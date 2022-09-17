@@ -1,0 +1,25 @@
+vertigo-backend/.DS_Store
+vertigo-backend/.env
+vertigo-backend/.flaskenv
+vertigo-backend/*.pyc
+vertigo-backend/*.pyo
+vertigo-backend/env/
+vertigo-backend/venv/
+vertigo-backend/.venv/
+vertigo-backend/env*
+vertigo-backend/dist/
+vertigo-backend/build/
+vertigo-backend/*.egg
+vertigo-backend/*.egg-info/
+vertigo-backend/.tox/
+vertigo-backend/.cache/
+vertigo-backend/.pytest_cache/
+vertigo-backend/.idea/
+vertigo-backend/docs/_build/
+vertigo-backend/.vscode
+vertigo-backend/# Coverage reports
+vertigo-backend/htmlcov/
+vertigo-backend/.coverage
+vertigo-backend/.coverage.*
+vertigo-backend/*,cover
+vertigo-backend/Config/

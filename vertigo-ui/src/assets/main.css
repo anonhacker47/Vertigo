@@ -1,0 +1,43 @@
+@import "./base.css";
+
+#app {
+  margin: 0 auto;
+  font-weight: normal;
+  background-image: linear-gradient(to right top, #282f3e,  #242936, #161c2c, #12192b, #0f172a);
+  min-height: 100vh;
+  max-width: 100vw;
+  overflow: none;
+  font-family: 'Nunito', sans-serif;
+}
+
+.formkit-outer {
+  color: white;
+  outline: none m !important;
+}
+
+.formkit-inner {
+  background-color: #404a59;
+  color: white;
+  outline: none m !important;
+  box-shadow: 0 0 0 1px #1f2937;
+  
+}
+
+[data-type="button"] .formkit-input, [data-type="submit"] .formkit-input {
+  width: 100%;
+}
+.error {
+  color: red;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: rgb(255, 255, 255);
+  transition: 0.4s;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
