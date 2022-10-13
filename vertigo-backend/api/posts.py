@@ -1,4 +1,5 @@
-from flask import Blueprint, abort
+from pstats import SortKey
+from flask import Blueprint, abort, request
 from apifairy import authenticate, body, response, other_responses
 
 from api import db
@@ -89,8 +90,8 @@ def delete(id):
 
 @posts.route('/feed', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(posts_schema, order_by=Post.timestamp,
-                    order_direction='desc',
+@paginated_response(posts_schema, order_by=Post.title,
+                    order_direction='asc',
                     pagination_schema=DateTimePaginationSchema)
 def feed():
     """Retrieve the user's post feed"""

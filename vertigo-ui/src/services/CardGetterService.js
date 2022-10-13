@@ -1,8 +1,9 @@
 import Api from "@/services/Api";
 
 export default {
-  getcards(token) {
-    return Api().get("feed",token);
+  getcards(token,orderby,orderdir) {
+    return Api().get(`feed?orderby=${orderby}&orderdir=${orderdir}`,token);
+    ;
   },
   addpost(data,headers) {
     return Api().post("posts",data,headers

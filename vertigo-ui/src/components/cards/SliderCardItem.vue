@@ -14,7 +14,7 @@
       :style="{ backgroundImage: 'url(' + src + ')' }"
     ></div> -->
 
-        <img v-if="src != string" :src="src" alt="" class="slideritem" />
+        <img v-if="src != string" :src="src" alt="" class="slideritem border-solid border-b-8 border-sky-300" />
 
         <div
           class="absolute rounded-lg bg-[#131929] opacity-0 hover:opacity-50"
@@ -24,9 +24,8 @@
         ></div>
         <p
           v-if="active || src == string"
-          class="absolute break-words"
+          class="absolute leading-none pb-2 break-words"
           :style="{ maxWidth: cardWidth - 2 + 'vw' }"
-          id="fittedText"
         >
           {{ name }}
         </p>
@@ -45,11 +44,15 @@ onMounted(() => {});
 const props = defineProps({
   name: String,
   src: String,
+  grid: Number,
 });
 
+let cardHeightMultiplier = [69, 62, 50, 41, 38];
+let cardWidthMultiplier = [23, 20, 16, 13, 12];
+
 let string = "string";
-let cardHeight = 62;
-let cardWidth = 20.4 / 1.1;
+let cardHeight = cardHeightMultiplier[props.grid - 3];
+let cardWidth = cardWidthMultiplier[props.grid - 3];
 
 const active = ref(false);
 

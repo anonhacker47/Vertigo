@@ -9,13 +9,6 @@
         <RouterLink tag="li" to="/"
           ><img class="" src="../assets/logo.svg" alt="" width="40" height="40"
         /></RouterLink>
-        <button
-          class="text-white cursor-pointer text-xl leading-none px-3 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none"
-          type="button"
-          v-on:click="toggleNavbar()"
-        >
-          <i class="fas fa-bars"></i>
-        </button>
       </div>
       <div
         class="hidden justify-between items-center w-full md:flex md:w-auto navMenu"
@@ -47,7 +40,7 @@
       </div>
       <div class="flex items-center">
         <div class="flex flex-col lg:flex-row list-none">
-          <div class="dropdown dropbtn">
+          <div class="dropdown dropdown-hover">
             <img
               @mouseenter="toggle"
               @mouseleave="untoggle"
@@ -56,21 +49,17 @@
               alt=""
             />
 
-            <div class="dropdown-content">
-              <RouterLink
-                tag="li"
-                to="/login"
-                class="nav-item px-3 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-              >
-                Settings</RouterLink
-              >
-              <a
-                class="logout nav-item px-3 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                @click="logout"
-              >
-                Log-out
-              </a>
-            </div>
+            <ul
+              tabindex="0"
+              class="dropdown-content right-0 menu p-2 shadow bg-base-200 text-white rounded-box w-52"
+            >
+              <li>
+                <RouterLink tag="li" to="/login" class="hover:text-blue-400 "> Settings</RouterLink>
+              </li>
+              <li>
+                <a @click="logout" class="hover:text-blue-400 "> Log-out </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -87,9 +76,8 @@ import { ref } from "vue";
 const route = useRouter();
 
 function logout() {
-  useUserStore().token = null;
-  useUserStore().username = null;
-  useUserStore().isUserLoggedIn = false;
+  localStorage.clear()
+
   route.push("/");
 }
 </script>
@@ -109,49 +97,7 @@ img:hover {
   transform: scale(1.1);
 }
 
-.dropbtn {
-  border: none;
-  cursor: pointer;
-}
-
-/* The container <div> - needed to position the dropdown content */
-.dropdown {
-  position: relative;
-}
-
-/* Dropdown Content (Hidden by Default) */
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #0c0f15;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  right: 0 !important;
-  z-index: 500;
-}
-
-/* Links inside the dropdown */
-.dropdown-content a {
-  color: rgb(255, 255, 255);
-  padding: 16px;
-  text-decoration: none;
-  display: block;
-}
-
-/* Change color of dropdown links on hover */
-.dropdown-content a:hover {
-  background-color: #223245;
-  color: aqua;
-}
-
-/* Show the dropdown menu on hover */
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.router-link-active{
+.router-link-active {
   color: #38bdf8;
 }
-
-
 </style>

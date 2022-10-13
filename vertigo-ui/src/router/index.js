@@ -18,7 +18,7 @@ const router = createRouter({
       name: "Home",
       component: HomeView,
       meta: {
-        requiresAuth: true
+        requiresAuth: false
     }
     },
     {
@@ -86,13 +86,12 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const userStore = useUserStore();
   if (to.name === 'Login') {
-    userStore.isUserLoggedIn ? next({ name: 'Home' }) : next();
+    localStorage.getItem('isUserLoggedIn') ? next({ name: 'Home' }) : next();
     // next() // login route is always  okay (we could use the requires auth flag below). prevent a redirect loop
   } else if (to.meta && to.meta.requiresAuth === false) {
     next() // requires auth is explicitly set to false
-  } else if (userStore.isUserLoggedIn) {
+  } else if (localStorage.getItem('isUserLoggedIn')) {
     next() // i'm logged in. carry on
   } else {
     next({ name: 'Login' }) // always put your redirect as the default case

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center items-center h-full">
+  <div class="flex justify-center items-center h-screen">
 <PanelCardItem>
         <h1
           class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white"
@@ -62,8 +62,9 @@ async function login(values) {
     console.log(response);
 
     userStore.addToken(response.data.access_token,response.data.refresh_token)
- if (userStore.token){
-   userStore.isUserLoggedIn = true;
+ if (localStorage.getItem('token')){
+   localStorage.setItem('isUserLoggedIn',true)
+   console.log("logging in");
    route.push("home")}
    else {
     userStore.isUserLoggedIn = false;

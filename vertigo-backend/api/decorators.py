@@ -1,19 +1,32 @@
 from functools import wraps
-from flask import abort
+from flask import abort,request
 from apifairy import arguments, response
+from api.models import User, Post
 import sqlalchemy as sqla
 from api.app import db
 from api.schemas import StringPaginationSchema, PaginatedCollection
 
 
 def paginated_response(schema, max_limit=25, order_by=None,
-                       order_direction='asc',
+                       order_direction='desc',
                        pagination_schema=StringPaginationSchema):
     def inner(f):
         @wraps(f)
         def paginate(*args, **kwargs):
             args = list(args)
             pagination = args.pop(-1)
+            order_by_object = request.args.get('orderby')
+            order_by=Post.timestamp
+            if (request.args.get('orderdir') == 'desc'):
+                order_direction = 'desc'
+            else: 
+                order_direction = 'asc'
+            print(order_direction)
+            if order_by_object == "title":
+                order_by = Post.title
+            elif order_by_object == "timestamp":
+                order_by = Post.timestamp
+            print(order_by)    
             select_query = f(*args, **kwargs)
             if order_by is not None:
                 o = order_by.desc() if order_direction == 'desc' else order_by

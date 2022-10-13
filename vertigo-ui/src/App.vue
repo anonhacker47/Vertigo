@@ -16,19 +16,6 @@ async function refreshToken() {
     console.log(error);
   }
 }
-
-function refreshTokenGenerate() {
-  if (store.isUserLoggedIn) {
-      refreshToken();
-  }else{
-    alert("nope")
-  }
-}
-
-setInterval(() => {
-  refreshTokenGenerate();
-    }, 1200000);
-
 </script>
 
 <template>

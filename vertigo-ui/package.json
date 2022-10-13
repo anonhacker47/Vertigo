@@ -17,6 +17,7 @@
     "@mdi/font": "5.9.55",
     "animate.css": "^4.1.1",
     "axios": "^0.27.2",
+    "daisyui": "^2.31.0",
     "pinia": "^2.0.22",
     "pinia-plugin-persistedstate": "^2.2.0",
     "roboto-fontface": "*",
