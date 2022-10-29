@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
+from gc import collect
 from hashlib import md5
 import secrets
 from time import time
+from traceback import StackSummary
 
 from flask import current_app, url_for
 import jwt
@@ -201,6 +203,20 @@ class Post(Updateable, db.Model):
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
+    publisher = sqla.Column(sqla.String(280))
+    genre = sqla.Column(sqla.String(280))
+    main_char = sqla.Column(sqla.String(280))
+    writer = sqla.Column(sqla.String(280))
+    artist = sqla.Column(sqla.String(280))
+    editor = sqla.Column(sqla.String(280))
+    summary = sqla.Column(sqla.String(570))
+        
+    series_format = sqla.Column(sqla.String(100))
+    books_count = sqla.Column(sqla.Integer)
+    
+    read_whole = sqla.Column(sqla.Integer)
+    have_whole = sqla.Column(sqla.Integer)
+    
     slug = sqla.Column(sqla.String(280))
     thumbnail = sqla.Column(sqla.String(280))
     timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,

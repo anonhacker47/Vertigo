@@ -27,4 +27,14 @@ module.exports = {
     },
   },
   plugins: [require('daisyui')],
+  daisyui: {
+    themes: [
+      {
+        night: {
+          ...require("daisyui/src/colors/themes")["[data-theme=night]"],
+          accent: "#4ade80",
+        },
+      },
+    ],
+  },
 };

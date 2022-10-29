@@ -123,6 +123,32 @@ class PostSchema(ma.SQLAlchemySchema):
     
     title = ma.auto_field(required=True, validate=validate.Length(
         min=1, max=280))
+    publisher = ma.auto_field() 
+    writer = ma.auto_field(validate=validate.Length(
+        min=0, max=280))   
+    artist = ma.auto_field(validate=validate.Length(
+        min=0, max=280))   
+    
+    editor = ma.auto_field(validate=validate.Length(
+        min=0, max=280))  
+    
+    summary = ma.auto_field(validate=validate.Length(
+        min=0, max=570))  
+    
+    genre = ma.auto_field(validate=validate.Length(
+        min=0, max=280)) 
+    
+    main_char = ma.auto_field(validate=validate.Length(
+        min=0, max=280)) 
+    
+    
+    series_format = ma.auto_field(validate=validate.Length(
+        min=1, max=100))
+    books_count = ma.auto_field() 
+    read_whole = ma.auto_field() 
+    have_whole = ma.auto_field() 
+    
+    
     slug = ma.String()
     thumbnail = ma.String()
     timestamp = ma.auto_field(dump_only=True)

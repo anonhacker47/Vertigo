@@ -5,18 +5,12 @@
     leave-active-class="animate__animated animate__fadeOut animate__faster"
   >
     <div
-      v-if="!modalOpen"
       class="flex justify-around py-5 border-b border-slate-700"
-    >
-      <button
-        class="smallbutton text-black bg-[#7f76ee] hover:bg-[#5d55cc] hover:text-grey-100 rounded px-5 shadow-inner justify-center hover:shadow-lg inline-flex items-center"
-        @click="
-          toggleModal();
-          cancelDelete();
-        "
-      >
+    ><RouterLink :to="{ name: 'addnew'}" class="smallbutton text-black bg-[#7f76ee] hover:bg-[#5d55cc] hover:text-grey-100 rounded px-5 shadow-inner justify-center hover:shadow-lg inline-flex items-center">
+
         Add Series
-      </button>
+
+    </RouterLink>
 
       <div class="dropdown">
         <label tabindex="0" class="btn m-1 focus:ring"
@@ -130,39 +124,7 @@
       </button>
     </div>
   </Transition>
-  <Transition enter-active-class="animate__animated animate__fadeIn"
-    ><div
-      v-if="modalOpen"
-      class="z-50 h-full fixed flex justify-center items-center pb-24 w-full background"
-    >
-      <PanelCardItem
-        ><div>
-          <FormKit type="form" submit-label="Create" @submit="addCard">
-            <FormKit
-              type="text"
-              name="title"
-              label="Series Name"
-              validation="required"
-              label-class="mx-5"
-            />
-            <FormKit
-              type="text"
-              name="thumbnail"
-              label="Image Link"
-              default="meh"
-            />
-          </FormKit>
-          <button
-            class="bg-red-400 w-full text-black rounded px-6 py-2"
-            @click="toggleModal"
-          >
-            Cancel
-          </button>
-        </div>
-      </PanelCardItem>
-    </div></Transition
-  >
-  <div class="container grid px-8 pb-8" :class="`grid-cols-${selectedGrid}`" id="carddiv">
+   <div class="container grid px-8 pb-8" :class="`grid-cols-${selectedGrid}`" id="carddiv">
     <TransitionGroup
       enter-active-class="animate__animated animate__zoomInDown"
     >
@@ -182,12 +144,13 @@
             :src="card.thumbnail"
             :grid="selectedGrid"
             :key="selectedGrid"
+            :format="card.series_format"
           /> </RouterLink
         ><TransitionGroup
           enter-active-class="animate__animated animate__bounceIn"
           leave-active-class="animate__animated animate__bounceOut"
           ><div
-            v-if="deleteMode && !modalOpen"
+            v-if="deleteMode"
             @click.prevent="deleteCard(card.id)"
             class="rounded hover:scale-105 mt-4 hover:rotate-180 z-[800] transition ease-in-out"
           >
@@ -214,10 +177,7 @@ import { order } from "@formkit/i18n";
 
 const cards = ref();
 const message = ref();
-const modalOpen = ref(false);
 const deleteMode = ref(false);
-const overflow = ref("auto");
-const localid = ref();
 const headers = TokenService.getTokenHeader();
 const selectedGrid = ref(4);
 const orderby = ref("timestamp");
@@ -238,14 +198,6 @@ async function deleteCard(id) {
   }
 
   console.log(message);
-}
-
-function toggleModal() {
-  window.scrollTo({ top: 0 });
-  overflow.value = overflow.value == "auto" ? "hidden" : "auto";
-
-  modalOpen.value = !modalOpen.value;
-  document.body.style.overflow = `${overflow.value}`;
 }
 
 function toggleDelete() {
@@ -269,41 +221,6 @@ async function getCards() {
   } catch (error) {
     message.value = error;
   }
-}
-
-function convertToSlug(Text) {
-  return Text.toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "");
-}
-
-async function addCard(values) {
-  const title = values.title;
-  var thumbnail = values.thumbnail;
-  thumbnail ??= "string";
-
-  var local = cards.value[0] == undefined ? 1 : cards.value[0]["id"] + 1;
-
-  try {
-    const response = await CardGetterService.addpost(
-      { title, thumbnail },
-      { headers }
-    );
-    localid.value = local;
-    // console.log(localid.value);
-    cards.value.unshift({
-      id: local,
-      slug: convertToSlug(title),
-      title: title,
-      thumbnail: thumbnail,
-    });
-    // getCards();
-    toggleModal();
-  } catch (error) {
-    message.value = error;
-  }
-
-  console.log(message);
 }
 
 function changeGrid(selected) {

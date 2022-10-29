@@ -20,6 +20,8 @@ export default defineConfig({
   build: {
     outDir: '../vertigo-backend/api/wwwroot',
     assetsDir: "static" 
-  }
-   
+  },
+  server: {
+    host: true
+  }   
 });
