@@ -4,7 +4,7 @@ export default () => {
   var axiosInstance = axios.create({
     withCredentials: true,
 
-    baseURL: "http://192.168.18.4:5000/api",
+    baseURL: "http://127.0.0.1:5000/api",
   });
 
   axiosInstance.interceptors.request.use(

@@ -3,7 +3,7 @@
   <form
     @submit.prevent
     autocomplete="on"
-    class="flex flex-row min-h-[calc(100vh-700px)]"
+    class="flex flex-row"
   >
     <div class="content">
       <div class="card w-[22rem] bg-base-100 shadow-xl">

@@ -43,19 +43,23 @@
             <input
               @change="changeGrid"
               type="range"
-              min="3"
-              max="7"
-              value="4"
+              min="2"
+              max="10"
+              :value="selectedGrid"
               class="range range-xs"
               step="1"
             />
           </div>
           <div class="w-full flex justify-between text-xs px-5">
+            <span>2</span>
             <span>3</span>
             <span>4</span>
             <span>5</span>
             <span>6</span>
             <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>10</span>
           </div>
           <div class="flex justify-between">
             <label class="label">
@@ -124,7 +128,7 @@
       </button>
     </div>
   </Transition>
-   <div class="container grid px-8 pb-8" :class="`grid-cols-${selectedGrid}`" id="carddiv">
+   <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" :class="`grid-cols-${selectedGrid}`" id="carddiv">
     <TransitionGroup
       enter-active-class="animate__animated animate__zoomInDown"
     >
@@ -134,31 +138,35 @@
         :key="card"
       >
         <RouterLink
-          class="shadow-2xl"
+          class="shadow-2xl pt-4"
+          :key="selectedGrid"
+          :class="`md:h-[${cardHeightMD}vh]`, `md:w-[${cardWidthMD}vw]`, `h-[${cardHeight}vh]`, `w-[${cardWidth}vw]`"
           :to="{ name: 'series', params: { Id: card.id + card.slug } }"
         >
           <SliderCardItem
-            class="mt-8"
             :class="{ 'animate-wiggle': deleteMode }"
             :name="card.title"
+            class="h-full w-full"
             :src="card.thumbnail"
             :grid="selectedGrid"
             :key="selectedGrid"
             :format="card.series_format"
-          /> </RouterLink
-        ><TransitionGroup
+            :textwidth-m-d="cardWidthMD"
+            :textwidth="cardWidth"
+          /> </RouterLink><TransitionGroup
           enter-active-class="animate__animated animate__bounceIn"
           leave-active-class="animate__animated animate__bounceOut"
           ><div
             v-if="deleteMode"
             @click.prevent="deleteCard(card.id)"
-            class="rounded hover:scale-105 mt-4 hover:rotate-180 z-[800] transition ease-in-out"
+            class="top-0 right-0 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out"
           >
             <img
               src="../assets/remove.svg"
               alt=""
               height="30"
               width="30"
+              class="min-w-[25px] min-h-[25px]"
             /></div
         ></TransitionGroup></div
     ></TransitionGroup>
@@ -179,9 +187,24 @@ const cards = ref();
 const message = ref();
 const deleteMode = ref(false);
 const headers = TokenService.getTokenHeader();
-const selectedGrid = ref(4);
+const selectedGrid = ref(localStorage.getItem('gridCol')?localStorage.getItem('gridCol'):4);
 const orderby = ref("timestamp");
 const orderdir = ref("desc");
+
+// Custom heights and width for each column vallues
+// cardHeight for mobile devices
+// cardHeightMD for larger devices
+
+let cardHeightMultiplierMD = [70, 70, 70, 55, 48, 42,38,35,32];
+let cardWidthMultiplierMD = [23, 23, 22, 20, 18, 16,12,10,12];
+const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2])
+const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2])
+
+let cardHeightMultiplier = [35, 25, 70, 55, 45, 42,38,35,32];
+let cardWidthMultiplier = [80, 75, 24, 20, 18, 16,12,10,12];
+const cardHeight= ref(cardHeightMultiplier[selectedGrid.value - 2])
+const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2])
+
 
 async function deleteCard(id) {
   const idToRemove = id;
@@ -225,6 +248,12 @@ async function getCards() {
 
 function changeGrid(selected) {
   selectedGrid.value = parseInt(selected.target.value);
+  localStorage.setItem('gridCol',selected.target.value)
+  cardHeightMD.value = cardHeightMultiplierMD[selectedGrid.value - 2];
+  cardWidthMD.value = cardWidthMultiplierMD[selectedGrid.value - 2];
+  cardHeight.value = cardHeightMultiplier[selectedGrid.value - 2];
+  cardWidth.value = cardWidthMultiplier[selectedGrid.value - 2];
+  console.log(selectedGrid.value);
 }
 
 function sortByDirection(values) {

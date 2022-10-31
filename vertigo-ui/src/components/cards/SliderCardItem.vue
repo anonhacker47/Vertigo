@@ -1,49 +1,41 @@
 <template>
-  <div class="flex items-end" id="card">
-    <div
-      :style="{ height: cardHeight + 'vh', width: cardWidth + 'vw' }"
-      class="flex items-start"
-    >
+  <div class="flex items-end" @mouseenter="activate" @mouseleave="activate">
+    <div class="flex h-full w-full items-end">
       <div
         id="image_container"
-        :style="{ height: cardHeight + 'vh', width: cardWidth + 'vw' }"
-        class="flex overflow-hidden justify-center hvr-bounce-in items-end text-center border-solid border-b-[12px] border-green-400"
+        class="h-full rounded md:rounded-lg w-full justify-center hvr-bounce-in items-end text-center border-solid border-b-[12px] border-green-400"
       >
-        <!-- <div
-      class="slideritem"
-      :style="{ backgroundImage: 'url(' + src + ')' }"
-    ></div> -->
-
         <img
           v-if="src != string"
           :src="src"
           alt=""
-          class="slideritem"
+          class="slideritem h-full w-full md:rounded-t-lg"
         />
 
         <div
-          class="absolute rounded-t-lg bg-[#131929] opacity-0 hover:opacity-50"
-          :style="{ height: cardHeight + 'vh', width: cardWidth + 'vw' }"
-          @mouseenter="activate"
-          @mouseleave="activate"
+          class="absolute flex h-full w-full rounded-t md:rounded-t-lg bg-[#131929] opacity-0"
+          :class="{ 'opacity-60': active }"
         ></div>
         <p
           v-if="active || src == string"
-          class="absolute name leading-none pb-2 break-words"
-          :class="src == string?'top-1/2':''"
-          :style="{ maxWidth: cardWidth - 2 + 'vw' }"
+          class="absolute md:text-xl name text-sm leading-none pb-2 break-words"
+          :class="
+            (src == string ? 'top-1/2' : '',
+            `md:max-w-[${textwidthMD / 2}vw]`,
+            `max-w-[${textwidth / 2}vw]`)
+          "
+          :style="src == string ? `top: 50%;` : ''"
         >
           {{ name }}
         </p>
         <p
-          class="absolute overflow-hidden px-3 py-2 m-2 bg-slate-800 text-green-200 font-bold rounded-md text-bold top-0 right-0 break-words"
-        
+          class="absolute text-[10px] md:text-sm px-3 py-2 m-1 md:m-2 bg-slate-800 text-green-200 rounded md:rounded-md top-0 right-0 break-words"
         >
           {{ format }}
         </p>
       </div>
-      <slot></slot>
     </div>
+    <slot></slot>
   </div>
   <!-- <span class="caption flex justify-center uppercase decoration-solid text-lg my-5">{{ name }}</span> -->
 </template>
@@ -57,15 +49,11 @@ const props = defineProps({
   name: String,
   src: String,
   format: String,
-  grid: Number,
+  textwidth: Number,
+  textwidthMD: Number,
 });
 
-let cardHeightMultiplier = [69, 62, 50, 41, 38];
-let cardWidthMultiplier = [23, 20, 16, 13, 12];
-
 let string = "string";
-let cardHeight = cardHeightMultiplier[props.grid - 3];
-let cardWidth = cardWidthMultiplier[props.grid - 3];
 
 const active = ref(false);
 
@@ -75,21 +63,14 @@ function activate() {
 </script>
 
 <style scoped>
-#card {
-  border-radius: 8px;
-}
-
 #image_container {
   display: flex;
   background-color: #161617;
-  border-radius: 8px;
   transition: transform 0.4s ease, box-shadow 0.4s ease;
   z-index: 8;
 }
 
 .slideritem {
-  height: 100%;
-  width: 100%;
   background-repeat: no-repeat;
   background-size: cover;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -112,7 +93,6 @@ function activate() {
 
 .name {
   color: white;
-  font-size: 35px;
   font-weight: 700;
 }
 </style>

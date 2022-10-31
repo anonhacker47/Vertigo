@@ -10,49 +10,49 @@ const router = createRouter({
       redirect: "/login",
       name: "Default",
       meta: {
-        requiresAuth: false
-    }
+        requiresAuth: false,
+      },
     },
     {
       path: "/home",
       name: "Home",
       component: HomeView,
       meta: {
-        requiresAuth: false
-    }
+        requiresAuth: false,
+      },
     },
     {
       path: "/reading",
       name: "Reading",
       component: () => import("../views/ReadingView.vue"),
       meta: {
-        requiresAuth: true
-    }
+        requiresAuth: true,
+      },
     },
     {
       path: "/wishlist",
       name: "Wishlist",
       component: () => import("../views/WishlistView.vue"),
       meta: {
-        requiresAuth: true
-    }
+        requiresAuth: true,
+      },
     },
     {
       path: "/about",
       name: "about",
       meta: {
-        requiresAuth: true
-    },
+        requiresAuth: true,
+      },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import("../views/AboutView.vue"),
+      component: () => import("../views/SeriesView.vue"),
     },
     {
       path: "/login",
-      name: "Login",      
+      name: "Login",
       meta: {
-        requiresAuth: false
+        requiresAuth: false,
       },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
@@ -67,47 +67,45 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import("../views/SignupView.vue"),
       meta: {
-        requiresAuth: false
+        requiresAuth: false,
       },
     },
     {
       path: "/series/:Id",
       name: "series",
       meta: {
-        requiresAuth: true
-    },
+        requiresAuth: true,
+      },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import("../views/AboutView.vue"),
-
+      component: () => import("../views/SeriesView.vue"),
     },
     {
       path: "/add",
       name: "addnew",
       meta: {
-        requiresAuth: true
-    },
+        requiresAuth: true,
+      },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import("../views/AddNewView.vue"),
-
     },
   ],
 });
 
 router.beforeEach((to, from, next) => {
-  if (to.name === 'Login') {
-    localStorage.getItem('isUserLoggedIn') ? next({ name: 'Home' }) : next();
+  if (to.name === "Login") {
+    localStorage.getItem("isUserLoggedIn") ? next({ name: "Home" }) : next();
     // next() // login route is always  okay (we could use the requires auth flag below). prevent a redirect loop
   } else if (to.meta && to.meta.requiresAuth === false) {
-    next() // requires auth is explicitly set to false
-  } else if (localStorage.getItem('isUserLoggedIn')) {
-    next() // i'm logged in. carry on
+    next(); // requires auth is explicitly set to false
+  } else if (localStorage.getItem("isUserLoggedIn")) {
+    next(); // i'm logged in. carry on
   } else {
-    next({ name: 'Login' }) // always put your redirect as the default case
+    next({ name: "Login" }); // always put your redirect as the default case
   }
-})
+});
 
 export default router;
