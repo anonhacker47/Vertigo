@@ -1,3 +1,4 @@
+import os
 from pydoc import render_doc
 from flask import Flask, redirect, url_for, request, render_template
 from alchemical.flask import Alchemical
@@ -22,6 +23,8 @@ def create_app(config_class=Config):
             template_folder = "./wwwroot")
     app.config.from_object(config_class)
     
+    app.config['cover_path'] = os.path.abspath("./Config/Covers/")
+    app.config['sql_path'] = os.path.abspath("./Config/")
 
     # extensions
     from api import models

@@ -1,9 +1,13 @@
 from datetime import datetime, timedelta
 from gc import collect
 from hashlib import md5
+import uuid
+from PIL import Image
 import secrets
 from time import time
 from traceback import StackSummary
+import requests
+import re
 
 from flask import current_app, url_for
 import jwt
@@ -11,9 +15,9 @@ import sqlalchemy as sqla
 from sqlalchemy import orm as sqla_orm
 from werkzeug.security import generate_password_hash, check_password_hash
 from slugify import slugify
+import shutil
 
 from api.app import db
-
 
 class Updateable:
     def update(self, data):
@@ -90,6 +94,9 @@ class User(Updateable, db.Model):
 
     def posts_select(self):
         return Post.select().where(sqla_orm.with_parent(self, User.posts))
+    
+    def covers_select(id):
+         return Post.select().where(Post.id==id)
 
     def following_select(self):
         return User.select().where(sqla_orm.with_parent(self, User.following))
@@ -228,6 +235,45 @@ class Post(Updateable, db.Model):
     def __init__(self, *args, **kwargs):
         if not 'slug' in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
+        url = kwargs.get('thumbnail', '')
+        r = requests.get(url, stream = True)
+        ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
+        print(ext)
+        
+        if "webp" in ext:            
+            extension = ".webp"
+        elif "png" in ext:
+            extension = ".png"
+        elif "jpeg" or "jpg" in ext:
+            extension = ".jpeg"
+        
+        else:
+            print("no extensions")
+            try:
+                request = requests.get(url, stream = True)
+                im = Image.open(request.raw)
+                extension = f".{im.format}"
+            except Exception as e:
+                print(url) #here you get the file causing the exception
+                print(e)
+                
+        filename = f"{uuid.uuid4()}{kwargs['slug']}{extension}"
+        print(filename)
+        
+        if r.status_code == 200:
+        # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
+            r.raw.decode_content = True                           
+
+        # Open a local file with wb ( write binary ) permission.
+            with open(current_app.config['cover_path']+"/"+filename,'wb') as f:
+                shutil.copyfileobj(r.raw, f)
+
+            print('Image sucessfully Downloaded: ',filename)
+            kwargs['thumbnail'] = filename
+        else:
+            print('Image Couldn\'t be retreived')
+        
+        
         super().__init__(*args, **kwargs)
 
     def __repr__(self):

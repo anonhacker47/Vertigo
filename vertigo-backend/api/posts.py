@@ -1,5 +1,9 @@
+import os
 from pstats import SortKey
-from flask import Blueprint, abort, request
+from flask import current_app
+import sqlite3
+
+from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
 
 from api import db
@@ -9,11 +13,11 @@ from api.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas import DateTimePaginationSchema
 
+
 posts = Blueprint('posts', __name__)
 post_schema = PostSchema()
 posts_schema = PostSchema(many=True)
 update_post_schema = PostSchema(partial=True)
-
 
 @posts.route('/posts', methods=['POST'])
 @authenticate(token_auth)
@@ -83,7 +87,14 @@ def delete(id):
     post = db.session.get(Post, id) or abort(404)
     if post.author != token_auth.current_user():
         abort(403)
+    thumbnail =  post.thumbnail    
     db.session.delete(post)
+    
+    if os.path.exists(current_app.config['cover_path']+f"\\{thumbnail}"):
+        os.remove(current_app.config['cover_path']+f"\\{thumbnail}")
+    else:
+        print("The file does not exist") 
+
     db.session.commit()
     return '', 204
 
@@ -97,3 +108,11 @@ def feed():
     """Retrieve the user's post feed"""
     user = token_auth.current_user()
     return user.followed_posts_select()
+
+@posts.route('posts/images/<int:id>',methods=['GET'])
+# @authenticate(token_auth)
+def upload(id):
+    """Retrieve post image"""
+    post = db.session.get(Post, id)
+    print(post.thumbnail)
+    return send_file(current_app.config['cover_path']+f"\\{post.thumbnail}")

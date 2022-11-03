@@ -11,9 +11,7 @@ module.exports = {
   'grid-cols-8',
   'grid-cols-9',
   'grid-cols-10',
-
   'opacity-50',
-
   'md:h-[70vh]',
   'md:h-[55vh]',
   'md:h-[50vh]',
@@ -22,7 +20,7 @@ module.exports = {
   'md:h-[38vh]',
   'md:h-[35vh]',
   'md:h-[32vh]',
-  'md:w-[20vw]',
+  'md:w-[19vw]',
   'md:w-[23vw]',
   'md:w-[22vw]',
   'md:w-[18vw]',

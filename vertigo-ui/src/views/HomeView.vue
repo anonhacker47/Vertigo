@@ -4,17 +4,17 @@
     enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster"
   >
-    <div
-      class="flex justify-around py-5 border-b border-slate-700"
-    ><RouterLink :to="{ name: 'addnew'}" class="smallbutton text-black bg-[#7f76ee] hover:bg-[#5d55cc] hover:text-grey-100 rounded px-5 shadow-inner justify-center hover:shadow-lg inline-flex items-center">
-
+    <div class="flex justify-around py-5 border-b border-slate-700">
+      <RouterLink
+        :to="{ name: 'addnew' }"
+        class="smallbutton text-black bg-[#7f76ee] hover:bg-[#5d55cc] hover:text-grey-100 rounded px-5 shadow-inner justify-center hover:shadow-lg inline-flex items-center"
+      >
         Add Series
-
-    </RouterLink>
+      </RouterLink>
 
       <div class="dropdown">
-        <label tabindex="0" class="btn m-1 focus:ring"
-          ><svg
+        <label tabindex="0" class="btn m-1 focus:ring">
+          <svg
             width="24"
             height="24"
             xmlns="http://www.w3.org/2000/svg"
@@ -26,7 +26,7 @@
               d="M12.01 20c-5.065 0-9.586-4.211-12.01-8.424 2.418-4.103 6.943-7.576 12.01-7.576 5.135 0 9.635 3.453 11.999 7.564-2.241 4.43-6.726 8.436-11.999 8.436zm-10.842-8.416c.843 1.331 5.018 7.416 10.842 7.416 6.305 0 10.112-6.103 10.851-7.405-.772-1.198-4.606-6.595-10.851-6.595-6.116 0-10.025 5.355-10.842 6.584zm10.832-4.584c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zm0 1c2.208 0 4 1.792 4 4s-1.792 4-4 4-4-1.792-4-4 1.792-4 4-4z"
               fill="#a5f3fc"
             />
-            </svg></label>
+          </svg></label>
         <div
           tabindex="0"
           class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-80"
@@ -110,8 +110,8 @@
                 type="radio"
                 name="sortby"
                 class="radio checked:bg-blue-500"
-                @click="sortByProperties"         
-                value="timestamp"       
+                @click="sortByProperties"
+                value="timestamp"
                 checked
               />
             </label>
@@ -128,10 +128,12 @@
       </button>
     </div>
   </Transition>
-   <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" :class="`grid-cols-${selectedGrid}`" id="carddiv">
-    <TransitionGroup
-      enter-active-class="animate__animated animate__zoomInDown"
-    >
+  <div
+    class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5"
+    :class="`grid-cols-${selectedGrid}`"
+    id="carddiv"
+  >
+    <TransitionGroup enter-active-class="animate__animated animate__zoomInDown">
       <div
         class="flex flex-row justify-center items-start"
         v-for="card in cards"
@@ -141,22 +143,29 @@
           class="shadow-2xl pt-4"
           :key="selectedGrid"
           :class="`md:h-[${cardHeightMD}vh]`, `md:w-[${cardWidthMD}vw]`, `h-[${cardHeight}vh]`, `w-[${cardWidth}vw]`"
-          :to="{ name: 'series', params: { Id: card.id + card.slug } }"
+          :to="{
+            name: 'series',
+            params: { Link: card.slug , Id: card.id },
+            id:card.id,
+          }"
         >
           <SliderCardItem
-            :class="{ 'animate-wiggle': deleteMode }"
+            :class="{ '}animate-wiggle': deleteMode }"
             :name="card.title"
             class="h-full w-full"
-            :src="card.thumbnail"
+            :src="`http://localhost:5000/api/posts/images/${card.id}`"
             :grid="selectedGrid"
             :key="selectedGrid"
             :format="card.series_format"
             :textwidth-m-d="cardWidthMD"
             :textwidth="cardWidth"
-          /> </RouterLink><TransitionGroup
+          />
+        </RouterLink>
+        <TransitionGroup
           enter-active-class="animate__animated animate__bounceIn"
           leave-active-class="animate__animated animate__bounceOut"
-          ><div
+        >
+          <div
             v-if="deleteMode"
             @click.prevent="deleteCard(card.id)"
             class="top-0 right-0 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out"
@@ -167,9 +176,11 @@
               height="30"
               width="30"
               class="min-w-[25px] min-h-[25px]"
-            /></div
-        ></TransitionGroup></div
-    ></TransitionGroup>
+            />
+          </div>
+        </TransitionGroup>
+      </div>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -181,13 +192,17 @@ import CardGetterService from "../services/CardGetterService";
 import TokenService from "../services/TokenService";
 import PanelCardItem from "../components/cards/PanelCardItem.vue";
 import ActionButtonItem from "../components/buttons/ActionButtonItem.vue";
-import { order } from "@formkit/i18n";
+import { id, order } from "@formkit/i18n";
+import { applyListeners } from "@formkit/observer";
 
 const cards = ref();
+const imageDataUrl = ref();
 const message = ref();
 const deleteMode = ref(false);
 const headers = TokenService.getTokenHeader();
-const selectedGrid = ref(localStorage.getItem('gridCol')?localStorage.getItem('gridCol'):4);
+const selectedGrid = ref(
+  localStorage.getItem("gridCol") ? localStorage.getItem("gridCol") : 4
+);
 const orderby = ref("timestamp");
 const orderdir = ref("desc");
 
@@ -195,16 +210,15 @@ const orderdir = ref("desc");
 // cardHeight for mobile devices
 // cardHeightMD for larger devices
 
-let cardHeightMultiplierMD = [70, 70, 70, 55, 48, 42,38,35,32];
-let cardWidthMultiplierMD = [23, 23, 22, 20, 18, 16,12,10,12];
-const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2])
-const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2])
+let cardHeightMultiplierMD = [70, 70, 70, 55, 48, 42, 38, 35, 32];
+let cardWidthMultiplierMD = [23, 23, 22, 19, 18, 16, 12, 10, 12];
+const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
+const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2]);
 
-let cardHeightMultiplier = [35, 25, 70, 55, 45, 42,38,35,32];
-let cardWidthMultiplier = [80, 75, 24, 20, 18, 16,12,10,12];
-const cardHeight= ref(cardHeightMultiplier[selectedGrid.value - 2])
-const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2])
-
+let cardHeightMultiplier = [35, 25, 70, 55, 45, 42, 38, 35, 32];
+let cardWidthMultiplier = [80, 75, 24, 20, 18, 16, 12, 10, 12];
+const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
+const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
 
 async function deleteCard(id) {
   const idToRemove = id;
@@ -227,9 +241,21 @@ function toggleDelete() {
   deleteMode.value = !deleteMode.value;
 }
 
-function cancelDelete() {
-  deleteMode.value = deleteMode.value == true ? false : false;
-}
+// async function getPostImages(id){
+//   console.log(id);
+//   try {
+//   const response = await CardGetterService.getimagebyid(
+//     id,{headers}
+//   )
+//   .then(function (response) {
+//     var imgUrl = 'data:image/jpeg;base64,' + btoa(new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
+//     console.log(imgUrl);
+//   })
+//   } catch (error) {
+//     message.value = error;
+//     console.log(message);
+//   }
+// }
 
 async function getCards() {
   try {
@@ -248,7 +274,7 @@ async function getCards() {
 
 function changeGrid(selected) {
   selectedGrid.value = parseInt(selected.target.value);
-  localStorage.setItem('gridCol',selected.target.value)
+  localStorage.setItem("gridCol", selected.target.value);
   cardHeightMD.value = cardHeightMultiplierMD[selectedGrid.value - 2];
   cardWidthMD.value = cardWidthMultiplierMD[selectedGrid.value - 2];
   cardHeight.value = cardHeightMultiplier[selectedGrid.value - 2];
@@ -276,6 +302,7 @@ onMounted(() => {
 .paneldiv {
   height: calc(100vh - 72px);
 }
+
 .background {
   background: var(--bg-gradient);
 }
@@ -284,8 +311,10 @@ input:checked + label {
   border: 2px;
   color: #38bdf8;
 }
-.range::-moz-range-thumb{
-  color: #1FB2A6;
-  box-shadow: 0 0 0 3px #1FB2A6 inset, var(--focus-shadow, 0 0), calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
+
+.range::-moz-range-thumb {
+  color: #1fb2a6;
+  box-shadow: 0 0 0 3px #1fb2a6 inset, var(--focus-shadow, 0 0),
+    calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
 }
 </style>

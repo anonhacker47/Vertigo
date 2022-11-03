@@ -71,7 +71,7 @@ const router = createRouter({
       },
     },
     {
-      path: "/series/:Id",
+      path: "/series/:Id-:Link",
       name: "series",
       meta: {
         requiresAuth: true,

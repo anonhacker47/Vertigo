@@ -203,7 +203,6 @@ const thumbnail = ref("");
 
 
 function changeImage(event) {
-
   event.target.value?imagesrc.value = event.target.value:imagesrc.value = new URL('../assets/dummy.webp', import.meta.url).href;
   thumbnail.value= event.target.value
 }
@@ -235,7 +234,7 @@ async function addCard() {
       },
       { headers }
     );
-    router.push("home")
+    // router.push("home")
   } catch (error) {
     console.log(error);
   }
