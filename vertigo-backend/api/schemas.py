@@ -149,6 +149,7 @@ class PostSchema(ma.SQLAlchemySchema):
     have_whole = ma.auto_field() 
     
     
+    dominant_color = ma.String()
     slug = ma.String()
     thumbnail = ma.String()
     timestamp = ma.auto_field(dump_only=True)

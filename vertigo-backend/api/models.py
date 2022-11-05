@@ -8,7 +8,11 @@ from time import time
 from traceback import StackSummary
 import requests
 import re
-
+import extcolors
+from colorthief import ColorThief
+import numexpr as ne
+import numpy as np
+            
 from flask import current_app, url_for
 import jwt
 import sqlalchemy as sqla
@@ -224,6 +228,7 @@ class Post(Updateable, db.Model):
     read_whole = sqla.Column(sqla.Integer)
     have_whole = sqla.Column(sqla.Integer)
     
+    dominant_color = sqla.Column(sqla.String(280))
     slug = sqla.Column(sqla.String(280))
     thumbnail = sqla.Column(sqla.String(280))
     timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
@@ -236,9 +241,8 @@ class Post(Updateable, db.Model):
         if not 'slug' in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
         url = kwargs.get('thumbnail', '')
-        r = requests.get(url, stream = True)
+        request = requests.get(url, stream = True)
         ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
-        print(ext)
         
         if "webp" in ext:            
             extension = ".webp"
@@ -250,25 +254,52 @@ class Post(Updateable, db.Model):
         else:
             print("no extensions")
             try:
-                request = requests.get(url, stream = True)
-                im = Image.open(request.raw)
-                extension = f".{im.format}"
+                img = Image.open(request.raw)
+                extension = f".{img.format}"
             except Exception as e:
                 print(url) #here you get the file causing the exception
                 print(e)
                 
         filename = f"{uuid.uuid4()}{kwargs['slug']}{extension}"
-        print(filename)
         
-        if r.status_code == 200:
+        
+        if request.status_code == 200:
         # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-            r.raw.decode_content = True                           
+            request.raw.decode_content = True                           
 
         # Open a local file with wb ( write binary ) permission.
             with open(current_app.config['cover_path']+"/"+filename,'wb') as f:
-                shutil.copyfileobj(r.raw, f)
+                shutil.copyfileobj(request.raw, f)
 
             print('Image sucessfully Downloaded: ',filename)
+            # dominant_color = extcolors.extract_from_path(current_app.config['cover_path']+"/"+filename)
+            # color_thief = ColorThief(current_app.config['cover_path']+"/"+filename)
+            # color_thief = ColorThief(request.raw)
+            # dominant_color = color_thief.get_color(quality=1)
+            # hex_color = '#%02x%02x%02x' % dominant_color
+            def get_dominant_color(pil_img, palette_size=16):
+                # Resize image to speed up processing
+                img = pil_img.copy()
+                img.thumbnail((100, 100))
+
+                # Reduce colors (uses k-means internally)
+                paletted = img.convert('P', palette=Image.ADAPTIVE, colors=palette_size)
+
+                # Find the color that occurs most often
+                palette = paletted.getpalette()
+                color_counts = sorted(paletted.getcolors(), reverse=True)
+                print(color_counts)
+                palette_index = color_counts[0][1]
+                print(palette_index)
+                dominant_color = palette[palette_index*3:palette_index*3+3]
+
+                return dominant_color
+            
+            im = Image.open(current_app.config['cover_path']+"/"+filename) 
+            
+            print((get_dominant_color(im)))
+            # print(check)
+            kwargs['dominant_color'] = f"{get_dominant_color(im)[0],get_dominant_color(im)[1],get_dominant_color(im)[2]}"
             kwargs['thumbnail'] = filename
         else:
             print('Image Couldn\'t be retreived')

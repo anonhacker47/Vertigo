@@ -234,7 +234,7 @@ async function addCard() {
       },
       { headers }
     );
-    // router.push("home")
+    router.push("home")
   } catch (error) {
     console.log(error);
   }

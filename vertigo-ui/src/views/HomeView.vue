@@ -211,7 +211,7 @@ const orderdir = ref("desc");
 // cardHeightMD for larger devices
 
 let cardHeightMultiplierMD = [70, 70, 70, 55, 48, 42, 38, 35, 32];
-let cardWidthMultiplierMD = [23, 23, 22, 19, 18, 16, 12, 10, 12];
+let cardWidthMultiplierMD = [22, 22, 22, 19, 18, 16, 12, 10, 12];
 const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
 const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2]);
 
