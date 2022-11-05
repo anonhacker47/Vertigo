@@ -1,15 +1,11 @@
 from datetime import datetime, timedelta
-from gc import collect
 from hashlib import md5
 import uuid
 from PIL import Image
 import secrets
 from time import time
-from traceback import StackSummary
 import requests
 import re
-import extcolors
-from colorthief import ColorThief
 import numexpr as ne
 import numpy as np
             
@@ -83,7 +79,7 @@ class User(Updateable, db.Model):
 
     tokens = sqla_orm.relationship('Token', back_populates='user',
                                    lazy='noload')
-    posts = sqla_orm.relationship('Post', back_populates='author',
+    series = sqla_orm.relationship('Series', back_populates='author',
                                   lazy='noload')
     following = sqla_orm.relationship(
         'User', secondary=followers,
@@ -96,11 +92,11 @@ class User(Updateable, db.Model):
         secondaryjoin=(followers.c.follower_id == id),
         back_populates='following', lazy='noload')
 
-    def posts_select(self):
-        return Post.select().where(sqla_orm.with_parent(self, User.posts))
+    def series_select(self):
+        return Series.select().where(sqla_orm.with_parent(self, User.series))
     
     def covers_select(id):
-         return Post.select().where(Post.id==id)
+         return Series.select().where(Series.id==id)
 
     def following_select(self):
         return User.select().where(sqla_orm.with_parent(self, User.following))
@@ -108,11 +104,11 @@ class User(Updateable, db.Model):
     def followers_select(self):
         return User.select().where(sqla_orm.with_parent(self, User.followers))
 
-    def followed_posts_select(self):
-        return Post.select().join(
-            followers, (followers.c.followed_id == Post.user_id),
-            isouter=True).group_by(Post.id).filter(
-                sqla.or_(Post.author == self,
+    def followed_series_select(self):
+        return Series.select().join(
+            followers, (followers.c.followed_id == Series.user_id),
+            isouter=True).group_by(Series.id).filter(
+                sqla.or_(Series.author == self,
                          followers.c.follower_id == self.id))
 
     def __repr__(self):  # pragma: no cover
@@ -209,8 +205,8 @@ class User(Updateable, db.Model):
                 user))).one_or_none() is not None
 
 
-class Post(Updateable, db.Model):
-    __tablename__ = 'posts'
+class Series(Updateable, db.Model):
+    __tablename__ = 'series'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
@@ -235,7 +231,7 @@ class Post(Updateable, db.Model):
                             nullable=False)
     user_id = sqla.Column(sqla.Integer, sqla.ForeignKey(User.id), index=True)
 
-    author = sqla_orm.relationship('User', back_populates='posts')
+    author = sqla_orm.relationship('User', back_populates='series')
 
     def __init__(self, *args, **kwargs):
         if not 'slug' in kwargs:
@@ -308,8 +304,8 @@ class Post(Updateable, db.Model):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return '<Post {}>'.format(self.text,self.thumbnail,self.slug)
+        return '<Series {}>'.format(self.text,self.thumbnail,self.slug)
 
     @property
     def url(self):
-        return url_for('posts.get', id=self.id)
+        return url_for('series.get', id=self.id)

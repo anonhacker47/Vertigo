@@ -69,8 +69,10 @@ async function getCard() {
     bg.value =
       response.data.dominant_color.slice(0, -1) +
       response.data.dominant_color.slice(-1);
+    // CardGetterService.getimagebyid(card.image).then()
     console.log(bg);
-    image.value = `http://localhost:5000/api/posts/images/${card.value.id}`;
+    image.value = await CardGetterService.getimagebyid(card.value.id);
+    console.log(image.value);
   } catch (error) {
     // message.value = error;
     console.log(error);

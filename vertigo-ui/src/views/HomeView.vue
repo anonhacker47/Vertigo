@@ -150,10 +150,10 @@
           }"
         >
           <SliderCardItem
-            :class="{ '}animate-wiggle': deleteMode }"
+            :class="{ 'animate-wiggle': deleteMode }"
             :name="card.title"
             class="h-full w-full"
-            :src="`http://localhost:5000/api/posts/images/${card.id}`"
+            :src="CardGetterService.getimagebyid(card.id)"
             :grid="selectedGrid"
             :key="selectedGrid"
             :format="card.series_format"

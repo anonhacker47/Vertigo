@@ -1,0 +1,118 @@
+import os
+from pstats import SortKey
+from flask import current_app
+import sqlite3
+
+from flask import Blueprint, abort, request, send_file, send_from_directory
+from apifairy import authenticate, body, response, other_responses
+
+from api import db
+from api.models import User, Series
+from api.schemas import SeriesSchema
+from api.auth import token_auth
+from api.decorators import paginated_response
+from api.schemas import DateTimePaginationSchema
+
+
+series = Blueprint('series', __name__)
+series_schema = SeriesSchema()
+multi_series_schema = SeriesSchema(many=True)
+update_series_schema = SeriesSchema(partial=True)
+
+@series.route('/series', methods=['POST'])
+@authenticate(token_auth)
+@body(series_schema)
+@response(series_schema, 201)
+def new(args):
+    """Create a new series"""
+    user = token_auth.current_user()
+    series = Series(author=user, **args)
+    db.session.add(series)
+    db.session.commit()
+    return series
+
+
+@series.route('/series/<int:id>', methods=['GET'])
+@authenticate(token_auth)
+@response(series_schema)
+@other_responses({404: 'Series not found'})
+def get(id):
+    """Retrieve a series by id"""
+    return db.session.get(Series, id) or abort(404)
+
+
+@series.route('/series', methods=['GET'])
+@authenticate(token_auth)
+@paginated_response(multi_series_schema, order_by=Series.timestamp,
+                    order_direction='desc',
+                    pagination_schema=DateTimePaginationSchema)
+def all():
+    """Retrieve all series"""
+    return Series.select()
+
+
+@series.route('/users/<int:id>/series', methods=['GET'])
+@authenticate(token_auth)
+@paginated_response(multi_series_schema, order_by=Series.timestamp,
+                    order_direction='desc',
+                    pagination_schema=DateTimePaginationSchema)
+@other_responses({404: 'User not found'})
+def user_all(id):
+    """Retrieve all series from a user"""
+    user = db.session.get(User, id) or abort(404)
+    return user.series_select()
+
+
+@series.route('/series/<int:id>', methods=['PUT'])
+@authenticate(token_auth)
+@body(update_series_schema)
+@response(series_schema)
+@other_responses({403: 'Not allowed to edit this series',
+                  404: 'Series not found'})
+def put(data, id):
+    """Edit a series"""
+    series = db.session.get(Series, id) or abort(404)
+    if series.author != token_auth.current_user():
+        abort(403)
+    series.update(data)
+    db.session.commit()
+    return series
+
+
+@series.route('/series/<int:id>', methods=['DELETE'])
+@authenticate(token_auth)
+@other_responses({403: 'Not allowed to delete the series'})
+def delete(id):
+    """Delete a series"""
+    series = db.session.get(Series, id) or abort(404)
+    if series.author != token_auth.current_user():
+        abort(403)
+    thumbnail =  series.thumbnail    
+    db.session.delete(series)
+    
+    if os.path.exists(current_app.config['cover_path']+f"\\{thumbnail}"):
+        os.remove(current_app.config['cover_path']+f"\\{thumbnail}")
+    else:
+        print("The file does not exist") 
+
+    db.session.commit()
+    return '', 204
+
+
+@series.route('/feed', methods=['GET'])
+@authenticate(token_auth)
+@paginated_response(multi_series_schema, order_by=Series.title,
+                    order_direction='asc',
+                    pagination_schema=DateTimePaginationSchema)
+def feed():
+    """Retrieve the user's series feed"""
+    user = token_auth.current_user()
+    return user.followed_series_select()
+
+@series.route('series/images/<int:id>',methods=['GET'])
+# @authenticate(token_auth)
+def upload(id):
+    """Retrieve series image"""
+    series = db.session.get(Series, id)
+    print(series.thumbnail)
+    return send_file(current_app.config['cover_path']+f"\\{series.thumbnail}")

@@ -23,3 +23,6 @@ vertigo-backend/.coverage
 vertigo-backend/.coverage.*
 vertigo-backend/*,cover
 vertigo-backend/Config/
+vertigo-backend/api/__pycache__/
+vertigo-backend/__pycache__/
+
