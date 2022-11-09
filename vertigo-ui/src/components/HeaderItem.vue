@@ -73,11 +73,14 @@ import { useRouter } from "vue-router";
 import PanelCardItem from "./cards/PanelCardItem.vue";
 import { ref } from "vue";
 
+const userStore = useUserStore();
 const route = useRouter();
 
 function logout() {
-  localStorage.clear()
-
+  localStorage.removeItem("token");
+  localStorage.removeItem("isUserLoggedIn");
+  userStore.isUserLoggedIn = false
+  userStore.userId = null
   route.push("/");
 }
 </script>
@@ -86,9 +89,6 @@ function logout() {
 nav {
   padding-left: 4.5rem;
   padding-right: 4.5rem;
-}
-
-img {
   transition: ease-in-out;
   transition-duration: 200ms;
 }

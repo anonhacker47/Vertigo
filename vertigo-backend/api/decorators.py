@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import abort,request
 from apifairy import arguments, response
-from api.models import User, Series
+from api.models import User, Series, Issue
 import sqlalchemy as sqla
 from api.app import db
 from api.schemas import StringPaginationSchema, PaginatedCollection
@@ -16,22 +16,29 @@ def paginated_response(schema, max_limit=25, order_by=None,
             args = list(args)
             pagination = args.pop(-1)
             order_by_object = request.args.get('orderby')
-            order_by=Series.timestamp
-            if (request.args.get('orderdir') == 'desc'):
+            order_by_dir = request.args.get('orderdir')
+            nonlocal order_by
+            nonlocal order_direction
+            
+            if (order_by_dir == 'desc'):
                 order_direction = 'desc'
-            else: 
+            elif(order_by_dir == 'asc'): 
                 order_direction = 'asc'
             print(order_direction)
-            if order_by_object == "title":
-                order_by = Series.title
-            elif order_by_object == "timestamp":
-                order_by = Series.timestamp
-            print(order_by)    
+            if order_by==Series.timestamp:
+                if order_by_object != None:
+                    order_by = getattr(Series, order_by_object)
+            elif order_by==Series.title:
+                if order_by_object != None:
+                    order_by = getattr(Series, order_by_object)
+            elif order_by==Issue.timestamp:
+                if order_by_object != None:
+                    order_by = getattr(Issue, order_by_object)
             select_query = f(*args, **kwargs)
+            print(order_by)
             if order_by is not None:
                 o = order_by.desc() if order_direction == 'desc' else order_by
                 select_query = select_query.order_by(o)
-
             count = db.session.scalar(sqla.select(
                 sqla.func.count()).select_from(select_query))
 

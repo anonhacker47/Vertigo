@@ -3,7 +3,7 @@ from marshmallow import validate, validates, validates_schema, \
     ValidationError, post_dump
 from api import ma, db
 from api.auth import token_auth
-from api.models import User, Series
+from api.models import User, Series, Issue
 
 paginated_schema_cache = {}
 
@@ -153,7 +153,36 @@ class SeriesSchema(ma.SQLAlchemySchema):
     slug = ma.String()
     thumbnail = ma.String()
     timestamp = ma.auto_field(dump_only=True)
-    author = ma.Nested(UserSchema, dump_only=True)
+    user = ma.Nested(UserSchema, dump_only=True)
+
+    
+    @post_dump
+    def fix_datetimes(self, data, **kwargs):
+        data['timestamp'] += 'Z'
+        return data
+
+class IssueSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Issue
+        include_fk = True
+        ordered = True
+
+    id = ma.auto_field(dump_only=True)
+    url = ma.String(dump_only=True)
+        
+    title = ma.auto_field(required=True, validate=validate.Length(
+        min=1, max=280))
+
+    read_whole = ma.auto_field() 
+    have_whole = ma.auto_field() 
+        
+    slug = ma.String()
+
+    timestamp = ma.auto_field(dump_only=True)
+
+    series = ma.Nested(SeriesSchema, dump_only=True)
+    
+    user = ma.Nested(UserSchema, dump_only=True)
 
     
     @post_dump

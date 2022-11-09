@@ -8,6 +8,10 @@ export default {
     return Api().post("tokens",null,
       credentials);
   },
+  getUser(token){
+    return Api().get("me",
+      token);
+  },
   refreshToken(data) {
     return Api().put("tokens",data);
   },

@@ -13,7 +13,7 @@ module.exports = {
   'grid-cols-10',
   'opacity-50',
   'md:h-[70vh]',
-  'md:h-[55vh]',
+  'md:h-[56vh]',
   'md:h-[50vh]',
   'md:h-[48vh]',
   'md:h-[42vh]',

@@ -1,10 +1,6 @@
 <template>
   <HeaderItem />
-  <form
-    @submit.prevent
-    autocomplete="on"
-    class="flex flex-row"
-  >
+  <form @submit.prevent autocomplete="on" class="flex flex-row">
     <div class="content">
       <div class="card w-[22rem] bg-base-100 shadow-xl">
         <figure class="px-5 pt-5">
@@ -157,12 +153,18 @@
           </div>
           <div class="flex flex-row gap-16 justify-around">
             <div class="form-control w-full">
-              <button @click="addCard" class="btn btn-primary">
+              <button @click="createSeries" class="btn btn-primary">
                 Add Series
               </button>
             </div>
             <div class="form-control w-full">
-              <button type="button" @click="router.push('home')" class="btn btn-danger">Cancel</button>
+              <button
+                type="button"
+                @click="router.push('home')"
+                class="btn btn-danger"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -175,10 +177,11 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
-import CardGetterService from "../services/CardGetterService";
+import IssueService from "../services/IssueService";
+import SeriesService from "../services/SeriesService";
 import TokenService from "../services/TokenService";
 
-var imagesrc = ref(new URL('../assets/dummy.webp', import.meta.url).href)
+var imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 // ref(
 //   "../assets/dummy.webp"
 // );
@@ -201,22 +204,20 @@ const have_whole = ref(0);
 const thumbnail = ref("");
 // const thumb_validity = ref(true);
 
-
 function changeImage(event) {
-  event.target.value?imagesrc.value = event.target.value:imagesrc.value = new URL('../assets/dummy.webp', import.meta.url).href;
-  thumbnail.value= event.target.value
+  event.target.value
+    ? (imagesrc.value = event.target.value)
+    : (imagesrc.value = new URL("../assets/dummy.webp", import.meta.url).href);
+  thumbnail.value = event.target.value;
 }
 
-function changeThumb(){
-  thumbnail.value="string";
+function changeThumb() {
+  thumbnail.value = "noimage";
 }
 
-async function addCard() {
-
-  
+async function createSeries() {
   try {
-
-    const response = await CardGetterService.addpost(
+    const response = await SeriesService.addSeries(
       {
         title: title.value,
         publisher: publisher.value,
@@ -234,7 +235,52 @@ async function addCard() {
       },
       { headers }
     );
-    router.push("home")
+    if (books_count.value>0) {
+      iterateIssues(books_count.value);
+    }
+    else{
+      console.log("nothing to add");
+    }
+    setPrimaryKey();
+    // router.push("home")
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function setPrimaryKey() {
+  try {
+    const response = await SeriesService.getSeriesKey(
+      { headers }
+      
+    );
+    localStorage.setItem("key",response.data)
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function iterateIssues(count) {
+  for (var i = 0; i < count; i++) {
+    var bookname = `Volume ${i}`;
+    addIssues(bookname);
+    console.log(`Book ${i} Added`);
+  }
+}
+
+async function addIssues(bookname) {
+  var key = Number(localStorage.getItem("key")) + 1
+  console.log(key);
+  try {
+    const response = await IssueService.addIssues(
+      key,
+      {
+        title: bookname,
+        read_whole: 0,
+        have_whole: 0,
+      },
+      {headers}
+      );
   } catch (error) {
     console.log(error);
   }

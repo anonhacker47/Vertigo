@@ -6,9 +6,7 @@ import secrets
 from time import time
 import requests
 import re
-import numexpr as ne
-import numpy as np
-            
+
 from flask import current_app, url_for
 import jwt
 import sqlalchemy as sqla
@@ -18,6 +16,7 @@ from slugify import slugify
 import shutil
 
 from api.app import db
+
 
 class Updateable:
     def update(self, data):
@@ -79,8 +78,11 @@ class User(Updateable, db.Model):
 
     tokens = sqla_orm.relationship('Token', back_populates='user',
                                    lazy='noload')
-    series = sqla_orm.relationship('Series', back_populates='author',
-                                  lazy='noload')
+    series = sqla_orm.relationship('Series', back_populates='user',
+                                   lazy='noload')
+    issue = sqla_orm.relationship('Issue', back_populates='user',
+                                   lazy='noload')
+
     following = sqla_orm.relationship(
         'User', secondary=followers,
         primaryjoin=(followers.c.follower_id == id),
@@ -94,9 +96,9 @@ class User(Updateable, db.Model):
 
     def series_select(self):
         return Series.select().where(sqla_orm.with_parent(self, User.series))
-    
+
     def covers_select(id):
-         return Series.select().where(Series.id==id)
+        return Series.select().where(Series.id == id)
 
     def following_select(self):
         return User.select().where(sqla_orm.with_parent(self, User.following))
@@ -108,7 +110,7 @@ class User(Updateable, db.Model):
         return Series.select().join(
             followers, (followers.c.followed_id == Series.user_id),
             isouter=True).group_by(Series.id).filter(
-                sqla.or_(Series.author == self,
+                sqla.or_(Series.user == self,
                          followers.c.follower_id == self.id))
 
     def __repr__(self):  # pragma: no cover
@@ -204,7 +206,6 @@ class User(Updateable, db.Model):
             User.id == self.id, User.following.contains(
                 user))).one_or_none() is not None
 
-
 class Series(Updateable, db.Model):
     __tablename__ = 'series'
 
@@ -217,13 +218,16 @@ class Series(Updateable, db.Model):
     artist = sqla.Column(sqla.String(280))
     editor = sqla.Column(sqla.String(280))
     summary = sqla.Column(sqla.String(570))
-        
+    
+    issue = sqla_orm.relationship('Issue', back_populates='series',
+                                   lazy='noload')
+
     series_format = sqla.Column(sqla.String(100))
     books_count = sqla.Column(sqla.Integer)
-    
+
     read_whole = sqla.Column(sqla.Integer)
     have_whole = sqla.Column(sqla.Integer)
-    
+
     dominant_color = sqla.Column(sqla.String(280))
     slug = sqla.Column(sqla.String(280))
     thumbnail = sqla.Column(sqla.String(280))
@@ -231,81 +235,124 @@ class Series(Updateable, db.Model):
                             nullable=False)
     user_id = sqla.Column(sqla.Integer, sqla.ForeignKey(User.id), index=True)
 
-    author = sqla_orm.relationship('User', back_populates='series')
+    user = sqla_orm.relationship('User', back_populates='series')
+    
+    issue = sqla_orm.relationship('Issue', back_populates='series',lazy='noload')
+    
+    def issue_select(self):
+        return Issue.select().where(sqla_orm.with_parent(self, Series.issue))
 
     def __init__(self, *args, **kwargs):
         if not 'slug' in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
-        url = kwargs.get('thumbnail', '')
-        request = requests.get(url, stream = True)
-        ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
-        
-        if "webp" in ext:            
-            extension = ".webp"
-        elif "png" in ext:
-            extension = ".png"
-        elif "jpeg" or "jpg" in ext:
-            extension = ".jpeg"
-        
-        else:
-            print("no extensions")
-            try:
-                img = Image.open(request.raw)
-                extension = f".{img.format}"
-            except Exception as e:
-                print(url) #here you get the file causing the exception
-                print(e)
-                
-        filename = f"{uuid.uuid4()}{kwargs['slug']}{extension}"
-        
-        
-        if request.status_code == 200:
-        # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-            request.raw.decode_content = True                           
+            url = kwargs.get('thumbnail', '')
+        if  url != "noimage":  
+            request = requests.get(url, stream=True)
+            ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
 
-        # Open a local file with wb ( write binary ) permission.
-            with open(current_app.config['cover_path']+"/"+filename,'wb') as f:
-                shutil.copyfileobj(request.raw, f)
+            if "webp" in ext:
+                extension = ".webp"
+            elif "png" in ext:
+                extension = ".png"
+            elif "jpeg" or "jpg" in ext:
+                extension = ".jpeg"
 
-            print('Image sucessfully Downloaded: ',filename)
-            # dominant_color = extcolors.extract_from_path(current_app.config['cover_path']+"/"+filename)
-            # color_thief = ColorThief(current_app.config['cover_path']+"/"+filename)
-            # color_thief = ColorThief(request.raw)
-            # dominant_color = color_thief.get_color(quality=1)
-            # hex_color = '#%02x%02x%02x' % dominant_color
-            def get_dominant_color(pil_img, palette_size=16):
-                # Resize image to speed up processing
-                img = pil_img.copy()
-                img.thumbnail((100, 100))
+            else:
+                print("no extensions")
+                try:
+                    img = Image.open(request.raw)
+                    extension = f".{img.format}"
+                except Exception as e:
+                    print(url)  # here you get the file causing the exception
+                    print(e)
 
-                # Reduce colors (uses k-means internally)
-                paletted = img.convert('P', palette=Image.ADAPTIVE, colors=palette_size)
+            filename = f"{uuid.uuid4()}{kwargs['slug']}{extension}"
 
-                # Find the color that occurs most often
-                palette = paletted.getpalette()
-                color_counts = sorted(paletted.getcolors(), reverse=True)
-                print(color_counts)
-                palette_index = color_counts[0][1]
-                print(palette_index)
-                dominant_color = palette[palette_index*3:palette_index*3+3]
+            if request.status_code == 200:
+                # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
+                request.raw.decode_content = True
 
-                return dominant_color
-            
-            im = Image.open(current_app.config['cover_path']+"/"+filename) 
-            
-            print((get_dominant_color(im)))
-            # print(check)
-            kwargs['dominant_color'] = f"{get_dominant_color(im)[0],get_dominant_color(im)[1],get_dominant_color(im)[2]}"
-            kwargs['thumbnail'] = filename
-        else:
-            print('Image Couldn\'t be retreived')
-        
-        
+            # Open a local file with wb ( write binary ) permission.
+                with open(current_app.config['cover_path']+"/"+filename, 'wb') as f:
+                    shutil.copyfileobj(request.raw, f)
+
+                print('Image sucessfully Downloaded: ', filename)
+
+                def get_dominant_color(pil_img, palette_size=16):
+                    # Resize image to speed up processing
+                    img = pil_img.copy()
+                    img.thumbnail((100, 100))
+
+                    # Reduce colors (uses k-means internally)
+                    paletted = img.convert(
+                        'P', palette=Image.ADAPTIVE, colors=palette_size)
+
+                    # Find the color that occurs most often
+                    palette = paletted.getpalette()
+                    color_counts = sorted(paletted.getcolors(), reverse=True)
+                    palette_index = color_counts[0][1]
+                    dominant_color = palette[palette_index*3:palette_index*3+3]
+                    i=0
+                    while i<len(color_counts): 
+                        palette = paletted.getpalette()
+                        color_counts = sorted(paletted.getcolors(), reverse=True)
+                        palette_index = color_counts[i][1]
+                        dominant_color = palette[palette_index*3:palette_index*3+3]
+                        if dominant_color[0] >100 or dominant_color[0] >100 or dominant_color[0] >100:     
+                            return dominant_color
+                        else:
+                            i+=1
+
+                im = Image.open(current_app.config['cover_path']+"/"+filename)
+
+                # print((get_dominant_color(im)))
+                # print(check)
+                kwargs['dominant_color'] = f"{get_dominant_color(im)[0],get_dominant_color(im)[1],get_dominant_color(im)[2]}"
+                kwargs['thumbnail'] = filename
+            else:
+                print('Image Couldn\'t be retreived')
+
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return '<Series {}>'.format(self.text,self.thumbnail,self.slug)
+        return '<Series {}>'.format(self.title, self.thumbnail, self.slug)
 
     @property
     def url(self):
         return url_for('series.get', id=self.id)
+
+
+class Issue(Updateable, db.Model):
+    __tablename__ = 'issue'
+
+    id = sqla.Column(sqla.Integer, primary_key=True)
+    title = sqla.Column(sqla.String(280), nullable=False)
+    slug = sqla.Column(sqla.String(280))
+
+    read_whole = sqla.Column(sqla.Integer)
+    have_whole = sqla.Column(sqla.Integer)
+
+    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
+                            nullable=False)
+
+    series_id = sqla.Column(
+        sqla.Integer, sqla.ForeignKey(Series.id), index=True)
+
+    user_id = sqla.Column(sqla.Integer, sqla.ForeignKey(User.id), index=True)
+
+    user = sqla_orm.relationship('User', back_populates='issue')
+
+    series = sqla_orm.relationship('Series', back_populates='issue')
+
+    def __init__(self, *args, **kwargs):
+        if not 'slug' in kwargs:
+            kwargs['slug'] = slugify(kwargs.get('title', ''))
+
+        super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return '<Issue {}>'.format(self.slug)
+
+    @property
+    def url(self):
+        return url_for('issue.get', id=self.id)

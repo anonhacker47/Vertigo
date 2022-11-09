@@ -1,6 +1,6 @@
 import os
 from pstats import SortKey
-from flask import current_app
+from flask import current_app, jsonify
 import sqlite3
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
@@ -26,7 +26,7 @@ update_series_schema = SeriesSchema(partial=True)
 def new(args):
     """Create a new series"""
     user = token_auth.current_user()
-    series = Series(author=user, **args)
+    series = Series(user=user, **args)
     db.session.add(series)
     db.session.commit()
     return series
@@ -72,7 +72,7 @@ def user_all(id):
 def put(data, id):
     """Edit a series"""
     series = db.session.get(Series, id) or abort(404)
-    if series.author != token_auth.current_user():
+    if series.user != token_auth.current_user():
         abort(403)
     series.update(data)
     db.session.commit()
@@ -85,7 +85,7 @@ def put(data, id):
 def delete(id):
     """Delete a series"""
     series = db.session.get(Series, id) or abort(404)
-    if series.author != token_auth.current_user():
+    if series.user != token_auth.current_user():
         abort(403)
     thumbnail =  series.thumbnail    
     db.session.delete(series)
@@ -101,8 +101,8 @@ def delete(id):
 
 @series.route('/feed', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(multi_series_schema, order_by=Series.title,
-                    order_direction='asc',
+@paginated_response(multi_series_schema, order_by=Series.timestamp,
+                    order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
 def feed():
     """Retrieve the user's series feed"""
@@ -114,5 +114,17 @@ def feed():
 def upload(id):
     """Retrieve series image"""
     series = db.session.get(Series, id)
-    print(series.thumbnail)
-    return send_file(current_app.config['cover_path']+f"\\{series.thumbnail}")
+    if series.thumbnail == "noimage":
+        return jsonify("noimage")
+    else:
+        return send_file(current_app.config['cover_path']+f"\\{series.thumbnail}")
+
+@series.route('/series/key', methods=['GET'])
+@authenticate(token_auth)
+def key():
+    """Retrieve series key"""
+    obj = db.session.query(Series).order_by(Series.id.desc()).first()
+    if obj is None:
+        return jsonify("0")
+    else:
+        return jsonify(f"{obj.id}")

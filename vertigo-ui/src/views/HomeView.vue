@@ -153,7 +153,7 @@
             :class="{ 'animate-wiggle': deleteMode }"
             :name="card.title"
             class="h-full w-full"
-            :src="CardGetterService.getimagebyid(card.id)"
+            :src="SeriesService.getImagebyId(card.id)"
             :grid="selectedGrid"
             :key="selectedGrid"
             :format="card.series_format"
@@ -188,15 +188,17 @@
 import HeaderItem from "../components/HeaderItem.vue";
 import SliderCardItem from "../components/cards/SliderCardItem.vue";
 import { onMounted, ref } from "vue";
-import CardGetterService from "../services/CardGetterService";
+import SeriesService from "../services/SeriesService";
 import TokenService from "../services/TokenService";
 import PanelCardItem from "../components/cards/PanelCardItem.vue";
 import ActionButtonItem from "../components/buttons/ActionButtonItem.vue";
 import { id, order } from "@formkit/i18n";
 import { applyListeners } from "@formkit/observer";
+import { useUserStore } from "../store/user";
 
 const cards = ref();
-const imageDataUrl = ref();
+const userstore = useUserStore();
+const userId = userstore.userId;
 const message = ref();
 const deleteMode = ref(false);
 const headers = TokenService.getTokenHeader();
@@ -210,7 +212,7 @@ const orderdir = ref("desc");
 // cardHeight for mobile devices
 // cardHeightMD for larger devices
 
-let cardHeightMultiplierMD = [70, 70, 70, 55, 48, 42, 38, 35, 32];
+let cardHeightMultiplierMD = [70, 70, 70, 56, 48, 42, 38, 35, 32];
 let cardWidthMultiplierMD = [22, 22, 22, 19, 18, 16, 12, 10, 12];
 const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
 const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2]);
@@ -228,8 +230,8 @@ async function deleteCard(id) {
   );
 
   try {
-    const response = await CardGetterService.removepost(id, { headers });
-    console.log("removed");
+    const response = await SeriesService.removeSeries(id, { headers });
+    setPrimaryKey();
   } catch (error) {
     message.value = error;
   }
@@ -241,10 +243,21 @@ function toggleDelete() {
   deleteMode.value = !deleteMode.value;
 }
 
+async function setPrimaryKey() {
+  try {
+    const response = await SeriesService.getSeriesKey(
+      { headers }
+          );
+    localStorage.setItem("key",response.data)
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 // async function getPostImages(id){
 //   console.log(id);
 //   try {
-//   const response = await CardGetterService.getimagebyid(
+//   const response = await SeriesService.getimagebyid(
 //     id,{headers}
 //   )
 //   .then(function (response) {
@@ -259,13 +272,14 @@ function toggleDelete() {
 
 async function getCards() {
   try {
-    const response = await CardGetterService.getcards(
+    const response = await SeriesService.getSeries(
       { headers },
+      userId,
       orderby.value,
       orderdir.value
     );
     cards.value = response.data.data;
-    console.log(cards);
+    console.log(cards.value);
     // console.log(response);
   } catch (error) {
     message.value = error;

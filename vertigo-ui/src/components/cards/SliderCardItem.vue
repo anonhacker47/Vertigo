@@ -6,8 +6,9 @@
         class="h-full rounded md:rounded-lg w-full justify-center hvr-bounce-in items-end text-center border-solid border-b-[12px] border-green-400"
       >
         <img
-          v-if="src != string"
+          v-if="src != Image"
           :src="src"
+          @error="src = Image"
           alt=""
           class="slideritem h-full w-full md:rounded-t-lg"
         />
@@ -17,14 +18,14 @@
           :class="{ 'opacity-60': active }"
         ></div>
         <p
-          v-if="active || src == string"
-          class="absolute md:text-xl name text-sm leading-none pb-2 break-words"
+          v-if="active || src == Image"
+          class="absolute md:text-xl name text-sm leading-none uppercase pb-2 break-words"
           :class="
-            (src == string ? 'top-1/2' : '',
+            (src == Image ? 'top-1/2' : '',
             `md:max-w-[${textwidthMD / 2}vw]`,
             `max-w-[${textwidth / 2}vw]`)
           "
-          :style="src == string ? `top: 50%;` : ''"
+          :style="src == Image ? `top: 50%;` : ''"
         >
           {{ name }}
         </p>
@@ -53,7 +54,7 @@ const props = defineProps({
   textwidthMD: Number,
 });
 
-let string = "string";
+let Image = "noimage";
 
 const active = ref(false);
 

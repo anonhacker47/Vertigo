@@ -44,7 +44,9 @@ def create_app(config_class=Config):
     from api.users import users
     app.register_blueprint(users, url_prefix='/api')
     from api.series import series
-    app.register_blueprint(series, url_prefix='/api')
+    app.register_blueprint(series, url_prefix='/api') 
+    from api.issue import issues
+    app.register_blueprint(issues, url_prefix='/api') 
 
     # define the shell context
     @app.shell_context_processor

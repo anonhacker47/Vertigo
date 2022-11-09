@@ -25,4 +25,4 @@ vertigo-backend/*,cover
 vertigo-backend/Config/
 vertigo-backend/api/__pycache__/
 vertigo-backend/__pycache__/
-
+vscode/*
