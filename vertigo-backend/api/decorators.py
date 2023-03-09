@@ -37,8 +37,19 @@ def paginated_response(schema, max_limit=25, order_by=None,
             select_query = f(*args, **kwargs)
             print(order_by)
             if order_by is not None:
-                o = order_by.desc() if order_direction == 'desc' else order_by
+                
+                if "Issue" in str(order_by):
+                                
+                    o = sqla.cast(order_by, sqla.Integer()).desc() if order_direction == 'desc' else sqla.cast(order_by, sqla.Integer())
+
+                else:
+                    
+                    o = order_by.desc() if order_direction == 'desc' else order_by
+
+
                 select_query = select_query.order_by(o)
+                # print(select_query)
+                
             count = db.session.scalar(sqla.select(
                 sqla.func.count()).select_from(select_query))
 
