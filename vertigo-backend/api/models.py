@@ -45,6 +45,12 @@ class Token(db.Model):
 
     user = sqla_orm.relationship('User', back_populates='tokens')
 
+    @property
+    def access_token_jwt(self):
+        return jwt.encode({'token': self.access_token},
+                          current_app.config['SECRET_KEY'],
+                          algorithm='HS256')
+
     def generate(self):
         self.access_token = secrets.token_urlsafe()
         self.access_expiration = datetime.utcnow() + \
@@ -64,6 +70,18 @@ class Token(db.Model):
         db.session.execute(Token.delete().where(
             Token.refresh_expiration < yesterday))
 
+    @staticmethod
+    def from_jwt(access_token_jwt):
+        access_token = None
+        try:
+            access_token = jwt.decode(access_token_jwt,
+                                      current_app.config['SECRET_KEY'],
+                                      algorithms=['HS256'])['token']
+            return db.session.scalar(Token.select().filter_by(
+                access_token=access_token))
+        except jwt.PyJWTError:
+            pass
+
 
 class User(Updateable, db.Model):
     __tablename__ = 'users'
@@ -81,7 +99,7 @@ class User(Updateable, db.Model):
     series = sqla_orm.relationship('Series', back_populates='user',
                                    lazy='noload')
     issue = sqla_orm.relationship('Issue', back_populates='user',
-                                   lazy='noload')
+                                  lazy='noload')
 
     following = sqla_orm.relationship(
         'User', secondary=followers,
@@ -145,9 +163,8 @@ class User(Updateable, db.Model):
         return token
 
     @staticmethod
-    def verify_access_token(access_token, refresh_token=None):
-        token = db.session.scalar(Token.select().filter_by(
-            access_token=access_token))
+    def verify_access_token(access_token_jwt, refresh_token=None):
+        token = Token.from_jwt(access_token_jwt)
         if token:
             if token.access_expiration > datetime.utcnow():
                 token.user.ping()
@@ -155,10 +172,9 @@ class User(Updateable, db.Model):
                 return token.user
 
     @staticmethod
-    def verify_refresh_token(refresh_token, access_token):
-        token = db.session.scalar(Token.select().filter_by(
-            refresh_token=refresh_token, access_token=access_token))
-        if token:
+    def verify_refresh_token(refresh_token, access_token_jwt):
+        token = Token.from_jwt(access_token_jwt)
+        if token and token.refresh_token == refresh_token:
             if token.refresh_expiration > datetime.utcnow():
                 return token
 
@@ -206,6 +222,7 @@ class User(Updateable, db.Model):
             User.id == self.id, User.following.contains(
                 user))).one_or_none() is not None
 
+
 class Series(Updateable, db.Model):
     __tablename__ = 'series'
 
@@ -218,9 +235,9 @@ class Series(Updateable, db.Model):
     artist = sqla.Column(sqla.String(280))
     editor = sqla.Column(sqla.String(280))
     summary = sqla.Column(sqla.String(570))
-    
+
     issue = sqla_orm.relationship('Issue', back_populates='series',
-                                   lazy='noload')
+                                  lazy='noload')
 
     series_format = sqla.Column(sqla.String(100))
     books_count = sqla.Column(sqla.Integer)
@@ -236,9 +253,10 @@ class Series(Updateable, db.Model):
     user_id = sqla.Column(sqla.Integer, sqla.ForeignKey(User.id), index=True)
 
     user = sqla_orm.relationship('User', back_populates='series')
-    
-    issue = sqla_orm.relationship('Issue', back_populates='series',lazy='noload')
-    
+
+    issue = sqla_orm.relationship(
+        'Issue', back_populates='series', lazy='noload')
+
     def issue_select(self):
         return Issue.select().where(sqla_orm.with_parent(self, Series.issue))
 
@@ -246,7 +264,7 @@ class Series(Updateable, db.Model):
         if not 'slug' in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
             url = kwargs.get('thumbnail', '')
-        if  url != "noimage":  
+        if url != "noimage":
             request = requests.get(url, stream=True)
             ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
 
@@ -277,11 +295,11 @@ class Series(Updateable, db.Model):
                     shutil.copyfileobj(request.raw, f)
 
                 print('Image sucessfully Downloaded: ', filename)
-                
+
                 def increase_brightness(color):
                     for i in range(len(color)):
-                     if 100< color[i] <150 :
-                        color[i] += 50
+                        if 100 < color[i] < 150:
+                            color[i] += 50
                     return color
 
                 def get_dominant_color(pil_img, palette_size=16):
@@ -298,17 +316,20 @@ class Series(Updateable, db.Model):
                     color_counts = sorted(paletted.getcolors(), reverse=True)
                     palette_index = color_counts[0][1]
                     dominant_color = palette[palette_index*3:palette_index*3+3]
-                    i=0
-                    while i<len(color_counts): 
+                    i = 0
+                    while i < len(color_counts):
                         palette = paletted.getpalette()
-                        color_counts = sorted(paletted.getcolors(), reverse=True)
+                        color_counts = sorted(
+                            paletted.getcolors(), reverse=True)
                         palette_index = color_counts[i][1]
-                        dominant_color = palette[palette_index*3:palette_index*3+3]
-                        if dominant_color[0] >100 or dominant_color[1] >100 or dominant_color[2] >100:
-                            dominant_color = increase_brightness(dominant_color)     
+                        dominant_color = palette[palette_index *
+                                                 3:palette_index*3+3]
+                        if dominant_color[0] > 100 or dominant_color[1] > 100 or dominant_color[2] > 100:
+                            dominant_color = increase_brightness(
+                                dominant_color)
                             return dominant_color
                         else:
-                            i+=1
+                            i += 1
 
                 im = Image.open(current_app.config['cover_path']+"/"+filename)
 
