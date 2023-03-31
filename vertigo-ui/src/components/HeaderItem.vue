@@ -51,7 +51,7 @@
 
             <ul
               tabindex="0"
-              class="dropdown-content right-0 menu p-2 shadow bg-base-200 text-white rounded-box w-52"
+              class="dropdown-content right-0 hover:z-50 menu p-2 shadow bg-base-200 text-white rounded-box w-52"
             >
               <li>
                 <RouterLink tag="li" to="/login" class="hover:text-blue-400 "> Settings</RouterLink>
@@ -79,6 +79,7 @@ const route = useRouter();
 function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("isUserLoggedIn");
+  localStorage.removeItem("userId");
   userStore.isUserLoggedIn = false
   userStore.userId = null
   route.push("/");

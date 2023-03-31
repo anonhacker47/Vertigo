@@ -42,8 +42,8 @@ def get(id):
 
 @issues.route('/series/issues/', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(issues_schema, order_by=Issue.timestamp,
-                    order_direction='desc',
+@paginated_response(issues_schema, order_by=Issue.title,
+                    order_direction='asc',
                     pagination_schema=DateTimePaginationSchema)
 def all():
     """Retrieve all issues"""

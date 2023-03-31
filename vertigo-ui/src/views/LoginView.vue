@@ -67,9 +67,9 @@ async function login(values) {
       try {
         const response = await AuthenticationService.getUser(
           { headers },);
-        userStore.userId = response.data.id
+        userStore.addUser(response.data.id)
       } catch (error) {
-        message.value = error;
+        message.value = response;
       }
       route.push("home");
     } else {

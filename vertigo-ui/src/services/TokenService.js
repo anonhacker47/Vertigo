@@ -13,4 +13,8 @@ export default {
     const token = localStorage.getItem("token");
     return token;
   },
+  getUser() {
+    const user = localStorage.getItem("userId");
+    return user;
+  },
 };

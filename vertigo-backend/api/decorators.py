@@ -37,21 +37,15 @@ def paginated_response(schema, max_limit=25, order_by=None,
             select_query = f(*args, **kwargs)
             print(order_by)
             if order_by is not None:
-                
                 if "Issue" in str(order_by):
-                                
-                    o = sqla.cast(order_by, sqla.Integer()).desc() if order_direction == 'desc' else sqla.cast(order_by, sqla.Integer())
-
+                    o = sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer()).desc() if order_direction == 'desc' else sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer()).asc()                        # Convert the volume number to an integer for proper sorting
                 else:
-                    
                     o = order_by.desc() if order_direction == 'desc' else order_by
-
-
                 select_query = select_query.order_by(o)
-                # print(select_query)
-                
-            count = db.session.scalar(sqla.select(
-                sqla.func.count()).select_from(select_query))
+                            # print(select_query)
+
+                count = db.session.scalar(sqla.select(
+                    sqla.func.count()).select_from(select_query))
 
             limit = pagination.get('limit', max_limit)
             offset = pagination.get('offset')

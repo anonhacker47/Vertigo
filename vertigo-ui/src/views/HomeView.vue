@@ -29,7 +29,7 @@
           </svg></label>
         <div
           tabindex="0"
-          class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-80"
+          class="dropdown-content card p-2 ml-[-80px] md:ml-0 shadow bg-base-100 rounded-box w-64 md:w-80"
         >
           <label class="label">
             <span class="font-bold text-lg text-sky-200 text-grey-500"
@@ -39,7 +39,7 @@
           <label class="label self-center pt-0">
             <span class="text-slate-200 text-sm">Items per line</span>
           </label>
-          <div class="px-5">
+          <div v-if="getScreenWidth() >= `500`" class="px-5">
             <input
               @change="changeGrid"
               type="range"
@@ -50,7 +50,7 @@
               step="1"
             />
           </div>
-          <div class="w-full flex justify-between text-xs px-5">
+          <div v-if="getScreenWidth() >= `500`" class="w-full flex justify-between text-xs px-5">
             <span>2</span>
             <span>3</span>
             <span>4</span>
@@ -60,6 +60,23 @@
             <span>8</span>
             <span>9</span>
             <span>10</span>
+          </div>
+          <div v-if="getScreenWidth() < `500`" class="px-5">
+            <input
+              @change="changeGrid"
+              type="range"
+              min="2"
+              max="5"
+              :value="selectedGrid"
+              class="range range-xs"
+              step="1"
+            />
+          </div>
+          <div v-if="getScreenWidth() < `500`" class="w-full flex justify-between text-xs px-5">
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
           </div>
           <div class="flex justify-between">
             <label class="label">
@@ -195,10 +212,12 @@ import ActionButtonItem from "../components/buttons/ActionButtonItem.vue";
 import { id, order } from "@formkit/i18n";
 import { applyListeners } from "@formkit/observer";
 import { useUserStore } from "../store/user";
+import { useWindowSize } from 'vue-window-size';
 
+const { width } = useWindowSize();
 const cards = ref();
 const userstore = useUserStore();
-const userId = userstore.userId;
+const userId = TokenService.getUser();
 const message = ref();
 const deleteMode = ref(false);
 const headers = TokenService.getTokenHeader();
@@ -207,6 +226,7 @@ const selectedGrid = ref(
 );
 const orderby = ref("timestamp");
 const orderdir = ref("desc");
+
 
 // Custom heights and width for each column vallues
 // cardHeight for mobile devices
@@ -283,6 +303,7 @@ async function getCards() {
     // console.log(response);
   } catch (error) {
     message.value = error;
+    console.log(error);
   }
 }
 
@@ -307,6 +328,11 @@ function sortByProperties(values) {
   getCards();
 }
 
+function getScreenWidth() {
+  const windowWidth = width.value;
+  return windowWidth;
+}
+
 onMounted(() => {
   getCards();
 });
@@ -324,6 +350,10 @@ onMounted(() => {
 input:checked + label {
   border: 2px;
   color: #38bdf8;
+}
+
+.drp{
+  margin-left: -84px;
 }
 
 .range::-moz-range-thumb {

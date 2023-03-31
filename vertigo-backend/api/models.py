@@ -277,6 +277,12 @@ class Series(Updateable, db.Model):
                     shutil.copyfileobj(request.raw, f)
 
                 print('Image sucessfully Downloaded: ', filename)
+                
+                def increase_brightness(color):
+                    for i in range(len(color)):
+                     if 100< color[i] <150 :
+                        color[i] += 50
+                    return color
 
                 def get_dominant_color(pil_img, palette_size=16):
                     # Resize image to speed up processing
@@ -298,15 +304,17 @@ class Series(Updateable, db.Model):
                         color_counts = sorted(paletted.getcolors(), reverse=True)
                         palette_index = color_counts[i][1]
                         dominant_color = palette[palette_index*3:palette_index*3+3]
-                        if dominant_color[0] >100 or dominant_color[0] >100 or dominant_color[0] >100:     
+                        if dominant_color[0] >100 or dominant_color[1] >100 or dominant_color[2] >100:
+                            dominant_color = increase_brightness(dominant_color)     
                             return dominant_color
                         else:
                             i+=1
 
                 im = Image.open(current_app.config['cover_path']+"/"+filename)
 
-                # print((get_dominant_color(im)))
+                print((get_dominant_color(im)))
                 # print(check)
+
                 kwargs['dominant_color'] = f"{get_dominant_color(im)[0],get_dominant_color(im)[1],get_dominant_color(im)[2]}"
                 kwargs['thumbnail'] = filename
             else:
