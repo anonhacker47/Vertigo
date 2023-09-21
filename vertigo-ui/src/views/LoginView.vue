@@ -48,25 +48,16 @@ const auth = ref();
 
 
 async function login(values) {
-  const encoded_credentials =
-    btoa(values.username) + btoa(":" + values.password);
-
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Basic ${encoded_credentials}`,
-  };
-
   try {
-    const response = await AuthenticationService.login({
-      headers,
-    });
-    console.log(response);
+    const response = await AuthenticationService.login(values.username,values.password);
+
+
     userStore.addToken(response.data.access_token);
+
     if (localStorage.getItem("token")) {
       const headers = TokenService.getTokenHeader();
       try {
-        const response = await AuthenticationService.getUser(
-          { headers },);
+        const response = await AuthenticationService.getUser();
         userStore.addUser(response.data.id)
       } catch (error) {
         message.value = response;

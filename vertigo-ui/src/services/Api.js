@@ -1,65 +1,65 @@
 import axios from "axios";
+import router from "../router";
 
 export default () => {
-  var axiosInstance = axios.create({
-    withCredentials: true,
-    baseURL: `${import.meta.env.VITE_Base_URL}/api/`,
+  const axiosInstance = axios.create({
+    baseURL: `${import.meta.env.VITE_Base_URL}/api`,
+    withCredentials: false,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
-  // axiosInstance.interceptors.request.use(
-  //   function (config) {
-  //     // Do something before request is sent
+  const refreshAxiosInstance = axios.create({
+    baseURL: `${import.meta.env.VITE_Base_URL}/api`,
+    withCredentials: true,
+  });
 
-  //     return config;
-  //   },
+  axiosInstance.interceptors.request.use((config) => {
+    return config;
+  });
 
-  //   function (error) {
-  //     // Do something with request error
+  axiosInstance.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    async (error) => {
+      const originalRequest = error.config;
 
-  //     return Promise.reject(error);
-  //   }
-  // );
+      if (error.response.status === 401 && originalRequest.url != "tokens") {
+        console.log("Token Expired Refreshing");
+        try {
+          const token = localStorage.getItem("token");
+          console.log("old token", token);
 
-  // // Add a response interceptor
+          const response = await refreshAxiosInstance.put("tokens", {
+            access_token: token,
+          });
 
-  // axiosInstance.interceptors.response.use(
-  //   function (response) {
-  //     // Any status code that lie within the range of 2xx cause this function to trigger
+          if (response.data.access_token) {
+            const newToken = response.data.access_token;
 
-  //     // Do something with response data
+            console.log("nrw token", newToken);
 
-  //     return response;
-  //   },
+            originalRequest.headers["Authorization"] = "Bearer " + newToken;
 
-  //   async function (error) {
-  //     // Any status codes that falls outside the range of 2xx cause this function to trigger
-  //     // Do something with response error
-      
-  //     if (error.response.status == 401) {
+            localStorage.setItem("token", newToken);
 
-  //       const originalConfig = error.config;
-  //       console.log("Token Expired, Refreshing");
+            return await axiosInstance(originalRequest);
+          }
+        } catch (err) {
+          localStorage.clear();
+          router.push("/login");
+          return Promise.reject(error);
+        }
+      } else {
+        console.log(error);
+      }
 
-  //       try {
-  //         const response = await axiosInstance
-  //           .put("tokens", {
-  //             access_token: localStorage.getItem("token"),
-  //           });
-  //         localStorage.setItem("token", response.data.access_token);
-  //         originalConfig.headers["Authorization"] =
-  //           "Bearer " + response.data.access_token;
-  //         return await axiosInstance(originalConfig);
-  //       } catch (err) {
-  //         console.error(err);
-  //       }
-  //       }
-  //       else{
-  //         console.log(error);
-  //       }
+      return Promise.reject(error);
+    }
+  );
 
-  //       return Promise.reject(error);
-      
-  //   }
-  // );
   return axiosInstance;
 };
