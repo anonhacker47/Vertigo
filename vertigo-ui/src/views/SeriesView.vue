@@ -195,7 +195,7 @@
 <style scoped></style>
 
 <script setup>
-import { onMounted, ref,reactive } from "vue";
+import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueCarditem from "../components/cards/IssueCarditem.vue";

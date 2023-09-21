@@ -5,18 +5,17 @@ import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-		vue(),
-	],
+  plugins: [vue()],
   resolve: {
     alias: {
       "src": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
   build: {
-    outDir: '../vertigo-backend/api/wwwroot',
-    assetsDir: "static" 
+    outDir: "../vertigo-backend/api/wwwroot",
+    assetsDir: "static",
   },
+
   server: {
     host: false
   }   
