@@ -46,8 +46,8 @@
           >
             <h1
               class="flex pb-5 lg:px-20 md:px-10 px-5 lg:mx-40 md:mx-20 mx-5 font-bold text-4xl"
-              :style="`color: rgb${themecolor}`"            
-              >
+              :style="`color: rgb${themecolor}`"
+            >
               Issues
             </h1>
             <div class="flex overflow-x-scroll pb-10 hide-scroll-bar">
@@ -60,18 +60,21 @@
                   <div class="inline-block px-3">
                     <div
                       class="md:h-[35vh] flex md:w-[12vw] rounded-lg ml-4 border-2 justify-center bg-cover items-center transition-shadow duration-300 ease-in-out"
-                      :style="`background-image: ${'url(' + image + ')'}; border-color: rgb${themecolor}`"
-                    > 
-             <div
-      class="h-full w-full justify-center items-center rounded-lg flex"
-      :style="`background: rgba(25,18,43,0.7);`"
-    >       <p
-          class="md:text-xl text-white text-sm leading-none uppercase pb-2 break-words"
-        >
-          {{ issue.title }}
-        </p></div>
-        
-                  </div>
+                      :style="`background-image: ${
+                        'url(' + image + ')'
+                      }; border-color: rgb${themecolor}`"
+                    >
+                      <div
+                        class="h-full w-full justify-center items-center rounded-lg flex"
+                        :style="`background: rgba(25,18,43,0.7);`"
+                      >
+                        <p
+                          class="md:text-xl text-white text-sm leading-none uppercase pb-2 break-words"
+                        >
+                          {{ issue.title }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -86,7 +89,7 @@
 <style scoped></style>
 
 <script setup>
-import { onMounted, ref,reactive } from "vue";
+import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
 import SeriesService from "../services/SeriesService";
@@ -107,8 +110,8 @@ const props = defineProps({
 
 const issuestyle = reactive({
   borderColor: `rgb${themecolor}`,
-  backgroundImage: `${'url(' + image + ')'}`
-})
+  backgroundImage: `${"url(" + image + ")"}`,
+});
 
 async function getSeries() {
   try {

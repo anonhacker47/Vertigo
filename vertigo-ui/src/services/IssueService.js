@@ -4,8 +4,8 @@ export default {
   getIssues(token,id,orderby,orderdir) {
     return Api().get(`series/${id}/issues?orderby=${orderby}&orderdir=${orderdir}`,token);
   },
-  addIssues(id,headers,data) {
-    return Api().post(`series/${id}/issues`,headers,data);
+  addIssues(id,data) {
+    return Api().post(`series/${id}/issues`,data);
   },
   // removeSeries(data, headers) {
   //   return Api().delete(`series/${data}`, headers);

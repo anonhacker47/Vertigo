@@ -26,3 +26,4 @@ vertigo-backend/Config/
 vertigo-backend/api/__pycache__/
 vertigo-backend/__pycache__/
 vscode/*
+vertigo-backend/__pycache__/config.cpython-310.pyc

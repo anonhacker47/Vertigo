@@ -5,13 +5,10 @@ export const useUserStore = defineStore("user",{
         isUserLoggedIn:false,
         userId:null
     }),
-    // persist: true,
     actions: {
         addToken(token) {
             localStorage.setItem('token',token);
             localStorage.setItem('isUserLoggedIn',true)
-            
-            this.isUserLoggedIn = localStorage.getItem('isUserLoggedIn')
         },
         addUser(userId) {
             this.userId = userId

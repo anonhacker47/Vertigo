@@ -7,14 +7,14 @@ export default {
       token
     );
   },
-  addSeries(data, headers) {
-    return Api().post("series", data, headers);
+  addSeries(data) {
+    return Api().post("series", data);
   },
-  removeSeries(data, headers) {
-    return Api().delete(`series/${data}`, headers);
+  removeSeries(data) {
+    return Api().delete(`series/${data}`);
   },
-  getSeriesbyId(id, headers) {
-    return Api().get(`series/${id}`, headers);
+  getSeriesbyId(id) {
+    return Api().get(`series/${id}`);
   },
   getImagebyId(id) {
     return Api().defaults.baseURL + `/series/images/${id}`;
