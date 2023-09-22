@@ -7,7 +7,6 @@
       class="flex flex-col min-h-screen min-w-screen"
       :style="`background: rgba(18,25,43,0.95);`"
     >
-      <!-- <div class="min-h-screen" :style="`background-color: rgba${bg}`"> -->
       <HeaderItem />
       <div class="flex flex-col grow">
         <div class="flex flex-row basis-1/2">
@@ -37,8 +36,62 @@
                 {{ series.summary }}
               </p>
             </div>
-          </div>
-          <div class="basis-1/2"></div>
+          </div><div class="class flex flex-col flex-grow mr-8 mt-8 mb-6">
+
+            <div class="class flex flex-row"></div>
+
+          
+          <div
+            class="flex flex-row  flex-grow justify-around items-center">
+            
+              <!-- Column 1 -->
+              <div
+                class="flex flex-col align-middle self-center h-full justify-around items-start"
+              >
+                <DetailCardItem
+                  :icon="publisherUrl"
+                  field="Publisher"
+                  :detail="series.publisher"
+                />
+                <DetailCardItem
+                  :icon="genreUrl"
+                  field="Genre"
+                  :detail="series.genre"
+                />
+              </div>
+
+              <!-- Column 2 -->
+              <div
+                class="flex flex-col align-middle h-full justify-around items-start"
+              >
+                <DetailCardItem
+                  :icon="teamUrl"
+                  field="Main Character/Team"
+                  :detail="series.main_char"
+                />
+                <DetailCardItem
+                  :icon="teamUrl"
+                  field="Writer"
+                  :detail="series.writer"
+                />
+              </div>
+
+              <!-- Column 3 -->
+              <div
+                class="flex flex-col align-middle h-full justify-around items-start"
+              >
+                <DetailCardItem
+                  :icon="teamUrl"
+                  field="Artist"
+                  :detail="series.artist"
+                />
+                <DetailCardItem
+                  :icon="teamUrl"
+                  field="Editor"
+                  :detail="series.editor"
+                />
+              </div>
+          </div></div>
         </div>
         <div class="flex flex-col basis-1/2">
           <div
@@ -57,25 +110,11 @@
                   v-for="issue in issues"
                   :key="issue"
                 >
-                  <div class="inline-block px-3">
-                    <div
-                      class="md:h-[35vh] flex md:w-[12vw] rounded-lg ml-4 border-2 justify-center bg-cover items-center transition-shadow duration-300 ease-in-out"
-                      :style="`background-image: ${
-                        'url(' + image + ')'
-                      }; border-color: rgb${themecolor}`"
-                    >
-                      <div
-                        class="h-full w-full justify-center items-center rounded-lg flex"
-                        :style="`background: rgba(25,18,43,0.7);`"
-                      >
-                        <p
-                          class="md:text-xl text-white text-sm leading-none uppercase pb-2 break-words"
-                        >
-                          {{ issue.title }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <IssueCarditem
+                    :image="image"
+                    :themecolor="themecolor"
+                    :title="issue.title"
+                  />
                 </div>
               </div>
             </div>
@@ -92,9 +131,15 @@
 import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
+import IssueCarditem from "../components/cards/IssueCarditem.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import TokenService from "../services/TokenService";
+import DetailCardItem from "../components/cards/DetailCardItem.vue";
+
+const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
+const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
+const teamUrl = new URL("../assets/group.png", import.meta.url).href;
 
 const headers = TokenService.getTokenHeader("");
 const route = useRoute("");
@@ -139,7 +184,6 @@ async function getIssues() {
     issues.value = response.data.data;
     console.log(issues);
   } catch (error) {
-    // message.value = error;
     console.log(error);
   }
 }
@@ -150,11 +194,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hide-scroll-bar {
+/* .hide-scroll-bar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .hide-scroll-bar::-webkit-scrollbar {
   display: none;
-}
+} */
 </style>
