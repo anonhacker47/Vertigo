@@ -229,7 +229,7 @@ async function createSeries() {
       },
     );
     if (books_count.value>0) {
-      iterateIssues(books_count.value);
+      addIssues();
     } else {
       console.log("nothing to add");
     }
@@ -251,24 +251,15 @@ async function getPrimaryKey() {
   }
 }
 
-function iterateIssues(count) {
-  for (var i = 0; i < count; i++) {
-    var bookname = `Volume ${i}`;
-    addIssues(bookname);
-    console.log(`Book ${i} Added`);
-  }
-}
-
-async function addIssues(bookname) {
+async function addIssues() {
   var key = await getPrimaryKey();
-  console.log(key);
   try {
     const response = await IssueService.addIssues(
       key,
       {
-        title: bookname,
-        read_whole: 0,
-        have_whole: 0,
+        title: "title",
+        read_whole: 1,
+        have_whole: 1,
       },
     );
   } catch (error) {

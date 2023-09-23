@@ -376,6 +376,7 @@ class Issue(Updateable, db.Model):
     def __init__(self, *args, **kwargs):
         if not 'slug' in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
+        
 
         super().__init__(*args, **kwargs)
 
