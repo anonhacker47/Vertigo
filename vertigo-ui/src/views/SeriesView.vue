@@ -1,7 +1,7 @@
 <template>
   <div class="top-0 right-0 bottom-0 left-0 bg-no-repeat bg-center bg-cover"
     :style="{ backgroundImage: 'url(' + image + ')' }">
-    <div class="flex flex-col min-h-screen min-w-screen" :style="`background: rgba(18,25,43,0.95);`">
+    <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
       <HeaderItem />
 
       <div class="flex justify-end items-center py-4 pr-20 border-b border-slate-700">
@@ -31,9 +31,10 @@
         </div>
       </div>
 
-      <div class="flex flex-col grow">
-        <div class="flex flex-row basis-1/2">
-          <div class="flex flex-row pb-6 basis-1/2 z-50">
+      <div class="flex flex-row grow">
+        <div class="flex flex-row pb-6 pr-7 basis-1/2">
+          <div class="flex flex-row">
+
             <img v-if="image != Image" :src="image" alt="" class="md:h-[45vh] md:w-[15vw] rounded-lg mt-8 ml-16 border-2"
               :style="`border-color: rgb${themecolor}`" @error="image = Image" />
             <div class="flex flex-col mt-8 ml-8">
@@ -46,44 +47,39 @@
               <p class="text-base text-white mt-4 font-normal" :style="`color: rgb${themecolor}`">
                 {{ series.summary }}
               </p>
-            </div>
-          </div>
-          <div class="class flex flex-col flex-grow mr-8 mt-8 mb-6">
-            <div class="class flex flex-row"></div>
+              <div class="flex flex-row flex-grow justify-around items-center">
+                <!-- Column 1 -->
+                <div class="flex flex-col align-middle self-center h-full justify-around items-start">
+                  <DetailCardItem :icon="publisherUrl" field="Publisher" :detail="series.publisher" />
+                  <DetailCardItem :icon="genreUrl" field="Genre" :detail="series.genre" />
+                </div>
 
-            <div class="flex flex-row flex-grow justify-around items-center">
-              <!-- Column 1 -->
-              <div class="flex flex-col align-middle self-center h-full justify-around items-start">
-                <DetailCardItem :icon="publisherUrl" field="Publisher" :detail="series.publisher" />
-                <DetailCardItem :icon="genreUrl" field="Genre" :detail="series.genre" />
+                <!-- Column 2 -->
+                <div class="flex flex-col align-middle h-full justify-around items-start">
+                  <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" />
+                  <DetailCardItem :icon="teamUrl" field="Writer" :detail="series.writer" />
+                </div>
+
+                <!-- Column 3 -->
+                <div class="flex flex-col align-middle h-full justify-around items-start">
+                  <DetailCardItem :icon="teamUrl" field="Artist" :detail="series.artist" />
+                  <DetailCardItem :icon="teamUrl" field="Editor" :detail="series.editor" />
+                </div>
               </div>
 
-              <!-- Column 2 -->
-              <div class="flex flex-col align-middle h-full justify-around items-start">
-                <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" />
-                <DetailCardItem :icon="teamUrl" field="Writer" :detail="series.writer" />
-              </div>
-
-              <!-- Column 3 -->
-              <div class="flex flex-col align-middle h-full justify-around items-start">
-                <DetailCardItem :icon="teamUrl" field="Artist" :detail="series.artist" />
-                <DetailCardItem :icon="teamUrl" field="Editor" :detail="series.editor" />
-              </div>
             </div>
           </div>
         </div>
-        <div class="flex flex-col basis-1/2">
-          <div class="flex flex-col overflow-x-scroll flex-grow w-full m-auto p-auto">
-            <h1 class="flex pb-5 lg:px-20 md:px-10 px-5 lg:mx-40 md:mx-20 mx-5 font-bold text-4xl"
-              :style="`color: rgb${themecolor}`">
-              Issues
-            </h1>
-            <div class="flex overflow-x-scroll pb-10 hide-scroll-bar">
-              <div class="flex flex-nowrap lg:ml-60 md:ml-20 ml-10">
-                <div class="flex flex-row justify-center items-start" v-for="issue in issues" :key="issue">
-                  <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" />
-                </div>
-              </div>
+        <div class="flex flex-col overflow-hidden flex-grow border-l border-slate-700 pt-4 pb-6">
+          <h1 class="flex pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
+            Issues
+          </h1>
+          <div class="overflow-scroll" style="height: 65vh;">
+            <div class="grid grid-cols-4 gap-5 px-16">
+              <!-- <div class="flex flex-row justify-center items-start" > -->
+              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" v-for="issue in issues"
+                :key="issue" />
+              <!-- </div> -->
             </div>
           </div>
         </div>
