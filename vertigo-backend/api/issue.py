@@ -72,6 +72,26 @@ def series_all(id):
     series = db.session.get(Series, id) or abort(404)
     return series.issue_select()
 
+@issues.route('/series/<int:id>/issue_count', methods=['GET'])
+@authenticate(token_auth)
+@other_responses({404: 'User not found'})
+def issue_count(id):
+    """Retrieve issue counts from a series"""
+    series = db.session.get(Series, id) or abort(404)
+    issues = series.issue_select()
+    data = db.session.scalars(issues).all()
+    # Calculate the counts
+    have_whole_count = sum(issue.have_whole for issue in data)
+    read_whole_count = sum(issue.read_whole for issue in data)
+
+    response = {
+        "total_count":len(data),
+        "have_count": have_whole_count,
+        "read_count": read_whole_count,
+    }
+
+    return response
+
 
 # @series.route('/series/<int:id>', methods=['PUT'])
 # @authenticate(token_auth)
