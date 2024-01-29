@@ -27,11 +27,11 @@ def new(args,series_id):
     """Create a new issue"""
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
-    count = series.books_count
-    read_whole = args.get('read_whole', 0)
-    have_whole = args.get('have_whole', 0)
+    count = series.books_count + 1
+    read_whole = 1 if series.read_whole == 1 else 0
+    have_whole = 1 if series.have_whole == 1 else 0
 
-    for i in range(count):
+    for i in range(1,count):
         title = f"volume {i}"
         issue = Issue(user=user, series=series, title=title,
                       read_whole=read_whole, have_whole=have_whole)
@@ -93,20 +93,20 @@ def issue_count(id):
     return response
 
 
-# @series.route('/series/<int:id>', methods=['PUT'])
-# @authenticate(token_auth)
-# @body(update_series_schema)
-# @response(series_schema)
-# @other_responses({403: 'Not allowed to edit this series',
-#                   404: 'Series not found'})
-# def put(data, id):
-#     """Edit a series"""
-#     series = db.session.get(Series, id) or abort(404)
-#     if series.user != token_auth.current_user():
-#         abort(403)
-#     series.update(data)
-#     db.session.commit()
-#     return series
+@issues.route('/series/issues/<int:id>/', methods=['PUT'])
+@authenticate(token_auth)
+@body(update_issue_schema)
+@response(issue_schema)
+@other_responses({403: 'Not allowed to edit this issue',
+                  404: 'Issue not found'})
+def put(data, id):
+    """Edit an issue"""
+    issue = db.session.get(Issue, id) or abort(404)
+    if issue.user != token_auth.current_user():
+        abort(403)
+    issue.update(data)
+    db.session.commit()
+    return issue
 
 
 # @series.route('/series/<int:id>', methods=['DELETE'])

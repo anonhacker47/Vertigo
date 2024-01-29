@@ -13,6 +13,9 @@ export default {
   getIssueCount(id) {
     return Api().get(`series/${id}/issue_count`);
   },
+  updateIssue(id, data) {
+    return Api().put(`series/issues/${id}/`, data);
+  },
   // removeSeries(data, headers) {
   //   return Api().delete(`series/${data}`, headers);
   // },
