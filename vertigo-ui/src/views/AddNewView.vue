@@ -210,7 +210,12 @@ function changeThumb() {
 }
 
 async function createSeries() {
+
   try {
+    const have_count = have_whole.value == 1 ? books_count.value : 0;
+    const read_count = read_whole.value == 1  ? books_count.value : 0;
+    console.log("have_count", have_count);
+    console.log("read_count", read_count);
     const response = await SeriesService.addSeries(
       {
         title: title.value,
@@ -223,8 +228,8 @@ async function createSeries() {
         main_char: main_char.value,
         series_format: series_format.value,
         books_count: books_count.value,
-        read_whole: read_whole.value,
-        have_whole: have_whole.value,
+        read_count: read_count,
+        have_count: have_count,
         thumbnail: thumbnail.value,
       },
     );
@@ -233,7 +238,7 @@ async function createSeries() {
     } else {
       console.log("nothing to add");
     }
-    router.push("home");
+    // router.push("home");
   } catch (error) {
     console.log(error);
   }

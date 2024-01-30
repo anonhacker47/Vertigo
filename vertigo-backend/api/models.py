@@ -242,8 +242,8 @@ class Series(Updateable, db.Model):
     series_format = sqla.Column(sqla.String(100))
     books_count = sqla.Column(sqla.Integer)
 
-    read_whole = sqla.Column(sqla.Integer)
-    have_whole = sqla.Column(sqla.Integer)
+    read_count = sqla.Column(sqla.Integer)
+    have_count = sqla.Column(sqla.Integer)
 
     dominant_color = sqla.Column(sqla.String(280))
     slug = sqla.Column(sqla.String(280))

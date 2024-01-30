@@ -28,8 +28,8 @@ def new(args,series_id):
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
     count = series.books_count + 1
-    read_whole = 1 if series.read_whole == 1 else 0
-    have_whole = 1 if series.have_whole == 1 else 0
+    read_whole = 1 if series.read_count == series.books_count else 0
+    have_whole = 1 if series.have_count == series.books_count else 0
 
     for i in range(1,count):
         title = f"volume {i}"
@@ -105,6 +105,24 @@ def put(data, id):
     if issue.user != token_auth.current_user():
         abort(403)
     issue.update(data)
+
+    print("old have count",issue.series.have_count)
+    print("old read count",issue.series.read_count)
+
+    # Recalculate counts for the series
+    # issues = issue.series.issue_select()
+    # data = db.session.scalars(issues).all()
+    series = issue.series
+    have_whole_count = sum(issue.have_whole for issue in series.issue)
+    read_whole_count = sum(issue.read_whole for issue in series.issue)
+
+    # Update the series counts
+    issue.series.have_count = have_whole_count
+    issue.series.read_count = read_whole_count
+
+    print("new have count",issue.series.have_count)
+    print("new read count",issue.series.read_count)
+
     db.session.commit()
     return issue
 

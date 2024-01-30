@@ -146,8 +146,8 @@ class SeriesSchema(ma.SQLAlchemySchema):
     series_format = ma.auto_field(validate=validate.Length(
         min=1, max=100))
     books_count = ma.auto_field() 
-    read_whole = ma.auto_field() 
-    have_whole = ma.auto_field() 
+    read_count = ma.auto_field() 
+    have_count = ma.auto_field() 
     
     
     dominant_color = ma.String()
