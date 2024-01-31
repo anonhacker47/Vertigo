@@ -1,5 +1,5 @@
 <template>
-  <div class="top-0 right-0 bottom-0 left-0 bg-no-repeat bg-center bg-cover"
+  <div class="top-0 right-0 absolute bottom-0 left-0 bg-no-repeat bg-center h-screen bg-cover"
     :style="{ backgroundImage: 'url(' + image + ')' }">
     <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
       <HeaderItem />
@@ -32,11 +32,12 @@
       </div>
 
       <div class="flex flex-row grow">
-        <div class="flex flex-row pb-6 pr-7 basis-1/2">
-          <div class="flex flex-row">
+        <div class="flex flex-row pb-6 pr-3 basis-1/2">
+          <div class="flex flex-row relative">
 
-            <img v-if="image != Image" :src="image" alt="" class="md:h-[45vh] md:w-[15vw] rounded-lg mt-8 ml-16 border-2"
-              :style="`border-color: rgb${themecolor}`" @error="image = Image" />
+            <img v-if="image != 'noimage'" :src="image" alt=""
+              class="md:h-[45vh] md:w-[15vw] rounded-lg mt-8 ml-16 border-2" :style="`border-color: rgb${themecolor}`"
+              @error="image = placeholder" />
             <div class="flex flex-col mt-8 ml-8">
               <p class="text-5xl font-bold" :style="`color: rgb${themecolor}`">
                 {{ series.title }}
@@ -68,6 +69,91 @@
               </div>
 
             </div>
+            <!-- <EditSeriesModal :fill-color="themecolor"/> -->
+
+            <EditIcon class="absolute right-0 top-10 cursor-pointer w-8 h-8" :fill-color="`rgb${fillColor}`"
+              @click="showModal = true" />
+
+            <EditSeriesModal :title="`Edit Series`" @close="showModal = false" @esc="showModal = false"
+              :modal-ref="showModal">
+
+              <div class="flex flex-row">
+                <img v-if="image != 'noimage'" :src="image" alt=""
+                  class="md:h-[45vh] md:w-[15vw] rounded-lg mt-8 ml-16 border-2" :style="`border-color: rgb${themecolor}`"
+                  @error="image = placeholder" />
+
+
+
+                <div>
+
+                  <div class="flex flex-row gap-16 mb-5 justify-around">
+                    <!-- <div class="form-control"> -->
+                    <input type="text" placeholder="Series Name" v-model="title" class="input input-bordered" required />
+                    <!-- </div> -->
+                    <!-- <div class="form-control"> -->
+                    <select class="select select-primary w-full max-w-[240px]" v-model="series_format" required>
+                      <option disabled value="">Pick Format</option>
+                      <option>TPB</option>
+                      <option>HC</option>
+                      <option>OMNI</option>
+                      <option>ABS</option>
+                      <option>MANGA</option>
+                    </select>
+                    <!-- </div> -->
+                    <!-- <div class="form-control"> -->
+                    <input type="number" v-model.number="books_count" placeholder="Book Count"
+                      class="input input-bordered" />
+                    <!-- </div> -->
+                  </div>
+                  <div class="flex flex-row gap-16 my-5 justify-around">
+                    <div class="form-control">
+                      <input type="text" placeholder="Publisher" v-model="publisher" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                      <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                      <input type="text" v-model="main_char" placeholder="Main Character/Team"
+                        class="input input-bordered" />
+                    </div>
+                  </div>
+                  <div class="flex flex-row gap-16 my-5 justify-around">
+                    <div class="form-control">
+                      <input type="text" placeholder="Writer" v-model="writer" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                      <input type="text" v-model="artist" placeholder="Artist" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                      <input type="text" v-model="editor" placeholder="Editor" class="input input-bordered" />
+                    </div>
+                  </div>
+                  <div class="flex flex-row gap-16 mb-3 justify-around">
+                    <div class="form-control w-full">
+                      <textarea class="textarea textarea-bordered h-24" placeholder="Summary"
+                        v-model="summary"></textarea>
+                    </div>
+                    <!-- <div class="flex flex-row gap-16 justify-around">
+            <div class="form-control w-full">
+              <button @click="createSeries" class="btn btn-primary">
+                Edit Series
+              </button>
+            </div>
+            <div class="form-control w-full">
+              <button
+                type="button"
+                @click="router.push('home')"
+                class="btn btn-danger"
+              >
+                Cancel
+              </button>
+            </div>
+          </div> -->
+                  </div>
+                </div>
+              </div>
+            </EditSeriesModal>
+
           </div>
         </div>
         <div class="flex flex-col overflow-hidden flex-grow border-l border-slate-700 pt-4 pb-6">
@@ -100,6 +186,8 @@ import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import TokenService from "../services/TokenService";
 import DetailCardItem from "../components/cards/DetailCardItem.vue";
+import EditIcon from "../assets/EditIcon.vue";
+import EditSeriesModal from "../components/modals/EditSeriesModal.vue";
 
 const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
 const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
@@ -114,9 +202,10 @@ const issueCount = ref({
   read_count: 0,
   total_count: 0,
 });
-const themecolor = ref("");
+const themecolor = ref("(212, 222, 252)");
 const image = ref();
-let Image = "noimage";
+const placeholder = "https://upload.wikimedia.org/wikipedia/commons/c/cd/Placeholder_male_superhero_c.png"
+const showModal = ref(false);
 
 // const props = defineProps({
 //   id: Number,
@@ -188,6 +277,9 @@ async function updateStatus(issue, field) {
 onMounted(() => {
   getSeries(), getIssues(), getIssueCount();
 });
+
+
+
 </script>
 
 <style scoped>

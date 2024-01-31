@@ -3,7 +3,7 @@
     <div class="flex h-full w-full items-end">
       <div
         id="image_container"
-        class="h-full rounded md:rounded-lg w-full justify-center hvr-bounce-in items-end text-center border-solid border-b-[12px] border-green-400"
+        class="h-full rounded flex-col md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center"
       >
         <img
           v-if="src != Image"
@@ -30,13 +30,18 @@
           {{ name }}
         </p>
         <p
-          class="absolute text-[10px] md:text-sm px-3 py-2 m-1 md:m-2 bg-slate-800 text-green-200 rounded md:rounded-md top-0 right-0 break-words"
+          class="absolute text-[10px] md:text-sm px-3 py-2 m-1 md:m-2 font-extrabold bg-slate-800 text-green-200 text rounded md:rounded-md top-0 right-0 break-words"
         >
           {{ format }}
         </p>
+       <div class="h-3 w-full relative">
+        <div class="h-full bg-sky-500 rounded-b absolute" :style="{ width: haveFraction }"></div>
+        <div class="h-full bg-green-400 rounded-b absolute" :style="{ width: readFraction }"></div>
+       </div>
       </div>
-    </div>
-    <slot></slot>
+      
+    </div> 
+    
   </div>
   <!-- <span class="caption flex justify-center uppercase decoration-solid text-lg my-5">{{ name }}</span> -->
 </template>
@@ -52,6 +57,8 @@ const props = defineProps({
   format: String,
   textwidth: Number,
   textwidthMD: Number,
+  haveFraction: String,
+  readFraction: String,
 });
 
 let Image = "noimage";
