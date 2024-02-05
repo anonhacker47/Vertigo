@@ -71,27 +71,27 @@
             </div>
             <!-- <EditSeriesModal :fill-color="themecolor"/> -->
 
-            <EditIcon class="absolute right-0 top-10 cursor-pointer w-8 h-8" :fill-color="`rgb${fillColor}`"
+            <EditIcon class="absolute right-0 top-10 cursor-pointer w-8 h-8" :fill-color="`rgb${themecolor}`"
               @click="showModal = true" />
 
             <EditSeriesModal :title="`Edit Series`" @close="showModal = false" @esc="showModal = false"
               :modal-ref="showModal">
 
-              <div class="flex flex-row">
-                <img v-if="image != 'noimage'" :src="image" alt=""
-                  class="md:h-[45vh] md:w-[15vw] rounded-lg mt-8 ml-16 border-2" :style="`border-color: rgb${themecolor}`"
-                  @error="image = placeholder" />
-
-
-
-                <div>
-
-                  <div class="flex flex-row gap-16 mb-5 justify-around">
-                    <!-- <div class="form-control"> -->
-                    <input type="text" placeholder="Series Name" v-model="title" class="input input-bordered" required />
+              <div class="flex h-full flex-row justify-left items-center">
+                <div class="flex flex-col h-full justify-center items-center">
+                  <img v-if="image != 'noimage'" :src="image" alt=""
+                    class="md:h-[45vh] md:w-[15vw] rounded-lg mt-2 mr-2 mb-6 border-2"
+                    :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
+                  <input type="file" @change="onFileChange" class="file-input w-full max-w-xs" />
+                </div>
+                <div class="ml-5 flex flex-col justify-start items-stretch">
+                  <div class="flex flex-row gap-16 mb-5  justify-around">
+                    <!-- <div class="w-[13rem]"> -->
+                    <input type="text" placeholder="Series Name" v-model="updatedSeries.title"
+                      class="input w-[13rem] input-bordered" required />
                     <!-- </div> -->
                     <!-- <div class="form-control"> -->
-                    <select class="select select-primary w-full max-w-[240px]" v-model="series_format" required>
+                    <select class="select select-primary w-[13rem]" v-model="updatedSeries.series_format" required>
                       <option disabled value="">Pick Format</option>
                       <option>TPB</option>
                       <option>HC</option>
@@ -101,37 +101,42 @@
                     </select>
                     <!-- </div> -->
                     <!-- <div class="form-control"> -->
-                    <input type="number" v-model.number="books_count" placeholder="Book Count"
-                      class="input input-bordered" />
+                    <input type="number" v-model.number="updatedSeries.books_count" placeholder="Book Count"
+                      class="input input-bordered w-[13rem]" disabled />
                     <!-- </div> -->
                   </div>
                   <div class="flex flex-row gap-16 my-5 justify-around">
                     <div class="form-control">
-                      <input type="text" placeholder="Publisher" v-model="publisher" class="input input-bordered" />
+                      <input type="text" placeholder="Publisher" v-model="updatedSeries.publisher"
+                        class="input w-[13rem] input-bordered" />
                     </div>
                     <div class="form-control">
-                      <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" />
+                      <input type="text" placeholder="Genre" v-model="updatedSeries.genre"
+                        class="input input-bordered w-[13rem]" />
                     </div>
                     <div class="form-control">
-                      <input type="text" v-model="main_char" placeholder="Main Character/Team"
-                        class="input input-bordered" />
+                      <input type="text" v-model="updatedSeries.main_char" placeholder="Main Character/Team"
+                        class="input input-bordered w-[13rem]" />
                     </div>
                   </div>
                   <div class="flex flex-row gap-16 my-5 justify-around">
                     <div class="form-control">
-                      <input type="text" placeholder="Writer" v-model="writer" class="input input-bordered" />
+                      <input type="text" placeholder="Writer" v-model="updatedSeries.writer"
+                        class="input input-bordered w-[13rem]" />
                     </div>
                     <div class="form-control">
-                      <input type="text" v-model="artist" placeholder="Artist" class="input input-bordered" />
+                      <input type="text" v-model="updatedSeries.artist" placeholder="Artist"
+                        class="input input-bordered w-[13rem]" />
                     </div>
                     <div class="form-control">
-                      <input type="text" v-model="editor" placeholder="Editor" class="input input-bordered" />
+                      <input type="text" v-model="updatedSeries.editor" placeholder="Editor"
+                        class="input input-bordered w-[13rem]" />
                     </div>
                   </div>
                   <div class="flex flex-row gap-16 mb-3 justify-around">
                     <div class="form-control w-full">
-                      <textarea class="textarea textarea-bordered h-24" placeholder="Summary"
-                        v-model="summary"></textarea>
+                      <textarea class="textarea textarea-bordered h-24 " placeholder="Summary"
+                        v-model="updatedSeries.summary"></textarea>
                     </div>
                     <!-- <div class="flex flex-row gap-16 justify-around">
             <div class="form-control w-full">
@@ -146,7 +151,7 @@
                 class="btn btn-danger"
               >
                 Cancel
-              </button>
+              </button>s
             </div>
           </div> -->
                   </div>
@@ -160,7 +165,7 @@
           <h1 class="flex pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
-          <div class="overflow-scroll" style="height: 65vh">
+          <div class="overflow-scroll" style="height: 70vh">
             <div class="grid grid-cols-4 gap-5 px-16">
               <!-- <div class="flex flex-row justify-center items-start" > -->
               <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :have_whole="issue.have_whole"
@@ -197,6 +202,7 @@ const headers = TokenService.getTokenHeader("");
 const route = useRoute("");
 const series = ref("");
 const issues = ref("");
+const updatedSeries = series;
 const issueCount = ref({
   have_count: 0,
   read_count: 0,
@@ -274,6 +280,13 @@ async function updateStatus(issue, field) {
   }
 }
 
+
+function onFileChange(e) {
+      const file = e.target.files[0];
+      const url = URL.createObjectURL(file);
+      image.value = url
+    }
+
 onMounted(() => {
   getSeries(), getIssues(), getIssueCount();
 });
@@ -289,5 +302,4 @@ onMounted(() => {
 }
 .hide-scroll-bar::-webkit-scrollbar {
   display: none;
-} */
-</style>
+} */</style>

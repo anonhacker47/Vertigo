@@ -1,13 +1,13 @@
 <template>
   <dialog  class="modal w-full h-full" :class="modalRef ?'modal-open':'modal'"  @keydown.esc="$emit('esc')">
-        <div class="modal-box border-b-2 border-sky-600" style="max-width: calc(60vw);">
+        <div class="modal-box border-b-2 border-sky-600" style="max-width: calc(70vw);">
           <h3 class="font-bold text-lg">{{ title }}</h3>
           <p class="py-4">{{tagLine}}</p>
-          <div>
+          <!-- <div> -->
             <slot>
 
             </slot>
-          </div>
+          <!-- </div> -->
           <div class="modal-action">
             <form method="dialog"  class="modal-backdrop">
               <!-- if there is a button in form, it will close the modal -->

@@ -8,7 +8,7 @@ from apifairy import authenticate, body, response, other_responses
 
 from api import db
 from api.models import User, Series, Issue
-from api.schemas import SeriesSchema
+from api.schemas import SeriesSchema, EmptySchema
 from api.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas import DateTimePaginationSchema
@@ -114,10 +114,11 @@ def feed():
     user = token_auth.current_user()
     return user.followed_series_select()
 
-@series.route('series/images/<int:id>',methods=['GET'])
-# @authenticate(token_auth)
-def upload(id):
-    """Retrieve series image"""
+@series.route('series/image/<int:id>',methods=['GET'])
+@authenticate(token_auth)
+@response(200)
+def getSeriesImage(id):
+    """Retrieve the series thumbnail"""
     series = db.session.get(Series, id)
     if series.thumbnail == "noimage":
         return jsonify("noimage")
