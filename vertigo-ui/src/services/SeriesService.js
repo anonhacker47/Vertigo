@@ -23,4 +23,7 @@ export default {
     return Api().get("series/key",
     );
   },
+  getSeriesFieldValues(field){
+    return Api().get(`/series/filter/${field}`);
+  }
 };

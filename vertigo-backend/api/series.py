@@ -115,8 +115,6 @@ def feed():
     return user.followed_series_select()
 
 @series.route('series/image/<int:id>',methods=['GET'])
-@authenticate(token_auth)
-@response(200)
 def getSeriesImage(id):
     """Retrieve the series thumbnail"""
     series = db.session.get(Series, id)
@@ -134,3 +132,24 @@ def key():
         return jsonify("0")
     else:
         return jsonify(f"{obj.id}")
+    
+@series.route('/series/filter/<field>', methods=['GET'])
+# @authenticate(token_auth)
+# @response(200)
+def get_series_by_field(field):
+    """Retrieve values from a specific field across all series objects."""
+    if field not in ['title', 'publisher', 'genre', 'main_char', 'writer', 'artist', 'editor', 'summary']:
+        abort(400, "Invalid field provided")
+
+    # Get all series objects
+    values = db.session.query(getattr(Series, field)).distinct().all()
+
+    # Extract the desired field values
+    values = [value[0] for value in values if value[0]]
+
+    # Remove duplicates (optional)
+    values = list(set(values))
+    values.sort() 
+    print(values)
+
+    return jsonify(values)

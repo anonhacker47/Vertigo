@@ -4,45 +4,25 @@
     <div class="content">
       <div class="card w-[22rem] bg-base-100 shadow-xl">
         <figure class="px-5 pt-5">
-          <img
-            :src="imagesrc"
-            @error="changeThumb"
-            alt="Invalid Image Link"
-            class="rounded-xl w-[26rem] h-[29rem]"
-            key="imagesrc"
-          />
+          <img :src="imagesrc" @error="changeThumb" alt="Invalid Image Link" class="rounded-xl w-[26rem] h-[29rem]"
+            key="imagesrc" />
         </figure>
         <div class="flex flex-col p-5">
           <label class="label justify-center">
             <span class="label-text">Cover Image</span>
           </label>
-          <input
-            type="text"
-            @input="changeImage"
-            placeholder="paste image link here"
-            class="input input-bordered"
-            required
-          />
+          <input type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered"
+            required />
         </div>
       </div>
       <div class="card h-full shadow-2xl bg-base-100">
         <div class="card-body justify-between">
           <div class="flex flex-row gap-16 mb-5 justify-around">
             <div class="form-control">
-              <input
-                type="text"
-                placeholder="Series Name"
-                v-model="title"
-                class="input input-bordered"
-                required
-              />
+              <input type="text" placeholder="Series Name" v-model="title" class="input input-bordered" required />
             </div>
             <div class="form-control w-full">
-              <select
-                class="select select-primary"
-                v-model="series_format"
-                required
-              >
+              <select class="select select-primary" v-model="series_format" required>
                 <option disabled value="">Pick Format</option>
                 <option>TPB</option>
                 <option>HC</option>
@@ -52,73 +32,49 @@
               </select>
             </div>
             <div class="form-control">
-              <input
-                type="number"
-                v-model.number="books_count"
-                placeholder="Book Count"
-                class="input input-bordered"
-              />
+              <input type="number" v-model.number="books_count" placeholder="Book Count" class="input input-bordered" />
             </div>
           </div>
           <div class="flex flex-row gap-16 my-5 justify-around">
             <div class="form-control">
-              <input
+              <!-- <input
                 type="text"
                 placeholder="Publisher"
                 v-model="publisher"
                 class="input input-bordered"
-              />
+              /> -->
+              <TypeAheadInput v-model="publisher" field="publisher" placeholder="Publisher"/>
             </div>
             <div class="form-control">
-              <input
-                type="text"
-                placeholder="Genre"
-                v-model="genre"
-                class="input input-bordered"
-              />
+              <!-- <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" /> -->
+              <TypeAheadInput v-model="genre" field="genre" placeholder="Genre"/>
+
             </div>
             <div class="form-control">
-              <input
-                type="text"
-                v-model="main_char"
-                placeholder="Main Character/Team"
-                class="input input-bordered"
-              />
+              <!-- <input type="text" v-model="main_char" placeholder="Main Character/Team" class="input input-bordered" /> -->
+              <TypeAheadInput v-model="main_char" field="main_char" placeholder="Main Character/ Team"/>
+
             </div>
           </div>
           <div class="flex flex-row gap-16 my-5 justify-around">
             <div class="form-control">
-              <input
-                type="text"
-                placeholder="Writer"
-                v-model="writer"
-                class="input input-bordered"
-              />
+              <!-- <input type="text" placeholder="Writer" v-model="writer" class="input input-bordered" /> -->
+              <TypeAheadInput v-model="writer" field="writer" placeholder="Writer"/>
+
             </div>
             <div class="form-control">
-              <input
-                type="text"
-                v-model="artist"
-                placeholder="Artist"
-                class="input input-bordered"
-              />
+              <!-- <input type="text" v-model="artist" placeholder="Artist" class="input input-bordered" /> -->
+              <TypeAheadInput v-model="artist" field="artist" placeholder="Artist"/>
             </div>
             <div class="form-control">
-              <input
-                type="text"
-                v-model="editor"
-                placeholder="Editor"
-                class="input input-bordered"
-              />
+              <!-- <input type="text" v-model="editor" placeholder="Editor" class="input input-bordered" /> -->
+              <TypeAheadInput v-model="editor" field="editor" placeholder="Editor"/>
+
             </div>
           </div>
           <div class="flex flex-row gap-16 mb-3 justify-around">
             <div class="form-control w-full">
-              <textarea
-                class="textarea textarea-bordered h-24"
-                placeholder="Summary"
-                v-model="summary"
-              ></textarea>
+              <textarea class="textarea textarea-bordered h-24" placeholder="Summary" v-model="summary"></textarea>
             </div>
           </div>
           <div class="flex flex-row gap-16 mb-3 justify-around">
@@ -126,13 +82,8 @@
               <div class="form-control">
                 <label class="label cursor-pointer">
                   <span class="text-emerald-400">Read Already?</span>
-                  <input
-                    type="checkbox"
-                    true-value="1"
-                    false-value="0"
-                    v-model.number="read_whole"
-                    class="checkbox checkbox-accent"
-                  />
+                  <input type="checkbox" true-value="1" false-value="0" v-model.number="read_whole"
+                    class="checkbox checkbox-accent" />
                 </label>
               </div>
             </div>
@@ -140,13 +91,8 @@
               <div class="form-control">
                 <label class="label cursor-pointer">
                   <span class="text-emerald-400">All Bought?</span>
-                  <input
-                    type="checkbox"
-                    true-value="1"
-                    false-value="0"
-                    v-model.number="have_whole"
-                    class="checkbox checkbox-accent"
-                  />
+                  <input type="checkbox" true-value="1" false-value="0" v-model.number="have_whole"
+                    class="checkbox checkbox-accent" />
                 </label>
               </div>
             </div>
@@ -158,11 +104,7 @@
               </button>
             </div>
             <div class="form-control w-full">
-              <button
-                type="button"
-                @click="router.push('home')"
-                class="btn btn-danger"
-              >
+              <button type="button" @click="router.push('home')" class="btn btn-danger">
                 Cancel
               </button>
             </div>
@@ -174,11 +116,12 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
+import TypeAheadInput from "../components/TypeAheadInput.vue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 
@@ -198,6 +141,7 @@ const read_whole = ref(0);
 const have_whole = ref(0);
 const thumbnail = ref("");
 
+
 function changeImage(event) {
   event.target.value
     ? (imagesrc.value = event.target.value)
@@ -213,7 +157,7 @@ async function createSeries() {
 
   try {
     const have_count = have_whole.value == 1 ? books_count.value : 0;
-    const read_count = read_whole.value == 1  ? books_count.value : 0;
+    const read_count = read_whole.value == 1 ? books_count.value : 0;
     console.log("have_count", have_count);
     console.log("read_count", read_count);
     const response = await SeriesService.addSeries(
@@ -233,7 +177,7 @@ async function createSeries() {
         thumbnail: thumbnail.value,
       },
     );
-    if (books_count.value>0) {
+    if (books_count.value > 0) {
       addIssues();
     } else {
       console.log("nothing to add");
@@ -271,6 +215,9 @@ async function addIssues() {
     console.log(error);
   }
 }
+
+
+
 </script>
 
 <style scoped>
@@ -283,9 +230,11 @@ async function addIssues() {
   padding: 1rem;
   flex: 1;
 }
+
 .card-body {
   gap: 0 !important;
 }
+
 img {
   color: red;
   font-size: x-large;
