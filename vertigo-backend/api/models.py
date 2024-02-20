@@ -16,6 +16,7 @@ from slugify import slugify
 import shutil
 
 from api.app import db
+from api.helpers import save_series_thumbnail
 
 
 class Updateable:
@@ -261,83 +262,89 @@ class Series(Updateable, db.Model):
     def __init__(self, *args, **kwargs):
         if not 'slug' in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
+
             url = kwargs.get('thumbnail', '')
-        if url != "noimage":
-            request = requests.get(url, stream=True)
-            ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
 
-            if "webp" in ext:
-                extension = ".webp"
-            elif "png" in ext:
-                extension = ".png"
-            elif "jpeg" or "jpg" in ext:
-                extension = ".jpeg"
+        thumbnail_filename, dominant_color = save_series_thumbnail(url, kwargs['title'])
+        kwargs['dominant_color'] = dominant_color
+        kwargs['thumbnail'] = thumbnail_filename
+            
+        # if url != "noimage":
+        #     request = requests.get(url, stream=True)
+        #     ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
 
-            else:
-                print("no extensions")
-                try:
-                    img = Image.open(request.raw)
-                    extension = f".{img.format}"
-                except Exception as e:
-                    print(url)  # here you get the file causing the exception
-                    print(e)
+        #     if "webp" in ext:
+        #         extension = ".webp"
+        #     elif "png" in ext:
+        #         extension = ".png"
+        #     elif "jpeg" or "jpg" in ext:
+        #         extension = ".jpeg"
 
-            filename = f"{uuid.uuid4()}{kwargs['slug']}{extension}"
+        #     else:
+        #         print("no extensions")
+        #         try:
+        #             img = Image.open(request.raw)
+        #             extension = f".{img.format}"
+        #         except Exception as e:
+        #             print(url)  # here you get the file causing the exception
+        #             print(e)
 
-            if request.status_code == 200:
-                # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-                request.raw.decode_content = True
+        #     filename = f"{uuid.uuid4()}{kwargs['slug']}{extension}"
 
-            # Open a local file with wb ( write binary ) permission.
-                with open(current_app.config['cover_path']+"/"+filename, 'wb') as f:
-                    shutil.copyfileobj(request.raw, f)
+        #     if request.status_code == 200:
+        #         # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
+        #         request.raw.decode_content = True
 
-                print('Image sucessfully Downloaded: ', filename)
+        #     # Open a local file with wb ( write binary ) permission.
+        #         with open(current_app.config['cover_path']+"/"+filename, 'wb') as f:
+        #             shutil.copyfileobj(request.raw, f)
 
-                def increase_brightness(color):
-                    for i in range(len(color)):
-                        if 100 < color[i] < 150:
-                            color[i] += 50
-                    return color
+        #         print('Image sucessfully Downloaded: ', filename)
 
-                def get_dominant_color(pil_img, palette_size=16):
-                    # Resize image to speed up processing
-                    img = pil_img.copy()
-                    img.thumbnail((100, 100))
+        #         def increase_brightness(color):
+        #             for i in range(len(color)):
+        #                 if 100 < color[i] < 150:
+        #                     color[i] += 50
+        #             return color
 
-                    # Reduce colors (uses k-means internally)
-                    paletted = img.convert(
-                        'P', palette=Image.ADAPTIVE, colors=palette_size)
+        #         def get_dominant_color(pil_img, palette_size=16):
+        #             # Resize image to speed up processing
+        #             img = pil_img.copy()
+        #             img.thumbnail((100, 100))
 
-                    # Find the color that occurs most often
-                    palette = paletted.getpalette()
-                    color_counts = sorted(paletted.getcolors(), reverse=True)
-                    palette_index = color_counts[0][1]
-                    dominant_color = palette[palette_index*3:palette_index*3+3]
-                    i = 0
-                    while i < len(color_counts):
-                        palette = paletted.getpalette()
-                        color_counts = sorted(
-                            paletted.getcolors(), reverse=True)
-                        palette_index = color_counts[i][1]
-                        dominant_color = palette[palette_index *
-                                                 3:palette_index*3+3]
-                        if dominant_color[0] > 100 or dominant_color[1] > 100 or dominant_color[2] > 100:
-                            dominant_color = increase_brightness(
-                                dominant_color)
-                            return dominant_color
-                        else:
-                            i += 1
+        #             # Reduce colors (uses k-means internally)
+        #             paletted = img.convert(
+        #                 'P', palette=Image.ADAPTIVE, colors=palette_size)
 
-                im = Image.open(current_app.config['cover_path']+"/"+filename)
+        #             # Find the color that occurs most often
+        #             palette = paletted.getpalette()
+        #             color_counts = sorted(paletted.getcolors(), reverse=True)
+        #             palette_index = color_counts[0][1]
+        #             dominant_color = palette[palette_index*3:palette_index*3+3]
+        #             i = 0
+        #             while i < len(color_counts):
+        #                 palette = paletted.getpalette()
+        #                 color_counts = sorted(
+        #                     paletted.getcolors(), reverse=True)
+        #                 palette_index = color_counts[i][1]
+        #                 dominant_color = palette[palette_index *
+        #                                          3:palette_index*3+3]
+        #                 if dominant_color[0] > 100 or dominant_color[1] > 100 or dominant_color[2] > 100:
+        #                     dominant_color = increase_brightness(
+        #                         dominant_color)
+        #                     return dominant_color
+        #                 else:
+        #                     i += 1
 
-                print((get_dominant_color(im)))
-                # print(check)
+        #         im = Image.open(current_app.config['cover_path']+"/"+filename)
 
-                kwargs['dominant_color'] = f"{get_dominant_color(im)[0],get_dominant_color(im)[1],get_dominant_color(im)[2]}"
-                kwargs['thumbnail'] = filename
-            else:
-                print('Image Couldn\'t be retreived')
+        #         print((get_dominant_color(im)))
+        #         # print(check)
+
+        #         kwargs['dominant_color'] = f"{get_dominant_color(im)[0],get_dominant_color(im)[1],get_dominant_color(im)[2]}"
+        #         kwargs['thumbnail'] = filename
+        #     else:
+        #         print('Image Couldn\'t be retreived')
 
         super().__init__(*args, **kwargs)
 
