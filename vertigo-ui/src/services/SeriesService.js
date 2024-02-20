@@ -10,6 +10,9 @@ export default {
   addSeries(data) {
     return Api().post("series", data);
   },
+  updateSeries(id,data){
+    return Api().put(`series/${id}`,data)
+  },
   removeSeries(data) {
     return Api().delete(`series/${data}`);
   },

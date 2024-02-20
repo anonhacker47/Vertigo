@@ -11,8 +11,8 @@
           <div class="modal-action">
             <form method="dialog"  >
               <!-- if there is a button in form, it will close the modal -->
-              <button class="btn" @click="$emit('close')">Close</button>
-              <button class="btn btn-primary ml-5">Submit</button>
+              <button class="btn" @click="$emit('closeModal')">Close</button>
+              <button class="btn btn-primary ml-5" @click="$emit('submitForm')">Submit</button>
             </form>
           </div>
         </div>
