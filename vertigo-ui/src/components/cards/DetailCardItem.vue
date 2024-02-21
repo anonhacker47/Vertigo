@@ -6,10 +6,10 @@
   </div>
 </div>
   <div class="flex flex-col ml-2">
-    <div class="text-primary font-bold">
+    <div class="text-xs font-bold">
       {{field}}
     </div>
-    <div class="text-xs font-medium">
+    <div class="text-primary font-medium">
       {{detail}}
     </div>
   </div>

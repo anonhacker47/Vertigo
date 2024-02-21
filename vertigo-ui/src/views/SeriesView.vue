@@ -31,24 +31,24 @@
         </div>
       </div>
 
-      <div class="flex flex-row grow">
-        <div class="flex flex-row pb-6 pr-3 basis-1/2">
-          <div class="flex flex-row relative">
+      <div class="flex flex-col md:flex-row grow">
+        <div class="flex flex-row pb-6 pr-2 basis-1/2">
+          <div class="flex flex-row flex-grow relative">
 
             <img v-if="image != 'noimage'" :src="image" alt=""
-              class="md:h-[45vh] md:w-[15vw] rounded-lg mt-8 ml-16 border-2" :style="`border-color: rgb${themecolor}`"
+              class="w-40 h-56 rounded-lg mt-8 ml-16 border-2" :style="`border-color: rgb${themecolor}`"
               @error="image = placeholder" />
-            <div class="flex flex-col mt-8 ml-8">
-              <p class="text-5xl font-bold" :style="`color: rgb${themecolor}`">
+            <div class="flex flex-col mt-8 ml-8 w-[26rem]">
+              <span class="text-4xl font-bold text-ellipsis inlnie-block -nowrap overflow-clip" :style="`color: rgb${themecolor}`">
                 {{ series.title }}
-              </p>
+              </span>
               <p class="text-xl font-bold uppercase" :style="`color: rgb${themecolor}`">
                 {{ series.publisher }}
               </p>
               <p class="text-base text-white mt-4 font-normal" :style="`color: rgb${themecolor}`">
                 {{ series.summary }}
               </p>
-              <div class="flex flex-row flex-grow justify-around items-center">
+              <div class="flex flex-row flex-grow max-h-52 justify-around items-center">
                 <!-- Column 1 -->
                 <div class="flex flex-col align-middle self-center h-full justify-around items-start">
                   <DetailCardItem :icon="publisherUrl" field="Publisher" :detail="series.publisher" />
@@ -70,7 +70,7 @@
 
             </div>
 
-            <EditIcon class="absolute right-0 top-10 cursor-pointer w-8 h-8" :fill-color="`rgb${themecolor}`"
+            <EditIcon class="absolute right-0 top-2 cursor-pointer w-7 h-7" :fill-color="`rgb${themecolor}`"
               @click="showModal = true" />
 
             <EditSeriesModal :title="`Edit Series`" @close-modal="closeModal()" @esc="closeModal()" @submit-form="handleUpdate()" :modal-ref="showModal">
@@ -80,7 +80,8 @@
                   <img v-if="image != 'noimage'" :src="image" alt=""
                     class="md:h-[45vh] md:w-[15vw] rounded-lg mt-2 mr-2 mb-6 border-2"
                     :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
-                  <input type="file" @change="onFileChange" class="file-input w-full max-w-xs" />
+                  <!-- <input type="file" @change="onFileChange" class="file-input w-full max-w-xs" /> -->
+                  <input type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered" required />
                 </div>
                 <div class="flex flex-col justify-start items-stretch ml-14">
                   <div class="flex flex-row gap-16 mb-5  justify-between">
@@ -147,7 +148,7 @@
                   <div class="flex flex-row gap-16 mb-3 justify-around">
                     <div class="form-control w-full">
                       <textarea class="textarea textarea-bordered h-24 " placeholder="Summary"
-                        v-model="updatedSeries.summary"></textarea>
+                        v-model="updatedSeries.value.summary"></textarea>
                     </div>
                     <!-- <div class="flex flex-row gap-16 justify-around">
             <div class="form-control w-full">
@@ -172,7 +173,7 @@
 
           </div>
         </div>
-        <div class="flex flex-col overflow-hidden flex-grow border-l border-slate-700 pt-4 pb-6">
+        <div class="flex flex-col basis-1/2 flex-grow border-l border-slate-700 pt-4 pb-6">
           <h1 class="flex pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
@@ -298,6 +299,7 @@ async function handleUpdate(){
     image.value = SeriesService.getImagebyId(series.value.id);
     showModal.value = false
     console.log(series);
+    imageChanged.value = false
   }catch(error){
     console.log(error);
   }
@@ -330,11 +332,18 @@ async function updateStatus(issue, field) {
 }
 
 
-function onFileChange(e) {
-  const file = e.target.files[0];
-  const url = URL.createObjectURL(file);
-  image.value = url
-  imageChanged.value = true
+// function onFileChange(e) {
+//   const file = e.target.files[0];
+//   const url = URL.createObjectURL(file);
+//   image.value = url
+//   imageChanged.value = true
+// }
+
+function changeImage(event) {
+  event.target.value
+    ? (image.value = event.target.value)
+    : (imagesrc.value = new URL("../assets/dummy.webp", import.meta.url).href);
+      imageChanged.value = true
 }
 
 onMounted(() => {

@@ -1,6 +1,7 @@
 import requests
 import shutil
 import re
+import os
 import uuid
 from PIL import Image
 from flask import current_app
@@ -80,3 +81,7 @@ def calculate_dominant_color(filename):
     im = Image.open(current_app.config['cover_path']+"/"+filename)
     dominant_color = get_dominant_color(im)
     return f"({dominant_color[0]},{dominant_color[1]},{dominant_color[2]})"
+
+def delete_series_thumbnail(filename):
+    file_path = os.path.join(current_app.config['cover_path'], filename)
+    os.remove(file_path)

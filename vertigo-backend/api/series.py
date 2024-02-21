@@ -12,7 +12,7 @@ from api.schemas import SeriesSchema, EmptySchema
 from api.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas import DateTimePaginationSchema
-from api.helpers import save_series_thumbnail
+from api.helpers import save_series_thumbnail,delete_series_thumbnail
 
 
 series = Blueprint('series', __name__)
@@ -72,8 +72,8 @@ def user_all(id):
                   404: 'Series not found'})
 def put(data, id):
     """Edit a series"""
-
-    if(data["thumbnail"]):
+    thumbnail = data.get("thumbnail") 
+    if(thumbnail):
         # print(data["thumbnail"])
         thumbnail_filename, dominant_color = save_series_thumbnail(data["thumbnail"], data['title'])
         data['dominant_color'] = dominant_color
@@ -82,6 +82,8 @@ def put(data, id):
     series = db.session.get(Series, id) or abort(404)
     if series.user != token_auth.current_user():
         abort(403)
+    if (thumbnail_filename):
+        delete_series_thumbnail(series.thumbnail)
     series.update(data)
     db.session.commit()
     return series
