@@ -7,7 +7,7 @@
 alchemical==0.5.1
     # via -r requirements.in
 alembic==1.7.7
-    # via flask-migrate
+
 apifairy==0.9.1
     # via -r requirements.in
 apispec==5.1.1
@@ -40,10 +40,7 @@ flask-marshmallow==0.14.0
     # via
     #   -r requirements.in
     #   apifairy
-flask-migrate==3.1.0
-    # via -r requirements.in
 flask-sqlalchemy==2.5.1
-    # via flask-migrate
 greenlet==1.1.2
     # via sqlalchemy
 gunicorn==20.1.0
