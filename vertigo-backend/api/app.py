@@ -71,9 +71,9 @@ def create_app(config_class=Config):
     def index(path):
         return render_template('index.html')
     
-    # @app.route('/api/docs')
-    # def docs():  # pragma: no cover
-    #     return redirect(url_for('apifairy.docs'))
+    @app.route('/api/docs')
+    def docs():  # pragma: no cover
+        return redirect(url_for('apifairy.docs'))
 
     @app.after_request
     def after_request(response):
