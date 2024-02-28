@@ -26,6 +26,16 @@ def create_app(config_class=Config):
     app.config['cover_path'] = os.path.abspath("./Config/Covers/")
     app.config['sql_path'] = os.path.abspath("./Config/")
 
+    # Check if 'sql_path' exists and create it if not
+    if not os.path.exists(app.config['sql_path']):
+        os.makedirs(app.config['sql_path'])
+        print("The 'sql_path' directory is created!")    
+
+    # Check if 'cover_path' exists and create it if not
+    if not os.path.exists(app.config['cover_path']):
+        os.makedirs(app.config['cover_path'])
+        print("The 'cover_path' directory is created!")    
+
     # extensions
     from api import models
     db.init_app(app)
