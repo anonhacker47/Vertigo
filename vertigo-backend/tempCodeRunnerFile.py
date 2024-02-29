@@ -1,1 +1,0 @@
-/api/image/list
