@@ -6,9 +6,9 @@
         class="h-full rounded flex-col md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center"
       >
         <img
-          v-if="src != Image"
-          :src="src"
-          @error="src = Image"
+        v-if="displayedImage !== Image"
+          :src="displayedImage"
+          @error="handleImageError"
           alt=""
           class="slideritem h-full w-full md:rounded-t-lg"
         />
@@ -16,19 +16,20 @@
         <div
           class="absolute flex h-full w-full rounded-t md:rounded-t-lg bg-[#131929] opacity-0"
           :class="{ 'opacity-60': active }"
-        ></div>
-        <p
-          v-if="active || src == Image"
-          class="absolute md:text-xl name text-sm leading-none uppercase pb-2 break-words"
+        >
+      </div>
+        <span
+          v-if="active || displayedImage == Image"
+          class="absolute md:text-xl name text-sm leading-none uppercase pb-2 break-words text-ellipsis whitespace-nowrap overflow-hidden w-[80%]"
           :class="
-            (src == Image ? 'top-1/2' : '',
+            (displayedImage == Image ? 'top-1/2' : '',
             `md:max-w-[${textwidthMD / 2}vw]`,
             `max-w-[${textwidth / 2}vw]`)
           "
-          :style="src == Image ? `top: 50%;` : ''"
+          :style="displayedImage == Image ? `top: 50%;` : ''"
         >
           {{ name }}
-        </p>
+        </span>
         <p
           class="absolute text-[10px] md:text-sm px-3 py-2 m-1 md:m-2 font-extrabold bg-slate-800 text-green-200 text rounded md:rounded-md top-0 right-0 break-words"
         >
@@ -61,9 +62,14 @@ const props = defineProps({
   readFraction: String,
 });
 
+const displayedImage = ref(props.src);
 let Image = "noimage";
 
 const active = ref(false);
+
+const handleImageError = () => {
+      displayedImage.value = Image;
+    };
 
 function activate() {
   active.value = !active.value;

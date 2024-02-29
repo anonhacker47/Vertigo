@@ -16,7 +16,7 @@
               fill="#a5f3fc" />
           </svg></label>
         <div tabindex="0"
-          class="dropdown-content card p-2 ml-[-80px] md:ml-0 shadow bg-base-100 rounded-box w-64 md:w-80">
+          class="dropdown-content card p-2 ml-[-80px] md:ml-0 shadow bg-base-100 rounded-box w-64 md:w-80 z-20">
           <label class="label">
             <span class="font-bold text-lg text-sky-200 text-grey-500">Display Options</span>
           </label>
