@@ -4,11 +4,10 @@
     enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster"
   >
-    <div class="flex justify-around py-5 border-b border-slate-700">
+    <div class="flex justify-around items-center py-2 border-b border-slate-700">
       <RouterLink
         :to="{ name: 'addnew' }"
-        class="smallbutton text-black bg-[#7f76ee] hover:bg-[#5d55cc] hover:text-grey-100 rounded px-5 shadow-inner justify-center hover:shadow-lg inline-flex items-center"
-      >
+        class="btn btn-primary justify-center">
         Add Series
       </RouterLink>
 
@@ -137,9 +136,9 @@
       </div>
 
       <button
-        class="bg-red-400 text-black hover:bg-red-500 rounded hover:bg-[bg-red-500] mx-3 px-5 py-2"
-        :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
-        @click="toggleDelete"
+      class="btn"
+      :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
+      @click="toggleDelete"
       >
         Delete Mode
       </button>

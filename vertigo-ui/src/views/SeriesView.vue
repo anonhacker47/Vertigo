@@ -8,6 +8,33 @@
       :style="`background: rgba(18,25,43,0.95);`"
     >
       <HeaderItem />
+
+      <div class="flex justify-end items-center py-4 pr-20 border-b border-slate-700">
+        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
+          <div class="px-5 flex flex-row items-center">
+            <img class="" src="../assets/collection.svg" alt="" width="28" height="28" />
+            <p class="pl-2 text-primary font-bold text-lg">12</p>
+          </div>
+        </div>
+        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
+        <div class="px-5 flex flex-row items-center">
+          <img src="../assets/cart.svg" alt="" width="23" height="23" />
+          <!-- <div class="radial-progress text-accent ml-2" style="--value:66; --size:2.5rem;" role="progressbar"> -->
+          <p class="ml-2 text-primary font-bold text-lg">8/12</p>
+          <!-- </div> -->
+        </div>
+        </div>
+        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
+        <div class="px-5 flex flex-row items-center">
+          <img src="../assets/read.svg" alt="" width="25" height="25" />
+          <!-- <div class="radial-progress text-warning ml-2" style="--value:100; --size:2.5rem" role="progressbar"> -->
+          <p class="ml-2 text-primary font-bold text-lg">3/12</p>
+          <!-- </div> -->
+        </div>
+        </div>
+      </div>
+
+
       <div class="flex flex-col grow">
         <div class="flex flex-row basis-1/2">
           <div class="flex flex-row pb-6 basis-1/2 z-50">
