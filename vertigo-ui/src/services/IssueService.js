@@ -1,11 +1,17 @@
 import Api from "@/services/Api";
 
 export default {
-  getIssues(token,id,orderby,orderdir) {
-    return Api().get(`series/${id}/issues?orderby=${orderby}&orderdir=${orderdir}`,token);
+  getIssues(token, id, orderby, orderdir) {
+    return Api().get(
+      `series/${id}/issues?orderby=${orderby}&orderdir=${orderdir}`,
+      token
+    );
   },
-  addIssues(id,headers,data) {
-    return Api().post(`series/${id}/issues`,headers,data);
+  addIssues(id, data) {
+    return Api().post(`series/${id}/issues`, data);
+  },
+  getIssueCount(id) {
+    return Api().get(`series/${id}/issue_count`);
   },
   // removeSeries(data, headers) {
   //   return Api().delete(`series/${data}`, headers);

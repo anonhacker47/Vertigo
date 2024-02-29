@@ -20,21 +20,21 @@ def paginated_response(schema, max_limit=25, order_by=None,
             nonlocal order_by
             nonlocal order_direction
             
-            if (order_by_dir == 'desc'):
+            if order_by_dir == 'desc':
                 order_direction = 'desc'
-            elif(order_by_dir == 'asc'): 
+            elif order_by_dir == 'asc': 
                 order_direction = 'asc'
             print(order_direction)
-            if order_by==Series.timestamp:
-                if order_by_object != None:
+
+            if order_by == Series.timestamp or order_by == Series.title:
+                if order_by_object is not None:
                     order_by = getattr(Series, order_by_object)
-            elif order_by==Series.title:
-                if order_by_object != None:
-                    order_by = getattr(Series, order_by_object)
-            elif order_by==Issue.timestamp:
-                if order_by_object != None:
+            elif order_by == Issue.timestamp:
+                if order_by_object is not None:
                     order_by = getattr(Issue, order_by_object)
+
             select_query = f(*args, **kwargs)
+
             print(order_by)
             if order_by is not None:
                 if "Issue" in str(order_by):

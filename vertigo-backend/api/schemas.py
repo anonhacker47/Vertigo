@@ -98,7 +98,8 @@ class UserSchema(ma.SQLAlchemySchema):
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):
-        data['first_seen'] += 'Z'
+        if 'timestamp' in data:
+            data['timestamp'] += 'Z'
         return data
 
 
