@@ -69,12 +69,11 @@
               </div>
 
             </div>
-            <!-- <EditSeriesModal :fill-color="themecolor"/> -->
 
             <EditIcon class="absolute right-0 top-10 cursor-pointer w-8 h-8" :fill-color="`rgb${themecolor}`"
               @click="showModal = true" />
 
-            <EditSeriesModal :title="`Edit Series`" @close="closeModal()" @esc="closeModal()" :modal-ref="showModal">
+            <EditSeriesModal :title="`Edit Series`" @close-modal="closeModal()" @esc="closeModal()" @submit-form="handleUpdate()" :modal-ref="showModal">
 
               <div class="flex h-full flex-row justify-left items-center justify-around">
                 <div class="flex flex-col h-full justify-center items-center">
@@ -225,8 +224,10 @@ const themecolor = ref("(212, 222, 252)");
 const image = ref();
 const placeholder = "https://upload.wikimedia.org/wikipedia/commons/c/cd/Placeholder_male_superhero_c.png"
 const showModal = ref(false);
+const imageChanged = ref(false);
 
 function closeModal() {
+  image.value = SeriesService.getImagebyId(series.value.id);
   getSeries();
   showModal.value = false
 }
@@ -250,6 +251,8 @@ async function getSeries() {
       response.data.dominant_color.slice(0, -1) +
       response.data.dominant_color.slice(-1);
     image.value = SeriesService.getImagebyId(series.value.id);
+    console.log("getSeries",image.value);
+
   } catch (error) {
     // console.log(error);
   }
@@ -270,6 +273,35 @@ async function getIssues() {
   }
 }
 
+async function handleUpdate(){
+
+  let seriesData =     {
+        title: updatedSeries.value.title,
+        publisher:  updatedSeries.value.publisher,
+        writer:  updatedSeries.value.writer,
+        artist:  updatedSeries.value.artist,
+        editor:  updatedSeries.value.editor,
+        summary:  updatedSeries.value.summary,
+        genre:  updatedSeries.value.genre,
+        main_char:  updatedSeries.value.main_char,
+        series_format:  updatedSeries.value.series_format,
+      }
+    
+  if (imageChanged.value){
+    seriesData.thumbnail = image.value
+  }
+
+  try{
+    const response = await SeriesService.updateSeries(route.params.Id,seriesData
+    );
+    series.value = response.data;
+    image.value = SeriesService.getImagebyId(series.value.id);
+    showModal.value = false
+    console.log(series);
+  }catch(error){
+    console.log(error);
+  }
+}
 
 async function getIssueCount() {
   try {
@@ -302,6 +334,7 @@ function onFileChange(e) {
   const file = e.target.files[0];
   const url = URL.createObjectURL(file);
   image.value = url
+  imageChanged.value = true
 }
 
 onMounted(() => {
