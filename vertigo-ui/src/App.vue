@@ -1,4 +1,5 @@
 <script setup>
+import HeaderItem from "./components/HeaderItem.vue";
 import { useUserStore } from "./store/user";
 
 const store = useUserStore();
@@ -18,6 +19,7 @@ async function refreshToken() {
 </script>
 
 <template>
+    <!-- <HeaderItem/> -->
     <RouterView />
 </template>
 

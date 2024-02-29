@@ -110,11 +110,10 @@ def put(data, id):
     print("old read count",issue.series.read_count)
 
     # Recalculate counts for the series
-    # issues = issue.series.issue_select()
-    # data = db.session.scalars(issues).all()
-    series = issue.series
-    have_whole_count = sum(issue.have_whole for issue in series.issue)
-    read_whole_count = sum(issue.read_whole for issue in series.issue)
+    issues = issue.series.issue_select()
+    issuesData = db.session.scalars(issues).all()
+    have_whole_count = sum(issue.have_whole for issue in issuesData)
+    read_whole_count = sum(issue.read_whole for issue in issuesData)
 
     # Update the series counts
     issue.series.have_count = have_whole_count

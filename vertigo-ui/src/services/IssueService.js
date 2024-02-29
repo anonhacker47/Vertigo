@@ -1,4 +1,4 @@
-import Api from "@/services/Api";
+import Api from "src/services/Api";
 
 export default {
   getIssues(token, id, orderby, orderdir) {
