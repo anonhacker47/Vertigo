@@ -17,11 +17,10 @@ export default {
     return Api().get(`series/${id}`, headers);
   },
   getImagebyId(id) {
-    return Api().defaults.baseURL + `/series/images/${id}`;
+    return Api().defaults.baseURL + `/series/image/${id}`;
   },
-  getSeriesKey(token) {
+  getSeriesKey() {
     return Api().get("series/key",
-      token
     );
   },
 };
