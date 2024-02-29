@@ -6,7 +6,7 @@ from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
 
 from api import db
-from api.models import User,Series,Issue
+from api.models import User, Series, Issue
 from api.schemas import IssueSchema
 from api.auth import token_auth
 from api.decorators import paginated_response
@@ -18,6 +18,7 @@ issue_schema = IssueSchema()
 issues_schema = IssueSchema(many=True)
 update_issue_schema = IssueSchema(partial=True)
 
+
 @issues.route('/series/<int:series_id>/issues', methods=['POST'])
 @authenticate(token_auth)
 @body(issue_schema)
@@ -26,10 +27,20 @@ def new(args,series_id):
     """Create a new issue"""
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
-    issue = Issue(user=user,series=series, **args)
-    db.session.add(issue)
+    count = series.books_count
+    read_whole = args.get('read_whole', 0)
+    have_whole = args.get('have_whole', 0)
+
+    for i in range(count):
+        title = f"volume {i}"
+        issue = Issue(user=user, series=series, title=title,
+                      read_whole=read_whole, have_whole=have_whole)
+        db.session.add(issue)
+
     db.session.commit()
+
     return issue
+
 
 @issues.route('/series/issues/<int:id>/', methods=['GET'])
 @authenticate(token_auth)

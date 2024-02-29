@@ -170,7 +170,7 @@ class IssueSchema(ma.SQLAlchemySchema):
     id = ma.auto_field(dump_only=True)
     url = ma.String(dump_only=True)
         
-    title = ma.auto_field(required=True, validate=validate.Length(
+    title = ma.auto_field(validate=validate.Length(
         min=1, max=280))
 
     read_whole = ma.auto_field() 
