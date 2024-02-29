@@ -78,7 +78,7 @@ module.exports = {
     themes: [
       {
         night: {
-          ...require("daisyui/src/colors/themes")["[data-theme=night]"],
+          ...require("daisyui/src/theming/themes")["night"],
           accent: "#4ade80",
         },
       },
