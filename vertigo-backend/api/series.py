@@ -7,7 +7,7 @@ from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
 
 from api import db
-from api.models import User, Series
+from api.models import User, Series, Issue
 from api.schemas import SeriesSchema
 from api.auth import token_auth
 from api.decorators import paginated_response
@@ -87,7 +87,12 @@ def delete(id):
     series = db.session.get(Series, id) or abort(404)
     if series.user != token_auth.current_user():
         abort(403)
-    thumbnail =  series.thumbnail    
+    thumbnail =  series.thumbnail 
+
+    issues = db.session.query(Issue).filter(Issue.series_id==id).all()
+    for issue in issues:
+        print(issue.id)
+        db.session.delete(issue)    
     db.session.delete(series)
     
     if os.path.exists(current_app.config['cover_path']+f"\\{thumbnail}"):

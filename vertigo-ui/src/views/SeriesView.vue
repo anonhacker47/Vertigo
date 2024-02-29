@@ -74,10 +74,11 @@
           <h1 class="flex pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
-          <div class="overflow-scroll" style="height: 65vh;">
+          <div class="overflow-scroll" style="height: 65vh">
             <div class="grid grid-cols-4 gap-5 px-16">
               <!-- <div class="flex flex-row justify-center items-start" > -->
-              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" v-for="issue in issues"
+              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :have_whole="issue.have_whole"
+                :read_whole="issue.read_whole" v-for="issue in issues" @updateStatus="updateStatus(issue, $event)"
                 :key="issue" />
               <!-- </div> -->
             </div>
@@ -108,19 +109,23 @@ const headers = TokenService.getTokenHeader("");
 const route = useRoute("");
 const series = ref("");
 const issues = ref("");
-const issueCount = ref("");
+const issueCount = ref({
+  have_count: 0,
+  read_count: 0,
+  total_count: 0,
+});
 const themecolor = ref("");
 const image = ref();
 let Image = "noimage";
 
-const props = defineProps({
-  id: Number,
-});
+// const props = defineProps({
+//   id: Number,
+// });
 
-const issuestyle = reactive({
-  borderColor: `rgb${themecolor}`,
-  backgroundImage: `${'url(' + image + ')'}`
-})
+// const issuestyle = reactive({
+//   borderColor: `rgb${themecolor}`,
+//   backgroundImage: `${"url(" + image + ")"}`,
+// });
 
 async function getSeries() {
   try {
@@ -165,6 +170,20 @@ async function getIssueCount() {
   }
 }
 
+async function updateStatus(issue, field) {
+  issue[field] = (issue[field] === 0) ? 1 : 0;
+
+  try {
+    const updateData = { [field]: issue[field] }; // Use square brackets to set dynamic property name
+    const response = await IssueService.updateIssue(
+      issue.id,
+      updateData);
+    console.log(response.data[field]);
+    getIssueCount();
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 onMounted(() => {
   getSeries(), getIssues(), getIssueCount();

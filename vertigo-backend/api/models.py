@@ -237,7 +237,7 @@ class Series(Updateable, db.Model):
     summary = sqla.Column(sqla.String(570))
 
     issue = sqla_orm.relationship('Issue', back_populates='series',
-                                  lazy='noload')
+                                  lazy='noload', cascade='all, delete-orphan')
 
     series_format = sqla.Column(sqla.String(100))
     books_count = sqla.Column(sqla.Integer)
@@ -254,8 +254,6 @@ class Series(Updateable, db.Model):
 
     user = sqla_orm.relationship('User', back_populates='series')
 
-    issue = sqla_orm.relationship(
-        'Issue', back_populates='series', lazy='noload')
 
     def issue_select(self):
         return Issue.select().where(sqla_orm.with_parent(self, Series.issue))

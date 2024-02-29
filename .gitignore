@@ -20,6 +20,7 @@ vertigo-backend/.vscode
 vertigo-backend/# Coverage reports
 vertigo-backend/htmlcov/
 vertigo-backend/.coverage
+vertigo-backend/migrations/
 vertigo-backend/.coverage.*
 vertigo-backend/*,cover
 vertigo-backend/Config/

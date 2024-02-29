@@ -18,6 +18,6 @@ export default defineConfig({
     assetsDir: "static" 
   },
   server: {
-    host: true
+    host: false
   }   
 });
