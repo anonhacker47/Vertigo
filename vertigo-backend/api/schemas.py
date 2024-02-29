@@ -185,7 +185,6 @@ class IssueSchema(ma.SQLAlchemySchema):
     
     user = ma.Nested(UserSchema, dump_only=True)
 
-    
     @post_dump
     def fix_datetimes(self, data, **kwargs):
         data['timestamp'] += 'Z'

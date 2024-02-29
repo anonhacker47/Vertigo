@@ -73,6 +73,7 @@ def user_all(id):
 def put(data, id):
     """Edit a series"""
     thumbnail = data.get("thumbnail") 
+    thumbnail_filename = None
     if(thumbnail):
         # print(data["thumbnail"])
         thumbnail_filename, dominant_color = save_series_thumbnail(data["thumbnail"], data['title'])
@@ -82,7 +83,7 @@ def put(data, id):
     series = db.session.get(Series, id) or abort(404)
     if series.user != token_auth.current_user():
         abort(403)
-    if (thumbnail_filename):
+    if (thumbnail_filename is not None):
         delete_series_thumbnail(series.thumbnail)
     series.update(data)
     db.session.commit()
