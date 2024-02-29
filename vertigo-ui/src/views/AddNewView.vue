@@ -179,16 +179,11 @@ import { useRouter } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
-import TokenService from "../services/TokenService";
 
-var imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
-// ref(
-//   "../assets/dummy.webp"
-// );
+const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 
 const router = useRouter();
 
-const headers = TokenService.getTokenHeader();
 const title = ref("");
 const publisher = ref("");
 const writer = ref("");
@@ -202,7 +197,6 @@ const books_count = ref(0);
 const read_whole = ref(0);
 const have_whole = ref(0);
 const thumbnail = ref("");
-// const thumb_validity = ref(true);
 
 function changeImage(event) {
   event.target.value
@@ -233,28 +227,25 @@ async function createSeries() {
         have_whole: have_whole.value,
         thumbnail: thumbnail.value,
       },
-      { headers }
     );
     if (books_count.value>0) {
       iterateIssues(books_count.value);
-    }
-    else{
+    } else {
       console.log("nothing to add");
     }
-    setPrimaryKey();
-    // router.push("home")
+    router.push("home");
   } catch (error) {
     console.log(error);
   }
 }
 
-async function setPrimaryKey() {
+async function getPrimaryKey() {
   try {
-    const response = await SeriesService.getSeriesKey(
-      { headers }
-      
-    );
-    localStorage.setItem("key",response.data)
+    const response = await SeriesService.getSeriesKey();
+
+    const key = response.data;
+
+    return key;
   } catch (error) {
     console.log(error);
   }
@@ -269,7 +260,7 @@ function iterateIssues(count) {
 }
 
 async function addIssues(bookname) {
-  var key = Number(localStorage.getItem("key")) + 1
+  var key = await getPrimaryKey();
   console.log(key);
   try {
     const response = await IssueService.addIssues(
@@ -279,8 +270,7 @@ async function addIssues(bookname) {
         read_whole: 0,
         have_whole: 0,
       },
-      {headers}
-      );
+    );
   } catch (error) {
     console.log(error);
   }
