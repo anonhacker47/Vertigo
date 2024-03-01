@@ -51,10 +51,10 @@
 
             <ul
               tabindex="0"
-              class="dropdown-content right-0 hover:z-50 menu p-2 shadow bg-base-200 text-white rounded-box w-52"
+              class="dropdown-content right-0 menu z-50 p-2 shadow bg-base-200 text-white rounded-box w-52"
             >
               <li>
-                <RouterLink tag="li" to="/login" class="hover:text-blue-400 "> Settings</RouterLink>
+                <RouterLink to="/login" class="hover:text-blue-400 "> Settings</RouterLink>
               </li>
               <li>
                 <a @click="logout" class="hover:text-blue-400 "> Log-out </a>
