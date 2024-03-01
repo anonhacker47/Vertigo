@@ -8,6 +8,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { plugin, defaultConfig } from '@formkit/vue';
 import '@formkit/themes/genesis';
 import 'animate.css'
+import './input.css'
 
 import "./assets/main.css";
 import Api from "./services/Api";

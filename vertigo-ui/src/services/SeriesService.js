@@ -20,13 +20,13 @@ export default {
     return Api().get(`series/${id}`, headers);
   },
   getImagebyId(id) {
-    return Api().defaults.baseURL + `/series/image/${id}`;
+    return Api().defaults.baseURL + `series/image/${id}`;
   },
   getSeriesKey() {
     return Api().get("series/key",
     );
   },
   getSeriesFieldValues(field){
-    return Api().get(`/series/filter/${field}`);
+    return Api().get(`series/filter/${field}`);
   }
 };
