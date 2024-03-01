@@ -46,7 +46,7 @@ git clone https://github.com/anonhacker47/vertigo-comic-collection -b main
 cd vertigo-comic-collection
 ```
 
-### Backend Setup
+### Setup
 Set up a Python 3 virtualenv and install the dependencies on it:
 
 ```bash
@@ -61,10 +61,13 @@ Create the db and run flask app:
 alembic upgrade head
 flask run
 ```
-By default, the backend will be on http://localhost:5000/
+By default, You can try out the app from http://localhost:5000/ .
+<br/>
 <br/>
 
-### Frontend Setup
+> If you want to tinker with the Frontend follow the below instructions.
+
+#### Frontend Setup
 Install the dependencies:
 ```bash
 cd vertigo-ui
