@@ -20,7 +20,7 @@ export default {
     return Api().get(`series/${id}`);
   },
   getImagebyId(id) {
-    return Api().defaults.baseURL + `series/image/${id}`;
+    return Api().defaults.baseURL + `/series/image/${id}`;
   },
   getSeriesKey() {
     return Api().get("series/key",
