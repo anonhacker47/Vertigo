@@ -7,8 +7,8 @@ export default {
       token
     );
   },
-  addSeries(data, headers) {
-    return Api().post("series", data, headers);
+  addSeries(data) {
+    return Api().post("series", data);
   },
   updateSeries(id,data){
     return Api().put(`series/${id}`,data)
@@ -16,8 +16,8 @@ export default {
   removeSeries(data) {
     return Api().delete(`series/${data}`);
   },
-  getSeriesbyId(id, headers) {
-    return Api().get(`series/${id}`, headers);
+  getSeriesbyId(id) {
+    return Api().get(`series/${id}`);
   },
   getImagebyId(id) {
     return Api().defaults.baseURL + `/series/image/${id}`;
@@ -27,6 +27,6 @@ export default {
     );
   },
   getSeriesFieldValues(field){
-    return Api().get(`/series/filter/${field}`);
+    return Api().get(`series/filter/${field}`);
   }
 };
