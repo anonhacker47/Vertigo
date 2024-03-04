@@ -40,7 +40,7 @@ export default () => {
           if (response.data.access_token) {
             const newToken = response.data.access_token;
 
-            console.log("nrw token", newToken);
+            console.log("new token", newToken);
 
             originalRequest.headers["Authorization"] = "Bearer " + newToken;
 

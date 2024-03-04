@@ -83,16 +83,16 @@
   <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" :class="`grid-cols-${selectedGrid}`" id="carddiv">
     <TransitionGroup enter-active-class="animate__animated animate__zoomInDown">
       <div class="flex flex-row justify-center items-start" v-for="card in cards" :key="card">
-        <RouterLink class="shadow-2xl pt-4" :key="selectedGrid"
-          :class="`md:h-[${cardHeightMD}vh]`, `md:w-[${cardWidthMD}vw]`, `h-[${cardHeight}vh]`, `w-[${cardWidth}vw]`" :to="{
+        <RouterLink class="shadow-2xl pt-4"
+          :class="`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`"
+          :to="{
             name: 'series',
             params: { Link: card.slug, Id: card.id },
             id: card.id,
           }">
           <SliderCardItem :class="{ 'animate-wiggle': deleteMode }" :name="card.title" class="h-full w-full"
-            :src="SeriesService.getImagebyId(card.id)" :grid="selectedGrid" :key="selectedGrid"
-            :format="card.series_format" :textwidth-m-d="cardWidthMD" :textwidth="cardWidth"
-            :have-fraction="calculatePercentage(card.have_count, card.books_count)"
+            :src="SeriesService.getImagebyId(card.id)" :format="card.series_format" :textwidth-m-d="cardWidthMD"
+            :textwidth="cardWidth" :have-fraction="calculatePercentage(card.have_count, card.books_count)"
             :read-fraction="calculatePercentage(card.read_count, card.books_count)" />
         </RouterLink>
         <TransitionGroup enter-active-class="animate__animated animate__bounceIn"
@@ -138,13 +138,13 @@ const orderdir = ref("desc");
 // cardHeight for mobile devices
 // cardHeightMD for larger devices
 
-let cardHeightMultiplierMD = [70, 70, 70, 56, 48, 42, 38, 35, 32];
-let cardWidthMultiplierMD = [22, 22, 22, 19, 18, 16, 12, 10, 12];
+let cardHeightMultiplierMD = [34, 34, 32, 27, 21.5, 19, 16.3, 14, 13.5];
+let cardWidthMultiplierMD = [22, 22, 21, 17.5, 14, 12, 10.5, 9.2, 8.2];
 const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
 const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2]);
 
-let cardHeightMultiplier = [35, 25, 70, 55, 45, 42, 38, 35, 32];
-let cardWidthMultiplier = [80, 75, 24, 20, 18, 16, 12, 10, 12];
+let cardHeightMultiplier = [19, 14, 9, 7.5];
+let cardWidthMultiplier = [12, 9.2, 6, 5];
 const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
 const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
 
