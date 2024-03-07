@@ -10,11 +10,11 @@
           :src="displayedImage"
           @error="handleImageError"
           alt=""
-          class="slideritem h-full w-full md:rounded-t-lg"
+          class="slideritem h-full w-full md:rounded-t"
         />
 
         <div
-          class="absolute flex h-full w-full rounded-t md:rounded-t-lg bg-[#131929] opacity-0"
+          class="absolute flex h-full w-full rounded-t md:rounded-t bg-[#131929] opacity-0"
           :class="{ 'opacity-60': active }"
         >
       </div>
@@ -30,11 +30,11 @@
         >
           {{ name }}
         </span>
-        <p
-          class="absolute text-[10px] md:text-sm px-3 py-2 m-1 md:m-2 font-extrabold bg-slate-800 text-green-200 text rounded md:rounded-md top-0 right-0 break-words"
+        <span
+          class="absolute text-[9px] md:text-[12x] md:text-sm md:px-2 px-1 py-1 md:py-2 m-1 md:m-2 font-extrabold bg-slate-800 text-green-200 text rounded  top-0 right-0 break-words"
         >
           {{ format }}
-        </p>
+        </span>
        <div class="h-3 w-full relative">
         <div class="h-full bg-sky-500 rounded-b absolute" :style="{ width: haveFraction }"></div>
         <div class="h-full bg-green-400 rounded-b absolute" :style="{ width: readFraction }"></div>

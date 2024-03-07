@@ -28,5 +28,8 @@ export default {
   },
   getSeriesFieldValues(field){
     return Api().get(`series/filter/${field}`);
+  },
+  getSeriesThumbBg(){
+    return Api().get(`/series/thumbnail/bg`);
   }
 };

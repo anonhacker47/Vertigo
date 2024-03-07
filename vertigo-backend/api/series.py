@@ -83,7 +83,7 @@ def put(data, id):
     series = db.session.get(Series, id) or abort(404)
     if series.user != token_auth.current_user():
         abort(403)
-    if (thumbnail_filename is not None):
+    if (thumbnail_filename is not None and series.thumbnail is not None):
         delete_series_thumbnail(series.thumbnail)
     series.update(data)
     db.session.commit()
@@ -129,11 +129,21 @@ def feed():
 def getSeriesImage(id):
     """Retrieve the series thumbnail"""
     series = db.session.get(Series, id)
-    if series.thumbnail == "noimage":
-        return jsonify("noimage")
-    else:
-        return send_file(current_app.config['cover_path']+f"\\{series.thumbnail}")
 
+    if series is None:
+        return jsonify("Series not found"), 404
+
+    if series.thumbnail is None:
+        return jsonify("noimage")
+
+    try:
+        return send_file(current_app.config['cover_path'] + f"\\{series.thumbnail}")
+    except FileNotFoundError:
+        return jsonify("Image file not found"), 404
+    except Exception as e:
+        # Handle other potential exceptions (e.g., permission errors)
+        return jsonify(f"Error retrieving image: {str(e)}"), 500
+    
 @series.route('/series/key', methods=['GET'])
 @authenticate(token_auth)
 def key():
@@ -145,7 +155,7 @@ def key():
         return jsonify(f"{obj.id}")
     
 @series.route('/series/filter/<field>', methods=['GET'])
-# @authenticate(token_auth)
+@authenticate(token_auth)
 # @response(200)
 def get_series_by_field(field):
     """Retrieve values from a specific field across all series objects."""
@@ -164,3 +174,10 @@ def get_series_by_field(field):
     print(values)
 
     return jsonify(values)
+
+@series.route('/series/thumbnail/bg', methods=['GET'])
+def get_series_with_thumbnail():
+    """Retrieve IDs of series with non-null thumbnails"""
+    series_with_thumbnail = db.session.query(Series.id).filter(Series.thumbnail.isnot(None)).all()
+    series_ids = [series[0] for series in series_with_thumbnail]
+    return jsonify(series_ids)
