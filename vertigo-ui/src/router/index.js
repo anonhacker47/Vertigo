@@ -1,6 +1,5 @@
-import { useUserStore } from "../store/user";
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import DashboardView from "../views/DashboardView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,17 +13,17 @@ const router = createRouter({
       },
     },
     {
-      path: "/home",
-      name: "Home",
-      component: HomeView,
+      path: "/dashboard",
+      name: "Dashboard",
+      component: DashboardView,
       meta: {
         requiresAuth: true,
       },
     },
     {
-      path: "/reading",
-      name: "Reading",
-      component: () => import("../views/ReadingView.vue"),
+      path: "/collection",
+      name: "Collection",
+      component: () => import("../views/CollectionView.vue"),
       meta: {
         requiresAuth: true,
       },
@@ -43,9 +42,6 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
       },
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import("../views/SeriesView.vue"),
     },
     {
@@ -97,7 +93,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.name === "Login") {
-    localStorage.getItem("isUserLoggedIn") ? next({ name: "Home" }) : next();
+    localStorage.getItem("isUserLoggedIn") ? next({ name: "Dashboard" }) : next();
     // next() // login route is always  okay (we could use the requires auth flag below). prevent a redirect loop
   } else if (to.meta && to.meta.requiresAuth === false) {
     next(); // requires auth is explicitly set to false

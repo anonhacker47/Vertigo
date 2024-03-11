@@ -104,7 +104,7 @@
               </button>
             </div>
             <div class="form-control w-full">
-              <button type="button" @click="router.push('home')" class="btn btn-danger">
+              <button type="button" @click="router.push('collection')" class="btn btn-danger">
                 Cancel
               </button>
             </div>

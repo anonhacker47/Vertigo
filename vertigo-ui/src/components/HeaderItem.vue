@@ -6,7 +6,7 @@
       class="w-full flex-row container px-4 mx-auto flex flex-wrap items-center justify-between"
     >
       <div class="relative flex justify-between justify-start">
-        <RouterLink tag="li" to="/"
+        <RouterLink to="/"
           ><img class="" src="../assets/logo.svg" alt="" width="40" height="40"
         /></RouterLink>
       </div>
@@ -16,26 +16,23 @@
       >
         <div class="flex flex col">
           <RouterLink
-            tag="li"
-            to="/home"
+            to="/dashboard"
+            class="block pl-2 text-white rounded mx-5 hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700"
+          >
+            Dashboard</RouterLink
+          >
+          <RouterLink
+            to="/collection"
             class="block pl-2 text-white rounded mx-5 hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700"
           >
             Collection</RouterLink
           >
-          <RouterLink
-            tag="li"
-            to="/reading"
-            class="block pl-2 text-white rounded mx-5 hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700"
-          >
-            Reading</RouterLink
-          >
-          <RouterLink
-            tag="li"
+          <!-- <RouterLink
             to="/wishlist"
             class="block pl-2 text-white rounded mx-5 hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700"
           >
             Wishlist</RouterLink
-          >
+          > -->
         </div>
       </div>
       <div class="flex items-center">

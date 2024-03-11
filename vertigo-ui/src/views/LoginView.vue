@@ -49,7 +49,7 @@ async function login(values) {
 
 
     userStore.addToken(response.data.access_token);
-
+    
     if (localStorage.getItem("token")) {
       const headers = TokenService.getTokenHeader();
       try {
@@ -58,7 +58,7 @@ async function login(values) {
       } catch (error) {
         message.value = response;
       }
-      route.push("home");
+      route.push("collection");
     } else {
       userStore.isUserLoggedIn = false;
     }
