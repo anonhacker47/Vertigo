@@ -13,7 +13,7 @@ export const useUserStore = defineStore("user",{
         addUser(userId) {
             this.userId = userId
             localStorage.setItem('userId',userId);
-        },
+            },
         getRefrehToken(token) {
             this.token = token
         },

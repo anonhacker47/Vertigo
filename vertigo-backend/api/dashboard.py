@@ -41,7 +41,14 @@ def user_series_stats(user_id):
         .filter(Series.have_count == Series.books_count)
         .count()
     )
-    return jsonify({'totalSeriesCount': series_count, 'collectedSeriesCount': completed_series_count})
+    
+    read_series_count = (
+        db.session.query(Series)
+        .filter_by(user_id=user_id)
+        .filter(Series.have_count == Series.issue_count)
+        .count()
+    )    
+    return jsonify({'totalSeriesCount': series_count, 'collectedSeriesCount': completed_series_count,'readSeriesCount': read_series_count})
 
 
 
@@ -57,37 +64,13 @@ def user_issues_stats(user_id):
         .filter(Issue.have_whole == 1)
         .count()
     )
-    return jsonify({'totalIssueCount': issue_count, 'collectedIssueCount': completed_issue_count})
-
-
-
-@dashboard.route('/users/<int:user_id>/series/read', methods=['GET'])
-@authenticate(token_auth)
-@other_responses({404: {'description': 'User not found'}})
-def user_read_series(user_id):
-    """Retrieve number of series completely read by a user"""
-    read_series_count = (
-        db.session.query(Series)
-        .filter_by(user_id=user_id)
-        .filter(Series.have_count == Series.books_count)
-        .count()
-    )
-    return jsonify({'readSeriesCount': read_series_count})
-
-
-@dashboard.route('/users/<int:user_id>/issues/read', methods=['GET'])
-@authenticate(token_auth)
-@other_responses({404: {'description': 'User not found'}})
-def user_read_issues(user_id):
-    """Retrieve number of issues completely read by a user"""
     read_issue_count = (
         db.session.query(Issue)
         .filter_by(user_id=user_id)
         .filter(Issue.read_whole == 1)
         .count()
     )
-    return jsonify({'readIssueCount': read_issue_count})
-
+    return jsonify({'totalIssueCount': issue_count, 'collectedIssueCount': completed_issue_count,'readIssueCount': read_issue_count})
 
 
 field_options = ['publisher', 'genre', 'main_char', 'writer', 'artist', 'editor']

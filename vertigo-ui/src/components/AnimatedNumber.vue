@@ -3,7 +3,7 @@
 </template>
 
 <script setup> 
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { gsap } from 'gsap';
 
 const props = defineProps({
@@ -15,7 +15,14 @@ const props = defineProps({
 const element = ref(null);
 const animatedValue = ref(0);
 
-onMounted(() => {
-    gsap.to(element.value, { duration: 1, textContent: props.number, roundProps: { textContent: 1 } });
-});
+watch(
+    () => props.number,
+    (newValue) => {
+        gsap.to(element.value, {
+            duration: 1,
+            textContent: newValue,
+            roundProps: { textContent: 1 },
+        });
+    },
+);
 </script>

@@ -58,7 +58,7 @@ async function login(values) {
       } catch (error) {
         message.value = response;
       }
-      route.push("collection");
+      route.push("dashboard");
     } else {
       userStore.isUserLoggedIn = false;
     }
