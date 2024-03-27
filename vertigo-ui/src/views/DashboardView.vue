@@ -6,11 +6,14 @@
     </div> -->
     <div class="w-full flex gap-12 items-center h-40 pt-4 pl-8 pr-8 justify-around">
       <InsightCardItem :border="true" :icon="collectionIcon" :multipleData="true" titleA="My Series" titleB="My Issues"
-        :valueANumerator="15" :valueBNumerator="35" :valueBDenominator="80" />
-      <InsightCardItem :border="true" :icon="readIcon" :multipleData="false" titleA="Series Read" titleB="Issues Read"
-        :valueANumerator="15" :valueBNumerator="35" :valueBDenominator="80" />
+        :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount" :value-b-numerator="seriesInfo.totalSeriesCount" :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
+        
+      <InsightCardItem :border="true" :icon="readIcon" :multipleData="false" titleA="Series Read"
+        :valueANumerator="seriesInfo.readSeriesCount" :valueADenominator="seriesInfo.totalSeriesCount" />
+
       <InsightCardItem :border="true" :icon="readIssueIcon" :multipleData="false" titleA="Issues Read"
-        titleB="Issues Read" :valueANumerator="15" :valueBNumerator="35" :valueBDenominator="80" />
+        titleB="Issues Read" :valueANumerator="issueInfo.readIssueCount"  :valueADenominator="issueInfo.totalIssueCount" />
+
       <AddSeriesCardItem :icon="addIcon" />
     </div>
     <div class="w-full flex mt-8 justify-around gap-8 pl-8 pr-8 mb-8 h-full">
@@ -35,18 +38,13 @@
 
         <div class="flex  gap-4 pb-4 pr-4 pl-4 w-full">
           <div class="relative w-1/2">
-            <select class="select select-primary select-bordered w-full" v-model="selectedType">
-              <option>Series</option>
-              <option>Issues</option>
+            <select class="select select-primary select-bordered w-full" v-model="selectedType" @change="fetchData">
+              <option v-for="(item, i) in chartTypeList" :key="i" :value="item.field">{{item.Name}}</option>
             </select>
           </div>
           <div class="relative w-1/2">
-            <select class="select  select-primary select-bordered w-full" v-model="selectedCategory">
-              <option>Publisher</option>
-              <option>Genre</option>
-              <option>Main Char/Team</option>
-              <option>Writer</option>
-              <option>Artist</option>
+            <select class="select  select-primary select-bordered w-full" v-model="selectedCategory" @change="fetchData">
+              <option v-for="item in chartCategoryList" :key="item.Name" :value="item.field">{{item.Name}}</option>
             </select>
           </div>
         </div>
@@ -77,36 +75,85 @@ import readIssueIcon from '@/assets/readIssue.svg'
 import InsightCardItem from '../components/cards/InsightCardItem.vue'
 import AddSeriesCardItem from '../components/cards/AddSeriesCardItem.vue'
 
-import { ref, computed } from 'vue';
+import { ref, computed,onMounted } from 'vue';
 import PieChartItem from '../components/charts/PieChartItem.vue';
 import LineChartItem from '../components/charts/LineChartItem.vue';
 import SwiperCardItem from '../components/cards/SwiperCardItem.vue';
+import DashboardService from '../services/DashboardService';
+import TokenService from '../services/TokenService';
 
-const selectedType = ref('Series');
-const selectedCategory = ref('Publisher');
+const userId = TokenService.getUser();
 
-const chartData = [
-  { value: 1548, name: 'Marvel' },
-  { value: 310, name: 'DC Comics' },
-  { value: 345, name: 'Dark Horse Comics' },
-  { value: 1234, name: 'Vertigo' },
-  { value: 135, name: 'Image Comics' },
-  { value: 190, name: 'Milestone Media' },
+const selectedType = ref('series');
+const selectedCategory = ref('publisher');
+
+const seriesInfo = ref({ totalSeriesCount: 0, collectedSeriesCount: 0, readSeriesCount: 0 });
+const issueInfo = ref({ totalIssueCount: 0, collectedIssueCount: 0, readIssueCount: 0 });
+const chartData =ref([] );
+
+const chartTypeList = [
+  { Name: 'Series', field: 'series' },
+  { Name: 'Issue', field: 'issue' },
 ];
+const chartCategoryList = [
+  { Name: 'Publisher', field: 'publisher' },
+  { Name: 'Genre', field: 'genre' },
+  { Name: 'Main Char/Team', field: 'main_char' },
+  { Name: 'Writer', field: 'writer' },
+  { Name: 'Artist', field: 'artist' },
+  { Name: 'Editor', field: 'editor' },
+];
+async function getSeriesInfo() {
+  try {
+    const response = await DashboardService.getUserSeriesStats(userId);
+    seriesInfo.value.totalSeriesCount = response.data.totalSeriesCount;
+    seriesInfo.value.collectedSeriesCount = response.data.collectedSeriesCount;
+    seriesInfo.value.readSeriesCount = response.data.readSeriesCount;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function getIssueInfo() {
+  try {
+    const response = await DashboardService.getUserIssueStats(userId);
+    issueInfo.value.totalIssueCount = response.data.totalIssueCount;
+    issueInfo.value.collectedIssueCount = response.data.collectedIssueCount;
+    issueInfo.value.readIssueCount = response.data.readIssueCount;
+    console.log(issueInfo.value.totalIssueCount);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function fetchData() {
+  await getUserFieldCountAsync(userId, selectedCategory.value, selectedType.value);
+};
+
+async function getUserFieldCountAsync(userId, field, type) {
+  try {
+    const response = await DashboardService.getUserFieldCount(userId, field, type);
+    chartData.value = response.data;
+    console.log(chartData.value);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+onMounted(async () => {
+  await getSeriesInfo();
+  await getIssueInfo();
+  await fetchData();
+});
 
 const dates = ['Jan', 'Feb', 'Mar','Apr','May']
 const purchaseData = [2,8, 10,3,5]
 
 const chartTitle = computed(() => {
-  let title = '';
-  if (selectedType.value === 'Series') {
-    title = 'Series by ';
-  } else if (selectedType.value === 'Issues') {
-    title = 'Issues by ';
-  }
-
-  title += selectedCategory.value;
-  return title;
+  const selectedTypeName = selectedType.value === 'series' ? 'Series' : 'Issues';
+  const selectedCategoryItem = chartCategoryList.find(item => item.field === selectedCategory.value);
+  return `${selectedTypeName} by ${selectedCategoryItem.Name}`;
 });
 
 </script>

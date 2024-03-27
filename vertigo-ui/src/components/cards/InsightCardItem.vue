@@ -5,7 +5,7 @@
 			<div v-if="selectedOption == 1" class="flex flex-col">
 				<h2 class="card-title">{{props.titleA}}</h2>
 				<span class="font-black text-5xl pt-4 text-gray-50">
-					<AnimatedNumber :number="props.valueANumerator" /><span v-if="props.valueANumerator" class="font-black text-3xl text-gray-400">{{ "/" + props.valueANumerator }}</span>
+					<AnimatedNumber :number="props.valueANumerator" /><span v-if="props.valueADenominator" class="font-black text-3xl text-gray-400">{{ "/" + props.valueADenominator }}</span>
 				</span>
 			</div>
 			<!-- Card B -->
@@ -43,6 +43,7 @@ const props = defineProps({
 })
 const selectedOption = ref('1');
 const multipleData = props.multipleData || false
+
 
 </script>
 
