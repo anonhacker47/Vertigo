@@ -32,7 +32,7 @@
               </select>
             </div>
             <div class="form-control">
-              <input type="number" v-model.number="books_count" placeholder="Book Count" class="input input-bordered" />
+              <input type="number" v-model.number="issue_count" placeholder="Book Count" class="input input-bordered" />
             </div>
           </div>
           <div class="flex flex-row gap-16 my-5 justify-around">
@@ -43,32 +43,32 @@
                 v-model="publisher"
                 class="input input-bordered"
               /> -->
-              <TypeAheadInput v-model="publisher" field="publisher" placeholder="Publisher"/>
+              <SingleSelectCombobox v-model="publisher" field="publisher" placeholder="Publisher"/>
             </div>
             <div class="form-control">
               <!-- <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" /> -->
-              <TypeAheadInput v-model="genre" field="genre" placeholder="Genre"/>
+              <MultiSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
 
             </div>
             <div class="form-control">
               <!-- <input type="text" v-model="main_char" placeholder="Main Character/Team" class="input input-bordered" /> -->
-              <TypeAheadInput v-model="main_char" field="main_char" placeholder="Main Character/ Team"/>
+              <SingleSelectCombobox v-model="main_char" field="main_char" placeholder="Main Character/ Team"/>
 
             </div>
           </div>
           <div class="flex flex-row gap-16 my-5 justify-around">
             <div class="form-control">
               <!-- <input type="text" placeholder="Writer" v-model="writer" class="input input-bordered" /> -->
-              <TypeAheadInput v-model="writer" field="writer" placeholder="Writer"/>
+              <SingleSelectCombobox v-model="writer" field="writer" placeholder="Writer"/>
 
             </div>
             <div class="form-control">
               <!-- <input type="text" v-model="artist" placeholder="Artist" class="input input-bordered" /> -->
-              <TypeAheadInput v-model="artist" field="artist" placeholder="Artist"/>
+              <SingleSelectCombobox v-model="artist" field="artist" placeholder="Artist"/>
             </div>
             <div class="form-control">
               <!-- <input type="text" v-model="editor" placeholder="Editor" class="input input-bordered" /> -->
-              <TypeAheadInput v-model="editor" field="editor" placeholder="Editor"/>
+              <SingleSelectCombobox v-model="editor" field="editor" placeholder="Editor"/>
 
             </div>
           </div>
@@ -121,7 +121,8 @@ import { useRouter } from "vue-router";
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
-import TypeAheadInput from "../components/TypeAheadInput.vue";
+import SingleSelectCombobox from "../components/customInputs/SingleSelectCombobox.vue";
+import MultiSelectCombobox from "../components/customInputs/MultiSelectCombobox.vue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 
@@ -133,10 +134,10 @@ const writer = ref("");
 const artist = ref("");
 const editor = ref("");
 const summary = ref("");
-const genre = ref("");
+const genre = ref([]);
 const main_char = ref("");
 const series_format = ref("");
-const books_count = ref(0);
+const issue_count = ref(0);
 const read_whole = ref(0);
 const have_whole = ref(0);
 const thumbnail = ref("");
@@ -156,8 +157,8 @@ function changeThumb() {
 async function createSeries() {
 
   try {
-    const have_count = have_whole.value == 1 ? books_count.value : 0;
-    const read_count = read_whole.value == 1 ? books_count.value : 0;
+    const have_count = have_whole.value == 1 ? issue_count.value : 0;
+    const read_count = read_whole.value == 1 ? issue_count.value : 0;
     console.log("have_count", have_count);
     console.log("read_count", read_count);
     const response = await SeriesService.addSeries(
@@ -171,13 +172,13 @@ async function createSeries() {
         genre: genre.value,
         main_char: main_char.value,
         series_format: series_format.value,
-        books_count: books_count.value,
+        issue_count: issue_count.value,
         read_count: read_count,
         have_count: have_count,
         thumbnail: thumbnail.value,
       },
     );
-    if (books_count.value > 0) {
+    if (issue_count.value > 0) {
       addIssues();
     } else {
       console.log("nothing to add");

@@ -110,19 +110,19 @@
                     <div class="form-control">
                       <!-- <input type="text" placeholder="Publisher" v-model="updatedSeries.publisher"
                         class="input w-[13rem] input-bordered" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.publisher" field="publisher" placeholder="Publisher" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.publisher" field="publisher" placeholder="Publisher" />
 
                     </div>
                     <div class="form-control">
                       <!-- <input type="text" placeholder="Genre" v-model="updatedSeries.genre"
                         class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.genre" field="genre" placeholder="Genre" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.genre" field="genre" placeholder="Genre" />
 
                     </div>
                     <div class="form-control">
                       <!-- <input type="text" v-model="updatedSeries.main_char" placeholder="Main Character/Team"
                         class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.main_char" field="main_char"
+                      <SingleSelectCombobox v-model="updatedSeries.value.main_char" field="main_char"
                         placeholder="Main Character/Team" />
                     </div>
                   </div>
@@ -130,19 +130,19 @@
                     <div class="form-control">
                       <!-- <input type="text" placeholder="Writer" v-model="updatedSeries.writer"
                         class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.writer" field="writer" placeholder="Writer" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.writer" field="writer" placeholder="Writer" />
 
                     </div>
                     <div class="form-control">
                       <!-- <input type="text" v-model="updatedSeries.artist" placeholder="Artist"
                         class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.artist" field="artist" placeholder="Artist" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.artist" field="artist" placeholder="Artist" />
 
                     </div>
                     <div class="form-control">
                       <!-- <input type="text" v-model="updatedSeries.editor" placeholder="Editor"
                         class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.editor" field="editor" placeholder="Editor" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.editor" field="editor" placeholder="Editor" />
                     </div>
                   </div>
                   <div class="flex flex-row gap-16 mb-3 justify-around">
@@ -205,8 +205,7 @@ import TokenService from "../services/TokenService";
 import DetailCardItem from "../components/cards/DetailCardItem.vue";
 import EditIcon from "../assets/EditIcon.vue";
 import EditSeriesModal from "../components/modals/EditSeriesModal.vue";
-import TypeAheadInput from "../components/TypeAheadInput.vue";
-
+import SingleSelectCombobox from "../components/customInputs/SingleSelectCombobox.vue";
 const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
 const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
 const teamUrl = new URL("../assets/group.png", import.meta.url).href;
