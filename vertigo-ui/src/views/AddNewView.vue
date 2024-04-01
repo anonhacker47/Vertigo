@@ -47,7 +47,7 @@
             </div>
             <div class="form-control">
               <!-- <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" /> -->
-              <MultiSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
+              <SingleSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
 
             </div>
             <div class="form-control">

@@ -6,12 +6,15 @@ from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
 
 from api import db
-from api.models import User, Series, Issue
-from api.schemas import IssueSchema
-from api.auth import token_auth
-from api.decorators import paginated_response
-from api.schemas import DateTimePaginationSchema
+from api.models.user import User
+from api.models.series import Series
+from api.models.issue import Issue
 
+from api.schemas.issue_schema import IssueSchema
+from api.utils.auth import token_auth
+from api.decorators import paginated_response
+from api.schemas.pagination_schema import DateTimePaginationSchema
+ 
 
 issues = Blueprint('issue', __name__)
 issue_schema = IssueSchema()

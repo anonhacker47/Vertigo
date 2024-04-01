@@ -1,10 +1,12 @@
 from functools import wraps
 from flask import abort,request
 from apifairy import arguments, response
-from api.models import User, Series, Issue
+from api.models.user import User
+from api.models.series import Series
+from api.models.issue import Issue
 import sqlalchemy as sqla
 from api.app import db
-from api.schemas import StringPaginationSchema, PaginatedCollection
+from api.schemas.pagination_schema import StringPaginationSchema, PaginatedCollection
 
 
 def paginated_response(schema, max_limit=25, order_by=None,

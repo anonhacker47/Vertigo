@@ -1,21 +1,18 @@
-import os
-from pstats import SortKey
-from flask import current_app, jsonify
-import sqlite3
+from flask import jsonify
 from sqlalchemy import desc,func
 
 
-from flask import Blueprint, abort, request, send_file, send_from_directory
-from apifairy import authenticate, body, response, other_responses
+from flask import Blueprint, abort
+from apifairy import authenticate, other_responses
 
 from api import db
-from api.models import User, Series, Issue
-from api.schemas import SeriesSchema, EmptySchema, IssueSchema
+from api.models.series import Series
+from api.models.issue import Issue
+from api.schemas.series_schema import SeriesSchema 
+from api.schemas.issue_schema import IssueSchema
 
-from api.auth import token_auth
-from api.decorators import paginated_response
-from api.schemas import DateTimePaginationSchema
-from api.helpers import save_series_thumbnail,delete_series_thumbnail
+
+from api.utils.auth import token_auth
 
 
 dashboard = Blueprint('dashboard', __name__)

@@ -3,10 +3,11 @@ from flask import Blueprint, abort
 from apifairy import authenticate, body, response
 
 from api import db
-from api.models import User
-from api.schemas import UserSchema, UpdateUserSchema, EmptySchema
-from api.auth import token_auth
-from api.decorators import paginated_response
+from api.models.user import User
+from api.schemas.user_schema import UserSchema, UpdateUserSchema
+from api.schemas.empty_schema import EmptySchema
+
+from api.utils.auth import token_auth
 
 users = Blueprint('users', __name__)
 user_schema = UserSchema()

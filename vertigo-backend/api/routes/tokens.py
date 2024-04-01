@@ -3,11 +3,15 @@ from werkzeug.http import dump_cookie
 from apifairy import authenticate, body, response, other_responses
 
 from api.app import db
-from api.auth import basic_auth
-from api.email import send_email
-from api.models import User, Token
-from api.schemas import TokenSchema, PasswordResetRequestSchema, \
-    PasswordResetSchema, EmptySchema
+from api.utils.auth import basic_auth
+from api.utils.email import send_email
+from api.models.user import User
+from api.models.token import Token
+
+from api.schemas.token_schema import TokenSchema
+from api.schemas.password_reset_schema import PasswordResetRequestSchema, \
+    PasswordResetSchema
+from api.schemas.empty_schema import EmptySchema
 
 tokens = Blueprint('tokens', __name__)
 token_schema = TokenSchema()

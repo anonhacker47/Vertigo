@@ -14,7 +14,6 @@ cors = CORS()
 mail = Mail()
 apifairy = APIFairy()
 
-
 def create_app(config_class=Config):
     app = Flask(__name__,
             static_folder = "./wwwroot/static",
@@ -35,7 +34,8 @@ def create_app(config_class=Config):
         print("The 'cover_path' directory is created!")    
 
     # extensions
-    from api import models
+    from api import models  
+
     db.init_app(app)
     ma.init_app(app)
     if app.config['USE_CORS']:  # pragma: no branch
@@ -46,15 +46,15 @@ def create_app(config_class=Config):
     # blueprints
     from api.errors import errors
     app.register_blueprint(errors)
-    from api.tokens import tokens
+    from api.routes.tokens import tokens
     app.register_blueprint(tokens, url_prefix='/api')
-    from api.users import users
+    from api.routes.users import users
     app.register_blueprint(users, url_prefix='/api')
-    from api.series import series
+    from api.routes.series import series
     app.register_blueprint(series, url_prefix='/api') 
-    from api.issue import issues
+    from api.routes.issue import issues
     app.register_blueprint(issues, url_prefix='/api') 
-    from api.dashboard import dashboard
+    from api.routes.dashboard import dashboard
     app.register_blueprint(dashboard, url_prefix='/api') 
 
     # define the shell context
