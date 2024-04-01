@@ -18,10 +18,10 @@
       <div class="card h-full shadow-2xl bg-base-100">
         <div class="card-body justify-between">
           <div class="flex flex-row gap-16 mb-5 justify-around">
-            <div class="form-control">
+            <div class="form-control max-w-52">
               <input type="text" placeholder="Series Name" v-model="title" class="input input-bordered" required />
             </div>
-            <div class="form-control w-full">
+            <div class="form-control w-full max-w-52">
               <select class="select select-primary" v-model="series_format" required>
                 <option disabled value="">Pick Format</option>
                 <option>TPB</option>
@@ -31,11 +31,11 @@
                 <option>MANGA</option>
               </select>
             </div>
-            <div class="form-control">
+            <div class="form-control max-w-52">
               <input type="number" v-model.number="issue_count" placeholder="Book Count" class="input input-bordered" />
             </div>
           </div>
-          <div class="flex flex-row gap-16 my-5 justify-around">
+          <div class="flex flex-row gap-16 mt-5 justify-around">
             <div class="form-control">
               <!-- <input
                 type="text"
@@ -47,7 +47,7 @@
             </div>
             <div class="form-control">
               <!-- <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" /> -->
-              <SingleSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
+              <MultiSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
 
             </div>
             <div class="form-control">
@@ -56,19 +56,19 @@
 
             </div>
           </div>
-          <div class="flex flex-row gap-16 my-5 justify-around">
+          <div class="flex flex-row gap-16 justify-around">
             <div class="form-control">
               <!-- <input type="text" placeholder="Writer" v-model="writer" class="input input-bordered" /> -->
-              <SingleSelectCombobox v-model="writer" field="writer" placeholder="Writer"/>
+              <MultiSelectCombobox v-model="writer" field="writer" placeholder="Writer"/>
 
             </div>
             <div class="form-control">
               <!-- <input type="text" v-model="artist" placeholder="Artist" class="input input-bordered" /> -->
-              <SingleSelectCombobox v-model="artist" field="artist" placeholder="Artist"/>
+              <MultiSelectCombobox v-model="artist" field="artist" placeholder="Artist"/>
             </div>
             <div class="form-control">
               <!-- <input type="text" v-model="editor" placeholder="Editor" class="input input-bordered" /> -->
-              <SingleSelectCombobox v-model="editor" field="editor" placeholder="Editor"/>
+              <MultiSelectCombobox v-model="editor" field="editor" placeholder="Editor"/>
 
             </div>
           </div>
@@ -129,10 +129,10 @@ const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 const router = useRouter();
 
 const title = ref("");
-const publisher = ref("");
-const writer = ref("");
-const artist = ref("");
-const editor = ref("");
+const publisher = ref([]);
+const writer = ref([]);
+const artist = ref([]);
+const editor = ref([]);
 const summary = ref("");
 const genre = ref([]);
 const main_char = ref("");
@@ -168,9 +168,10 @@ async function createSeries() {
         writer: writer.value,
         artist: artist.value,
         editor: editor.value,
-        summary: summary.value,
+        description: summary.value,
         genre: genre.value,
         main_char: main_char.value,
+        main_char_type: "character",
         series_format: series_format.value,
         issue_count: issue_count.value,
         read_count: read_count,

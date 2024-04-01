@@ -9,12 +9,14 @@ from apifairy import authenticate, body, response, other_responses
 from api import db
 from api.models.user import User
 from api.models.series import Series
+from api.models.series_entities import *
 from api.models.issue import Issue
 
 from api.schemas.series_schema import SeriesSchema
 from api.schemas.empty_schema import EmptySchema
 
 from api.utils.auth import token_auth
+from api.utils.series_field import create_or_get_entities, create_or_get_main_character
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
 from api.helpers.thumbnail_processing import save_series_thumbnail,delete_series_thumbnail
@@ -32,8 +34,37 @@ update_series_schema = SeriesSchema(partial=True)
 def new(args):
     """Create a new series"""
     user = token_auth.current_user()
+
+    entities = {
+        'genre': args.pop("genre", []),
+        'team': args.pop("team", []),
+        'editor': args.pop("editor", []),
+        'writer': args.pop("writer", []),
+        'artist': args.pop("artist", []),
+        'inker': args.pop("inker", []),
+        'penciller': args.pop("penciller", []),
+        'colorist': args.pop("colorist", []),
+        'letterer': args.pop("letterer", []),
+        'character': args.pop("character", []),
+    }
+
+    main_char_title = args.pop("main_char", None)
+    main_char_type = args.pop("main_char_type", None)
+
+
     series = Series(user=user, **args)
     db.session.add(series)
+
+    for entity_type, titles in entities.items():
+        entity_items = create_or_get_entities(entity_type, titles)
+        for item in entity_items:
+            getattr(series, entity_type).append(item)
+
+    if main_char_title:
+        main_char = create_or_get_main_character(main_char_type, main_char_title)
+        series.main_char_id = main_char.id
+        series.main_char_type = main_char_type
+
     db.session.commit()
     return series
 
@@ -45,7 +76,6 @@ def new(args):
 def get(id):
     """Retrieve a series by id"""
     return db.session.get(Series, id) or abort(404)
-
 
 @series.route('/series', methods=['GET'])
 @authenticate(token_auth)
@@ -86,10 +116,24 @@ def put(data, id):
         data['thumbnail'] = thumbnail_filename
 
     series = db.session.get(Series, id) or abort(404)
+
     if series.user != token_auth.current_user():
         abort(403)
+        
     if (thumbnail_filename is not None and series.thumbnail is not None):
         delete_series_thumbnail(series.thumbnail)
+
+    entities = {
+        'genre': data.pop("genre", []),
+        'editor': data.pop("editor", []),
+        'writer': data.pop("writer", []),
+        'artist': data.pop("artist", []),
+    }
+
+    for entity_type, titles in entities.items():
+        entity_items = create_or_get_entities(entity_type, titles)
+        setattr(series, entity_type, entity_items)
+
     series.update(data)
     db.session.commit()
     return series
@@ -159,25 +203,51 @@ def key():
     else:
         return jsonify(f"{obj.id}")
     
-@series.route('/series/filter/<field>', methods=['GET'])
+@series.route('/series/filter/<table>', methods=['GET'])
 @authenticate(token_auth)
-# @response(200)
-def get_series_by_field(field):
-    """Retrieve values from a specific field across all series objects."""
-    if field not in ['title', 'publisher', 'genre', 'main_char', 'writer', 'artist', 'editor', 'summary']:
-        abort(400, "Invalid field provided")
+def get_series_by_table(table):
+    """Retrieve values from a specific table across all series objects."""
+    
+    # # Get all series objects
+    # if table_class is None:
+    #     if table == "publisher" or "main_char":
+    #         values = db.session.query(getattr(Series, table)).distinct().all()
+    #         # Extract the desired field values
+    #         values = [value[0] for value in values if value[0]]
+    #         # Remove duplicates (optional)
+    #         values = list(set(values))
+    #         values.sort() 
+    #         values = [{'id':str(i+1),'value': value} for i, value in enumerate(values)]
+    #         return jsonify(values)
+    #     else: 
+    #         abort(400, "Invalid table provided")
+    # else:
 
-    # Get all series objects
-    values = db.session.query(getattr(Series, field)).distinct().all()
+    if table.lower() == 'main_char':
+        # Handle main_char separately by combining characters and teams
+        characters = db.session.query(Character.title).distinct().all()
+        teams = db.session.query(Team.title).distinct().all()
+        
+        # Combine results and remove duplicates
+        values = {char.title for char in characters} | {team.title for team in teams}
+    else:
+        table_class = {
+            'genre': Genre,
+            'artist': Artist,
+            'editor': Editor,
+            'writer': Writer,
+            'publisher': Publisher,
+        }.get(table.lower())
 
-    # Extract the desired field values
-    values = [value[0] for value in values if value[0]]
+        if table_class is None:
+            return jsonify({'error': 'Invalid table name'}), 400
 
-    # Remove duplicates (optional)
-    values = list(set(values))
-    values.sort() 
-    print(values)
+        values = db.session.query(table_class.title).distinct().all()
+        values = {value.title for value in values}
 
+    # Sort and format the final list
+    values = sorted(values)
+    values = [{'id': str(i + 1), 'value': value} for i, value in enumerate(values)]
     return jsonify(values)
 
 @series.route('/series/thumbnail/bg', methods=['GET'])

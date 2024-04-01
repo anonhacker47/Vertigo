@@ -37,7 +37,7 @@ class Issue(Updateable, db.Model):
     series = sqla_orm.relationship('Series', back_populates='issue')
 
     def __init__(self, *args, **kwargs):
-        if not 'slug' in kwargs:
+        if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
         
 

@@ -39,7 +39,7 @@ def new(args,series_id):
         issue = Issue(user=user, series=series, title=title,
                       read_whole=read_whole, have_whole=have_whole)
         db.session.add(issue)
-
+    
     db.session.commit()
 
     return issue

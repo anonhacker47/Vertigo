@@ -46,15 +46,15 @@ def create_app(config_class=Config):
     # blueprints
     from api.errors import errors
     app.register_blueprint(errors)
-    from api.routes.tokens import tokens
+    from api.routes.tokens_routes import tokens
     app.register_blueprint(tokens, url_prefix='/api')
-    from api.routes.users import users
+    from api.routes.users_routes import users
     app.register_blueprint(users, url_prefix='/api')
-    from api.routes.series import series
+    from api.routes.series_routes import series
     app.register_blueprint(series, url_prefix='/api') 
-    from api.routes.issue import issues
+    from api.routes.issue_routes import issues
     app.register_blueprint(issues, url_prefix='/api') 
-    from api.routes.dashboard import dashboard
+    from api.routes.dashboard_routes import dashboard
     app.register_blueprint(dashboard, url_prefix='/api') 
 
     # define the shell context

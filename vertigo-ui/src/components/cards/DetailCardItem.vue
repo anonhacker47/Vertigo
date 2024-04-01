@@ -10,19 +10,25 @@
       {{field}}
     </div>
     <div class="text-primary font-medium">
-      {{detail}}
+      {{detailString}}
     </div>
   </div>
 </div>
 </template>
 <script setup>
+import { computed } from 'vue';
+
 
 
 const props = defineProps({
     icon :String,
     field : String,
-    detail : String
-})
+    detail: [String, Array]
+  })
+
+const detailString = computed(() => {
+  return Array.isArray(props.detail) ? props.detail.join(", ") : props.detail;
+});
 </script>
 <style>
 

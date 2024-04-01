@@ -1,9 +1,8 @@
-from marshmallow import validate,\
-     post_dump
-from api import ma, db
-from api.utils.auth import token_auth
+from marshmallow import post_load, validate, post_dump
+from api import ma
 from api.models.series import Series
 from api.schemas.user_schema import UserSchema
+from api.schemas.genre_schema import GenreSchema
 
 class SeriesSchema(ma.SQLAlchemySchema):
     class Meta:
@@ -14,49 +13,43 @@ class SeriesSchema(ma.SQLAlchemySchema):
     id = ma.auto_field(dump_only=True)
     url = ma.String(dump_only=True)
     
-    
     title = ma.auto_field(required=True, validate=validate.Length(
         min=1, max=280))
-    publisher = ma.auto_field() 
-    writer = ma.auto_field(validate=validate.Length(
-        min=0, max=280))   
-    artist = ma.auto_field(validate=validate.Length(
+    publisher = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280))) 
+    writer = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))
+    artist = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))
+
+    inker = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))  
+    penciller = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))  
+    colorist = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))  
+    letterer = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))
+
+    character = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))
+      
+    main_char = ma.String(validate=validate.Length(
         min=0, max=280))
+    
+    editor = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280))) 
+    
+    description = ma.auto_field(validate=validate.Length(
+        min=0, max=1250))  
 
-    inker = ma.auto_field(validate=validate.Length(
-        min=0, max=280))   
-    penciller = ma.auto_field(validate=validate.Length(
-        min=0, max=280))   
-    colorist = ma.auto_field(validate=validate.Length(
-        min=0, max=280))   
-    letterer = ma.auto_field(validate=validate.Length(
-        min=0, max=280))
-
-    characters = ma.auto_field(validate=validate.Length(
-        min=0, max=570))
-    
-    teams = ma.auto_field(validate=validate.Length(
-        min=0, max=570))   
-    
-    editor = ma.auto_field(validate=validate.Length(
-        min=0, max=280))  
-    
-    summary = ma.auto_field(validate=validate.Length(
-        min=0, max=570))  
-    
-    genre = ma.auto_field(validate=validate.Length(
-        min=0, max=280)) 
-    
-    characters = ma.auto_field(validate=validate.Length(
-        min=0, max=570))
-
-    teams = ma.auto_field(validate=validate.Length(
-        min=0, max=570))
+    team = ma.List(ma.String(validate=validate.Length(
+        min=0, max=280)))
 
     user_rating = ma.auto_field()
 
-    main_char = ma.auto_field(validate=validate.Length(
-        min=0, max=280)) 
+    main_char_id = ma.auto_field()
+    main_char_type = ma.String(validate=validate.OneOf(['character', 'team']))
     
     manga = ma.Integer(validate=validate.OneOf([0, 1]))
 
@@ -69,6 +62,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
     read_count = ma.auto_field() 
     have_count = ma.auto_field() 
     
+    genre = ma.List(ma.String)
     
     dominant_color = ma.String()
     slug = ma.String()
@@ -78,5 +72,18 @@ class SeriesSchema(ma.SQLAlchemySchema):
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):
-        data['timestamp'] += 'Z'
+        if 'timestamp' in data:
+            data['timestamp'] += 'Z'
         return data
+    
+    # @post_load
+    # def process_genre(self, data, **kwargs):
+    #     # Check if genre was passed as a string or a nested schema
+    #     if isinstance(data.get('genre'), list):
+    #         # If genre was passed as a string, create or get the genre object
+    #         genre_title = data['genre'][0]
+    #         genre = create_or_get_genre(genre_title)
+    #         data['genre'] = genre
+    #         print(genre)
+    #     # If genre was passed as a nested schema, it's already processed
+    #     return data

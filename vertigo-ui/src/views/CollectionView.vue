@@ -2,7 +2,7 @@
     <HeaderItem />
     <Transition enter-active-class="animate__animated animate__fadeIn"
       leave-active-class="animate__animated animate__fadeOut animate__faster">
-      <div class="flex justify-around items-center py-2 border-b border-slate-700">
+      <div v-if="true" class="flex justify-around items-center py-2 border-b border-slate-700">
         <RouterLink :to="{ name: 'addnew' }" class="btn btn-primary justify-center">
           Add Series
         </RouterLink>
@@ -82,7 +82,7 @@
     </Transition>
     <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" :class="`grid-cols-${selectedGrid}`" id="carddiv">
       <TransitionGroup enter-active-class="animate__animated animate__zoomInDown">
-        <div class="flex flex-row justify-center items-start" v-for="card in cards" :key="card">
+        <div class="flex flex-row  relative justify-center items-start" v-for="card in cards" :key="card">
           <RouterLink class="shadow-2xl pt-4"
             :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`]"
             :to="{
@@ -96,9 +96,9 @@
               :read-fraction="calculatePercentage(card.read_count, card.books_count)" />
           </RouterLink>
           <TransitionGroup enter-active-class="animate__animated animate__bounceIn"
-            leave-active-class="animate__animated animate__bounceOut">
+            leave-active-class="animate__animated  animate__bounceOut">
             <div v-if="deleteMode" @click.prevent="deleteCard(card.id)"
-              class="top-0 right-0 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
+              class=" absolute rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
               <img src="../assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
             </div>
           </TransitionGroup>
