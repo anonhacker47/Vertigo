@@ -58,7 +58,7 @@ def upgrade_() -> None:
     sa.Column('editor', sa.String(length=280), nullable=True),
     sa.Column('summary', sa.String(length=570), nullable=True),
     sa.Column('series_format', sa.String(length=100), nullable=True),
-    sa.Column('issue_count', sa.Integer(), nullable=True),
+    sa.Column('books_count', sa.Integer(), nullable=True),
     sa.Column('read_count', sa.Integer(), nullable=True),
     sa.Column('have_count', sa.Integer(), nullable=True),
     sa.Column('dominant_color', sa.String(length=280), nullable=True),

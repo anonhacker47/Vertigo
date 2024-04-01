@@ -15,14 +15,17 @@ const props = defineProps({
 const element = ref(null);
 const animatedValue = ref(0);
 
-watch(
-    () => props.number,
-    (newValue) => {
-        gsap.to(element.value, {
-            duration: 1,
-            textContent: newValue,
-            roundProps: { textContent: 1 },
-        });
-    },
-);
+onMounted(() => {
+    watch(
+        () => props.number,
+        (newValue) => {
+            gsap.to(element.value, {
+                duration: 1,
+                textContent: newValue,
+                roundProps: { textContent: 1 },
+            });
+        },
+        { immediate: true, flush: 'post' }
+    );
+});
 </script>
