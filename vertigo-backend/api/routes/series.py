@@ -9,6 +9,7 @@ from apifairy import authenticate, body, response, other_responses
 from api import db
 from api.models.user import User
 from api.models.series import Series
+from api.models.genre import Genre
 from api.models.issue import Issue
 
 from api.schemas.series_schema import SeriesSchema

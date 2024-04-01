@@ -14,7 +14,6 @@ class SeriesSchema(ma.SQLAlchemySchema):
     id = ma.auto_field(dump_only=True)
     url = ma.String(dump_only=True)
     
-    
     title = ma.auto_field(required=True, validate=validate.Length(
         min=1, max=280))
     publisher = ma.auto_field() 
@@ -41,11 +40,8 @@ class SeriesSchema(ma.SQLAlchemySchema):
     editor = ma.auto_field(validate=validate.Length(
         min=0, max=280))  
     
-    summary = ma.auto_field(validate=validate.Length(
-        min=0, max=570))  
-    
-    genre = ma.auto_field(validate=validate.Length(
-        min=0, max=280)) 
+    description = ma.auto_field(validate=validate.Length(
+        min=0, max=1250))  
     
     characters = ma.auto_field(validate=validate.Length(
         min=0, max=570))
@@ -69,6 +65,8 @@ class SeriesSchema(ma.SQLAlchemySchema):
     read_count = ma.auto_field() 
     have_count = ma.auto_field() 
     
+    genre =  ma.auto_field(validate=validate.Length(
+        min=0, max=280))   
     
     dominant_color = ma.String()
     slug = ma.String()

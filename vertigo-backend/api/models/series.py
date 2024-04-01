@@ -4,12 +4,14 @@ from datetime  import datetime
 from slugify import slugify
 
 from api.models.issue import Issue
+from api.models.genre import Genre
 
 from flask import current_app, url_for
 
 from api.app import db
 from api.helpers.thumbnail_processing import save_series_thumbnail
 from api.models.updatable import Updateable
+from api.models.associations import *
 
 
 class Series(Updateable, db.Model):
@@ -19,7 +21,10 @@ class Series(Updateable, db.Model):
     title = sqla.Column(sqla.String(280), nullable=False)
 
     publisher = sqla.Column(sqla.String(280))
-    genre = sqla.Column(sqla.String(280))
+    
+    genre = sqla_orm.relationship('Genre', secondary=series_genre, 
+                                  back_populates='series', lazy='dynamic')
+    
     main_char = sqla.Column(sqla.String(280))
     writer = sqla.Column(sqla.String(280))
     artist = sqla.Column(sqla.String(280))
@@ -35,7 +40,7 @@ class Series(Updateable, db.Model):
     user_rating = sqla.Column(sqla.Float)
 
     editor = sqla.Column(sqla.String(280))
-    summary = sqla.Column(sqla.String(570))
+    description = sqla.Column(sqla.String(1250))
 
     issue = sqla_orm.relationship('Issue', back_populates='series',
                                   lazy='noload', cascade='all, delete-orphan')
