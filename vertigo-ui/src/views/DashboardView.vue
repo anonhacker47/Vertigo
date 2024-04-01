@@ -14,7 +14,7 @@
       <InsightCardItem :border="true" :icon="readIssueIcon" :multipleData="false" titleA="Issues Read"
         titleB="Issues Read" :valueANumerator="issueInfo.readIssueCount"  :valueADenominator="issueInfo.totalIssueCount" />
 
-      <AddSeriesCardItem :icon="addIcon" />
+      <AddSeriesCardItem />
     </div>
     <div class="w-full flex mt-8 justify-around gap-8 pl-8 pr-8 mb-8 h-full">
       <div class="card relative flex justify-center w-full  basis-1/2  items-center bg-base-100 shadow-xl">
@@ -70,6 +70,7 @@
 import HeaderItem from '../components/HeaderItem.vue';
 import collectionIcon from '@/assets/collection.svg'
 import readIcon from '@/assets/read.svg'
+import forwardIcon from '@/assets/forward.svg'
 import addIcon from '@/assets/add.svg'
 import readIssueIcon from '@/assets/readIssue.svg'
 import InsightCardItem from '../components/cards/InsightCardItem.vue'
