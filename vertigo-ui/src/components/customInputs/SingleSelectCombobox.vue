@@ -70,7 +70,7 @@ const props = defineProps({
 let selected = ref()
 
 onMounted(() => {
-  getSeriesFields();
+  // getSeriesFields();
 });
 
 async function getSeriesFields() {

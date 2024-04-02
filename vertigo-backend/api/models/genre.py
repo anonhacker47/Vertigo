@@ -31,7 +31,7 @@ class Genre(Updateable, db.Model):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return '<Genre {}>'.format(self.title, self.thumbnail, self.slug)
+        return '{}'.format(self.title)
 
     @property
     def url(self):

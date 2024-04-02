@@ -47,7 +47,7 @@
             </div>
             <div class="form-control">
               <!-- <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" /> -->
-              <SingleSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
+              <MultiSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
 
             </div>
             <div class="form-control">
@@ -169,7 +169,7 @@ async function createSeries() {
         artist: artist.value,
         editor: editor.value,
         description: summary.value,
-        genre: [genre.value],
+        genre: genre.value,
         main_char: main_char.value,
         series_format: series_format.value,
         issue_count: issue_count.value,

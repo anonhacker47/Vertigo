@@ -65,8 +65,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
     read_count = ma.auto_field() 
     have_count = ma.auto_field() 
     
-    genre =  ma.auto_field(validate=validate.Length(
-        min=0, max=280))   
+    genre = ma.List(ma.String(), validate=validate.Length(min=1))
     
     dominant_color = ma.String()
     slug = ma.String()

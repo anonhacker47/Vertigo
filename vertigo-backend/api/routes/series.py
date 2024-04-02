@@ -33,6 +33,15 @@ update_series_schema = SeriesSchema(partial=True)
 def new(args):
     """Create a new series"""
     user = token_auth.current_user()
+    genre_names = args.get('genre', [])
+    genre_list = []
+    for genre_name in genre_names:
+        genre = db.session.query(Genre).filter(Genre.title==genre_name).first()
+        if not genre:
+            genre = Genre(title=genre_name)
+            db.session.add(genre)
+        genre_list.append(genre)
+    args['genre'] = genre_list
     series = Series(user=user, **args)
     db.session.add(series)
     db.session.commit()
@@ -160,25 +169,31 @@ def key():
     else:
         return jsonify(f"{obj.id}")
     
-@series.route('/series/filter/<field>', methods=['GET'])
+@series.route('/series/filter/<table>', methods=['GET'])
 @authenticate(token_auth)
-# @response(200)
-def get_series_by_field(field):
-    """Retrieve values from a specific field across all series objects."""
-    if field not in ['title', 'publisher', 'genre', 'main_char', 'writer', 'artist', 'editor', 'summary']:
-        abort(400, "Invalid field provided")
+def get_series_by_table(table):
+    """Retrieve values from a specific table across all series objects."""
+    table_class = {
+        'genre': Genre,
+        'publisher': Series.publisher,
+    }.get(table.lower())
+
+    if table_class is None:
+        abort(400, "Invalid table provided")
 
     # Get all series objects
-    values = db.session.query(getattr(Series, field)).distinct().all()
+    values = db.session.query(table_class).distinct().all()
 
     # Extract the desired field values
-    values = [value[0] for value in values if value[0]]
+    values = [value.title for value in values]
 
     # Remove duplicates (optional)
     values = list(set(values))
-    values.sort() 
+    values.sort()
     values = [{'id':str(i+1),'value': value} for i, value in enumerate(values)]
     return jsonify(values)
+
+
 
 @series.route('/series/thumbnail/bg', methods=['GET'])
 def get_series_with_thumbnail():
