@@ -109,3 +109,4 @@ class Series(Updateable, db.Model):
         elif self.main_char_type == 'team':
             return db.session.query(entities.Team).get(self.main_char_id)
         return None
+

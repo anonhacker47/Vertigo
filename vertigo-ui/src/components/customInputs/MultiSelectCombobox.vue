@@ -100,7 +100,7 @@ async function getSeriesFields() {
 
     items.value = response.data;
 
-    console.log(items.value);
+    console.log("items2multiple",items.value);
   } catch (error) {
     console.log(error);
   }

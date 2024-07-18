@@ -31,28 +31,29 @@ update_series_schema = SeriesSchema(partial=True)
 @authenticate(token_auth)
 @body(series_schema)
 @response(series_schema, 201)
-def new(args):
+def new(data):
     """Create a new series"""
     user = token_auth.current_user()
 
     entities = {
-        'genre': args.pop("genre", []),
-        'team': args.pop("team", []),
-        'editor': args.pop("editor", []),
-        'writer': args.pop("writer", []),
-        'artist': args.pop("artist", []),
-        'inker': args.pop("inker", []),
-        'penciller': args.pop("penciller", []),
-        'colorist': args.pop("colorist", []),
-        'letterer': args.pop("letterer", []),
-        'character': args.pop("character", []),
+        'genre': data.pop("genre", []),
+        'team': data.pop("team", []),
+        'editor': data.pop("editor", []),
+        'writer': data.pop("writer", []),
+        'artist': data.pop("artist", []),
+        'inker': data.pop("inker", []),
+        'penciller': data.pop("penciller", []),
+        'colorist': data.pop("colorist", []),
+        'letterer': data.pop("letterer", []),
+        'character': data.pop("character", []),
+        'publisher': data.pop("publisher", []),
     }
 
-    main_char_title = args.pop("main_char", None)
-    main_char_type = args.pop("main_char_type", None)
+    main_char_title = data.pop("main_char", None)
+    main_char_type = data.pop("main_char_type", None)
 
 
-    series = Series(user=user, **args)
+    series = Series(user=user, **data)
     db.session.add(series)
 
     for entity_type, titles in entities.items():
@@ -125,14 +126,33 @@ def put(data, id):
 
     entities = {
         'genre': data.pop("genre", []),
+        'team': data.pop("team", []),
         'editor': data.pop("editor", []),
         'writer': data.pop("writer", []),
         'artist': data.pop("artist", []),
+        'inker': data.pop("inker", []),
+        'penciller': data.pop("penciller", []),
+        'colorist': data.pop("colorist", []),
+        'letterer': data.pop("letterer", []),
+        'character': data.pop("character", []),
+        'publisher': data.pop("publisher", []),
     }
 
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
         setattr(series, entity_type, entity_items)
+
+    for entity_type, titles in entities.items():
+        entity_items = create_or_get_entities(entity_type, titles)
+        setattr(series, entity_type, entity_items)
+
+    main_char_title = data.pop("main_char", None)
+    main_char_type = data.pop("main_char_type", None)
+
+    if main_char_title:
+        main_char = create_or_get_main_character(main_char_type, main_char_title)
+        series.main_char_id = main_char.id
+        series.main_char_type = main_char_type
 
     series.update(data)
     db.session.commit()
@@ -230,6 +250,7 @@ def get_series_by_table(table):
         
         # Combine results and remove duplicates
         values = {char.title for char in characters} | {team.title for team in teams}
+        print(values)
     else:
         table_class = {
             'genre': Genre,
@@ -244,6 +265,7 @@ def get_series_by_table(table):
 
         values = db.session.query(table_class.title).distinct().all()
         values = {value.title for value in values}
+        print(values)
 
     # Sort and format the final list
     values = sorted(values)
