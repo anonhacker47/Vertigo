@@ -3,6 +3,7 @@ from api.models.series_entities import *
 
 def create_or_get_entities(entity_type, titles, description=None):
     entity_class = {
+        'publisher': Publisher,
         'genre': Genre,
         'team': Team,
         'writer': Writer,

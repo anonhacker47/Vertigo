@@ -292,13 +292,14 @@ async function handleUpdate() {
 
   let seriesData = {
     title: updatedSeries.value.title,
-    publisher: updatedSeries.value.publisher,
+    publisher: [updatedSeries.value.publisher],
     writer: updatedSeries.value.writer,
     artist: updatedSeries.value.artist,
     editor: updatedSeries.value.editor,
     summary: updatedSeries.value.summary,
     genre: updatedSeries.value.genre,
     main_char: updatedSeries.value.main_char,
+    main_char_type: "character",
     series_format: updatedSeries.value.series_format,
   }
 
