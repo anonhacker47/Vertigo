@@ -69,7 +69,7 @@ def user_all(id):
 @body(update_series_schema)
 @response(series_schema)
 @other_responses({403: 'Not allowed to edit this series',
-                  404: 'Series not found'})
+                         404: 'Series not found'})
 def put(data, id):
     """Edit a series"""
     thumbnail = data.get("thumbnail") 
