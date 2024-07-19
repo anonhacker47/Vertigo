@@ -2,6 +2,9 @@ from api.app import db
 from api.models.series_entities import *
 
 def create_or_get_entities(entity_type, titles, description=None):
+    if titles is None:
+        return []
+
     entity_class = {
         'publisher': Publisher,
         'genre': Genre,
