@@ -1,5 +1,5 @@
 <template>
-	<v-chart class="flex justify-center h-full w-full relative" :option="option" :autoresize="true" />
+  <v-chart class="flex justify-center h-full w-full relative" :option="option" :autoresize="true" />
 </template>
 
 <script setup>
@@ -7,30 +7,25 @@ import { use } from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-
+import { onMounted, ref, provide, watch } from 'vue';
 use([GridComponent, LineChart, SVGRenderer])
 
 import VChart, { THEME_KEY } from 'vue-echarts';
-import { ref, provide, watch } from 'vue';
 
 const props = defineProps({
-	// title: {
-	// 	type: String,
-	// 	required: true,
-	// },
-	xData: {
-		type: Array,
-		required: true,
-	},
-	yData: {
-		type: Array,
-		required: true,
-	},
+  xData: {
+    type: Array,
+    required: true,
+  },
+  yData: {
+    type: Array,
+    required: true,
+  },
 });
 
 provide(THEME_KEY, 'dark');
 
-const option = {
+const option = ref({
   backgroundColor: 'transparent',
   darkMode: 'true',
   title: {
@@ -59,16 +54,31 @@ const option = {
       // smooth: true
     }
   ]
-};
+});
 
-// watch(() => props.title, (newValue) => {
-//   option.value.title.text = newValue;
+// Watch for changes in props.xData and props.yData
+watch(
+  () => [props.xData, props.yData],
+  ([newXData, newYData]) => {
+    option.value = {
+      ...option.value,
+      xAxis: {
+        ...option.value.xAxis,
+        data: newYData,
+      },
+      series: [
+        {
+          ...option.value.series[0],
+          data: newXData,
+        }
+      ]
+    }
+  },
+  { deep: true }
+);
+
+// onMounted(() => {
+//   console.log("xData:", props.xData);
+//   console.log("yData:", props.yData);
 // });
-
-// watch(() => props.data, (newValue) => {
-//   option.value.series[0].data = newValue;
-// });
-
-
-
 </script>

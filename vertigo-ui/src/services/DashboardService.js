@@ -11,4 +11,10 @@ export default {
     getUserFieldCount(userId, field, type) {
         return Api().get(`users/${userId}/${field}/${type}/count`);
     },
+    getRecentPurchaseList(userId) {
+        return Api().get(`users/${userId}/recent_purchases`);
+    },
+    getPurchasesPerMonth(userId) {
+        return Api().get(`users/${userId}/purchases_per_month`);
+    }
 }

@@ -1,5 +1,6 @@
-from flask import jsonify
+from flask import jsonify, url_for
 from sqlalchemy import desc,func
+from datetime import datetime, timedelta, timezone
 
 
 from flask import Blueprint, abort
@@ -174,6 +175,59 @@ def user_field_count(user_id, field, type):
     field_count_json = [{'value': item[1], 'name': item[0]} for item in field_count]
     return jsonify(field_count_json)
 
+@dashboard.route('/users/<int:user_id>/recent_purchases', methods=['GET'])
+@authenticate(token_auth)
+@other_responses({404: {'description': 'User not found'}})
+def get_recent_purchases(user_id):
+    """Get recent purchases for user"""
 
+    recent_purchases = (
+        db.session.query(
+            Issue.title,
+            Issue.number,
+            Issue.bought_date,
+            Series.id.label('series_id'),
+            Series.title.label('series_title')
+        )
+        .join(Series, Series.id == Issue.series_id)
+        .filter(Issue.bought_date.isnot(None))
+        .filter(Series.user_id == user_id)
+        .order_by(desc(Issue.bought_date))
+        .limit(5)
+        .all()
+    )
+    
+    result = []
+    for issue in recent_purchases:
+        result.append({
+            'title': issue.title,
+            'bought_date': issue.bought_date.strftime('%d %b %Y') if issue.bought_date else None,
+            'series': issue.series_title,
+            'image': url_for('series.get_series_image', id=issue.series_id, _external=True) 
+        })
+    
+    return jsonify(result)
 
+@dashboard.route('/users/<int:user_id>/purchases_per_month', methods=['GET'])
+@authenticate(token_auth)
+@other_responses({404: {'description': 'User not found'}})
+def get_purchases_per_month(user_id):
+    """Get purchases per month for a user"""
+    # Calculate the start and end dates for the previous 12 months
+    end_date = datetime.now(timezone.utc)  # Start of the current month
+    start_date = end_date - timedelta(days=365)  # Roughly a year ago
+
+    # Query to get purchases per month for the specified user
+    purchases_per_month = db.session.query(
+        func.strftime('%Y-%m', Issue.bought_date).label('month'),
+        func.count(Issue.id).label('count')
+    ).join(Series, Series.id == Issue.series_id) \
+     .filter(Issue.bought_date.between(start_date, end_date)) \
+     .filter(Series.user_id == user_id) \
+     .group_by('month') \
+     .order_by('month') \
+     .all()
+
+    result = [{'month': month, 'count': count} for month, count in purchases_per_month]
+    return jsonify(result)
 
