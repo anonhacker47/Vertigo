@@ -46,7 +46,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
     
     issue_count = ma.auto_field()
     read_count = ma.auto_field()
-    have_count = ma.auto_field()
+    owned_count = ma.auto_field()
     
     genre = ma.List(ma.String, allow_none=True)
     

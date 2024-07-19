@@ -71,7 +71,7 @@
               <div class="form-control">
                 <label class="label cursor-pointer">
                   <span class="text-emerald-400">Read Already?</span>
-                  <input type="checkbox" true-value="1" false-value="0" v-model.number="read_whole"
+                  <input type="checkbox" true-value="1" false-value="0" v-model.number="is_read"
                     class="checkbox checkbox-accent" />
                 </label>
               </div>
@@ -80,7 +80,7 @@
               <div class="form-control">
                 <label class="label cursor-pointer">
                   <span class="text-emerald-400">All Bought?</span>
-                  <input type="checkbox" true-value="1" false-value="0" v-model.number="have_whole"
+                  <input type="checkbox" true-value="1" false-value="0" v-model.number="is_owned"
                     class="checkbox checkbox-accent" />
                 </label>
               </div>
@@ -127,8 +127,8 @@ const genre = ref([]);
 const main_char = ref("");
 const series_format = ref("");
 const issue_count = ref(0);
-const read_whole = ref(0);
-const have_whole = ref(0);
+const is_read = ref(0);
+const is_owned = ref(0);
 const thumbnail = ref("");
 
 
@@ -146,14 +146,14 @@ function changeThumb() {
 async function createSeries() {
 
   try {
-    const have_count = have_whole.value == 1 ? issue_count.value : 0;
-    const read_count = read_whole.value == 1 ? issue_count.value : 0;
-    console.log("have_count", have_count);
+    const owned_count = is_owned.value == 1 ? issue_count.value : 0;
+    const read_count = is_read.value == 1 ? issue_count.value : 0;
+    console.log("owned_count", owned_count);
     console.log("read_count", read_count);
     const response = await SeriesService.addSeries(
       {
         title: title.value,
-        publisher: publisher.value,
+        publisher: [publisher.value],
         writer: writer.value,
         artist: artist.value,
         editor: editor.value,
@@ -164,7 +164,7 @@ async function createSeries() {
         series_format: series_format.value,
         issue_count: issue_count.value,
         read_count: read_count,
-        have_count: have_count,
+        owned_count: owned_count,
         thumbnail: thumbnail.value,
       },
     );
@@ -198,8 +198,8 @@ async function addIssues() {
       key,
       {
         title: "title",
-        read_whole: 1,
-        have_whole: 1,
+        is_read: 1,
+        is_owned: 1,
       },
     );
   } catch (error) {

@@ -92,7 +92,7 @@
             }">
             <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :name="card.title" class="h-full w-full"
               :src="SeriesService.getImagebyId(card.id)" :format="card.series_format" :textwidth-m-d="cardWidthMD"
-              :textwidth="cardWidth" :have-fraction="calculatePercentage(card.have_count, card.books_count)"
+              :textwidth="cardWidth" :have-fraction="calculatePercentage(card.owned_count, card.books_count)"
               :read-fraction="calculatePercentage(card.read_count, card.books_count)" />
           </RouterLink>
           <TransitionGroup enter-active-class="animate__animated animate__bounceIn"

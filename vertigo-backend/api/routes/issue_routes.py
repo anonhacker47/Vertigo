@@ -1,6 +1,5 @@
 import os
-from pstats import SortKey
-from flask import current_app
+from datetime  import datetime, timezone
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
@@ -31,13 +30,13 @@ def new(args,series_id):
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
     count = series.issue_count + 1
-    read_whole = 1 if series.read_count == series.issue_count else 0
-    have_whole = 1 if series.have_count == series.issue_count else 0
+    is_read = 1 if series.read_count == series.issue_count else 0
+    is_owned = 1 if series.owned_count == series.issue_count else 0
 
     for i in range(1,count):
         title = f"volume {i}"
         issue = Issue(user=user, series=series, title=title,
-                      read_whole=read_whole, have_whole=have_whole)
+                      is_read=is_read, is_owned=is_owned)
         db.session.add(issue)
     
     db.session.commit()
@@ -84,13 +83,13 @@ def issue_count(id):
     issues = series.issue_select()
     data = db.session.scalars(issues).all()
     # Calculate the counts
-    have_whole_count = sum(issue.have_whole for issue in data)
-    read_whole_count = sum(issue.read_whole for issue in data)
+    owned_count = sum(issue.is_owned for issue in data)
+    read_count = sum(issue.is_read for issue in data)
 
     response = {
         "total_count":len(data),
-        "have_count": have_whole_count,
-        "read_count": read_whole_count,
+        "owned_count": owned_count,
+        "read_count": read_count,
     }
 
     return response
@@ -109,21 +108,25 @@ def put(data, id):
         abort(403)
     issue.update(data)
 
-    print("old have count",issue.series.have_count)
-    print("old read count",issue.series.read_count)
-
     # Recalculate counts for the series
     issues = issue.series.issue_select()
     issues_data = db.session.scalars(issues).all()
-    have_whole_count = sum(issue.have_whole for issue in issues_data)
-    read_whole_count = sum(issue.read_whole for issue in issues_data)
+    is_owned_count = sum(issue.is_owned for issue in issues_data)
+    is_read_count = sum(issue.is_read for issue in issues_data)
 
     # Update the series counts
-    issue.series.have_count = have_whole_count
-    issue.series.read_count = read_whole_count
+    issue.series.owned_count = is_owned_count
+    issue.series.read_count = is_read_count
 
-    print("new have count",issue.series.have_count)
-    print("new read count",issue.series.read_count)
+    # Check if `owned or read` is True, update `bought_date` and 'read_date'
+    if data.get('is_owned') == False:
+        issue.bought_date = None
+    if data.get('is_read') == False:
+        issue.read_date = None
+    if data.get('is_owned'):
+        issue.bought_date = datetime.now(timezone.utc)
+    if data.get('is_read'):
+        issue.read_date = datetime.now(timezone.utc)
 
     db.session.commit()
     return issue
