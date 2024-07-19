@@ -13,28 +13,36 @@
         <ComboboxOptions
           class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
           style="z-index: 1;">
-          <ComboboxOption v-for="person in filteredPeople" as="template" :key="person.id" :value="person.value"
+          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item.value"
             v-slot="{ active }">
             <ul class="">
-              <li class="relative cursor-default select-none py-3 pl-10 pr-4" :class="{
+              <li class="relative cursor-pointer  select-none py-3 pl-10 pr-4" :class="{
                 'bg-base-300 text-white': active,
                 'text-white': !active,
               }">
                 <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
-                  {{ person.value }}
+                  {{ item.value }}
+                </span>
+                <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
+                  :class="{ 'text-teal-400': active, 'text-white': !active }">
+                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
                 </span>
               </li>
             </ul>
           </ComboboxOption>
           <ComboboxOption v-slot="{ active }" v-if="queryPerson" :value="queryPerson" class="relative cursor-default">
             <ul class="">
-            <li class="relative cursor-default select-none py-3 pl-10 pr-4" :class="{
+            <li class="relative cursor-pointer  select-none py-3 pl-10 pr-4" :class="{
               'bg-base-300 text-white': active,
               'text-white': !active,
             }">
               <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
                 Create "{{ query }}"
               </span>
+              <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
+                  :class="{ 'text-white': active, 'text-teal-600': !active }">
+                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                </span>
             </li>
             </ul>
           </ComboboxOption>
@@ -57,7 +65,7 @@ import {
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
 import SeriesService from 'src/services/SeriesService';
 
-const people = ref([])
+const items = ref([])
 const props = defineProps({
   field: String,
   placeholder: String
@@ -75,9 +83,9 @@ async function getSeriesFields() {
       `${props.field}`,
     );
 
-    people.value = response.data;
+    items.value = response.data;
 
-    console.log(people.value);
+    console.log(items.value);
   } catch (error) {
     console.log(error);
   }
@@ -88,11 +96,11 @@ const queryPerson = computed(() => {
   return query.value === '' ? null : query.value
 })
 
-let filteredPeople = computed(() =>
+let filteredItems = computed(() =>
   query.value === ''
-    ? people.value
-    : people.value.filter((person) =>
-      person.value
+    ? items.value
+    : items.value.filter((item) =>
+      item.value
         .toLowerCase()
         .replace(/\s+/g, '')
         .includes(query.value.toLowerCase().replace(/\s+/g, ''))

@@ -9,7 +9,7 @@ from apifairy import authenticate, body, response, other_responses
 from api import db
 from api.models.user import User
 from api.models.series import Series
-from api.models.series_entities import *
+import api.models.series_entities as series_entities
 from api.models.issue import Issue
 
 from api.schemas.series_schema import SeriesSchema
@@ -198,7 +198,7 @@ def feed():
     return user.followed_series_select()
 
 @series.route('series/image/<int:id>',methods=['GET'])
-def getSeriesImage(id):
+def get_series_image(id):
     """Retrieve the series thumbnail"""
     series = db.session.get(Series, id)
 
@@ -248,19 +248,19 @@ def get_series_by_table(table):
 
     if table.lower() == 'main_char':
         # Handle main_char separately by combining characters and teams
-        characters = db.session.query(Character.title).distinct().all()
-        teams = db.session.query(Team.title).distinct().all()
+        characters = db.session.query(series_entities.Character.title).distinct().all()
+        teams = db.session.query(series_entities.Team.title).distinct().all()
         
         # Combine results and remove duplicates
         values = {char.title for char in characters} | {team.title for team in teams}
         print(values)
     else:
         table_class = {
-            'genre': Genre,
-            'artist': Artist,
-            'editor': Editor,
-            'writer': Writer,
-            'publisher': Publisher,
+            'genre': series_entities.Genre,
+            'artist': series_entities.Artist,
+            'editor': series_entities.Editor,
+            'writer': series_entities.Writer,
+            'publisher': series_entities.Publisher,
         }.get(table.lower())
 
         if table_class is None:

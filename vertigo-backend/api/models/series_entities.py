@@ -23,7 +23,7 @@ class Publisher(Updateable, db.Model):
                                    lazy='noload')
 
     def __init__(self, *args, **kwargs):
-        if not 'slug' in kwargs:
+        if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
 
     def __init__(self, *args, **kwargs):

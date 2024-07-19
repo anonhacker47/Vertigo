@@ -38,7 +38,7 @@ class StringPaginationSchema(ma.Schema):
             raise ValidationError('Cannot specify both offset and after')
 
 
-def PaginatedCollection(schema, pagination_schema=StringPaginationSchema):
+def paginated_collection(schema, pagination_schema=StringPaginationSchema):
     if schema in paginated_schema_cache:
         return paginated_schema_cache[schema]
 

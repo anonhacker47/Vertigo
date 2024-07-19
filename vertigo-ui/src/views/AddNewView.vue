@@ -4,14 +4,14 @@
     <div class="content">
       <div class="card w-[22rem] bg-base-100 shadow-xl">
         <figure class="px-5 pt-5">
-          <img :src="imagesrc" @error="changeThumb" alt="Invalid Image Link" class="rounded-xl w-[26rem] h-[29rem]"
+          <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl w-[26rem] h-[29rem]"
             key="imagesrc" />
         </figure>
         <div class="flex flex-col p-5">
-          <label class="label justify-center">
+          <label class="label justify-center" for="image">
             <span class="label-text">Cover Image</span>
           </label>
-          <input type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered"
+          <input id="image" type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered"
             required />
         </div>
       </div>
@@ -37,37 +37,26 @@
           </div>
           <div class="flex flex-row gap-16 mt-5 justify-around">
             <div class="form-control">
-              <!-- <input
-                type="text"
-                placeholder="Publisher"
-                v-model="publisher"
-                class="input input-bordered"
-              /> -->
               <SingleSelectCombobox v-model="publisher" field="publisher" placeholder="Publisher"/>
             </div>
             <div class="form-control">
-              <!-- <input type="text" placeholder="Genre" v-model="genre" class="input input-bordered" /> -->
               <MultiSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
 
             </div>
             <div class="form-control">
-              <!-- <input type="text" v-model="main_char" placeholder="Main Character/Team" class="input input-bordered" /> -->
               <SingleSelectCombobox v-model="main_char" field="main_char" placeholder="Main Character/ Team"/>
 
             </div>
           </div>
           <div class="flex flex-row gap-16 justify-around">
             <div class="form-control">
-              <!-- <input type="text" placeholder="Writer" v-model="writer" class="input input-bordered" /> -->
               <MultiSelectCombobox v-model="writer" field="writer" placeholder="Writer"/>
 
             </div>
             <div class="form-control">
-              <!-- <input type="text" v-model="artist" placeholder="Artist" class="input input-bordered" /> -->
               <MultiSelectCombobox v-model="artist" field="artist" placeholder="Artist"/>
             </div>
             <div class="form-control">
-              <!-- <input type="text" v-model="editor" placeholder="Editor" class="input input-bordered" /> -->
               <MultiSelectCombobox v-model="editor" field="editor" placeholder="Editor"/>
 
             </div>

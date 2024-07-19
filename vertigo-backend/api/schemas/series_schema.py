@@ -60,4 +60,6 @@ class SeriesSchema(ma.SQLAlchemySchema):
     def fix_datetimes(self, data, **kwargs):
         if 'timestamp' in data:
             data['timestamp'] += 'Z'
+        if 'publisher' in data and isinstance(data['publisher'], list):
+            data['publisher'] = data['publisher'][0] if data['publisher'] else None
         return data

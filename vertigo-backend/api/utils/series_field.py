@@ -1,22 +1,22 @@
 from api.app import db
-from api.models.series_entities import *
+import api.models.series_entities as series_entities
 
 def create_or_get_entities(entity_type, titles, description=None):
     if titles is None:
         return []
 
     entity_class = {
-        'publisher': Publisher,
-        'genre': Genre,
-        'team': Team,
-        'writer': Writer,
-        'editor': Editor,
-        'artist': Artist,
-        'inker': Inker,
-        'colorist': Colorist,
-        'character': Character,
-        'penciller': Penciller,
-        'letterer': Letterer
+        'publisher': series_entities.Publisher,
+        'genre': series_entities.Genre,
+        'team': series_entities.Team,
+        'writer': series_entities.Writer,
+        'editor': series_entities.Editor,
+        'artist': series_entities.Artist,
+        'inker': series_entities.Inker,
+        'colorist': series_entities.Colorist,
+        'character': series_entities.Character,
+        'penciller': series_entities.Penciller,
+        'letterer': series_entities.Letterer
     }[entity_type]
 
     entities = []
@@ -34,9 +34,9 @@ def create_or_get_entities(entity_type, titles, description=None):
 
 def create_or_get_main_character(main_char_type, main_char_title):
     if main_char_type == 'character':
-        entity_class = Character
+        entity_class = series_entities.Character
     elif main_char_type == 'team':
-        entity_class = Team
+        entity_class = series_entities.Team
     else:
         raise ValueError("Invalid main_char_type. Must be 'character' or 'team'.")
 
