@@ -96,7 +96,7 @@ class Series(Updateable, db.Model):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return '<Series {}>'.format(self.title, self.thumbnail, self.slug)
+        return '<Series {}>'.format(self.title)
 
     @property
     def url(self):
@@ -109,4 +109,3 @@ class Series(Updateable, db.Model):
         elif self.main_char_type == 'team':
             return db.session.query(entities.Team).get(self.main_char_id)
         return None
-

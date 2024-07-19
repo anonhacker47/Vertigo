@@ -1,7 +1,7 @@
 
 import sqlalchemy as sqla
 from sqlalchemy import orm as sqla_orm
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import secrets
 import jwt
@@ -31,20 +31,20 @@ class Token(db.Model):
 
     def generate(self):
         self.access_token = secrets.token_urlsafe()
-        self.access_expiration = datetime.utcnow() + \
+        self.access_expiration = datetime.now(timezone.utc) + \
             timedelta(minutes=current_app.config['ACCESS_TOKEN_MINUTES'])
         self.refresh_token = secrets.token_urlsafe()
-        self.refresh_expiration = datetime.utcnow() + \
+        self.refresh_expiration = datetime.now(timezone.utc) + \
             timedelta(days=current_app.config['REFRESH_TOKEN_DAYS'])
 
     def expire(self):
-        self.access_expiration = datetime.utcnow()
-        self.refresh_expiration = datetime.utcnow()
+        self.access_expiration = datetime.now(timezone.utc)
+        self.refresh_expiration = datetime.now(timezone.utc)
 
     @staticmethod
     def clean():
         """Remove any tokens that have been expired for more than a day."""
-        yesterday = datetime.utcnow() - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         db.session.execute(Token.delete().where(
             Token.refresh_expiration < yesterday))
 

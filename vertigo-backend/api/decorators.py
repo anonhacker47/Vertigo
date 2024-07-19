@@ -6,7 +6,7 @@ from api.models.series import Series
 from api.models.issue import Issue
 import sqlalchemy as sqla
 from api.app import db
-from api.schemas.pagination_schema import StringPaginationSchema, PaginatedCollection
+from api.schemas.pagination_schema import StringPaginationSchema, paginated_collection
 
 
 def paginated_response(schema, max_limit=25, order_by=None,
@@ -84,7 +84,7 @@ def paginated_response(schema, max_limit=25, order_by=None,
             }}
 
         # wrap with APIFairy's arguments and response decorators
-        return arguments(pagination_schema)(response(PaginatedCollection(
+        return arguments(pagination_schema)(response(paginated_collection(
             schema, pagination_schema=pagination_schema))(paginate))
 
     return inner

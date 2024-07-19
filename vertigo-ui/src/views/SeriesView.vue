@@ -115,8 +115,7 @@
                     <div class="form-control">
                       <!-- <input type="text" placeholder="Publisher" v-model="updatedSeries.publisher"
                         class="input w-[13rem] input-bordered" /> -->
-                      <SingleSelectCombobox v-model="updatedSeries.value.publisher" field="publisher"
-                        placeholder="Publisher" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.publisher" field="publisher" placeholder="Publisher" />
 
                     </div>
                     <div class="form-control">
