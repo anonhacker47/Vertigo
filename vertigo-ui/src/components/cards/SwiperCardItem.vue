@@ -4,7 +4,7 @@
         delay: 2500,
         disableOnInteraction: false,
     }" :navigation="true" :modules="modules" class="mySwiper card-body">
-        <swiper-slide class="rounded-t-lg">
+        <!-- <swiper-slide class="rounded-t-lg">
             <img src="https://rukminim2.flixcart.com/image/850/1000/l5ld8y80/book/k/x/k/preacher-the-25th-anniversary-omnibus-vol-2-original-imagg7uvmfh8yhbg.jpeg?"
                 alt="Preacher" class="rounded-md" />
             <div class="flex flex-col pt-8 pb-2 justify-center items-center text-center">
@@ -27,6 +27,25 @@
                 <div class="text-2xl text-primary font-bold">Gotham Central</div>
                 <div class="text-lg">Issue #6</div>
             </div>
+        </swiper-slide> -->
+        <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="rounded-t-lg">
+            <img :src="issue.image" alt="" class="rounded-md" />
+            <div class="flex flex-col items-center text-center p-4 rounded-lg shadow-md">
+                <!-- Series Title -->
+                <div class="text-2xl font-bold text-primary">
+                    {{ issue.series }}
+                </div>
+
+                <!-- Issue Title -->
+                <div class="text-lg font-semibold capitalize text-white">
+                    {{ issue.title }}
+                </div>
+
+                <!-- Bought Date -->
+                <div class="text-sm text-gray-400">
+                    {{ issue.bought_date }}
+                </div>
+            </div>
         </swiper-slide>
 
     </swiper>
@@ -40,34 +59,35 @@ import 'swiper/css/navigation';
 
 import { EffectCards, Navigation, Autoplay } from 'swiper/modules';
 
-const modules = [EffectCards, Navigation,Autoplay];
+const modules = [EffectCards, Navigation, Autoplay];
+
+const props = defineProps(['recentPurchasedIssues'])
 
 </script>
 
-<style scoped>  
-.swiper {
-    width: 20rem;
-    height: 16rem;
-    padding-inline: .5rem !important;
-    padding-block: 1rem !important;
-}
+<style scoped>  .swiper {
+      width: 20rem;
+      height: 16rem;
+      padding-inline: .5rem !important;
+      padding-block: 1rem !important;
+  }
 
-.swiper-slide {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    font-weight: bold;
-    color: #fff;
-    background-color: #0F172A;
-}
+  .swiper-slide {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+      background-color: #0F172A;
+  }
 
-.swiper-slide img {
-  width: auto;
-  height: auto;
-  width: 58%;
-  height: 65%;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
+  .swiper-slide img {
+      width: auto;
+      height: auto;
+      width: 58%;
+      height: 65%;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
 </style>

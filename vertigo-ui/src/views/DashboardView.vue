@@ -55,7 +55,7 @@
         <div
           class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases </div>
-        <SwiperCardItem />
+        <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
       </div>
         
         <div class="card relative basis-1/2 w-full flex bg-base-100 shadow-xl">
@@ -90,7 +90,9 @@ const selectedCategory = ref('publisher');
 
 const seriesInfo = ref({ totalSeriesCount: 0, collectedSeriesCount: 0, readSeriesCount: 0 });
 const issueInfo = ref({ totalIssueCount: 0, collectedIssueCount: 0, readIssueCount: 0 });
-const chartData =ref([] );
+const chartData =ref([]);
+
+const recentPurchasedIssues = ref([]);
 
 const chartTypeList = [
   { Name: 'Series', field: 'series' },
@@ -135,7 +137,27 @@ async function getUserFieldCountAsync(userId, field, type) {
   try {
     const response = await DashboardService.getUserFieldCount(userId, field, type);
     chartData.value = response.data;
-    console.log(chartData.value);
+    // console.log(chartData.value);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function getRecentPurchases() {
+  try {
+    const response = await DashboardService.getRecentPurchaseList(userId);
+    recentPurchasedIssues.value = response.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function getPurchasesPerMonth() {
+  try {
+    const response = await DashboardService.getPurchasesPerMonth(userId);
+    dates.value = response.data.map(item => item.month)
+    purchaseData.value = response.data.map(item => item.count)
+    
   } catch (error) {
     console.log(error);
   }
@@ -146,10 +168,15 @@ onMounted(async () => {
   await getSeriesInfo();
   await getIssueInfo();
   await fetchData();
+  await getRecentPurchases();
+  await getPurchasesPerMonth();
 });
 
-const dates = ['Jan', 'Feb', 'Mar','Apr','May']
-const purchaseData = [2,8, 10,3,5]
+// const dates = ref(['Jan', 'Feb', 'Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']);
+// const purchaseData = ref(Array.from({length: 12}, () => Math.floor(Math.random() * 21)));
+
+const dates = ref([]);
+const purchaseData = ref([]);
 
 const chartTitle = computed(() => {
   const selectedTypeName = selectedType.value === 'series' ? 'Series' : 'Issues';
