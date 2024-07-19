@@ -12,11 +12,11 @@
       </div>
     </div>
     <div class="h-1/5 w-full flex rounded-b-lg border-t-2 " :style="`border-color: rgb${themecolor};`">
-      <div class="flex basis-1/2 cursor-pointer border-r-2 justify-center" @click="$emit('updateStatus','have_whole')" :style="`border-color: rgb${themecolor};`"> 
-        <img class="" :class="{ invert: have_whole === 0 }" src="../../assets/collection.svg" alt="" width="22" height="22" />
+      <div class="flex basis-1/2 cursor-pointer border-r-2 justify-center" @click="$emit('updateStatus','is_owned')" :style="`border-color: rgb${themecolor};`"> 
+        <img class="" :class="{ invert: !is_owned }" src="../../assets/collection.svg" alt="" width="22" height="22" />
       </div>
-      <div class="flex basis-1/2 cursor-pointer justify-center" @click="$emit('updateStatus','read_whole')"> 
-        <img class="" :class="{ invert: read_whole === 0 }"  src="../../assets/read.svg" alt="" width="20" height="20"  />
+      <div class="flex basis-1/2 cursor-pointer justify-center" @click="$emit('updateStatus','is_read')"> 
+        <img class="" :class="{ invert: !is_read  }"  src="../../assets/read.svg" alt="" width="20" height="20"  />
       </div>
     </div>
 
@@ -29,8 +29,8 @@ const props = defineProps({
   image: String,
   themecolor: String,
   title: String,
-  have_whole: Number,
-  read_whole: Number,
+  is_owned: Boolean,
+  is_read: Boolean,
 })
 
 

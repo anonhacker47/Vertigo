@@ -19,8 +19,8 @@ class IssueSchema(ma.SQLAlchemySchema):
     
     number = ma.auto_field() 
     
-    read_whole = ma.auto_field() 
-    have_whole = ma.auto_field() 
+    is_read = ma.Boolean()
+    is_owned = ma.Boolean() 
 
     bought_date = ma.auto_field() 
     read_date = ma.auto_field()
