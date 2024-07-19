@@ -17,7 +17,7 @@
           <div class="px-5 flex flex-row items-center">
             <img src="../assets/collection.svg" alt="" width="28" height="28" />
             <!-- <div class="radial-progress text-accent ml-2" style="--value:66; --size:2.5rem;" role="progressbar"> -->
-            <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.have_count + "/" + issueCount.total_count }}</p>
+            <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.owned_count + "/" + issueCount.total_count }}</p>
             <!-- </div> -->
           </div>
         </div>
@@ -193,8 +193,8 @@
           <div class="overflow-scroll" style="height: 70vh">
             <div class="grid grid-cols-4 gap-5 px-16">
               <!-- <div class="flex flex-row justify-center items-start" > -->
-              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :have_whole="issue.have_whole"
-                :read_whole="issue.read_whole" v-for="issue in issues" @updateStatus="updateStatus(issue, $event)"
+              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned"
+                :is_read="issue.is_read" v-for="issue in issues" @updateStatus="updateStatus(issue, $event)"
                 :key="issue" />
               <!-- </div> -->
             </div>
@@ -230,7 +230,7 @@ const series = ref("");
 const issues = ref("");
 const updatedSeries = reactive({ value: series });;
 const issueCount = ref({
-  have_count: 0,
+  owned_count: 0,
   read_count: 0,
   total_count: 0,
 });
@@ -332,7 +332,7 @@ async function getIssueCount() {
 }
 
 async function updateStatus(issue, field) {
-  issue[field] = (issue[field] === 0) ? 1 : 0;
+  issue[field] = !issue[field];
   try {
     const updateData = { [field]: issue[field] }; // Use square brackets to set dynamic property name
     const response = await IssueService.updateIssue(

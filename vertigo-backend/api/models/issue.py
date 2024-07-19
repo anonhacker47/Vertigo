@@ -18,8 +18,8 @@ class Issue(Updateable, db.Model):
 
     slug = sqla.Column(sqla.String(280))
 
-    read_whole = sqla.Column(sqla.Integer)
-    have_whole = sqla.Column(sqla.Integer)
+    is_read = sqla.Column(sqla.Integer)
+    is_owned = sqla.Column(sqla.Integer)
 
     bought_date = sqla.Column(sqla.DateTime)
     read_date = sqla.Column(sqla.DateTime)

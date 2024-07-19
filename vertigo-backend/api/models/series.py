@@ -69,7 +69,7 @@ class Series(Updateable, db.Model):
     issue_count = sqla.Column(sqla.Integer)
 
     read_count = sqla.Column(sqla.Integer)
-    have_count = sqla.Column(sqla.Integer)
+    owned_count = sqla.Column(sqla.Integer)
 
     dominant_color = sqla.Column(sqla.String(280))
     slug = sqla.Column(sqla.String(280))
@@ -85,7 +85,7 @@ class Series(Updateable, db.Model):
         return Issue.select().where(sqla_orm.with_parent(self, Series.issue))
 
     def __init__(self, *args, **kwargs):
-        if not 'slug' in kwargs:
+        if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
 
         url = kwargs.get('thumbnail', '')
