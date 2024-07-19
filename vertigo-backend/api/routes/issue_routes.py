@@ -30,9 +30,9 @@ def new(args,series_id):
     """Create a new issue"""
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
-    count = series.books_count + 1
-    read_whole = 1 if series.read_count == series.books_count else 0
-    have_whole = 1 if series.have_count == series.books_count else 0
+    count = series.issue_count + 1
+    read_whole = 1 if series.read_count == series.issue_count else 0
+    have_whole = 1 if series.have_count == series.issue_count else 0
 
     for i in range(1,count):
         title = f"volume {i}"
@@ -114,9 +114,9 @@ def put(data, id):
 
     # Recalculate counts for the series
     issues = issue.series.issue_select()
-    issuesData = db.session.scalars(issues).all()
-    have_whole_count = sum(issue.have_whole for issue in issuesData)
-    read_whole_count = sum(issue.read_whole for issue in issuesData)
+    issues_data = db.session.scalars(issues).all()
+    have_whole_count = sum(issue.have_whole for issue in issues_data)
+    read_whole_count = sum(issue.read_whole for issue in issues_data)
 
     # Update the series counts
     issue.series.have_count = have_whole_count

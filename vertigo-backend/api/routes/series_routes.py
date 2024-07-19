@@ -137,10 +137,10 @@ def put(data, id):
         'character': data.pop("character", []),
         'publisher': data.pop("publisher", []),
     }
-
     for entity_type, titles in entities.items():
-        entity_items = create_or_get_entities(entity_type, titles)
-        setattr(series, entity_type, entity_items)
+        if titles is not None:
+            entity_items = create_or_get_entities(entity_type, titles)
+            setattr(series, entity_type, entity_items)
 
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
@@ -153,6 +153,9 @@ def put(data, id):
         main_char = create_or_get_main_character(main_char_type, main_char_title)
         series.main_char_id = main_char.id
         series.main_char_type = main_char_type
+    else:
+        series.main_char_id = None
+        series.main_char_type = None
 
     series.update(data)
     db.session.commit()
