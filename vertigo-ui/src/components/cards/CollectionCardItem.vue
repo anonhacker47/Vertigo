@@ -3,7 +3,7 @@
     <div class="flex h-full w-full items-end">
       <div
         id="image_container"
-        class="h-full rounded flex-col md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center"
+        class="h-full rounded flex-col relative md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center"
       >
         <img
         v-if="displayedImage !== Image"
@@ -20,7 +20,7 @@
       </div>
         <span
           v-if="active || displayedImage == Image"
-          class="absolute md:text-xl name text-sm leading-none uppercase pb-2 break-words text-ellipsis whitespace-nowrap overflow-hidden w-[80%]"
+          class="absolute md:text-xl name text-sm leading-none font-bold uppercase pb-2 break-words text-ellipsis whitespace-nowrap overflow-hidden w-[80%]"
           :class="
             (displayedImage == Image ? 'top-1/2' : '',
             `md:max-w-[${textwidthMD / 2}vw]`,
@@ -31,13 +31,13 @@
           {{ name }}
         </span>
         <span
-          class="absolute text-[9px] md:text-[12x] md:text-sm md:px-2 px-1 py-1 md:py-2 m-1 md:m-2 font-extrabold bg-slate-800 text-green-200 text rounded  top-0 right-0 break-words"
+          class="absolute text-[12px] md:text-[12x] m-[3px] px-[4px] font-bold text-sm bg-slate-800 text-green-200 text rounded  top-0 right-0 break-words"
         >
           {{ format }}
         </span>
        <div class="h-3 w-full relative">
-        <div class="h-full bg-sky-500 rounded-b absolute" :style="{ width: haveFraction }"></div>
-        <div class="h-full bg-green-400 rounded-b absolute" :style="{ width: readFraction }"></div>
+        <div class="h-full  bg-sky-500 rounded-b absolute" :style="{ width: fraction(ownedCount,issueCount) }"></div>
+        <div class="h-full bg-green-400 rounded-b absolute" :style="{ width: fraction(readCount ,issueCount)  }"></div>
        </div>
       </div>
       
@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 
 onMounted(() => {});
 
@@ -58,8 +58,9 @@ const props = defineProps({
   format: String,
   textwidth: Number,
   textwidthMD: Number,
-  haveFraction: String,
-  readFraction: String,
+  readCount: Number,
+  ownedCount: Number,
+  issueCount: Number,
 });
 
 const displayedImage = ref(props.src);
@@ -73,6 +74,12 @@ const handleImageError = () => {
 
 function activate() {
   active.value = !active.value;
+}
+
+
+function fraction(count, total) {
+  const percentage = `${(count / total) * 100}%`;
+  return percentage;
 }
 </script>
 

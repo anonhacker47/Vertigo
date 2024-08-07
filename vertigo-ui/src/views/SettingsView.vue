@@ -1,5 +1,4 @@
 <template>
-  <HeaderItem />
     <h1>patti</h1>
 </template>
 

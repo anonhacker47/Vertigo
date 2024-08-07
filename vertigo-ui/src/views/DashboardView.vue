@@ -1,6 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen w-screen">
-    <HeaderItem />
+  <div class="flex flex-col h-[88vh] w-screen">
     <!-- <div class="w-full h-24 flex items-center ml-10 pt-4 pb-4">
       <span class="text-4xl font-bold text-primary">Hello, anonhacker</span>
     </div> -->
@@ -55,7 +54,7 @@
         <div
           class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases </div>
-        <div class="p-4">
+        <div class="mt-6">
           <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
         </div>
       </div>

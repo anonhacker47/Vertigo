@@ -71,6 +71,7 @@ const router = createRouter({
       name: "series",
       meta: {
         requiresAuth: true,
+        removeHeader: true,
       },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
