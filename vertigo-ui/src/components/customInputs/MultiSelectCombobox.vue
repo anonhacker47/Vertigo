@@ -73,7 +73,7 @@ import {
   ComboboxOption,
   TransitionRoot,
 } from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
+import { CheckIcon, ChevronUpDownIcon,TrashIcon } from '@heroicons/vue/20/solid'
 import SeriesService from '@/services/SeriesService';
 
 const items = ref("")
