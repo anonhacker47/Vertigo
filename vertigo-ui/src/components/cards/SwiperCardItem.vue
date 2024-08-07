@@ -28,9 +28,9 @@
                 <div class="text-lg">Issue #6</div>
             </div>
         </swiper-slide> -->
-        <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="swiper-sl m-auto rounded-t-lg">
-            <img :src="issue.image" alt="" class="rounded-md w-[58%] h-[20%] " />
-            <div class="flex flex-col items-center text-center p-4 rounded-lg shadow-md">
+        <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="swiper-sl rounded-t-lg">
+            <img :src="issue.image" alt="" class="rounded-md w-[11rem] h-[15rem] m-auto " />
+            <div class="flex flex-col items-center text-center pt-4 rounded-lg shadow-md">
                 <!-- Series Title -->
                 <div class="text-xl font-bold text-primary">
                     {{ issue.series }}

@@ -1,9 +1,8 @@
 <template>
-  <div class="top-0 right-0 absolute bottom-0 left-0 bg-no-repeat bg-center h-screen bg-cover"
+  <div class="bg-no-repeat bg-center h-screen bg-cover"
     :style="{ backgroundImage: 'url(' + image + ')' }">
     <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
-      <HeaderItem />
-
+<HeaderItem/>
       <div class="flex justify-end items-center py-4 pr-20 border-b border-slate-700">
         <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
           <div class="px-5 flex flex-row items-center">
