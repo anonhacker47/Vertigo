@@ -7,15 +7,18 @@ import { plugin, defaultConfig } from '@formkit/vue';
 import PrimeVue from 'primevue/config';
 import '@formkit/themes/genesis';
 import 'animate.css'
+import ConfirmDialog from 'primevue/confirmdialog'
 import './input.css'
 import Lara from '@primevue/themes/lara';
 import { definePreset } from '@primevue/themes';
+import ConfirmationService from 'primevue/confirmationservice';
 import "./assets/main.css";
+import ToastService from 'primevue/toastservice';
+import Toast from "primevue/toast";
 
 const app = createApp(App);
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate)
-
 
 const MyPreset = definePreset(Lara, {
     semantic: {
@@ -66,5 +69,9 @@ app.use(PrimeVue, {
     }
     // pt: Aura
 });
+app.use(ConfirmationService);
+app.use(ToastService);
+app.component('ConfirmDialog',ConfirmDialog)
+app.component('NotificationToast',Toast)
 app.mount("#app");
 
