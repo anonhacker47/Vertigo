@@ -74,13 +74,13 @@
             </div>
           </button>
         </div>
-  
+        
         <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
           Delete Mode
         </button>
       </div>
     </Transition>
-    <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" :class="`grid-cols-${selectedGrid}`" id="carddiv">
+    <!-- <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" :class="`grid-cols-${selectedGrid}`" id="carddiv">
       <TransitionGroup enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row  relative justify-center items-start" v-for="card in cards" :key="card">
           <RouterLink class="shadow-2xl pt-4"
@@ -93,7 +93,8 @@
             <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :name="card.title" class="h-full w-full"
               :src="SeriesService.getImagebyId(card.id)" :format="card.series_format" :textwidth-m-d="cardWidthMD"
               :textwidth="cardWidth" :have-fraction="calculatePercentage(card.owned_count, card.books_count)"
-              :read-fraction="calculatePercentage(card.read_count, card.books_count)" />
+              :read-fraction="calculatePercentage(card.read_count, card.books_count)" /> 
+
           </RouterLink>
           <TransitionGroup enter-active-class="animate__animated animate__bounceIn"
             leave-active-class="animate__animated  animate__bounceOut">
@@ -104,12 +105,16 @@
           </TransitionGroup>
         </div>
       </TransitionGroup>
+    </div> -->
+    <div class="mx-8">
+      <CollectionTable :cards="cards" />
     </div>
   </template>
   
   <script setup>
   import HeaderItem from "../components/HeaderItem.vue";
   import CollectionCardItem from "../components/cards/CollectionCardItem.vue";
+  import CollectionTable from "../components/tables/CollectionTable.vue";
   import { onMounted, ref } from "vue";
   import SeriesService from "../services/SeriesService";
   import TokenService from "../services/TokenService";
@@ -119,7 +124,8 @@
   import { applyListeners } from "@formkit/observer";
   import { useUserStore } from "../store/user";
   import { useWindowSize } from 'vue-window-size';
-  
+
+
   const { width } = useWindowSize();
   const cards = ref();
   const userstore = useUserStore();
