@@ -1,50 +1,50 @@
 <template>
 	<DataTable class="mt-5 rounded-lg rounded-table" :value="cards" @row-click="navigate"  rowHover  :rows="10">
-		<Column field="Series" header="Series" >
+		<Column field="title" sortable header="Series" >
 			<template #body="{ data }">
-					<div class="flex items-center max-w-xs gap-4">
-						<img :src="SeriesService.getImagebyId(data.id)" class="h-20 w-25 ml-2 rounded-lg"
+					<div class="flex items-center gap-4">
+						<img :src="SeriesService.getImagebyId(data.id)" class="h-16 w-12 ml-2 object-fill rounded-sm"
 							alt="Series Thumbnail" />
 						<span class="text-large font-extrabold overflow-hidden whitespace-nowrap text-ellipsis">{{ data.title }}</span>
 					</div>
 			</template>
 		</Column>
-		<Column field="publisher" header="Publisher">
+		<Column field="publisher" sortable header="Publisher">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					{{ data.publisher }}
 				</div>
 			</template>
 		</Column>
-		<Column field="series_format" header="Format">
+		<Column field="series_format" sortable header="Format">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					{{ data.series_format }}
 				</div>
 			</template>
 		</Column>
-		<Column field="timestamp" header="Date Added">
+		<Column field="timestamp" sortable header="Date Added">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					{{ new Date(data.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) }}
 				</div>
 			</template>
 		</Column>
-		<Column field="rating" header="Rating">
+		<Column field="user_rating" sortable header="Rating">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					<Rating :modelValue="data.user_rating" readonly disabled :stars="5" :cancel="false" />
 				</div>
 			</template>
 		</Column>
-		<Column field="owned_count" header="Owned/Books" :bodyStyle="{ 'text-align': 'center' }">
+		<Column field="owned_count" sortable header="Owned/Books" :bodyStyle="{ 'text-align': 'center' }">
 			<template #body="{ data }">
-				{{ data.owned_count+'/'+data.issue_count }}
+				{{ data.owned_count || 0 +'/'+data.issue_count }}
 			</template>
 		</Column>
-		<Column field="read_count" header="Read/Books" :bodyStyle="{ 'text-align': 'center' }">
+		<Column field="read_count" sortable header="Read/Books" :bodyStyle="{ 'text-align': 'center' }">
 			<template #body="{ data }">
-				{{ data.read_count+'/'+data.issue_count }}
+				{{ data.read_count || 0 +'/'+data.issue_count }}
 			</template>
 		</Column>
 		<Column headerStyle="width: 5rem" bodyClass="text-center" header="Actions" v-if="deleteMode">

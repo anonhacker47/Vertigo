@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="relative bg-transparent border-b border-slate-700 flex flex-wrap items-center justify-between py-5"
+    class="z-50 bg-transparent border-b border-slate-700 flex flex-wrap items-center justify-between py-5"
   >
     <div
       class="w-full flex-row container px-4 mx-auto flex flex-wrap items-center justify-between"

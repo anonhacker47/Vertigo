@@ -1,5 +1,4 @@
 <template>
-  <HeaderItem />
   <Transition enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
     <div v-if="true" class="flex justify-around items-center py-2 border-b border-slate-700">
@@ -26,8 +25,7 @@
             }">
             <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :name="card.title" class="h-full w-full"
               :src="SeriesService.getImagebyId(card.id)" :format="card.series_format" :textwidth-m-d="cardWidthMD"
-              :textwidth="cardWidth" :have-fraction="calculatePercentage(card.owned_count, card.books_count)"
-              :read-fraction="calculatePercentage(card.read_count, card.books_count)" /> 
+              :textwidth="cardWidth" :ownedCount="card.owned_count" :readCount="card.read_count" :issueCount="card.issue_count" /> 
 
           </RouterLink>
           <TransitionGroup enter-active-class="animate__animated animate__bounceIn"
@@ -177,11 +175,6 @@ async function setPrimaryKey() {
 //   }
 // }
 
-const calculatePercentage = (count, total) => {
-  const percentage = `${(count / total) * 100}%`;
-  console.log(`Calculated percentage: ${percentage}`);
-  return percentage;
-}
 
 async function getCards() {
   try {

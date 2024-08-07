@@ -7,13 +7,12 @@
           <img @error="handleImageError(index)" :src="image" class="background-image" />
         </div>
       </div>
-      <div
-  class="w-fit h-fit card top-0 right-0 left-0 bottom-0 m-auto absolute z-20 px-6 max-w-md rounded-xl shadow-md bg-base-100 ">
-  <div class="card-body">
-    <h1 class="text-xl text-center font-bold card-title leading-tight tracking-tight md:text-2xl text-white">
+      <div class="w-fit h-fit card top-0 right-0 left-0 bottom-0 m-auto absolute z-20 w-md rounded-xl shadow-md bg-base-100 ">
+  <div class="card-body mx-8 mx-4">
+    <h1 class="text-xl text-center font-bold card-title leading-tight tracking-tight md:text-2xl mb-2 text-white">
       Sign in to your account
     </h1>
-    <form @submit.prevent="login" class="flex gap-2 flex-col">
+    <form @submit.prevent="login" class="flex gap-4 flex-col">
       <div class="form-control">
         <label for="username" class="label">
           <span class="label-text text-white">Username</span>
