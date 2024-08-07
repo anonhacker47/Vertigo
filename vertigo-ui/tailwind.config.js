@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   purge: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
- content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
+ content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}","./presets/**/*.{js,vue,ts}",],
  safelist: [
   'grid-cols-2',
   'grid-cols-3',
@@ -68,7 +68,7 @@ module.exports = {
       wiggle: 'wiggle .3s ease-in-out infinite',
     },
   },
-  plugins: [require('daisyui')],
+  plugins: [require('daisyui'), require('tailwindcss-primeui')],
   daisyui: {
     themes: [
       {
