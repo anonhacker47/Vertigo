@@ -1,20 +1,24 @@
+import 'animate.css'
+import "./assets/main.css";
+import 'swiper/css';
+import 'swiper/css/effect-cards';
+import 'swiper/css/navigation';
+
+
 import { createApp } from "vue";
 import App from "./App.vue";
 import { createPinia } from 'pinia'
-import router from "./router";
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { plugin, defaultConfig } from '@formkit/vue';
 import PrimeVue from 'primevue/config';
 import '@formkit/themes/genesis';
-import 'animate.css'
 import ConfirmDialog from 'primevue/confirmdialog'
-import './input.css'
 import Lara from '@primevue/themes/lara';
 import { definePreset } from '@primevue/themes';
 import ConfirmationService from 'primevue/confirmationservice';
-import "./assets/main.css";
 import ToastService from 'primevue/toastservice';
 import Toast from "primevue/toast";
+import router from "./router";
 
 const app = createApp(App);
 const pinia = createPinia();

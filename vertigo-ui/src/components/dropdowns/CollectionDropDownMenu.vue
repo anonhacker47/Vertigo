@@ -9,12 +9,12 @@
 	          </svg>
 	        </button>
 	        <button tabindex="0"
-	          class="dropdown-content  card shadow bg-base-100 border border-slate-700 rounded-md w-64 md:w-80 z-20">
-	          <div class="label px-2 justify-center flex border-b border-slate-700 ">
+	          class="dropdown-content cursor-default card shadow bg-base-100 border border-slate-700 rounded-md w-64 md:w-80 z-20">
+	          <div class="label px-2 justify-center  flex border-b border-slate-700 ">
 	            <span class="font-bold text-lg text-sky-200 text-grey-500">Display Options</span>
 	          </div>
 	
-	          <div class="flex justify-between mt-2 px-2 pb-2 border-b border-slate-700">
+	          <div class="flex justify-between mt-1 px-2 pb-1 border-b border-slate-700">
 	            <div class="form-control">
 	              <label class="label cursor-pointer">
 	                <span class="text-slate-200 ml-2 ">Card View</span>
@@ -71,7 +71,7 @@
 	            </div>
 	            <div class="flex">
 	              <input type="radio" id="asc" value="asc" name="asc" class="hidden" @click="sortByDirection" /><label
-	                for="asc" class="label text-gray-400 label-text text-sm cursor-pointer">Asc</label>
+	                for="asc" class="label text-gray-400 label-text mr-2 text-sm cursor-pointer">Asc</label>
 	              <input type="radio" id="desc" value="desc" name="asc" class="hidden" @click="sortByDirection"
 	                checked /><label for="desc" class="label text-gray-400 label-text text-sm cursor-pointer">Desc</label>
 	            </div>

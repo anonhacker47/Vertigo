@@ -51,11 +51,13 @@
 
       </div>
       
-      <div class="card card-compact relative basis-1/3 w-full flex bg-base-100 shadow-xl">
+      <div class="card card-compact relative basis-1/3 w-full bg-base-100 shadow-xl">
         <div
           class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases </div>
-        <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
+        <div class="p-4">
+          <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
+        </div>
       </div>
         
         <div class="card relative basis-1/2 w-full flex bg-base-100 shadow-xl">

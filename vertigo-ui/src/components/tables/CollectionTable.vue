@@ -1,5 +1,5 @@
 <template>
-	<DataTable class="mt-5 rounded-lg rounded-table" :value="cards" @row-click="navigate"  rowHover showGridlines :rows="10">
+	<DataTable class="mt-5 rounded-lg rounded-table" :value="cards" @row-click="navigate"  rowHover  :rows="10">
 		<Column field="Series" header="Series" >
 			<template #body="{ data }">
 					<div class="flex items-center max-w-xs gap-4">
@@ -50,7 +50,8 @@
 		<Column headerStyle="width: 5rem" bodyClass="text-center" header="Actions" v-if="deleteMode">
 			<template #body="{ data }">
 				<div class="flex justify-center">
-					<button class="p-button-rounded p-button-danger p-button-text" @click="confirmDelete(data.id,data.title)"><i class="pi pi-trash text-red-500 hover:cursor-pointer"/></button>
+					<button class="p-button-rounded p-button-danger p-button-text" @click="confirmDelete(data.id,data.title)"><TrashIcon class="h-5 w-5 text-red-500"  />
+					</button>
 				</div>
 			</template>
 		</Column>
@@ -61,11 +62,12 @@
 <script setup>
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import { ref, defineProps } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import SeriesService from '../../services/SeriesService';
 import Rating from 'primevue/rating'
 import 'primeicons/primeicons.css'
+import { TrashIcon } from '@heroicons/vue/20/solid'
 
 
 const props = defineProps({
