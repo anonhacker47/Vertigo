@@ -68,7 +68,7 @@ module.exports = {
       wiggle: 'wiggle .3s ease-in-out infinite',
     },
   },
-  plugins: [require('daisyui'), require('tailwindcss-primeui')],
+  plugins: [require('daisyui')],
   daisyui: {
     themes: [
       {
