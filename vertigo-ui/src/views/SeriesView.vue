@@ -209,11 +209,11 @@
 <script setup>
 import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
+import { useUserStore } from "../store/user";
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueCarditem from "../components/cards/IssueCarditem.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
-import TokenService from "../services/TokenService";
 import DetailCardItem from "../components/cards/DetailCardItem.vue";
 import EditIcon from "../assets/EditIcon.vue";
 import EditSeriesModal from "../components/modals/EditSeriesModal.vue";
@@ -223,7 +223,9 @@ const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
 const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
 const teamUrl = new URL("../assets/group.png", import.meta.url).href;
 
-const headers = TokenService.getTokenHeader("");
+const userstore = useUserStore();
+
+const headers = useUserStore.getTokenHeader("");
 const route = useRoute("");
 const series = ref("");
 const issues = ref("");
