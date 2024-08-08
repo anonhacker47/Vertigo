@@ -44,7 +44,6 @@ import { ref, onMounted } from "vue";
 import { useUserStore } from "../store/user";
 import { useRouter } from "vue-router";
 import AuthenticationService from "../services/AuthenticationService";
-import TokenService from "../services/TokenService";
 import SeriesService from "../services/SeriesService";
 import helpers from "../helpers/helpers";
 import img from "../assets/logo.svg";
@@ -68,7 +67,7 @@ async function login() {
     userStore.addToken(response.data.access_token);
 
     if (localStorage.getItem("token")) {
-      const headers = TokenService.getTokenHeader();
+      const headers = userStore.getTokenHeader();
       try {
         const userResponse = await AuthenticationService.getUser();
         userStore.addUser(userResponse.data.id);

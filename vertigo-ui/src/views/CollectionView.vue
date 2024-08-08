@@ -6,49 +6,41 @@
         Add Series
       </RouterLink>
 
-      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid" :sortByDirection="sortByDirection" :sortByProperties="sortByProperties" v-model:viewMode="viewMode" />
+      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
+        :orderbyDirection="orderbyDirection" :orderbyProperties="orderbyProperties" v-model:viewMode="viewMode" />
 
       <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
         Delete Mode
       </button>
     </div>
   </Transition>
-   <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" v-if="viewMode == 'card'" :class="`grid-cols-${selectedGrid}`" id="carddiv">
-      <TransitionGroup enter-active-class="animate__animated animate__zoomInDown">
-        <div class="flex flex-row  relative justify-center items-start" v-for="card in cards" :key="card">
-          <RouterLink class="shadow-2xl pt-4"
-            :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`]"
-            :to="{
-              name: 'series',
-              params: { Link: card.slug, Id: card.id },
-              id: card.id,
-            }">
-            <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :name="card.title" class="h-full w-full"
-              :src="SeriesService.getImagebyId(card.id)" :format="card.series_format" :textwidth-m-d="cardWidthMD"
-              :textwidth="cardWidth" :ownedCount="card.owned_count" :readCount="card.read_count" :issueCount="card.issue_count" /> 
+    <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" v-if="viewMode == 'card'"
+      :class="`grid-cols-${selectedGrid}`" id="carddiv">
+      <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
+        <div class="flex flex-row relative justify-center items-start" v-for="card in cards" :key="card.id" >
 
-          </RouterLink>
-          <TransitionGroup enter-active-class="animate__animated animate__bounceIn"
-            leave-active-class="animate__animated  animate__bounceOut">
-            <div v-if="deleteMode" @click.prevent="confirmDelete(card.id,card.title)"
-              class=" absolute rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
-              <img src="../assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
-            </div>
-          </TransitionGroup>
+        <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :card="card"
+          :cardHeightMD="cardHeightMD" :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth"
+          :deleteMode="deleteMode" @confirmDelete="confirmDelete"  />
+
         </div>
       </TransitionGroup>
-    </div> 
-  <div class="mx-5 pb-10" v-if="viewMode == 'list'">
-    <CollectionTable :cards="cards" v-if="cards && cards.length" :deleteMode="deleteMode" :confirmDelete="confirmDelete" />
-  </div>
-    <NotificationToast position="bottom-center" />
+    </div>
+  <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut">
+    <div class="mx-5 pb-10" v-if="viewMode === 'list'" key="listView">
+      <CollectionTable v-if="cards && cards.length" :cards="cards" :deleteMode="deleteMode"
+        :confirmDelete="confirmDelete" />
+    </div>
+  </Transition>
+  <NotificationToast position="bottom-center" />
   <ConfirmDialog>
     <template #message="slotProps">
       <p class="font-bold">
-      Do you really want to delete the series 
-      <span class="text-red-500">{{ slotProps.message.message  }}</span>?
-    </p>
-      </template>
+        Do you really want to delete the series
+        <span class="text-red-500">{{ slotProps.message.message }}</span>?
+      </p>
+    </template>
   </ConfirmDialog>
 </template>
   
@@ -58,12 +50,8 @@ import CollectionCardItem from "../components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
 import { onMounted, ref } from "vue";
 import SeriesService from "../services/SeriesService";
-import TokenService from "../services/TokenService";
-import PanelCardItem from "../components/cards/PanelCardItem.vue";
-import ActionButtonItem from "../components/buttons/ActionButtonItem.vue";
-import { id, order } from "@formkit/i18n";
-import { applyListeners } from "@formkit/observer";
 import { useUserStore } from "../store/user";
+import { useUserPreferences} from "@/store/userPreferences";
 import { useWindowSize } from 'vue-window-size';
 import CollectionDropDownMenu from '@/components/dropdowns/CollectionDropDownMenu.vue';
 import { useConfirm } from "primevue/useconfirm";
@@ -72,38 +60,38 @@ import { useToast } from "primevue/usetoast";
 const confirm = useConfirm();
 const toast = useToast();
 
-const confirmDelete = (id,title) => {
-    confirm.require({
-        message: title,
-        header: 'Confirm Deletion',
-        icon: 'pi pi-info-circle',
-        rejectLabel: 'Cancel',
-        rejectProps: {
-            label: 'Cancel',
-            severity: 'secondary',
-            outlined: true
-        },
-        acceptProps: {
-            label: 'Delete',
-            severity: 'danger'
-        },
-        accept: () => {
-            deleteCard(id);
-            toast.add({ severity: 'error', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
-        },
-        reject: () => {
-            // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-        }
-    });
+const confirmDelete = (id, title) => {
+  confirm.require({
+    message: title,
+    header: 'Confirm Deletion',
+    icon: 'pi pi-info-circle',
+    rejectLabel: 'Cancel',
+    rejectProps: {
+      label: 'Cancel',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: 'Delete',
+      severity: 'danger'
+    },
+    accept: () => {
+      deleteCard(id);
+      toast.add({ severity: 'error', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+    }
+  });
 };
 
 const { width } = useWindowSize();
 const cards = ref();
 const userstore = useUserStore();
-const userId = TokenService.getUser();
+const userId = userstore.getUser();
 const message = ref();
 const deleteMode = ref(false);
-const headers = TokenService.getTokenHeader();
+const headers = userstore.getTokenHeader();
 const selectedGrid = ref(
   localStorage.getItem("gridCol") ? localStorage.getItem("gridCol") : 4
 );
@@ -112,6 +100,7 @@ const orderdir = ref("desc");
 
 const viewMode = ref("card"); // Default to card mode
 
+const sortKey = ref(true);
 // Custom heights and width for each column vallues
 // cardHeight for mobile devices
 // cardHeightMD for larger devices
@@ -156,7 +145,7 @@ async function setPrimaryKey() {
     localStorage.setItem("key", response.data)
   } catch (error) {
     console.log(error);
-  } 
+  }
 }
 
 // async function getPostImages(id){
@@ -184,7 +173,7 @@ async function getCards() {
       orderby.value,
       orderdir.value
     );
-    cards.value = response.data.data;
+    cards.value = response.data.data.map(card => ({ ...card, key: card.id }));
     console.log(cards.value);
     // console.log(response);
   } catch (error) {
@@ -203,14 +192,16 @@ function changeGrid(selected) {
   console.log(selectedGrid.value);
 }
 
-function sortByDirection(values) {
+function orderbyDirection(values) {
   orderdir.value = values.target.value;
+  cards.value=[]
   getCards();
+  
 }
 
-function sortByProperties(values) {
+function orderbyProperties(values) {
   orderby.value = values.target.value;
-  console.log(orderby);
+  cards.value=[]
   getCards();
 }
 

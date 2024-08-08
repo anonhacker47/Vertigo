@@ -73,6 +73,7 @@ import collectionIcon from '@/assets/collection.svg'
 import readIcon from '@/assets/read.svg'
 import forwardIcon from '@/assets/forward.svg'
 import addIcon from '@/assets/add.svg'
+import { useUserStore } from "../store/user";
 import readIssueIcon from '@/assets/readIssue.svg'
 import InsightCardItem from '../components/cards/InsightCardItem.vue'
 import AddSeriesCardItem from '../components/cards/AddSeriesCardItem.vue'
@@ -82,9 +83,9 @@ import PieChartItem from '../components/charts/PieChartItem.vue';
 import LineChartItem from '../components/charts/LineChartItem.vue';
 import SwiperCardItem from '../components/cards/SwiperCardItem.vue';
 import DashboardService from '../services/DashboardService';
-import TokenService from '../services/TokenService';
 
-const userId = TokenService.getUser();
+const userstore = useUserStore();
+const userId = userstore.getUser();
 
 const selectedType = ref('series');
 const selectedCategory = ref('publisher');
