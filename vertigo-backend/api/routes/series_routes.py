@@ -1,7 +1,7 @@
 import os
 from pstats import SortKey
 import random
-from flask import current_app, jsonify
+from flask import current_app, json, jsonify
 import sqlite3
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
@@ -28,48 +28,71 @@ series_schema = SeriesSchema()
 multi_series_schema = SeriesSchema(many=True)
 update_series_schema = SeriesSchema(partial=True)
 
+
 @series.route('/series', methods=['POST'])
 @authenticate(token_auth)
-@body(series_schema)
-@response(series_schema, 201)
-def new(data):
+def new():
     """Create a new series"""
     user = token_auth.current_user()
 
+    # Parse FormData fields
+    title = request.form.get('title', '')
+    description = request.form.get('description', '')
+    series_format = request.form.get('series_format', '')
+    issue_count = int(request.form.get('issue_count', 0))
+    read_count = int(request.form.get('read_count', 0))
+    owned_count = int(request.form.get('owned_count', 0))
+    main_char = request.form.get('main_char', None)
+    main_char_type = request.form.get('main_char_type', None)
+
+    # Parse JSON fields within FormData
+    genre = request.form.get('genre', '[]')
+    writer = request.form.get('writer', '[]')
+    artist = request.form.get('artist', '[]')
+    editor = request.form.get('editor', '[]')
+    publisher = request.form.get('publisher', '[]')
+
     entities = {
-        'genre': data.pop("genre", []),
-        'team': data.pop("team", []),
-        'editor': data.pop("editor", []),
-        'writer': data.pop("writer", []),
-        'artist': data.pop("artist", []),
-        'inker': data.pop("inker", []),
-        'penciller': data.pop("penciller", []),
-        'colorist': data.pop("colorist", []),
-        'letterer': data.pop("letterer", []),
-        'character': data.pop("character", []),
-        'publisher': data.pop("publisher", []),
+        'genre': json.loads(genre),
+        'editor': json.loads(editor),
+        'writer': json.loads(writer),
+        'artist': json.loads(artist),
+        'publisher': [publisher],
     }
 
-    main_char_title = data.pop("main_char", None)
-    main_char_type = data.pop("main_char_type", None)
-
-
-    series = Series(user=user, **data)
+    # Create series instance
+    series = Series(
+        user=user,
+        title=title,
+        description=description,
+        series_format=series_format,
+        issue_count=issue_count,
+        read_count=read_count,
+        owned_count=owned_count,
+        main_char_id=None,  # This will be updated if main_char is provided
+        main_char_type=main_char_type,
+    )
     db.session.add(series)
 
+    # Handle entities
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
         for item in entity_items:
             getattr(series, entity_type).append(item)
 
-    if main_char_title:
-        main_char = create_or_get_main_character(main_char_type, main_char_title)
-        series.main_char_id = main_char.id
-        series.main_char_type = main_char_type
+    if main_char:
+        main_char_instance = create_or_get_main_character(main_char_type, main_char)
+        series.main_char_id = main_char_instance.id
+
+    # Handle thumbnail file if it exists
+    if 'thumbnail' in request.files:
+        file = request.files['thumbnail']
+        thumbnail_filename, dominant_color = save_series_thumbnail(file, title)
+        series.thumbnail = thumbnail_filename
+        series.dominant_color = dominant_color
 
     db.session.commit()
-    return series
-
+    return series_schema.dump(series), 201
 
 @series.route('/series/<int:id>', methods=['GET'])
 @authenticate(token_auth)
@@ -103,64 +126,74 @@ def user_all(id):
 
 @series.route('/series/<int:id>', methods=['PUT'])
 @authenticate(token_auth)
-@body(update_series_schema)
-@response(series_schema)
-@other_responses({403: 'Not allowed to edit this series',
-                         404: 'Series not found'})
-def put(data, id):
+def update_series(id):
     """Edit a series"""
-    thumbnail = data.get("thumbnail") 
-    thumbnail_filename = None
-    if(thumbnail):
-        # print(data["thumbnail"])
-        thumbnail_filename, dominant_color = save_series_thumbnail(data["thumbnail"], data['title'])
-        data['dominant_color'] = dominant_color
-        data['thumbnail'] = thumbnail_filename
-
+    user = token_auth.current_user()
     series = db.session.get(Series, id) or abort(404)
 
-    if series.user != token_auth.current_user():
+    if series.user != user:
         abort(403)
-        
-    if (thumbnail_filename is not None and series.thumbnail is not None):
-        delete_series_thumbnail(series.thumbnail)
+
+    # Parse FormData fields
+    title = request.form.get('title', '')
+    description = request.form.get('description', '')
+    series_format = request.form.get('series_format', '')
+    issue_count = int(request.form.get('issue_count', 0))
+    read_count = int(request.form.get('read_count', 0))
+    owned_count = int(request.form.get('owned_count', 0))
+    main_char = request.form.get('main_char', None)
+    main_char_type = request.form.get('main_char_type', None)
+
+    # Parse JSON fields within FormData
+    genre = request.form.get('genre', '[]')
+    writer = request.form.get('writer', '[]')
+    artist = request.form.get('artist', '[]')
+    editor = request.form.get('editor', '[]')
+    publisher = request.form.get('publisher', '[]')
 
     entities = {
-        'genre': data.pop("genre", []),
-        'team': data.pop("team", []),
-        'editor': data.pop("editor", []),
-        'writer': data.pop("writer", []),
-        'artist': data.pop("artist", []),
-        'inker': data.pop("inker", []),
-        'penciller': data.pop("penciller", []),
-        'colorist': data.pop("colorist", []),
-        'letterer': data.pop("letterer", []),
-        'character': data.pop("character", []),
-        'publisher': data.pop("publisher", []),
+        'genre': json.loads(genre),
+        'editor': json.loads(editor),
+        'writer': json.loads(writer),
+        'artist': json.loads(artist),
+        'publisher': [publisher],
     }
-    for entity_type, titles in entities.items():
-        if titles is not None:
-            entity_items = create_or_get_entities(entity_type, titles)
-            setattr(series, entity_type, entity_items)
 
+    # Handle thumbnail file if it exists
+    thumbnail_filename = None
+    if 'thumbnail' in request.files:
+        file = request.files['thumbnail']
+        thumbnail_filename, dominant_color = save_series_thumbnail(file, title)
+        if series.thumbnail:
+            delete_series_thumbnail(series.thumbnail)
+        series.thumbnail = thumbnail_filename
+        series.dominant_color = dominant_color
+
+    # Update series instance
+    series.title = title
+    series.description = description
+    series.series_format = series_format
+    series.issue_count = issue_count
+    series.read_count = read_count
+    series.owned_count = owned_count
+    series.main_char_type = main_char_type
+
+    # Handle entities
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
         setattr(series, entity_type, entity_items)
 
-    main_char_title = data.pop("main_char", None)
-    main_char_type = data.pop("main_char_type", None)
-
-    if main_char_title:
-        main_char = create_or_get_main_character(main_char_type, main_char_title)
-        series.main_char_id = main_char.id
+    # Handle main character
+    if main_char:
+        main_char_instance = create_or_get_main_character(main_char_type, main_char)
+        series.main_char_id = main_char_instance.id
         series.main_char_type = main_char_type
     else:
         series.main_char_id = None
         series.main_char_type = None
 
-    series.update(data)
     db.session.commit()
-    return series
+    return series_schema.dump(series)
 
 
 @series.route('/series/<int:id>', methods=['DELETE'])
@@ -175,7 +208,6 @@ def delete(id):
 
     issues = db.session.query(Issue).filter(Issue.series_id==id).all()
     for issue in issues:
-        print(issue.id)
         db.session.delete(issue)    
     db.session.delete(series)
     
@@ -254,7 +286,6 @@ def get_series_by_table(table):
         
         # Combine results and remove duplicates
         values = {char.title for char in characters} | {team.title for team in teams}
-        print(values)
     else:
         table_class = {
             'genre': series_entities.Genre,
@@ -269,7 +300,6 @@ def get_series_by_table(table):
 
         values = db.session.query(table_class.title).distinct().all()
         values = {value.title for value in values}
-        print(values)
 
     # Sort and format the final list
     values = sorted(values)

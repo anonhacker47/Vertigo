@@ -2,7 +2,7 @@
   <Transition enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
     <div v-if="true" class="flex justify-around items-center py-2 border-b border-slate-700">
-      <RouterLink :to="{ name: 'addnew' }" class="btn btn-primary justify-center">
+      <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary justify-center">
         Add Series
       </RouterLink>
 

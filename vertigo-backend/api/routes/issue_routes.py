@@ -30,13 +30,16 @@ def new(args,series_id):
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
     count = series.issue_count + 1
-    is_read = 1 if series.read_count == series.issue_count else 0
     is_owned = 1 if series.owned_count == series.issue_count else 0
+    is_read = 1 if series.read_count == series.issue_count else 0
 
     for i in range(1,count):
         title = f"volume {i}"
+        bought_date = datetime.now(timezone.utc) if is_owned == 1 else None
+        read_date = datetime.now(timezone.utc) if is_read  == 1 else None
         issue = Issue(user=user, series=series, title=title,
-                      is_read=is_read, is_owned=is_owned)
+                      is_read=is_read, is_owned=is_owned,
+                      bought_date=bought_date, read_date=read_date)
         db.session.add(issue)
     
     db.session.commit()

@@ -87,14 +87,6 @@ class Series(Updateable, db.Model):
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-        url = kwargs.get('thumbnail', '')
-                
-        if url:
-            thumbnail_filename, dominant_color = save_series_thumbnail(url, kwargs['title'])
-            kwargs['dominant_color'] = dominant_color
-            kwargs['thumbnail'] = thumbnail_filename
-
         super().__init__(*args, **kwargs)
 
     def __repr__(self):

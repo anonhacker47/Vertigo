@@ -9,17 +9,26 @@ export default {
     );
     const seriesList = response.data.data;
     const pagination = response.data.pagination;
-    return {seriesList, pagination};
+    return { seriesList, pagination };
   },
 
-  async addSeries(data: Partial<Series>): Promise<Series> {
-    const response = await Api().post<Series>("series", data);
+  async addSeries(data: any): Promise<Series> {
+
+    const response = await Api().post("series", data, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+    });
     return response.data;
   },
 
 
   updateSeries(id: any, data: any) {
-    return Api().put(`series/${id}`, data)
+    return Api().put(`series/${id}`, data, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+    });
   },
 
   async removeSeries(id: number): Promise<void> {
@@ -34,12 +43,12 @@ export default {
   getImagebyId(id: Series["id"]) {
     return Api().defaults.baseURL + `/series/image/${id}`;
   },
-  
+
   getSeriesKey() {
     return Api().get("series/key",
     );
   },
-  
+
   getSeriesFieldValues(field: string) {
     return Api().get(`series/filter/${field}`);
   },

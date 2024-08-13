@@ -30,7 +30,7 @@
         </swiper-slide> -->
         <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="swiper-slm  rounded-t-lg">
             <RouterLink :to="{
-              name: 'series',
+              name: 'SeriesDetail',
               params: { Link: issue.slug, Id: issue.series_id },
               class: 'rounded-md w-[11rem] h-[15rem] m-auto',
             }">

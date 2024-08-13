@@ -1,7 +1,7 @@
 <template>
   <RouterLink class="shadow-2xl pt-4 flex flex-grow"
     :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`]" :to="{
-      name: 'series',
+      name: 'SeriesDetail',
       params: { Link: series.slug, Id: series.id },
     }">
     <div class="flex items-end flex h-full w-full" @mouseenter="activate" @mouseleave="activate">

@@ -3,7 +3,7 @@
     <div class="content">
       <div class="card w-[22rem] bg-base-100 shadow-xl">
         <figure class="px-5 pt-5">
-          <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl w-[24rem] h-[27rem]"
+          <img :src="imagesrc" @error="changeThumb"  alt="Invalid Link" class="rounded-xl w-[24rem] h-[27rem]"
             key="imagesrc" />
         </figure>
         <div class="flex flex-col p-5" v-if="true">
@@ -101,12 +101,12 @@
           </div>
           <div class="flex flex-row gap-16 justify-around">
             <div class="form-control w-full">
-              <button @click="createSeries" class="btn btn-primary">
-                Add Series
+              <button @click="updateSeries" class="btn btn-primary">
+                Update Series
               </button>
             </div>
             <div class="form-control w-full">
-              <button type="button" @click="router.push('collection')" class="btn btn-danger">
+              <button type="button" @click="router.back" class="btn btn-danger">
                 Cancel
               </button>
             </div>
@@ -118,8 +118,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
 
@@ -131,7 +131,22 @@ import MultiSelectCombobox from "../components/customInputs/MultiSelectCombobox.
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 
 const router = useRouter();
+const route = useRoute();
+
+const seriesId = Number(route.params.Id);
+
 const imageLinkInput = ref("");
+
+async function getSeries() {
+  try {
+    const response = await SeriesService.getSeriesbyId(seriesId)
+    Object.assign(seriesData, response);
+    console.log(seriesData);    
+    imagesrc.value = `${SeriesService.getImagebyId(seriesId)}?t=${Date.now()}`
+    } catch (error) {
+    console.log(error);
+  }
+}
 
 const seriesData: Partial<Series> = reactive({
   title: "",
@@ -140,15 +155,18 @@ const seriesData: Partial<Series> = reactive({
   editor: [],
   description: "",
   genre: [],
+  publisher: "",
   main_char: "",
   series_format: "",
   issue_count: 0,
   thumbnail: "",
-  publisher: "",
   read_count: 0,
   owned_count: 0,
 });
 
+onMounted(() => {
+  getSeries();
+});
 
 
 function changeImage(event: any, inputType: string) {
@@ -174,7 +192,7 @@ function changeThumb() {
   seriesData.thumbnail = "noimage";
 }
 
-async function createSeries() {
+async function updateSeries() {
   try {
     const owned_count = seriesData.owned_count == 1 ? seriesData.issue_count : 0;
     const read_count = seriesData.read_count == 1 ? seriesData.issue_count : 0;
@@ -200,47 +218,18 @@ async function createSeries() {
       formData.append("thumbnail", seriesData.thumbnail);
     }
 
+    console.log(formData);
+    
+
     // Send the FormData to the backend
-    const response = await SeriesService.addSeries(formData);
+    await SeriesService.updateSeries(seriesId,formData).then((response) => {
+      router.push({name: 'SeriesDetail', params: {Id: String(response.data.id), Link: response.data.link}})
+    });
 
-    if (seriesData.issue_count > 0) {
-      addIssues();
-    } else {
-      console.log("nothing to add");
-    }
   } catch (error) {
     console.log(error);
   }
 }
-
-async function getPrimaryKey() {
-  try {
-    const response = await SeriesService.getSeriesKey();
-
-    const key = response.data;
-
-    return key;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-async function addIssues() {
-  var key = await getPrimaryKey();
-  try {
-    const response = await IssueService.addIssues(
-      key,
-      {
-        title: "title",
-        is_read: 1,
-        is_owned: 1,
-      },
-    );
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 
 
 </script>
