@@ -105,7 +105,6 @@ defineProps<{
 const viewMode = defineModel<string>('viewMode', { required: true })
 </script>
 
-
 <style>
 input:checked+label {
   border: 2px;

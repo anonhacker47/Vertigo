@@ -48,16 +48,16 @@ export default () => {
 
             return await axiosInstance(originalRequest);
           }
-        } catch (err) {
+        } catch (error) {
           localStorage.clear();
           router.push("/login");
-          return Promise.reject(error);
+          return Promise.reject(error as Error);
         }
       } else {
         console.log(error);
       }
 
-      return Promise.reject(error);
+      return Promise.reject(error as Error);
     }
   );
 

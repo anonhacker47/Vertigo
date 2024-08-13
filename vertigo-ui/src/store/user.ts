@@ -19,6 +19,7 @@ export const useUserStore = defineStore("user", {
     },
     addUser(userId: string) {
       this.userId = userId;
+      this.isUserLoggedIn = true; 
       localStorage.setItem("userId", userId);
     },
     getRefrehToken(token: string) {
@@ -42,5 +43,11 @@ export const useUserStore = defineStore("user", {
       const user = localStorage.getItem("userId");
       return user;
     },
+    logout() {
+      this.isUserLoggedIn = false;
+      this.userId = null;
+      localStorage.removeItem("token");
+      localStorage.removeItem("isUserLoggedIn");
+      localStorage.removeItem("userId");    },
   },
 });

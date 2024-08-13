@@ -1,5 +1,6 @@
 import os
 from pstats import SortKey
+import random
 from flask import current_app, jsonify
 import sqlite3
 
@@ -280,4 +281,13 @@ def get_series_with_thumbnail():
     """Retrieve IDs of series with non-null thumbnails"""
     series_with_thumbnail = db.session.query(Series.id).filter(Series.thumbnail.isnot(None)).all()
     series_ids = [series[0] for series in series_with_thumbnail]
+    
+    # Ensure the list has at least 30 IDs
+    while len(series_ids) < 30:
+        series_ids.extend(series_ids)
+    
+    # Randomize the list and select the first 30
+    random.shuffle(series_ids)
+    series_ids = series_ids[:30]
+    
     return jsonify(series_ids)

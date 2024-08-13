@@ -1,16 +1,13 @@
 <template>
   <div class="flex flex-col h-[88vh] w-screen">
-    <!-- <div class="w-full h-24 flex items-center ml-10 pt-4 pb-4">
-      <span class="text-4xl font-bold text-primary">Hello, anonhacker</span>
-    </div> -->
     <div class="w-full flex gap-12 items-center h-40 pt-4 pl-8 pr-8 justify-around">
-      <InsightCardItem :border="true" :icon="collectionIcon" :multipleData="true" titleA="My Series" titleB="My Issues"
+      <InsightCardItem :border="true" icon="collection" :multipleData="true" titleA="My Series" titleB="My Issues"
         :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount" :value-b-numerator="seriesInfo.totalSeriesCount" :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
         
-      <InsightCardItem :border="true" :icon="readIcon" :multipleData="false" titleA="Series Read"
+      <InsightCardItem :border="true" icon="readSeries" :multipleData="false" titleA="Series Read"
         :valueANumerator="seriesInfo.readSeriesCount" :valueADenominator="seriesInfo.totalSeriesCount" />
 
-      <InsightCardItem :border="true" :icon="readIssueIcon" :multipleData="false" titleA="Issues Read"
+      <InsightCardItem :border="true" icon="readIssue" :multipleData="false" titleA="Issues Read"
         titleB="Issues Read" :valueANumerator="issueInfo.readIssueCount"  :valueADenominator="issueInfo.totalIssueCount" />
 
       <AddSeriesCardItem />
@@ -20,15 +17,15 @@
         <PieChartItem :title="chartTitle" :data="chartData" />
 
         <div class="dropdown dropdown-end absolute top-3 right-3">
-          <div tabindex="0" role="button" class="btn btn-circle btn-ghost btn-xs text-info">
-            <svg tabindex="0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          <button class="btn btn-circle btn-ghost btn-xs text-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               class="w-4 h-4 stroke-current">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-          </div>
-          <div tabindex="0" class="card compact dropdown-content z-[1] shadow bg-base-100 rounded-box w-64">
-            <div tabindex="0" class="card-body">
+          </button>
+          <div class="card compact dropdown-content z-[1] shadow bg-base-100 rounded-box w-64">
+            <div class="card-body">
               <h2 class="card-title">You needed more info?</h2>
               <p>Here is a description!</p>
             </div>
@@ -67,14 +64,8 @@
   </div>
 </template>
 
-<script setup>
-import HeaderItem from '../components/HeaderItem.vue';
-import collectionIcon from '@/assets/collection.svg'
-import readIcon from '@/assets/read.svg'
-import forwardIcon from '@/assets/forward.svg'
-import addIcon from '@/assets/add.svg'
+<script setup lang="ts">
 import { useUserStore } from "../store/user";
-import readIssueIcon from '@/assets/readIssue.svg'
 import InsightCardItem from '../components/cards/InsightCardItem.vue'
 import AddSeriesCardItem from '../components/cards/AddSeriesCardItem.vue'
 
@@ -83,6 +74,8 @@ import PieChartItem from '../components/charts/PieChartItem.vue';
 import LineChartItem from '../components/charts/LineChartItem.vue';
 import SwiperCardItem from '../components/cards/SwiperCardItem.vue';
 import DashboardService from '../services/DashboardService';
+
+import {Series} from "@/types/series.types";
 
 const userstore = useUserStore();
 const userId = userstore.getUser();
@@ -108,6 +101,7 @@ const chartCategoryList = [
   { Name: 'Artist', field: 'artist' },
   { Name: 'Editor', field: 'editor' },
 ];
+
 async function getSeriesInfo() {
   try {
     const response = await DashboardService.getUserSeriesStats(userId);
@@ -132,10 +126,10 @@ async function getIssueInfo() {
 }
 
 async function fetchData() {
-  await getUserFieldCountAsync(userId, selectedCategory.value, selectedType.value);
+  await getUserFieldCountAsync(Number(userId), selectedCategory.value, selectedType.value);
 };
 
-async function getUserFieldCountAsync(userId, field, type) {
+async function getUserFieldCountAsync(userId: Series["user"]["id"], field: string, type: string) {
   try {
     const response = await DashboardService.getUserFieldCount(userId, field, type);
     chartData.value = response.data;
@@ -157,8 +151,8 @@ async function getRecentPurchases() {
 async function getPurchasesPerMonth() {
   try {
     const response = await DashboardService.getPurchasesPerMonth(userId);
-    dates.value = response.data.map(item => item.month)
-    purchaseData.value = response.data.map(item => item.count)
+    dates.value = response.data.map((item: { month: any; }) => item.month)
+    purchaseData.value = response.data.map((item: { count: any; }) => item.count)
     
   } catch (error) {
     console.log(error);
@@ -174,9 +168,6 @@ onMounted(async () => {
   await getPurchasesPerMonth();
 });
 
-// const dates = ref(['Jan', 'Feb', 'Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']);
-// const purchaseData = ref(Array.from({length: 12}, () => Math.floor(Math.random() * 21)));
-
 const dates = ref([]);
 const purchaseData = ref([]);
 
@@ -188,4 +179,5 @@ const chartTitle = computed(() => {
 
 </script>
 
-<style scoped></style>
+<style scoped>
+</style>

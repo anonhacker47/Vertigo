@@ -52,7 +52,7 @@
   </Combobox>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import {
   Combobox,
@@ -63,7 +63,7 @@ import {
   TransitionRoot,
 } from '@headlessui/vue'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
-import SeriesService from 'src/services/SeriesService';
+import SeriesService from '@/services/SeriesService';
 
 const items = ref([])
 const props = defineProps({

@@ -14,22 +14,22 @@
       </button>
     </div>
   </Transition>
-    <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" v-if="viewMode == 'card'"
-      :class="`grid-cols-${selectedGrid}`" id="carddiv">
-      <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
-        <div class="flex flex-row relative justify-center items-start" v-for="card in cards" :key="card.id" >
+  <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" v-if="viewMode == 'card'"
+    :class="`grid-cols-${selectedGrid}`" id="carddiv">
+    <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
+      <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
 
-        <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :card="card"
-          :cardHeightMD="cardHeightMD" :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth"
-          :deleteMode="deleteMode" @confirmDelete="confirmDelete"  />
+        <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
+          :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
+          @confirmDelete="confirmDelete" />
 
-        </div>
-      </TransitionGroup>
-    </div>
+      </div>
+    </TransitionGroup>
+  </div>
   <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut">
     <div class="mx-5 pb-10" v-if="viewMode === 'list'" key="listView">
-      <CollectionTable v-if="cards && cards.length" :cards="cards" :deleteMode="deleteMode"
+      <CollectionTable v-if="seriesList && seriesList.length" :seriesList="seriesList" :deleteMode="deleteMode"
         :confirmDelete="confirmDelete" />
     </div>
   </Transition>
@@ -44,23 +44,23 @@
   </ConfirmDialog>
 </template>
   
-<script setup>
-import HeaderItem from "../components/HeaderItem.vue";
-import CollectionCardItem from "../components/cards/CollectionCardItem.vue";
+<script setup lang="ts">
+import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
 import { onMounted, ref } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
-import { useUserPreferences} from "@/store/userPreferences";
+import { useUserPreferences } from "@/store/userPreferences";
 import { useWindowSize } from 'vue-window-size';
 import CollectionDropDownMenu from '@/components/dropdowns/CollectionDropDownMenu.vue';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import { Series } from '@/types/series.types';
 
 const confirm = useConfirm();
 const toast = useToast();
 
-const confirmDelete = (id, title) => {
+const confirmDelete = (id: number, title: any) => {
   confirm.require({
     message: title,
     header: 'Confirm Deletion',
@@ -86,15 +86,14 @@ const confirmDelete = (id, title) => {
 };
 
 const { width } = useWindowSize();
-const cards = ref();
+const seriesList = ref<Series[]>([]);
+const pagination = ref({});
 const userstore = useUserStore();
 const userId = userstore.getUser();
 const message = ref();
 const deleteMode = ref(false);
 const headers = userstore.getTokenHeader();
-const selectedGrid = ref(
-  localStorage.getItem("gridCol") ? localStorage.getItem("gridCol") : 4
-);
+const selectedGrid = ref<number>(4);
 const orderby = ref("timestamp");
 const orderdir = ref("desc");
 
@@ -108,7 +107,7 @@ const sortKey = ref(true);
 let cardHeightMultiplierMD = [34, 34, 32, 27, 21.5, 19, 16.3, 14, 13.5];
 let cardWidthMultiplierMD = [22, 22, 21, 17.5, 14, 12, 10.5, 9.2, 8.2];
 const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
-const cardWidthMD = ref(cardWidthMultiplierMD[selectedGrid.value - 2]);
+const cardWidthMD = ref<number>(cardWidthMultiplierMD[selectedGrid.value - 2]);
 
 let cardHeightMultiplier = [19, 14, 9, 7.5];
 let cardWidthMultiplier = [12, 9.2, 6, 5];
@@ -116,16 +115,17 @@ const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
 const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
 
 
-async function deleteCard(id) {
+async function deleteCard(id:number) {
   const idToRemove = id;
-  cards.value.splice(
-    cards.value.findIndex((a) => a.id === idToRemove),
+  seriesList.value.splice(
+    seriesList.value.findIndex((a) => a.id === idToRemove),
     1
   );
 
   try {
-    const response = await SeriesService.removeSeries(id, { headers });
-    setPrimaryKey();
+    const response = await SeriesService.removeSeries(id);
+    // setPrimaryKey();
+    getseriesList();
   } catch (error) {
     message.value = error;
   }
@@ -133,20 +133,19 @@ async function deleteCard(id) {
   console.log(message);
 }
 
-function toggleDelete() {
+const toggleDelete = (): void => {
   deleteMode.value = !deleteMode.value;
-}
+};
 
-async function setPrimaryKey() {
-  try {
-    const response = await SeriesService.getSeriesKey(
-      { headers }
-    );
-    localStorage.setItem("key", response.data)
-  } catch (error) {
-    console.log(error);
-  }
-}
+// async function setPrimaryKey() {
+//   try {
+//     const response = await SeriesService.getSeriesKey(
+//     );
+//     localStorage.setItem("key", response.data)
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
 
 // async function getPostImages(id){
 //   console.log(id);
@@ -165,26 +164,19 @@ async function setPrimaryKey() {
 // }
 
 
-async function getCards() {
+const getseriesList = async () => {
   try {
-    const response = await SeriesService.getSeries(
-      { headers },
-      userId,
-      orderby.value,
-      orderdir.value
-    );
-    cards.value = response.data.data.map(card => ({ ...card, key: card.id }));
-    console.log(cards.value);
-    // console.log(response);
+    const result: any = await SeriesService.fetchSeries(userId, orderby.value, orderdir.value);
+    seriesList.value = result.seriesList;
+    pagination.value = result.pagination;
   } catch (error) {
-    message.value = error;
-    console.log(error);
+    console.error('Error loading series:', error);
   }
-}
+};
 
-function changeGrid(selected) {
+
+function changeGrid(selected: any) {
   selectedGrid.value = parseInt(selected.target.value);
-  localStorage.setItem("gridCol", selected.target.value);
   cardHeightMD.value = cardHeightMultiplierMD[selectedGrid.value - 2];
   cardWidthMD.value = cardWidthMultiplierMD[selectedGrid.value - 2];
   cardHeight.value = cardHeightMultiplier[selectedGrid.value - 2];
@@ -192,17 +184,17 @@ function changeGrid(selected) {
   console.log(selectedGrid.value);
 }
 
-function orderbyDirection(values) {
+function orderbyDirection(values: any) {
   orderdir.value = values.target.value;
-  cards.value=[]
-  getCards();
-  
+  seriesList.value = []
+  getseriesList();
+
 }
 
-function orderbyProperties(values) {
+function orderbyProperties(values: any) {
   orderby.value = values.target.value;
-  cards.value=[]
-  getCards();
+  seriesList.value = []
+  getseriesList();
 }
 
 function getScreenWidth() {
@@ -211,7 +203,7 @@ function getScreenWidth() {
 }
 
 onMounted(() => {
-  getCards();
+  getseriesList();
 });
 </script>
   

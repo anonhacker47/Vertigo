@@ -18,7 +18,7 @@
         </div>
       </dialog>
 </template>
-<script setup>
+<script setup lang="ts">
 import EditIcon from '../../assets/EditIcon.vue';
 import { ref } from 'vue';
 
