@@ -18,10 +18,10 @@
         <div class="card-body justify-between">
           <div class="flex flex-row gap-16 mb-5 justify-around">
             <div class="form-control max-w-52">
-              <input type="text" placeholder="Series Name" v-model="title" class="input input-bordered" required />
+              <input type="text" placeholder="Series Name" v-model="seriesData.title" class="input input-bordered" required />
             </div>
             <div class="form-control w-full max-w-52">
-              <select class="select select-primary" v-model="series_format" required>
+              <select class="select select-primary" v-model="seriesData.series_format" required>
                 <option disabled value="">Pick Format</option>
                 <option>TPB</option>
                 <option>HC</option>
@@ -31,38 +31,38 @@
               </select>
             </div>
             <div class="form-control max-w-52">
-              <input type="number" v-model.number="issue_count" placeholder="Book Count" class="input input-bordered" />
+              <input type="number" v-model.number="seriesData.issue_count" placeholder="Book Count" class="input input-bordered" />
             </div>
           </div>
           <div class="flex flex-row gap-16 mt-5 justify-around">
             <div class="form-control">
-              <SingleSelectCombobox v-model="publisher" field="publisher" placeholder="Publisher"/>
+              <SingleSelectCombobox v-model="publisherList" field="publisher" placeholder="Publisher"/>
             </div>
             <div class="form-control">
-              <MultiSelectCombobox v-model="genre" field="genre" placeholder="Genre"/>
+              <MultiSelectCombobox v-model="seriesData.genre" field="genre" placeholder="Genre"/>
 
             </div>
             <div class="form-control">
-              <SingleSelectCombobox v-model="main_char" field="main_char" placeholder="Main Character/ Team"/>
+              <SingleSelectCombobox v-model="seriesData.main_char" field="main_char" placeholder="Main Character/ Team"/>
 
             </div>
           </div>
           <div class="flex flex-row gap-16 justify-around">
             <div class="form-control">
-              <MultiSelectCombobox v-model="writer" field="writer" placeholder="Writer"/>
+              <MultiSelectCombobox v-model="seriesData.writer" field="writer" placeholder="Writer"/>
 
             </div>
             <div class="form-control">
-              <MultiSelectCombobox v-model="artist" field="artist" placeholder="Artist"/>
+              <MultiSelectCombobox v-model="seriesData.artist" field="artist" placeholder="Artist"/>
             </div>
             <div class="form-control">
-              <MultiSelectCombobox v-model="editor" field="editor" placeholder="Editor"/>
+              <MultiSelectCombobox v-model="seriesData.editor" field="editor" placeholder="Editor"/>
 
             </div>
           </div>
           <div class="flex flex-row gap-16 mb-3 justify-around">
             <div class="form-control w-full">
-              <textarea class="textarea textarea-bordered h-24" placeholder="Summary" v-model="summary"></textarea>
+              <textarea class="textarea textarea-bordered h-24" placeholder="Summary" v-model="seriesData.description"></textarea>
             </div>
           </div>
           <div class="flex flex-row gap-16 mb-3 justify-around">
@@ -70,7 +70,7 @@
               <div class="form-control">
                 <label class="label cursor-pointer">
                   <span class="text-emerald-400">Read Already?</span>
-                  <input type="checkbox" true-value="1" false-value="0" v-model.number="is_read"
+                  <input type="checkbox" true-value="1" false-value="0" v-model.number="seriesData.read_count"
                     class="checkbox checkbox-accent" />
                 </label>
               </div>
@@ -79,7 +79,7 @@
               <div class="form-control">
                 <label class="label cursor-pointer">
                   <span class="text-emerald-400">All Bought?</span>
-                  <input type="checkbox" true-value="1" false-value="0" v-model.number="is_owned"
+                  <input type="checkbox" true-value="1" false-value="0" v-model.number="seriesData.owned_count"
                     class="checkbox checkbox-accent" />
                 </label>
               </div>
@@ -103,10 +103,12 @@
   </form>
 </template>
 
-<script setup>
-import { ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import HeaderItem from "../components/HeaderItem.vue";
+
+import type { Series } from "@/types/series.types";
+
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
 import SingleSelectCombobox from "../components/customInputs/SingleSelectCombobox.vue";
@@ -116,58 +118,61 @@ const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 
 const router = useRouter();
 
-const title = ref("");
-const publisher = ref([]);
-const writer = ref([]);
-const artist = ref([]);
-const editor = ref([]);
-const summary = ref("");
-const genre = ref([]);
-const main_char = ref("");
-const series_format = ref("");
-const issue_count = ref(0);
-const is_read = ref(0);
-const is_owned = ref(0);
-const thumbnail = ref("");
+const seriesData: Partial<Series> = reactive({
+  title: "",
+  writer: [],
+  artist: [],
+  editor: [],
+  description: "",
+  genre: [],
+  main_char: "",
+  series_format: "",
+  issue_count: 0,
+  thumbnail: "",
+  read_count: 0,
+  owned_count: 0,
+});
 
+const publisherList = ref<string>("");
 
 function changeImage(event) {
   event.target.value
     ? (imagesrc.value = event.target.value)
     : (imagesrc.value = new URL("../assets/dummy.webp", import.meta.url).href);
-  thumbnail.value = event.target.value;
+    seriesData.thumbnail = event.target.value;
 }
 
 function changeThumb() {
-  thumbnail.value = "noimage";
+  seriesData.thumbnail = "noimage";
 }
 
 async function createSeries() {
 
   try {
-    const owned_count = is_owned.value == 1 ? issue_count.value : 0;
-    const read_count = is_read.value == 1 ? issue_count.value : 0;
+    const owned_count = seriesData.owned_count == 1 ? seriesData.issue_count : 0;
+    const read_count = seriesData.read_count == 1 ? seriesData.issue_count : 0;
     console.log("owned_count", owned_count);
     console.log("read_count", read_count);
+
     const response = await SeriesService.addSeries(
       {
-        title: title.value,
-        publisher: [publisher.value],
-        writer: writer.value,
-        artist: artist.value,
-        editor: editor.value,
-        description: summary.value,
-        genre: genre.value,
-        main_char: main_char.value,
+        title: seriesData.title,
+        publisher: [publisherList.value],
+        writer: seriesData.writer,
+        artist: seriesData.artist,
+        editor: seriesData.editor,
+        description: seriesData.description,
+        genre: seriesData.genre,
+        main_char: seriesData.main_char,
         main_char_type: "character",
-        series_format: series_format.value,
-        issue_count: issue_count.value,
+        series_format: seriesData.series_format,
+        issue_count: seriesData.issue_count,
         read_count: read_count,
         owned_count: owned_count,
-        thumbnail: thumbnail.value,
+        thumbnail: seriesData.thumbnail,
       },
     );
-    if (issue_count.value > 0) {
+    if (seriesData.issue_count > 0) {
       addIssues();
     } else {
       console.log("nothing to add");

@@ -1,8 +1,7 @@
 <template>
-  <div class="bg-no-repeat bg-center h-screen bg-cover"
-    :style="{ backgroundImage: 'url(' + image + ')' }">
+  <div v-if="series" class="bg-no-repeat bg-center h-screen bg-cover" :style="{ backgroundImage: 'url(' + image + ')' }">
     <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
-<HeaderItem/>
+      <HeaderItem />
       <div class="flex justify-end items-center py-4 pr-20 border-b border-slate-700">
         <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
           <div class="px-5 flex flex-row items-center">
@@ -15,17 +14,13 @@
         <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
           <div class="px-5 flex flex-row items-center">
             <img src="../assets/collection.svg" alt="" width="28" height="28" />
-            <!-- <div class="radial-progress text-accent ml-2" style="--value:66; --size:2.5rem;" role="progressbar"> -->
             <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.owned_count + "/" + issueCount.total_count }}</p>
-            <!-- </div> -->
           </div>
         </div>
         <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
           <div class="px-5 flex flex-row items-center">
             <img src="../assets/read.svg" alt="" width="28" height="28" />
-            <!-- <div class="radial-progress text-warning ml-2" style="--value:100; --size:2.5rem" role="progressbar"> -->
             <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.read_count + "/" + issueCount.total_count }}</p>
-            <!-- </div> -->
           </div>
         </div>
       </div>
@@ -45,9 +40,6 @@
               </span>
               <p class="text-xl font-bold uppercase" :style="`color: rgb${themecolor}`">
                 {{ series.publisher }}
-              </p>
-              <p class="text-base text-white mt-4 font-normal" :style="`color: rgb${themecolor}`">
-                {{ series.summary }}
               </p>
               <div class="flex flex-row flex-grow max-h-52 justify-around items-center">
                 <!-- Column 1 -->
@@ -83,13 +75,11 @@
                   <img v-if="image != 'noimage'" :src="image" alt=""
                     class="md:h-[45vh] md:w-[15vw] rounded-lg mt-2 mr-2 mb-6 border-2"
                     :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
-                  <!-- <input type="file" @change="onFileChange" class="file-input w-full max-w-xs" /> -->
                   <input type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered"
                     required />
                 </div>
                 <div class="flex flex-col justify-start items-stretch ml-14">
                   <div class="flex flex-row gap-16 mb-5  justify-between">
-                    <!-- <div class="w-[13rem]"> -->
                     <div class="flex h-full flex-row justify-left items-around">
 
                       <input type="text" placeholder="Series Name" v-model="updatedSeries.value.title"
@@ -106,70 +96,43 @@
                       </select>
                     </div>
                     <div class="form-control">
-                      <input type="number" v-model.number="updatedSeries.value.books_count" placeholder="Book Count"
+                      <input type="number" v-model.number="updatedSeries.value.issue_count" placeholder="Book Count"
                         class="input input-bordered" disabled />
                     </div>
                   </div>
                   <div class="flex flex-row gap-16 my-5 justify-around">
                     <div class="form-control">
-                      <!-- <input type="text" placeholder="Publisher" v-model="updatedSeries.publisher"
-                        class="input w-[13rem] input-bordered" /> -->
-                      <SingleSelectCombobox v-model="updatedSeries.value.publisher" field="publisher" placeholder="Publisher" />
+                      <SingleSelectCombobox v-model="updatedSeries.value.publisher" field="publisher"
+                        placeholder="Publisher" />
 
                     </div>
                     <div class="form-control">
-                      <!-- <input type="text" placeholder="Genre" v-model="updatedSeries.genre"
-                        class="input input-bordered w-[13rem]" /> -->
                       <MultiSelectCombobox v-model="updatedSeries.value.genre" field="genre" placeholder="Genre" />
 
                     </div>
                     <div class="form-control">
-                      <!-- <input type="text" v-model="updatedSeries.main_char" placeholder="Main Character/Team"
-                        class="input input-bordered w-[13rem]" /> -->
                       <SingleSelectCombobox v-model="updatedSeries.value.main_char" field="main_char"
                         placeholder="Main Character/Team" />
                     </div>
                   </div>
                   <div class="flex flex-row gap-16 my-5 justify-around">
                     <div class="form-control">
-                      <!-- <input type="text" placeholder="Writer" v-model="updatedSeries.writer"
-                        class="input input-bordered w-[13rem]" /> -->
                       <MultiSelectCombobox v-model="updatedSeries.value.writer" field="writer" placeholder="Writer" />
 
                     </div>
                     <div class="form-control">
-                      <!-- <input type="text" v-model="updatedSeries.artist" placeholder="Artist"
-                        class="input input-bordered w-[13rem]" /> -->
                       <MultiSelectCombobox v-model="updatedSeries.value.artist" field="artist" placeholder="Artist" />
 
                     </div>
                     <div class="form-control">
-                      <!-- <input type="text" v-model="updatedSeries.editor" placeholder="Editor"
-                        class="input input-bordered w-[13rem]" /> -->
                       <MultiSelectCombobox v-model="updatedSeries.value.editor" field="editor" placeholder="Editor" />
                     </div>
                   </div>
                   <div class="flex flex-row gap-16 mb-3 justify-around">
                     <div class="form-control w-full">
                       <textarea class="textarea textarea-bordered h-24 " placeholder="Summary"
-                        v-model="updatedSeries.value.summary"></textarea>
+                        v-model="updatedSeries.value.description"></textarea>
                     </div>
-                    <!-- <div class="flex flex-row gap-16 justify-around">
-            <div class="form-control w-full">
-              <button @click="createSeries" class="btn btn-primary">
-                Edit Series
-              </button>
-            </div>
-            <div class="form-control w-full">
-              <button
-                type="button"
-                @click="router.push('home')"
-                class="btn btn-danger"
-              >
-                Cancel
-              </button>s
-            </div>
-          </div> -->
                   </div>
                 </div>
               </div>
@@ -177,11 +140,12 @@
 
           </div>
           <div class="flex flex-col basis-1/2 relative">
-          <div class=" p-10">  <p class="text-xl font-bold" :style="`color: rgb${themecolor}`">
+            <div class=" p-10">
+              <p class="text-xl font-bold" :style="`color: rgb${themecolor}`">
                 {{ "Description:" }}
               </p>
-            <p class=" text-justify">{{ series.description }}</p>
-          </div>
+              <p class=" text-justify">{{ series.description }}</p>
+            </div>
           </div>
 
         </div>
@@ -191,11 +155,9 @@
           </h1>
           <div class="overflow-scroll" style="height: 70vh">
             <div class="grid grid-cols-4 gap-5 px-16">
-              <!-- <div class="flex flex-row justify-center items-start" > -->
               <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned"
-                :is_read="issue.is_read" v-for="issue in issues" @updateStatus="updateStatus(issue, $event)"
-                :key="issue" />
-              <!-- </div> -->
+                :is_read="issue.is_read" v-for="issue in issuesList" @updateStatus="updateStatus(issue, $event)"
+                :key="issue.id" />
             </div>
           </div>
         </div>
@@ -206,10 +168,14 @@
 
 <style scoped></style>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
 import { useUserStore } from "../store/user";
+
+import type { Series } from "@/types/series.types";
+import type { Issue } from "@/types/issue.types";
+
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueCarditem from "../components/cards/IssueCarditem.vue";
 import SeriesService from "../services/SeriesService";
@@ -225,18 +191,20 @@ const teamUrl = new URL("../assets/group.png", import.meta.url).href;
 
 const userstore = useUserStore();
 
-const headers = useUserStore.getTokenHeader("");
-const route = useRoute("");
-const series = ref("");
-const issues = ref("");
+const route = useRoute();
+const series = ref<Series | null>(null);
+const issuesList = ref<Issue[]>([]);
+
+const pagination = ref()
+
 const updatedSeries = reactive({ value: series });;
 const issueCount = ref({
   owned_count: 0,
   read_count: 0,
   total_count: 0,
 });
-const themecolor = ref("(212, 222, 252)");
-const image = ref();
+const themecolor = ref<string | null>("(212, 222, 252)");
+const image = ref<string | null>();
 const placeholder = "https://upload.wikimedia.org/wikipedia/commons/c/cd/Placeholder_male_superhero_c.png"
 const showModal = ref(false);
 const imageChanged = ref(false);
@@ -258,31 +226,25 @@ function closeModal() {
 
 async function getSeries() {
   try {
-    const response = await SeriesService.getSeriesbyId(route.params.Id, {
-      headers,
-    });
-    series.value = response.data;
-    themecolor.value =
-      response.data.dominant_color.slice(0, -1) +
-      response.data.dominant_color.slice(-1);
-    image.value = SeriesService.getImagebyId(series.value.id);
-    console.log("getSeries", image.value);
+    const response = await SeriesService.getSeriesbyId(Number(route.params.Id))
+    series.value = response;
+    themecolor.value = response.dominant_color.slice(0, -1).toString() + response.dominant_color.slice(-1).toString();
+
+    if (series.value) {
+      image.value = SeriesService.getImagebyId(series.value.id);
+      console.log("getSeries", image.value);
+    }
 
   } catch (error) {
-    // console.log(error);
+    console.log(error);
   }
 }
 
 async function getIssues() {
   try {
-    const response = await IssueService.getIssues(
-      { headers },
-      route.params.Id,
-      "title",
-      "asc"
-    );
-    issues.value = response.data.data;
-    console.log(issues);
+    const result: any = await IssueService.fetchIssues( Number(route.params.Id), "title", "asc");
+    issuesList.value = result.issuesList;
+    pagination.value = result.pagination;
   } catch (error) {
     console.log(error);
   }
@@ -292,16 +254,16 @@ async function handleUpdate() {
 
   let seriesData = {
     title: updatedSeries.value.title,
-    publisher: [updatedSeries.value.publisher],
+    publisher: updatedSeries.value.publisher,
     writer: updatedSeries.value.writer,
     artist: updatedSeries.value.artist,
     editor: updatedSeries.value.editor,
-    summary: updatedSeries.value.summary,
+    description: updatedSeries.value.description,
     genre: updatedSeries.value.genre,
     main_char: updatedSeries.value.main_char,
     main_char_type: "character",
     series_format: updatedSeries.value.series_format,
-  }
+  }as Partial<Series>;
 
   if (imageChanged.value) {
     seriesData.thumbnail = image.value
@@ -323,7 +285,7 @@ async function handleUpdate() {
 async function getIssueCount() {
   try {
     const response = await IssueService.getIssueCount(
-      route.params.Id,
+      Number(route.params.Id),
     );
     issueCount.value = response.data;
     console.log(issueCount);
@@ -332,7 +294,7 @@ async function getIssueCount() {
   }
 }
 
-async function updateStatus(issue, field) {
+async function updateStatus(issue: { [x: string]: any; id: any; }, field: string | number) {
   issue[field] = !issue[field];
   try {
     const updateData = { [field]: issue[field] }; // Use square brackets to set dynamic property name
@@ -346,7 +308,6 @@ async function updateStatus(issue, field) {
   }
 }
 
-
 // function onFileChange(e) {
 //   const file = e.target.files[0];
 //   const url = URL.createObjectURL(file);
@@ -354,18 +315,17 @@ async function updateStatus(issue, field) {
 //   imageChanged.value = true
 // }
 
-function changeImage(event) {
-  event.target.value
-    ? (image.value = event.target.value)
-    : (imagesrc.value = new URL("../assets/dummy.webp", import.meta.url).href);
-  imageChanged.value = true
+function changeImage(event: Event) {
+  const target = event.target as HTMLInputElement;
+  target.value
+    ? (image.value = target.value)
+    : (image.value = new URL("../assets/dummy.webp", import.meta.url).href);
+  imageChanged.value = true;
 }
 
 onMounted(() => {
   getSeries(), getIssues(), getIssueCount();
 });
-
-
 
 </script>
 

@@ -4,7 +4,7 @@
     <div class="background-images" :class="!showDefaultWall ? 'bg-base-100' : 'bg-none'">
       <div class="transform-class -skew-y-6 -translate-y-20 backdrop-blur-lg backdrop-brightness-50">
         <div v-for="(image, index) in images" :key="index">
-          <img @error="handleImageError(index)" :src="image" class="background-image" />
+          <img :src="image" class="background-image" alt="comicbooks tile backdrop"/>
         </div>
       </div>
       <div class="w-fit h-fit card top-0 right-0 left-0 bottom-0 m-auto absolute z-20 w-md rounded-xl shadow-md bg-base-100 ">
@@ -39,13 +39,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useUserStore } from "../store/user";
 import { useRouter } from "vue-router";
 import AuthenticationService from "../services/AuthenticationService";
 import SeriesService from "../services/SeriesService";
-import helpers from "../helpers/helpers";
 import img from "../assets/logo.svg";
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
@@ -72,7 +71,7 @@ async function login() {
         const userResponse = await AuthenticationService.getUser();
         userStore.addUser(userResponse.data.id);
       } catch (error) {
-        message.value = userResponse;
+        message.value = error;
       }
       route.push("dashboard");
     } else {
@@ -88,13 +87,11 @@ const fetchImages = async () => {
     const response = await SeriesService.getSeriesThumbBg();
     if (response.data.length > 0) {
       const seriesIds = response.data;
-      const promises = seriesIds.map(async (seriesId) => {
+      const promises = seriesIds.map(async (seriesId: number) => {
         const imagesResponse = SeriesService.getImagebyId(seriesId);
         return imagesResponse;
       });
-      const allImages = await Promise.all(promises);
-      const newImages = helpers.ensureMinimumLength(allImages);
-      images.value = newImages;
+      images.value = await Promise.all(promises);
       showDefaultWall.value = false;
     } else {
       showDefaultWall.value = true;

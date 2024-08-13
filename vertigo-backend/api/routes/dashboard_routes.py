@@ -187,6 +187,7 @@ def get_recent_purchases(user_id):
             Issue.number,
             Issue.bought_date,
             Series.id.label('series_id'),
+            Series.slug.label('slug'),
             Series.title.label('series_title')
         )
         .join(Series, Series.id == Issue.series_id)
@@ -203,6 +204,8 @@ def get_recent_purchases(user_id):
             'title': issue.title,
             'bought_date': issue.bought_date.strftime('%d %b %Y') if issue.bought_date else None,
             'series': issue.series_title,
+            'series_id': issue.series_id,
+            'slug': issue.slug,
             'image': url_for('series.get_series_image', id=issue.series_id, _external=True) 
         })
     

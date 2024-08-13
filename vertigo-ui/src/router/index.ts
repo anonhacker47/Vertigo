@@ -18,6 +18,7 @@ const router = createRouter({
       component: DashboardView,
       meta: {
         requiresAuth: true,
+        showHeaderItem: true,
       },
     },
     {
@@ -26,6 +27,7 @@ const router = createRouter({
       component: () => import("../views/CollectionView.vue"),
       meta: {
         requiresAuth: true,
+        showHeaderItem: true,
       },
     },
     {
@@ -34,6 +36,7 @@ const router = createRouter({
       component: () => import("../views/WishlistView.vue"),
       meta: {
         requiresAuth: true,
+        showHeaderItem: true,
       },
     },
     {
@@ -41,6 +44,7 @@ const router = createRouter({
       name: "about",
       meta: {
         requiresAuth: true,
+        showHeaderItem: true,
       },
       component: () => import("../views/SeriesView.vue"),
     },
@@ -49,6 +53,7 @@ const router = createRouter({
       name: "Login",
       meta: {
         requiresAuth: false,
+        showHeaderItem: false,
       },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
@@ -64,6 +69,7 @@ const router = createRouter({
       component: () => import("../views/SignupView.vue"),
       meta: {
         requiresAuth: false,
+        showHeaderItem: false,
       },
     },
     {
@@ -71,7 +77,7 @@ const router = createRouter({
       name: "series",
       meta: {
         requiresAuth: true,
-        removeHeader: true,
+        showHeaderItem: false,
       },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
@@ -83,6 +89,7 @@ const router = createRouter({
       name: "addnew",
       meta: {
         requiresAuth: true,
+        showHeaderItem: true,
       },
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route

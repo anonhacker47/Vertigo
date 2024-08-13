@@ -1,11 +1,11 @@
-import Api from "src/services/Api";
+import Api from "@/services/Api";
 
 export default {
-  register(credentials) {
+  register(credentials: any) {
     return Api().post("users", credentials);
   },
 
-  login(username,password) {
+  login(username: string,password: string) {
     const encoded_credentials = btoa(username + ":" + password);
 
     const headers = {
@@ -16,11 +16,11 @@ export default {
       {headers});
   },
 
-  getUser(token){
-    return Api().get("me",
-      token);
+  getUser(){
+    return Api().get("me");
   },
-  refreshToken(data) {
+
+  refreshToken(data: any) {
     return Api().put("tokens",data);
   },
 };

@@ -63,7 +63,7 @@
   </Combobox>
 </template>
 
-<script setup>
+<script setup lang="ts"> 
 import { ref, computed, onMounted } from 'vue'
 import {
   Combobox,
@@ -76,7 +76,7 @@ import {
 import { CheckIcon, ChevronUpDownIcon,TrashIcon } from '@heroicons/vue/20/solid'
 import SeriesService from '@/services/SeriesService';
 
-const items = ref("")
+const items = ref([])
 const props = defineProps({
   field: String,
   placeholder: String
@@ -114,7 +114,7 @@ const queryItem = computed(() => {
 let filteredItems = computed(() =>
   query.value === ''
     ? items.value
-    : items.value.filter((item) =>
+    : items.value.filter((item: { value: string; }) =>
       item.value
         .toLowerCase()
         .replace(/\s+/g, '')
@@ -126,13 +126,13 @@ const selectedValuesPlaceholder = computed(() => {
   return model.value.length > 0 ? model.value.join(', ') : props.placeholder;
 })
 
-const removeItem = (item) => {
+const removeItem = (item: any) => {
   model.value = model.value.filter(p => p !== item);
   console.log("model: ", model.value);
 }
 
-const addCustomItem = (value) => {
-  if (!items.value.find(item => item.value === value)) {
+const addCustomItem = (value: any) => {
+  if (!items.value.find((item: { value: any; }) => item.value === value)) {
     items.value.push({ id: value, value: value });
   }
   if (!model.value.includes(value)) {

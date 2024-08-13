@@ -5,7 +5,7 @@
     <div
       class="w-full flex-row container px-4 mx-auto flex flex-wrap items-center justify-between"
     >
-      <div class="relative flex justify-between justify-start">
+      <div class="relative flex justify-start">
         <RouterLink to="/"
           ><img class="" src="../assets/logo.svg" alt="" width="40" height="40"
         /></RouterLink>
@@ -14,7 +14,7 @@
         class="hidden justify-between items-center w-full md:flex md:w-auto navMenu"
         id="navbar-sticky"
       >
-        <div class="flex flex col">
+        <div class="flex flex-row">
           <RouterLink
             to="/dashboard"
             class="block pl-2 text-white rounded mx-5 hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700"
@@ -27,27 +27,18 @@
           >
             Collection</RouterLink
           >
-          <!-- <RouterLink
-            to="/wishlist"
-            class="block pl-2 text-white rounded mx-5 hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700"
-          >
-            Wishlist</RouterLink
-          > -->
         </div>
       </div>
       <div class="flex items-center">
         <div class="flex flex-col lg:flex-row list-none">
           <div class="dropdown dropdown-hover">
             <img
-              @mouseenter="toggle"
-              @mouseleave="untoggle"
               class="inline-block h-10 w-10 rounded-md hover:opacity-75 cursor-pointer"
               src="../assets/avatar.png"
               alt=""
             />
 
             <ul
-              tabindex="0"
               class="dropdown-content right-0 menu z-50 p-2 shadow bg-base-200 text-white rounded-box w-52"
             >
               <li>
@@ -64,21 +55,15 @@
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useUserStore } from "../store/user";
 import { useRouter } from "vue-router";
-import PanelCardItem from "./cards/PanelCardItem.vue";
-import { ref } from "vue";
 
 const userStore = useUserStore();
 const route = useRouter();
 
-function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("isUserLoggedIn");
-  localStorage.removeItem("userId");
-  userStore.isUserLoggedIn = false
-  userStore.userId = null
+function logout(): void {
+  userStore.logout();
   route.push("/");
 }
 </script>

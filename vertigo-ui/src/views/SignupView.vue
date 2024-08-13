@@ -37,7 +37,7 @@
     </FormKit></PanelCardItem></div>
 </template>
 
-<script setup>
+<script setup lang="ts" >
 import { ref } from "vue";
 import AuthenticationService from "../services/AuthenticationService";
 import PanelCardItem from "../components/cards/PanelCardItem.vue"
@@ -56,7 +56,7 @@ const message = ref('');
 
 //   }
 
-async function register(values) {
+async function register(values: { username: string; email: string; password: string; }) {
   try {
     const response = await AuthenticationService.register({
       username: values.username,

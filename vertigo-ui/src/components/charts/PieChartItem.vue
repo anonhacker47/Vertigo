@@ -2,7 +2,7 @@
 	<v-chart class="flex justify-center h-full w-full relative" :option="option" :autoresize="true" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { use } from 'echarts/core';
 import { PieChart } from 'echarts/charts';
 import {
@@ -36,7 +36,7 @@ use([
 provide(THEME_KEY, 'dark');
 
 
-const option = ref({
+const option: any = ref({
   backgroundColor: 'transparent',
   darkMode: 'true',
   title: {

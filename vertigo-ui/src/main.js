@@ -63,8 +63,8 @@ const MyPreset = definePreset(Lara, {
     }
 });
 
-app.use(pinia)
 app.use(router);
+app.use(pinia)
 app.use(plugin, defaultConfig);
 app.use(PrimeVue, {
     // unstyled: true,

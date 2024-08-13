@@ -28,8 +28,14 @@
                 <div class="text-lg">Issue #6</div>
             </div>
         </swiper-slide> -->
-        <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="swiper-sl rounded-t-lg">
-            <img :src="issue.image" alt="" class="rounded-md w-[11rem] h-[15rem] m-auto " />
+        <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="swiper-slm  rounded-t-lg">
+            <RouterLink :to="{
+              name: 'series',
+              params: { Link: issue.slug, Id: issue.series_id },
+              class: 'rounded-md w-[11rem] h-[15rem] m-auto',
+            }">
+              <img :src="issue.image" alt="" class="rounded-md w-[11rem] h-[15rem] m-auto" />
+            </RouterLink>
             <div class="flex flex-col items-center text-center pt-4 rounded-lg shadow-md">
                 <!-- Series Title -->
                 <div class="text-xl font-bold text-primary">
@@ -51,7 +57,7 @@
     </swiper>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import 'swiper/css';
 // import 'swiper/css/effect-cards';

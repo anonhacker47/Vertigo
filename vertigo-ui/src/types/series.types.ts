@@ -1,0 +1,40 @@
+export interface Series {
+    artist: string[];
+    character: string[];
+    colorist: string[];
+    description: string;
+    dominant_color: [number, number, number];
+    editor: string[];
+    genre: string[];
+    id: number;
+    inker: string[];
+    issue_count: number;
+    letterer: string[];
+    main_char: string | null;
+    main_char_id: string | null;
+    main_char_type: string | null;
+    manga: number;
+    owned_count: number;
+    penciller: string[];
+    publisher: string[];
+    read_count: number;
+    release_date: string; 
+    series_format: string;
+    slug: string;
+    team: string[];
+    thumbnail: string;
+    timestamp: string; 
+    title: string;
+    url: string;
+    user: {
+      avatar_url: string;
+      email: string;
+      first_seen: string; 
+      id: number;
+      series_url: string;
+      url: string;
+      username: string;
+    };
+    user_rating: number;
+    writer: string[];
+}

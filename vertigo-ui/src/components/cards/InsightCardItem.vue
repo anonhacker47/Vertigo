@@ -16,7 +16,7 @@
 				</span>
 			</div>
 
-			<img :src="props.icon" alt="" class=" absolute right-6 w-24 h-24 ml-2  pt-2" />
+			<img :src="props.icon == 'collection' ? collectionIcon : props.icon == 'readSeries' ? readIcon : readIssueIcon" alt="" class=" absolute right-6 w-24 h-24 ml-2  pt-2" />
 		</div>
 		<div class="absolute top-3 right-3" v-if="multipleData">
 			<input type="radio" :name="props.titleA" class="radio w-4 h-4 radio-primary" v-model="selectedOption" value="1"
@@ -26,22 +26,25 @@
 		</div>
 	</div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
-import AnimatedNumber from 'src/components/AnimatedNumber.vue'
+import AnimatedNumber from '@/components/AnimatedNumber.vue'
+import collectionIcon from '@/assets/collection.svg'
+import readIcon from '@/assets/read.svg'
+import readIssueIcon from '@/assets/readIssue.svg'
 
 const props = defineProps({
-	icon: String,
+	icon:String,
 	border:Boolean,
 	multipleData:Boolean,
-	titleA:String,
+	titleA	:String,
 	valueANumerator:Number,
 	valueADenominator:Number,
 	valueBNumerator:Number,
 	valueBDenominator:Number,
 	titleB:String,
 })
-const selectedOption = ref('1');
+const selectedOption = ref(1);
 const multipleData = props.multipleData || false
 
 

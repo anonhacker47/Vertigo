@@ -1,5 +1,5 @@
 <template>
-	<DataTable class="mt-5 rounded-lg rounded-table" :value="cards" @row-click="navigate"  rowHover  :rows="10">
+	<DataTable class="mt-5 rounded-lg rounded-table" :value="seriesList" @row-click="navigate"  rowHover  :rows="10">
 		<Column field="title" sortable header="Series" >
 			<template #body="{ data }">
 					<div class="flex items-center gap-4">
@@ -59,7 +59,7 @@
 </template>
   
 
-<script setup>
+<script setup lang="ts">
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { ref } from 'vue';
@@ -71,7 +71,7 @@ import { TrashIcon } from '@heroicons/vue/20/solid'
 
 
 const props = defineProps({
-	cards: {
+	seriesList: {
 		type: Array,
 		required: true
 	},
@@ -87,12 +87,11 @@ const props = defineProps({
 
 const router = useRouter();
 
-const navigate = (event) => {
+const navigate = (event: any) => {
 	const data = event.data;
 	router.push({
 		name: 'series',
 		params: { Link: data.slug, Id: data.id },
-		id: data.id,
 	});
 };
 
