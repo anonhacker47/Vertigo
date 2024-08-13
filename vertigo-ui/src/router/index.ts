@@ -74,7 +74,7 @@ const router = createRouter({
     },
     {
       path: "/series/:Id-:Link",
-      name: "series",
+      name: "SeriesDetail",
       meta: {
         requiresAuth: true,
         showHeaderItem: false,
@@ -86,7 +86,7 @@ const router = createRouter({
     },
     {
       path: "/add",
-      name: "addnew",
+      name: "AddNewSeries",
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
@@ -95,6 +95,18 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import("../views/AddNewView.vue"),
+    },
+    {
+      path: "/series/edit/:Id-:Link",
+      name: "EditSeries",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import("../views/EditSeriesView.vue"),
     },
   ],
 });

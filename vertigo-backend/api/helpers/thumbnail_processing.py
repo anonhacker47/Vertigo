@@ -13,32 +13,29 @@ import re
 import uuid
 from PIL import Image
 
-def save_series_thumbnail(url, title):
-    if url != "noimage":
-        request = requests.get(url, stream=True)
-        ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
+def save_series_thumbnail(file, title):
+    if not isinstance(file, str):
+        ext = re.search('\.(\w+)(?!.*\.)', file.filename).group(1)
 
         if "webp" in ext:
             extension = ".webp"
         elif "png" in ext:
             extension = ".png"
-        elif "jpeg" or "jpg" in ext:
+        elif "jpeg" in ext or "jpg" in ext:
             extension = ".jpeg"
         else:
             print("no extensions")
             try:
-                img = Image.open(request.raw)
+                img = Image.open(file.raw)
                 extension = f".{img.format}"
             except Exception as e:
-                print(url)  # here you get the file causing the exception
+                print(file)  # here you get the file causing the exception
                 print(e)
 
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
 
-        if request.status_code == 200:
-            request.raw.decode_content = True
-            with open(current_app.config['cover_path']+"/"+filename, 'wb') as f:
-                shutil.copyfileobj(request.raw, f)
+        if file:
+            file.save(current_app.config['cover_path']+"/"+filename)
 
             print('Image successfully Downloaded: ', filename)
 
@@ -84,4 +81,5 @@ def calculate_dominant_color(filename):
 
 def delete_series_thumbnail(filename):
     file_path = os.path.join(current_app.config['cover_path'], filename)
-    os.remove(file_path)
+    if os.path.exists(file_path):
+        os.remove(file_path)

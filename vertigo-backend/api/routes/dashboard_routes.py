@@ -156,7 +156,7 @@ def user_field_count(user_id, field, type):
             .filter(Series.user_id == user_id)
             .group_by(field_model.title)
             .order_by(desc('value'))
-            .limit(7)
+            # .limit(7)
             .all()
         )
     else:
@@ -168,7 +168,7 @@ def user_field_count(user_id, field, type):
             .filter(Series.user_id == user_id)
             .group_by(field_model.title)
             .order_by(desc('value'))
-            .limit(7)
+            # .limit(7)
             .all()
         )
 

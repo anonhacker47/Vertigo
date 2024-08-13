@@ -16,7 +16,7 @@ export interface Series {
     manga: number;
     owned_count: number;
     penciller: string[];
-    publisher: string[];
+    publisher: any;
     read_count: number;
     release_date: string; 
     series_format: string;

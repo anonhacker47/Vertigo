@@ -62,81 +62,10 @@
               </div>
             </div>
 
+            <RouterLink :to="{name: 'EditSeries', params: {Link: series.slug, Id: series.id}}" class="absolute right-0 top-2 cursor-pointer w-7 h-7">
+              <EditIcon class="w-7 h-7" :fill-color="`rgb${themecolor}`" />
+            </RouterLink>
 
-
-            <EditIcon class="absolute right-0 top-2 cursor-pointer w-7 h-7" :fill-color="`rgb${themecolor}`"
-              @click="showModal = true" />
-
-            <EditSeriesModal :title="`Edit Series`" @close-modal="closeModal()" @esc="closeModal()"
-              @submit-form="handleUpdate()" :modal-ref="showModal">
-
-              <div class="flex h-full flex-row justify-left items-center justify-around">
-                <div class="flex flex-col h-full justify-center items-center">
-                  <img v-if="image != 'noimage'" :src="image" alt=""
-                    class="md:h-[45vh] md:w-[15vw] rounded-lg mt-2 mr-2 mb-6 border-2"
-                    :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
-                  <input type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered"
-                    required />
-                </div>
-                <div class="flex flex-col justify-start items-stretch ml-14">
-                  <div class="flex flex-row gap-16 mb-5  justify-between">
-                    <div class="flex h-full flex-row justify-left items-around">
-
-                      <input type="text" placeholder="Series Name" v-model="updatedSeries.value.title"
-                        class="input  input-bordered" required />
-                    </div>
-                    <div class="form-control">
-                      <select class="select select-primary w-[16em]" v-model="updatedSeries.value.series_format" required>
-                        <option disabled value="">Pick Format</option>
-                        <option>TPB</option>
-                        <option>HC</option>
-                        <option>OMNI</option>
-                        <option>ABS</option>
-                        <option>MANGA</option>
-                      </select>
-                    </div>
-                    <div class="form-control">
-                      <input type="number" v-model.number="updatedSeries.value.issue_count" placeholder="Book Count"
-                        class="input input-bordered" disabled />
-                    </div>
-                  </div>
-                  <div class="flex flex-row gap-16 my-5 justify-around">
-                    <div class="form-control">
-                      <SingleSelectCombobox v-model="updatedSeries.value.publisher" field="publisher"
-                        placeholder="Publisher" />
-
-                    </div>
-                    <div class="form-control">
-                      <MultiSelectCombobox v-model="updatedSeries.value.genre" field="genre" placeholder="Genre" />
-
-                    </div>
-                    <div class="form-control">
-                      <SingleSelectCombobox v-model="updatedSeries.value.main_char" field="main_char"
-                        placeholder="Main Character/Team" />
-                    </div>
-                  </div>
-                  <div class="flex flex-row gap-16 my-5 justify-around">
-                    <div class="form-control">
-                      <MultiSelectCombobox v-model="updatedSeries.value.writer" field="writer" placeholder="Writer" />
-
-                    </div>
-                    <div class="form-control">
-                      <MultiSelectCombobox v-model="updatedSeries.value.artist" field="artist" placeholder="Artist" />
-
-                    </div>
-                    <div class="form-control">
-                      <MultiSelectCombobox v-model="updatedSeries.value.editor" field="editor" placeholder="Editor" />
-                    </div>
-                  </div>
-                  <div class="flex flex-row gap-16 mb-3 justify-around">
-                    <div class="form-control w-full">
-                      <textarea class="textarea textarea-bordered h-24 " placeholder="Summary"
-                        v-model="updatedSeries.value.description"></textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </EditSeriesModal>
 
           </div>
           <div class="flex flex-col basis-1/2 relative">
@@ -206,23 +135,6 @@ const issueCount = ref({
 const themecolor = ref<string | null>("(212, 222, 252)");
 const image = ref<string | null>();
 const placeholder = "https://upload.wikimedia.org/wikipedia/commons/c/cd/Placeholder_male_superhero_c.png"
-const showModal = ref(false);
-const imageChanged = ref(false);
-
-function closeModal() {
-  image.value = SeriesService.getImagebyId(series.value.id);
-  getSeries();
-  showModal.value = false
-}
-
-// const props = defineProps({
-//   id: Number,
-// });
-
-// const issuestyle = reactive({
-//   borderColor: `rgb${themecolor}`,
-//   backgroundImage: `${"url(" + image + ")"}`,
-// });
 
 async function getSeries() {
   try {
@@ -231,7 +143,7 @@ async function getSeries() {
     themecolor.value = response.dominant_color.slice(0, -1).toString() + response.dominant_color.slice(-1).toString();
 
     if (series.value) {
-      image.value = SeriesService.getImagebyId(series.value.id);
+      image.value = `${SeriesService.getImagebyId(series.value.id)}?t=${Date.now()}`;
       console.log("getSeries", image.value);
     }
 
@@ -250,37 +162,6 @@ async function getIssues() {
   }
 }
 
-async function handleUpdate() {
-
-  let seriesData = {
-    title: updatedSeries.value.title,
-    publisher: updatedSeries.value.publisher,
-    writer: updatedSeries.value.writer,
-    artist: updatedSeries.value.artist,
-    editor: updatedSeries.value.editor,
-    description: updatedSeries.value.description,
-    genre: updatedSeries.value.genre,
-    main_char: updatedSeries.value.main_char,
-    main_char_type: "character",
-    series_format: updatedSeries.value.series_format,
-  }as Partial<Series>;
-
-  if (imageChanged.value) {
-    seriesData.thumbnail = image.value
-  }
-
-  try {
-    const response = await SeriesService.updateSeries(route.params.Id, seriesData
-    );
-    series.value = response.data;
-    image.value = SeriesService.getImagebyId(series.value.id);
-    showModal.value = false
-    console.log(series);
-    imageChanged.value = false
-  } catch (error) {
-    console.log(error);
-  }
-}
 
 async function getIssueCount() {
   try {
@@ -308,20 +189,6 @@ async function updateStatus(issue: { [x: string]: any; id: any; }, field: string
   }
 }
 
-// function onFileChange(e) {
-//   const file = e.target.files[0];
-//   const url = URL.createObjectURL(file);
-//   image.value = url
-//   imageChanged.value = true
-// }
-
-function changeImage(event: Event) {
-  const target = event.target as HTMLInputElement;
-  target.value
-    ? (image.value = target.value)
-    : (image.value = new URL("../assets/dummy.webp", import.meta.url).href);
-  imageChanged.value = true;
-}
 
 onMounted(() => {
   getSeries(), getIssues(), getIssueCount();
