@@ -17,7 +17,7 @@
     "@heroicons/vue": "^2.0.10",
     "@mdi/font": "5.9.55",
     "animate.css": "^4.1.1",
-    "axios": "^1.6.7",
+    "axios": "^1.7.4",
     "color-thief-node": "^1.0.4",
     "colorthief": "npm:@pioug/colorthief@^3.0.1",
     "image-search-google": "^1.3.0",
