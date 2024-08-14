@@ -7,8 +7,8 @@
       </RouterLink>
 
       <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
-        :orderbyDirection="orderbyDirection" :orderbyProperties="orderbyProperties" v-model:viewMode="viewMode" />
-
+        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
+        v-model:orderBy="orderBy" v-model:orderDir="orderDir" />
       <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
         Delete Mode
       </button>
@@ -43,7 +43,7 @@
     </template>
   </ConfirmDialog>
 </template>
-  
+
 <script setup lang="ts">
 import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
@@ -76,7 +76,7 @@ const confirmDelete = (id: number, title: any) => {
       severity: 'danger'
     },
     accept: () => {
-      deleteCard(id);
+      deleteSeries(id);
       toast.add({ severity: 'error', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
     },
     reject: () => {
@@ -89,17 +89,18 @@ const { width } = useWindowSize();
 const seriesList = ref<Series[]>([]);
 const pagination = ref({});
 const userstore = useUserStore();
+const userPreferences = useUserPreferences();
 const userId = userstore.getUser();
 const message = ref();
 const deleteMode = ref(false);
-const headers = userstore.getTokenHeader();
-const selectedGrid = ref<number>(4);
-const orderby = ref("timestamp");
-const orderdir = ref("desc");
+const selectedGrid = ref<number>(userPreferences.cardsPerLine);
+const orderBy = ref(userPreferences.orderBy);
+const orderDir = ref(userPreferences.orderDir);
 
-const viewMode = ref("card"); // Default to card mode
+const viewMode = ref(userPreferences.viewMode); // Default to user preference
 
 const sortKey = ref(true);
+
 // Custom heights and width for each column vallues
 // cardHeight for mobile devices
 // cardHeightMD for larger devices
@@ -115,7 +116,7 @@ const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
 const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
 
 
-async function deleteCard(id:number) {
+async function deleteSeries(id: number) {
   const idToRemove = id;
   seriesList.value.splice(
     seriesList.value.findIndex((a) => a.id === idToRemove),
@@ -137,36 +138,9 @@ const toggleDelete = (): void => {
   deleteMode.value = !deleteMode.value;
 };
 
-// async function setPrimaryKey() {
-//   try {
-//     const response = await SeriesService.getSeriesKey(
-//     );
-//     localStorage.setItem("key", response.data)
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
-
-// async function getPostImages(id){
-//   console.log(id);
-//   try {
-//   const response = await SeriesService.getimagebyid(
-//     id,{headers}
-//   )
-//   .then(function (response) {
-//     var imgUrl = 'data:image/jpeg;base64,' + btoa(new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
-//     console.log(imgUrl);
-//   })
-//   } catch (error) {
-//     message.value = error;
-//     console.log(message);
-//   }
-// }
-
-
 const getseriesList = async () => {
   try {
-    const result: any = await SeriesService.fetchSeries(userId, orderby.value, orderdir.value);
+    const result: any = await SeriesService.fetchSeries(userId, orderBy.value, orderDir.value);
     seriesList.value = result.seriesList;
     pagination.value = result.pagination;
   } catch (error) {
@@ -174,8 +148,8 @@ const getseriesList = async () => {
   }
 };
 
-
 function changeGrid(selected: any) {
+  userPreferences.setCardsPerLine(selected.target.value);
   selectedGrid.value = parseInt(selected.target.value);
   cardHeightMD.value = cardHeightMultiplierMD[selectedGrid.value - 2];
   cardWidthMD.value = cardWidthMultiplierMD[selectedGrid.value - 2];
@@ -184,15 +158,17 @@ function changeGrid(selected: any) {
   console.log(selectedGrid.value);
 }
 
-function orderbyDirection(values: any) {
-  orderdir.value = values.target.value;
+function orderDirection(values: any) {
+  userPreferences.setorderDir(values.target.value)
+  orderDir.value = values.target.value;
   seriesList.value = []
   getseriesList();
 
 }
 
-function orderbyProperties(values: any) {
-  orderby.value = values.target.value;
+function orderByProperties(values: any) {
+  userPreferences.setorderBy(values.target.value);
+  orderBy.value = values.target.value;
   seriesList.value = []
   getseriesList();
 }
@@ -203,10 +179,11 @@ function getScreenWidth() {
 }
 
 onMounted(() => {
+  userPreferences.loadPreferences();
   getseriesList();
 });
 </script>
-  
+
 <style scoped>
 .paneldiv {
   height: calc(100vh - 72px);
@@ -227,4 +204,3 @@ onMounted(() => {
     calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
 }
 </style>
-  

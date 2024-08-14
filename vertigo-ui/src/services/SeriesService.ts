@@ -3,9 +3,9 @@ import { Series } from '@/types/series.types';
 import { ApiResponse } from '@/types/api-response.types';
 
 export default {
-  async fetchSeries(userId: string, orderby: string, orderdir: string): Promise<Object> {
+  async fetchSeries(userId: string, orderBy: string, orderDir: string): Promise<Object> {
     const response = await Api().get<ApiResponse<Series[]>>(
-      `users/${userId}/series?orderby=${orderby}&orderdir=${orderdir}`
+      `users/${userId}/series?orderBy=${orderBy}&orderDir=${orderDir}`
     );
     const seriesList = response.data.data;
     const pagination = response.data.pagination;
