@@ -18,15 +18,15 @@
 	            <div class="form-control">
 	              <label class="label cursor-pointer">
 	                <span class="text-slate-200 ml-2 ">Card View</span>
-	                <input type="radio" name="viewMode" value="card" class="radio ml-4" checked
-	                  @change="viewMode = 'card'" />
+	                <input type="radio" name="viewMode" value="card" class="radio ml-4" v-model="viewMode"
+	                  @change="changeViewMode('card')" />
 	              </label>
 	            </div>
 	            <div class="form-control">
 	              <label class="label cursor-pointer">
 	                <span class="text-slate-200">List View</span>
-	                <input type="radio" name="viewMode" value="list" class="radio ml-4 mr-2"
-	                  @change="viewMode = 'list'" />
+	                <input type="radio" name="viewMode" value="list" class="radio ml-4 mr-2" v-model="viewMode"
+	                  @change="changeViewMode('list')" />
 	              </label>
 	            </div>
 	          </div>
@@ -70,24 +70,23 @@
 	              <span class="font-bold text-lg text-sky-200">Sort By</span>
 	            </div>
 	            <div class="flex">
-	              <input type="radio" id="asc" value="asc" name="asc" class="hidden" @click="orderbyDirection" /><label
+	              <input type="radio" id="asc" value="asc" name="asc" class="hidden" @click="orderDirection" v-model="orderDir"/><label
 	                for="asc" class="label text-gray-400 label-text mr-2 text-sm cursor-pointer">Asc</label>
-	              <input type="radio" id="desc" value="desc" name="asc" class="hidden" @click="orderbyDirection"
-	                checked /><label for="desc" class="label text-gray-400 label-text text-sm cursor-pointer">Desc</label>
+	              <input type="radio" id="desc" value="desc" name="asc" class="hidden" @click="orderDirection" v-model="orderDir" /><label for="desc" class="label text-gray-400 label-text text-sm cursor-pointer">Desc</label>
 	            </div>
 	          </div>
 	          <div class="form-control px-5">
 	            <label class="label cursor-pointer">
 	              <span class="text-slate-200">Title</span>
-	              <input type="radio" name="orderby" class="radio checked:bg-red-500" @click="orderbyProperties"
-	                value="title" />
+	              <input type="radio" name="orderBy" class="radio checked:bg-red-500" @click="orderByProperties"
+	                value="title" v-model="orderBy" />
 	            </label>
 	          </div>
 	          <div class="form-control px-5 pb-2">
 	            <label class="label cursor-pointer">
 	              <span class="text-slate-200">Date Added</span>
-	              <input type="radio" name="orderby" class="radio checked:bg-blue-500" @click="orderbyProperties"
-	                value="timestamp" checked />
+	              <input type="radio" name="orderBy" class="radio checked:bg-blue-500" @click="orderByProperties"
+	                value="timestamp" v-model="orderBy" />
 	            </label>
 	          </div>
 	        </button>
@@ -95,14 +94,25 @@
 </template>
 
 <script setup lang="ts">
+import { useUserPreferences } from '@/store/userPreferences';
 defineProps<{ 
 	getScreenWidth: () => number;
 	selectedGrid: string | number | null;
 	changeGrid: (selected: any) => void;
-	orderbyDirection: (values: any) => void;
-	orderbyProperties: (values: any) => void;
+	orderDirection: (values: any) => void;
+	orderByProperties: (values: any) => void;
 }>()
-const viewMode = defineModel<string>('viewMode', { required: true })
+
+const viewMode = defineModel<string>('viewMode', { required: true });
+const orderBy = defineModel<string>('orderBy', { required: true });
+const orderDir = defineModel<string>('orderDir', { required: true });
+const userPreferences = useUserPreferences()
+
+const changeViewMode = (mode: 'card' | 'list') => {
+  userPreferences.setViewMode(mode);
+  viewMode.value = mode;
+};
+
 </script>
 
 <style>

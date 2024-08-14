@@ -1,20 +1,18 @@
 import { defineStore } from "pinia";
 
 interface UserPreferencesState {
-    viewMode: 'card' | 'list';
-    orderdir: 'asc' | 'desc';
-    orderby: string;
-    cardPerLine: number;
+    viewMode: string;
+    orderDir: string;
+    orderBy: string;
+    cardsPerLine: number;
 }
 
 export const useUserPreferences = defineStore("userPreferences", {
-    state: () => ({
-        state:() => ({
-            viewMode: 'card',
-            cardPerLine: 4,
-            orderdir: 'desc',
-            orderby: 'name',
-        })
+    state: (): UserPreferencesState => ({
+        viewMode: localStorage.getItem('viewMode') || 'card',
+        cardsPerLine: Number(localStorage.getItem('cardsPerLine')) || 4,
+        orderDir: localStorage.getItem('orderDir') || 'desc',
+        orderBy: localStorage.getItem('orderBy') || 'timestamp',
     }),
 
     actions: {
@@ -22,28 +20,23 @@ export const useUserPreferences = defineStore("userPreferences", {
             this.viewMode = viewMode;
             localStorage.setItem('viewMode', viewMode);
         },
-        setorderdir(orderdir: 'asc' | 'desc') {
-            this.orderdir = orderdir;
-            localStorage.setItem('orderdir', orderdir);
+        setorderDir(orderDir: 'asc' | 'desc') {
+            this.orderDir = orderDir;
+            localStorage.setItem('orderDir', orderDir);
         },
-        setorderby(orderby: string) {
-            this.orderby = orderby;
-            localStorage.setItem('orderby', orderby);
+        setorderBy(orderBy: string) {
+            this.orderBy = orderBy;
+            localStorage.setItem('orderBy', orderBy);
         },
         setCardsPerLine(cardsPerLine: number) {
             this.cardsPerLine = cardsPerLine;
             localStorage.setItem('cardsPerLine', cardsPerLine.toString());
         },
         loadPreferences() {
-            const viewMode = localStorage.getItem('viewMode');
-            const orderdir = localStorage.getItem('orderdir');
-            const orderby = localStorage.getItem('orderby');
-            const cardsPerLine = localStorage.getItem('cardsPerLine');
-
-            if (viewMode) this.viewMode = viewMode as 'card' | 'list';
-            if (orderdir) this.orderdir = orderdir as 'asc' | 'desc';
-            if (orderby) this.orderby = orderby;
-            if (cardsPerLine) this.cardsPerLine = parseInt(cardsPerLine);
+            this.setViewMode(localStorage.getItem('viewMode') || 'card');
+            this.setorderDir(localStorage.getItem('orderDir') || 'desc');
+            this.setorderBy(localStorage.getItem('orderBy') || 'timestamp');
+            this.setCardsPerLine(Number(localStorage.getItem('cardsPerLine')) || 6);
         }
     }
 });

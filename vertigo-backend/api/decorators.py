@@ -17,8 +17,8 @@ def paginated_response(schema, max_limit=25, order_by=None,
         def paginate(*args, **kwargs):
             args = list(args)
             pagination = args.pop(-1)
-            order_by_object = request.args.get('orderby')
-            order_by_dir = request.args.get('orderdir')
+            order_by_object = request.args.get('orderBy')
+            order_by_dir = request.args.get('orderDir')
             nonlocal order_by
             nonlocal order_direction
             

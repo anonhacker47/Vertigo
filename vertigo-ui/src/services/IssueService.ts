@@ -3,9 +3,9 @@ import { ApiResponse } from "@/types/api-response.types";
 import { Issue } from "@/types/issue.types";
 
 export default {
-  async fetchIssues(id: Number, orderby: string, orderdir: string): Promise<Object> {
+  async fetchIssues(id: Number, orderBy: string, orderDir: string): Promise<Object> {
     const response = await Api().get<ApiResponse<Issue[]>>(
-      `series/${id}/issues?orderby=${orderby}&orderdir=${orderdir}`
+      `series/${id}/issues?orderBy=${orderBy}&orderDir=${orderDir}`
     );
     const issuesList = response.data.data;
     const pagination = response.data.pagination;
