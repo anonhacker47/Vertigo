@@ -6,12 +6,12 @@
   </div>
 </div>
   <div class="flex flex-col ml-2">
-    <div class="text-xs font-bold">
+    <p class="text-xs font-bold">
       {{field}}
-    </div>
-    <div class="text-primary font-medium">
+    </p>
+    <p class="text-primary font-medium">
       {{detailString}}
-    </div>
+    </p>
   </div>
 </div>
 </template>

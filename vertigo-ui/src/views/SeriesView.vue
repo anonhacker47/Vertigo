@@ -1,68 +1,122 @@
 <template>
-  <div v-if="series" class="bg-no-repeat bg-center h-screen bg-cover" :style="{ backgroundImage: 'url(' + image + ')' }">
+  <div v-if="series" class="bg-no-repeat bg-center h-full bg-cover"
+    :style="{ backgroundImage: 'url(' + image + ')' }">
     <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
       <HeaderItem />
-      <div class="flex justify-end items-center py-4 pr-20 border-b border-slate-700">
-        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
-          <div class="px-5 flex flex-row items-center">
-            <img class="" src="../assets/wishlist.svg" alt="" width="28" height="28" />
-            <p class="pl-2 text-primary font-bold text-lg">
-              {{ issueCount.total_count }}
-            </p>
+      <div class="flex justify-between items-center py-4 pr-20 border-b border-slate-700">
+        <div class="flex flex-1 justify-start items-center px-5 w-1/3 break-words">
+          <p class="font-bold text-3xl truncate" :style="`color: rgb${themecolor}`">
+            {{ series.title }}
+          </p>
+        </div>
+        <div class="flex flex-1 justify-center items-center w-1/4 space-x-5">
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
+            <div class="flex flex-row items-center">
+              <img class="" src="../assets/wishlist.svg" alt="" width="28" height="28" />
+              <p class="pl-2 text-primary font-bold text-lg">
+                {{ issueCount.total_count }}
+              </p>
+            </div>
+          </div>
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
+            <div class="flex flex-row items-center">
+              <img src="../assets/collection.svg" alt="" width="28" height="28" />
+              <p class="pl-2 text-primary font-bold text-lg">{{ issueCount.owned_count + "/" + issueCount.total_count }}
+              </p>
+            </div>
+          </div>
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
+            <div class="flex flex-row items-center">
+              <img src="../assets/read.svg" alt="" width="28" height="28" />
+              <p class="pl-2 text-primary font-bold text-lg">{{ issueCount.read_count + "/" + issueCount.total_count }}
+              </p>
+            </div>
           </div>
         </div>
-        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
-          <div class="px-5 flex flex-row items-center">
-            <img src="../assets/collection.svg" alt="" width="28" height="28" />
-            <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.owned_count + "/" + issueCount.total_count }}</p>
-          </div>
-        </div>
-        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
-          <div class="px-5 flex flex-row items-center">
-            <img src="../assets/read.svg" alt="" width="28" height="28" />
-            <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.read_count + "/" + issueCount.total_count }}</p>
-          </div>
+        <div class="flex flex-1 justify-end items-center w-1/3">
+          <Rating :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
       </div>
 
       <div class="flex flex-col md:flex-row grow">
         <div class="flex flex-col mb-6 mr-2 basis-1/2">
-          <div class="flex flex-row pt-8 basis-1/2 relative">
+          <div class="flex flex-row pt-8 pl-2 basis-1/2 relative">
             <div class="flex flex-col basis-1/4 pl-4 pr-4">
               <img v-if="image != 'noimage'" :src="image" alt="" class="w-40 h-[14.5rem;]  rounded-lg border-2"
                 :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
+              <div class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
+                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
+                <p class="text-sm font-bold">
+                  {{ series.series_format }}
+                </p>
+              </div>
             </div>
-            <div class="flex flex-col basis-3/4">
+            <div class="flex flex-col basis-3/4 gap-4">
 
-              <span class="text-4xl font-bold text-ellipsis inlnie-block -nowrap overflow-clip"
+              <!-- <span class="text-4xl font-bold text-ellipsis inlnie-block -nowrap overflow-clip"
                 :style="`color: rgb${themecolor}`">
                 {{ series.title }}
-              </span>
-              <p class="text-xl font-bold uppercase" :style="`color: rgb${themecolor}`">
+              </span> -->
+              <!-- <p class="text-xl font-bold uppercase" :style="`color: rgb${themecolor}`">
                 {{ series.publisher }}
-              </p>
-              <div class="flex flex-row flex-grow max-h-52 justify-around items-center">
-                <!-- Column 1 -->
-                <div class="flex flex-col align-middle self-center h-full justify-around items-start">
+              </p> -->
+              <!-- <div class="flex flex-row flex-grow max-h-52 justify-between items-center">
+                <div class="flex flex-col align-middle self-center h-full basis-1/3 justify-around items-start">
                   <DetailCardItem :icon="publisherUrl" field="Publisher" :detail="series.publisher" />
                   <DetailCardItem :icon="genreUrl" field="Genre" :detail="series.genre" />
                 </div>
 
-                <!-- Column 2 -->
-                <div class="flex flex-col align-middle h-full justify-around items-start">
+                <div class="flex flex-col align-middle h-full justify-around basis-1/3  items-start">
                   <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" />
                   <DetailCardItem :icon="teamUrl" field="Writer" :detail="series.writer" />
                 </div>
 
-                <!-- Column 3 -->
-                <div class="flex flex-col align-middle h-full justify-around items-start">
+                <div class="flex flex-col align-middle h-full justify-around basis-1/3 items-start">
                   <DetailCardItem :icon="teamUrl" field="Artist" :detail="series.artist" />
                   <DetailCardItem :icon="teamUrl" field="Editor" :detail="series.editor" />
                 </div>
+              </div> -->
+              <!-- <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" /> -->
+            
+              <div class="flex flex-row items-center gap-4">
+                <span class=" font-bold">Publisher:</span>
+                <span class="text-lg font-semibold" :style="`color: rgb${themecolor}`">{{ series.publisher }}</span>
               </div>
+              <div class="flex flex-row items-center gap-4"> 
+                <div class="font-bold">Genre:</div>
+                <div class="flex flex-row gap-4 max-w-md overflow-scroll whitespace-nowrap">
+                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
+                    {{ genre }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex flex-row items-center gap-4">
+                <span class="font-bold">Main Character/Team:</span>
+                <span class="text-lg font-semibold" :style="`color: rgb${themecolor}`">{{ series.main_char }}</span>
+              </div>
+              <div class="flex flex-row items-center gap-4">
+                <div class="font-bold">Writers:</div>
+                <div class="flex flex-row gap-4 max-w-md overflow-scroll whitespace-nowrap">
+                  <p v-for="writer in series.writer" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
+                    {{ writer }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex flex-row items-center gap-4">
+                <div class="font-bold">Artists:</div>
+                <div class="flex flex-row gap-4 max-w-md overflow-scroll whitespace-nowrap">
+                  <p v-for="artist in series.artist" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
+                    {{ artist }}
+                  </p>
+                </div>
+              </div>
+            
+            
+
             </div>
 
-            <RouterLink :to="{name: 'EditSeries', params: {Link: series.slug, Id: series.id}}" class="absolute right-0 top-2 cursor-pointer w-7 h-7">
+            <RouterLink :to="{ name: 'EditSeries', params: { Link: series.slug, Id: series.id } }"
+              class="absolute right-0 top-2 cursor-pointer w-7 h-7">
               <EditIcon class="w-7 h-7" :fill-color="`rgb${themecolor}`" />
             </RouterLink>
 
@@ -79,7 +133,7 @@
 
         </div>
         <div class="flex flex-col basis-1/2 flex-grow border-l border-slate-700 pt-4 pb-6">
-          <h1 class="flex pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
+          <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
           <div class="overflow-scroll" style="height: 70vh">
@@ -102,6 +156,7 @@ import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
 import { useUserStore } from "../store/user";
 
+
 import type { Series } from "@/types/series.types";
 import type { Issue } from "@/types/issue.types";
 
@@ -111,9 +166,8 @@ import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import DetailCardItem from "../components/cards/DetailCardItem.vue";
 import EditIcon from "../assets/EditIcon.vue";
-import EditSeriesModal from "../components/modals/EditSeriesModal.vue";
-import SingleSelectCombobox from "../components/customInputs/SingleSelectCombobox.vue";
-import MultiSelectCombobox from "../components/customInputs/MultiSelectCombobox.vue";
+import Rating from "primevue/rating";
+
 const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
 const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
 const teamUrl = new URL("../assets/group.png", import.meta.url).href;
@@ -154,7 +208,7 @@ async function getSeries() {
 
 async function getIssues() {
   try {
-    const result: any = await IssueService.fetchIssues( Number(route.params.Id), "title", "asc");
+    const result: any = await IssueService.fetchIssues(Number(route.params.Id), "title", "asc");
     issuesList.value = result.issuesList;
     pagination.value = result.pagination;
   } catch (error) {

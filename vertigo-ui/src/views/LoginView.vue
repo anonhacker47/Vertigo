@@ -3,37 +3,42 @@
     :style="{ backgroundImage: showDefaultWall ? 'url(' + img + ')' : '' }">
     <div class="background-images" :class="!showDefaultWall ? 'bg-base-100' : 'bg-none'">
       <div class="transform-class -skew-y-6 -translate-y-20 backdrop-blur-lg backdrop-brightness-50">
-        <div v-for="(image, index) in images" :key="index">
-          <img :src="image" class="background-image" alt="comicbooks tile backdrop"/>
+        <TransitionGroup enter-active-class="animate__animated animate__flipInX"
+          leave-active-class="animate__animated animate__fadeOut">
+          <div v-for="(image, index) in images" :key="index">
+            <img :src="image" class="background-image" alt="comicbooks tile backdrop" />
+          </div>
+        </TransitionGroup>
+      </div>
+      <div
+        class="w-fit h-fit card top-0 right-0 left-0 bottom-0 m-auto absolute z-20 w-md rounded-xl shadow-md bg-base-100 ">
+        <div class="card-body mx-8 mx-4">
+          <h1 class="text-xl text-center font-bold card-title leading-tight tracking-tight md:text-2xl mb-2 text-white">
+            Sign in to your account
+          </h1>
+          <form @submit.prevent="login" class="flex gap-4 flex-col">
+            <div class="form-control">
+              <label for="username" class="label">
+                <span class="label-text text-white">Username</span>
+              </label>
+              <input type="text" placeholder="Username" v-model="username" id="username"
+                class="input input-bordered w-full" />
+            </div>
+            <div class="form-control">
+              <label for="password" class="label">
+                <span class="label-text text-white">Password</span>
+              </label>
+              <input type="password" v-model="password" id="password" class="input input-bordered w-full" />
+            </div>
+            <div v-if="message" class="error py-3 text-red-500">{{ message }}</div>
+            <button type="submit" class="btn btn-primary mt-4 w-full">Login</button>
+          </form>
+          <p class="text-sm font-light text-gray-500 dark:text-gray-400 mt-4">
+            Don’t have an account yet?
+            <RouterLink to="/register" class="text-blue-500 underline">Sign up</RouterLink>
+          </p>
         </div>
       </div>
-      <div class="w-fit h-fit card top-0 right-0 left-0 bottom-0 m-auto absolute z-20 w-md rounded-xl shadow-md bg-base-100 ">
-  <div class="card-body mx-8 mx-4">
-    <h1 class="text-xl text-center font-bold card-title leading-tight tracking-tight md:text-2xl mb-2 text-white">
-      Sign in to your account
-    </h1>
-    <form @submit.prevent="login" class="flex gap-4 flex-col">
-      <div class="form-control">
-        <label for="username" class="label">
-          <span class="label-text text-white">Username</span>
-        </label>
-        <input type="text" placeholder="Username" v-model="username" id="username" class="input input-bordered w-full" />
-      </div>
-      <div class="form-control">
-        <label for="password" class="label">
-          <span class="label-text text-white">Password</span>
-        </label>
-        <input type="password" v-model="password" id="password" class="input input-bordered w-full" />
-      </div>
-      <div v-if="message" class="error py-3 text-red-500">{{ message }}</div>
-      <button type="submit" class="btn btn-primary mt-4 w-full">Login</button>
-    </form>
-    <p class="text-sm font-light text-gray-500 dark:text-gray-400 mt-4">
-      Don’t have an account yet?
-      <RouterLink to="/register" class="text-blue-500 underline">Sign up</RouterLink>
-    </p>
-  </div>
-</div>
 
     </div>
   </div>
@@ -132,14 +137,14 @@ onMounted(() => {
   grid-auto-rows: 20rem;
 }
 
-.transform-class::before {
+.transform-class::after {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  
+
   backdrop-filter: blur(3px);
   background-color: rgba(27, 17, 46, 0.616);
   transform: scale(1);
