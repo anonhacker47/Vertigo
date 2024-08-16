@@ -19,13 +19,14 @@
 > **⚠ Disclaimer ⚠**: Vertigo is WIP and under active development. Expect occasional bugs, incomplete features, and potential breaking changes as I add new features and improve functionality. Only the basic CRUD is done till now.
 
 ## Goals:
-- A responsive modern web app to track and curate physical comicbook collection
-- Search and filter options based on various criteria such as title, publisher etc.
-- Track reading progress (read/unread, backlog and ratings if needed).
-- Generate insightful statistics on collection.
-- Explore options to integrate with external APIs for automatic fetching of details.
-- Backup/Export User Data to commonly used formats.
-- Feel free to reach out if you have anything else you'd like to see!
+- [x] A responsive modern web app to track and curate physical comicbook collection
+- [x] Search and filter options based on various criteria such as title, publisher etc.
+- [x] Track reading progress (read/unread, backlog and ratings if needed).
+- [x] Generate insightful statistics on collection.
+- [ ] Explore options to integrate with external APIs for automatic fetching of details.
+- [ ] Backup/Export User Data to commonly used formats.
+
+Feel free to reach out if you have anything else you'd like to see!
 
 ## Getting Started:
 Vertigo is not released yet, and is under active development, but if you can try it out using the Developer Guide below.
@@ -84,6 +85,3 @@ Voila! you can find the frontend at http://localhost:5173/
 ## Acknowledgements
 
 - **[Miguel Grinberg Microblog API](https://github.com/miguelgrinberg/microblog-api)**
-
-
-
