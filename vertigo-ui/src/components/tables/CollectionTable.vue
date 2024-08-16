@@ -1,6 +1,6 @@
 <template>
 	<DataTable class="mt-5 rounded-lg rounded-table" :value="seriesList" @row-click="navigate"  rowHover  :rows="10">
-		<Column field="title" sortable header="Series" >
+		<Column field="title" sortable header="Series" class="max-w-md">
 			<template #body="{ data }">
 					<div class="flex items-center gap-4">
 						<img :src="SeriesService.getImagebyId(data.id)" class="h-16 w-12 ml-2 object-fill rounded-sm"
@@ -90,7 +90,7 @@ const router = useRouter();
 const navigate = (event: any) => {
 	const data = event.data;
 	router.push({
-		name: 'series',
+		name: 'SeriesDetail',
 		params: { Link: data.slug, Id: data.id },
 	});
 };
