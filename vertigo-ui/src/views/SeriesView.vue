@@ -3,13 +3,13 @@
     :style="{ backgroundImage: 'url(' + image + ')' }">
     <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
       <HeaderItem />
-      <div class="flex justify-between items-center py-4 pr-20 border-b border-slate-700">
-        <div class="flex flex-1 justify-start items-center px-5 w-1/3 break-words">
+      <div class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
+        <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
           <p class="font-bold text-3xl truncate" :style="`color: rgb${themecolor}`">
             {{ series.title }}
           </p>
         </div>
-        <div class="flex flex-1 justify-center items-center w-1/4 space-x-5">
+        <div class="flex flex-1 justify-center items-center md:w-1/4 gap-5">
           <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
             <div class="flex flex-row items-center">
               <img class="" src="../assets/wishlist.svg" alt="" width="28" height="28" />
@@ -33,16 +33,16 @@
             </div>
           </div>
         </div>
-        <div class="flex flex-1 justify-end items-center w-1/3">
+        <div class="flex flex-1 justify-center md:justify-end items-center w-1/3">
           <Rating :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
       </div>
 
       <div class="flex flex-col md:flex-row grow">
-        <div class="flex flex-col mb-6 mr-2 basis-1/2">
-          <div class="flex flex-row pt-8 pl-2 basis-1/2 relative">
-            <div class="flex flex-col basis-1/4 pl-4 pr-4">
-              <img v-if="image != 'noimage'" :src="image" alt="" class="w-40 h-[14.5rem;]  rounded-lg border-2"
+        <div class="flex flex-col mb-6 mr-2 md:basis-1/2 md:w-1/2 w-full">
+          <div class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4">
+            <div class="flex flex-col basis-1/3 px-28 md:px-4">
+              <img v-if="image != 'noimage'" :src="image" alt="" class="rounded-lg border-2"
                 :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
               <div class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
                 :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
@@ -51,60 +51,34 @@
                 </p>
               </div>
             </div>
-            <div class="flex flex-col basis-3/4 gap-4">
-
-              <!-- <span class="text-4xl font-bold text-ellipsis inlnie-block -nowrap overflow-clip"
-                :style="`color: rgb${themecolor}`">
-                {{ series.title }}
-              </span> -->
-              <!-- <p class="text-xl font-bold uppercase" :style="`color: rgb${themecolor}`">
-                {{ series.publisher }}
-              </p> -->
-              <!-- <div class="flex flex-row flex-grow max-h-52 justify-between items-center">
-                <div class="flex flex-col align-middle self-center h-full basis-1/3 justify-around items-start">
-                  <DetailCardItem :icon="publisherUrl" field="Publisher" :detail="series.publisher" />
-                  <DetailCardItem :icon="genreUrl" field="Genre" :detail="series.genre" />
-                </div>
-
-                <div class="flex flex-col align-middle h-full justify-around basis-1/3  items-start">
-                  <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" />
-                  <DetailCardItem :icon="teamUrl" field="Writer" :detail="series.writer" />
-                </div>
-
-                <div class="flex flex-col align-middle h-full justify-around basis-1/3 items-start">
-                  <DetailCardItem :icon="teamUrl" field="Artist" :detail="series.artist" />
-                  <DetailCardItem :icon="teamUrl" field="Editor" :detail="series.editor" />
-                </div>
-              </div> -->
-              <!-- <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" /> -->
-            
-              <div class="flex flex-row items-center gap-4">
-                <span class=" font-bold">Publisher:</span>
-                <span class="text-lg font-semibold" :style="`color: rgb${themecolor}`">{{ series.publisher }}</span>
+            <div class="flex flex-col basis-2/3 shrink-0 overflow-scroll gap-4">
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
+                <span class=" font-bold text-lg">Publisher</span>
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{ series.publisher }}</span>
               </div>
-              <div class="flex flex-row items-center gap-4"> 
-                <div class="font-bold">Genre:</div>
-                <div class="flex flex-row gap-4 max-w-md overflow-scroll whitespace-nowrap">
-                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4"> 
+                <div class="font-bold text-lg">Genre</div>
+                <div class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap ">
+                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md  px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
                     {{ genre }}
                   </p>
                 </div>
               </div>
-              <div class="flex flex-row items-center gap-4">
-                <span class="font-bold">Main Character/Team:</span>
-                <span class="text-lg font-semibold" :style="`color: rgb${themecolor}`">{{ series.main_char }}</span>
+              <div class="flex flex-col md:flex-row items-center gap-4">
+                <span class="font-bold text-lg">Main Character/Team</span>
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{ series.main_char }}</span>
               </div>
-              <div class="flex flex-row items-center gap-4">
-                <div class="font-bold">Writers:</div>
-                <div class="flex flex-row gap-4 max-w-md overflow-scroll whitespace-nowrap">
-                  <p v-for="writer in series.writer" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
+              <div class="flex flex-col md:flex-row items-center max-w-full gap-4 ">
+                <div class="font-bold text-lg">Writers</div>
+                <div class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
+                  <p v-for="writer in series.writer" class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold" :style="`color: rgb${themecolor}`">
                     {{ writer }}
                   </p>
                 </div>
               </div>
-              <div class="flex flex-row items-center gap-4">
-                <div class="font-bold">Artists:</div>
-                <div class="flex flex-row gap-4 max-w-md overflow-scroll whitespace-nowrap">
+              <div class="flex flex-col md:flex-row items-center gap-4">
+                <div class="font-bold">Artists</div>
+                <div class="flex flex-row gap-4  overflow-scroll justify-center md:justify-start whitespace-nowrap">
                   <p v-for="artist in series.artist" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
                     {{ artist }}
                   </p>
@@ -122,7 +96,7 @@
 
 
           </div>
-          <div class="flex flex-col basis-1/2 relative">
+          <div class="flex flex-col relative  shrink-0">
             <div class=" p-10">
               <p class="text-xl font-bold" :style="`color: rgb${themecolor}`">
                 {{ "Description:" }}
@@ -132,7 +106,7 @@
           </div>
 
         </div>
-        <div class="flex flex-col basis-1/2 flex-grow border-l border-slate-700 pt-4 pb-6">
+        <div class="flex flex-col basis-1/2 w-1/2 shrink-0  border-l border-slate-700 pt-4 pb-6">
           <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>

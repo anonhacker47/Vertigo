@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col h-[88vh] w-screen">
-    <div class="w-full flex gap-12 items-center h-40 pt-4 pl-8 pr-8 justify-around">
+  <div class="flex flex-col  w-screen">
+    <div class="w-full flex flex-col md:flex-row md:gap-12 gap-8 items-center md:h-40 pt-4 pl-8 pr-8 justify-around">
       <InsightCardItem :border="true" icon="collection" :multipleData="true" titleA="My Series" titleB="My Issues"
-        :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount" :value-b-numerator="seriesInfo.totalSeriesCount" :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
+        :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount" :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
         
       <InsightCardItem :border="true" icon="readSeries" :multipleData="false" titleA="Series Read"
         :valueANumerator="seriesInfo.readSeriesCount" :valueADenominator="seriesInfo.totalSeriesCount" />
@@ -12,8 +12,8 @@
 
       <AddSeriesCardItem />
     </div>
-    <div class="w-full flex mt-8 justify-around gap-8 pl-8 pr-8 mb-8 h-full">
-      <div class="card relative flex justify-center w-full  basis-1/2  items-center bg-base-100 shadow-xl">
+    <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 h-full">
+      <div class="card relative flex justify-center w-full basis-1/2  items-center bg-base-100 shadow-xl">
         <PieChartItem :title="chartTitle" :data="chartData" />
 
         <div class="dropdown dropdown-end absolute top-3 right-3">
@@ -32,7 +32,7 @@
           </div>
         </div>
 
-        <div class="flex  gap-4 pb-4 pr-4 pl-4 w-full">
+        <div class="flex gap-4 pb-4 pr-4 pl-4">
           <div class="relative w-1/2">
             <select class="select select-primary select-bordered w-full" v-model="selectedType" @change="fetchData">
               <option v-for="(item, i) in chartTypeList" :key="i" :value="item.field">{{item.Name}}</option>
@@ -47,16 +47,16 @@
 
       </div>
       
-      <div class="card card-compact relative basis-1/3 w-full bg-base-100 shadow-xl">
+      <div class="card md:w-[20%] card-compact relative basis-1/3 w-full bg-base-100 shadow-xl">
         <div
           class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases </div>
-        <div class="mt-6">
+        <div class="mt-6 ">
           <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
         </div>
       </div>
         
-        <div class="card relative basis-1/2 w-full flex bg-base-100 shadow-xl">
+        <div class="card relative basis-1/2 md:w-[40%] flex bg-base-100 shadow-xl">
         <LineChartItem :x-data="purchaseData" :y-data="dates" />
         </div>
 

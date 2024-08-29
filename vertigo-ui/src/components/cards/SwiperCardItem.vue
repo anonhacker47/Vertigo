@@ -1,4 +1,3 @@
-
 <template>
     <swiper :slidesPerView="1" :grabCursor="true" :loop="true" :autoplay="{
         delay: 12500,
@@ -29,13 +28,15 @@
             </div>
         </swiper-slide> -->
         <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title" class="swiper-slm  rounded-t-lg">
+            <div class="rounded-md w-[11rem] h-[15rem] m-auto w-full'">
             <RouterLink :to="{
               name: 'SeriesDetail',
               params: { Link: issue.slug, Id: issue.series_id },
-              class: 'rounded-md w-[11rem] h-[15rem] m-auto',
+              class:''
             }">
-              <img :src="issue.image" alt="" class="rounded-md w-[11rem] h-[15rem] m-auto" />
-            </RouterLink>
+                    <img :src="issue.image" alt="" class="rounded-md w-[11rem] h-[15rem]" />
+                </RouterLink>
+            </div>
             <div class="flex flex-col items-center text-center pt-4 rounded-lg shadow-md">
                 <!-- Series Title -->
                 <div class="text-xl font-bold text-primary">
@@ -71,7 +72,7 @@ const props = defineProps(['recentPurchasedIssues'])
 
 </script>
 
-<style> 
+<style>
 /* .swiper {
     width: 20rem;
     height: 16rem;
@@ -84,6 +85,7 @@ const props = defineProps(['recentPurchasedIssues'])
     align-items: center !important;
     justify-content: center !important;
 }
+
 /*
   .swiper-slide img {
       width: auto;

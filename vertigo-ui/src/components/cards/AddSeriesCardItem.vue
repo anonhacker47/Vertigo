@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="card relative w-full h-full border bg-slate-800   text-gray-800 border-gray-700 first-letter:marker:shadow-xl">
+		class="card relative w-full h-full py-6 border bg-slate-800   text-gray-800 border-gray-700 first-letter:marker:shadow-xl">
 		<RouterLink :to="{ name: 'AddNewSeries' }" class="card-body  flex-row justify-between items-center group"
 			@mouseover="isHovered = true" @mouseleave="isHovered = false">
 			<div class="flex flex-col">

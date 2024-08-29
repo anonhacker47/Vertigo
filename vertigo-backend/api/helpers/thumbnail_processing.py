@@ -13,6 +13,43 @@ import re
 import uuid
 from PIL import Image
 
+def download_series_thumbnail(url, title):
+    if url != "noimage":
+        request = requests.get(url, stream=True)
+        ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
+
+        if "webp" in ext:
+            extension = ".webp"
+        elif "png" in ext:
+            extension = ".png"
+        elif "jpeg" or "jpg" in ext:
+            extension = ".jpeg"
+        else:
+            print("no extensions")
+            try:
+                img = Image.open(request.raw)
+                extension = f".{img.format}"
+            except Exception as e:
+                print(url)  # here you get the file causing the exception
+                print(e)
+
+        filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
+
+        if request.status_code == 200:
+            request.raw.decode_content = True
+            with open(current_app.config['cover_path']+"/"+filename, 'wb') as f:
+                shutil.copyfileobj(request.raw, f)
+
+            print('Image successfully Downloaded: ', filename)
+
+            # Logic for determining dominant color and saving it to the database
+            dominant_color = calculate_dominant_color(filename)
+            return filename, dominant_color
+
+    else:
+        print('Image Couldn\'t be retrieved')
+        return None, None
+
 def save_series_thumbnail(file, title):
     if not isinstance(file, str):
         ext = re.search('\.(\w+)(?!.*\.)', file.filename).group(1)

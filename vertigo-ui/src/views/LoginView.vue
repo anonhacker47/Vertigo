@@ -133,8 +133,9 @@ onMounted(() => {
   width: 100%;
   display: grid;
   grid-auto-flow: dense;
-  grid-template-columns: repeat(8, 2fr);
+  grid-template-columns: repeat(15, 2fr);
   grid-auto-rows: 20rem;
+  margin-top: -4rem
 }
 
 .transform-class::after {
@@ -145,8 +146,8 @@ onMounted(() => {
   width: 100%;
   height: 100%;
 
-  backdrop-filter: blur(3px);
-  background-color: rgba(27, 17, 46, 0.616);
+  backdrop-filter: blur(1px);
+  background-color: rgba(27, 17, 46, 0.459);
   transform: scale(1);
 }
 
@@ -155,4 +156,5 @@ onMounted(() => {
   width: 13.5rem;
   padding: .2rem;
 }
+
 </style>
