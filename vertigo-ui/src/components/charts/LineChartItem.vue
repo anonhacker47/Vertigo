@@ -1,5 +1,5 @@
 <template>
-  <v-chart class="flex justify-center h-full w-full relative" :option="option" :autoresize="true" />
+  <v-chart class="flex shrink-0 justify-center min-h-96 md:h-full w-full relative" :option="option" :autoresize="true" />
 </template>
 
 <script setup lang="ts">

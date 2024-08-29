@@ -50,4 +50,3 @@ const multipleData = props.multipleData || false
 
 </script>
 
-<style scoped></style>

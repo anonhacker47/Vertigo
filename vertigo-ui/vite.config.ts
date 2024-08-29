@@ -20,7 +20,7 @@ export default defineConfig({
     assetsDir: 'static',
   },
   server: {
-    host: false,
+    host: true,
   },
   css: {
     postcss: {

@@ -14,8 +14,8 @@
       </button>
     </div>
   </Transition>
-  <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:mx-5 mx-3 md:gap-5" v-if="viewMode == 'card'"
-    :class="`grid-cols-${selectedGrid}`" id="carddiv">
+  <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:gap-5 md:m-auto max-w-screen-2xl" v-if="viewMode == 'card'"
+    :class="`grid-cols-${selectedGrid}`">
     <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
       <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
 
@@ -105,8 +105,8 @@ const sortKey = ref(true);
 // cardHeight for mobile devices
 // cardHeightMD for larger devices
 
-let cardHeightMultiplierMD = [34, 34, 32, 27, 21.5, 19, 16.3, 14, 13.5];
-let cardWidthMultiplierMD = [22, 22, 21, 17.5, 14, 12, 10.5, 9.2, 8.2];
+let cardHeightMultiplierMD = [34, 34, 30, 27, 21.5, 19, 16.3, 14, 13.5];
+let cardWidthMultiplierMD = [22, 22, 20, 17.5, 14, 12, 10.5, 9.2, 8.2];
 const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
 const cardWidthMD = ref<number>(cardWidthMultiplierMD[selectedGrid.value - 2]);
 

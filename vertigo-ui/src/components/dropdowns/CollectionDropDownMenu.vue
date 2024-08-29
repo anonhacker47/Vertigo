@@ -1,5 +1,5 @@
 <template>
-	<div class="dropdown">
+	<div class="dropdown dropdown-bottom dropdown-center">
 	        <button tabindex="0" class="btn m-1 focus:ring">
 	          <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" class="focus:fill-black"
 	            clip-rule="evenodd">
@@ -119,5 +119,14 @@ const changeViewMode = (mode: 'card' | 'list') => {
 input:checked+label {
   border: 2px;
   color: #38bdf8;
+}
+.dropdown.dropdown-center.dropdown-right .dropdown-content,
+.dropdown-center.dropdown-left .dropdown-content{
+	@apply top-1/2 transform -translate-y-1/2;
+}
+
+.dropdown-center.dropdown-bottom .dropdown-content,
+.dropdown-center.dropdown-top .dropdown-content {
+	@apply left-1/2 transform -translate-x-1/2;
 }
 </style>

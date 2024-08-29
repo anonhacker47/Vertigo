@@ -27,3 +27,4 @@ vertigo-backend/.coverage.*
 vertigo-backend/*,cover
 vertigo-backend/Config/
 .vscode/*
+vertigo-ui/.env.development

@@ -1,5 +1,5 @@
 <template>
-  <RouterLink class="shadow-2xl pt-4 flex flex-grow"
+  <RouterLink class="shadow-2xl pt-4 flex"
     :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`]" :to="{
       name: 'SeriesDetail',
       params: { Link: series.slug, Id: series.id },

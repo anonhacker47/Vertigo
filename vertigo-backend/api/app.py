@@ -44,6 +44,8 @@ def create_app(config_class=Config):
     apifairy.init_app(app)
 
     # blueprints
+    from api.fake import fake
+    app.register_blueprint(fake)
     from api.errors import errors
     app.register_blueprint(errors)
     from api.routes.tokens_routes import tokens
