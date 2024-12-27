@@ -133,7 +133,7 @@ onMounted(() => {
   width: 100%;
   display: grid;
   grid-auto-flow: dense;
-  grid-template-columns: repeat(15, 2fr);
+  grid-template-columns: repeat(12, 2fr);
   grid-auto-rows: 20rem;
   margin-top: -4rem
 }

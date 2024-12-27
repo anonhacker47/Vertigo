@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col  w-screen">
+  <div class="flex flex-col w-screen">
     <div class="w-full flex flex-col md:flex-row md:gap-12 gap-8 items-center md:h-40 pt-4 pl-8 pr-8 justify-around">
       <InsightCardItem :border="true" icon="collection" :multipleData="true" titleA="My Series" titleB="My Issues"
         :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount" :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
@@ -12,8 +12,8 @@
 
       <AddSeriesCardItem />
     </div>
-    <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 h-full">
-      <div class="card relative flex justify-center w-full basis-1/2  items-center bg-base-100 shadow-xl">
+    <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 md:h-[68vh]">
+    <div class="card relative h-full basis-1/2  items-center bg-base-100 shadow-xl">
         <PieChartItem :title="chartTitle" :data="chartData" />
 
         <div class="dropdown dropdown-end absolute top-3 right-3">
@@ -47,11 +47,11 @@
 
       </div>
       
-      <div class="card md:w-[20%] card-compact relative basis-1/3 w-full bg-base-100 shadow-xl">
+      <div class="card md:w-[20%] card-compact relative basis-1/3 w-full h-full bg-base-100 shadow-xl">
         <div
           class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases </div>
-        <div class="mt-6 ">
+        <div class="mt-6 h-full ">
           <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
         </div>
       </div>

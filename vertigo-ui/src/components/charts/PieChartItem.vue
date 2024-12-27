@@ -63,7 +63,7 @@ const option: any = ref({
       type: 'pie',
       radius: '45%',
       // padAngle: 5,
-      center: ['50%', '53	%'],
+      center: ['50%', '46	%'],
 	 minShowLabelAngle:2,
       // itemStyle: {
       //   borderRadius: 10,

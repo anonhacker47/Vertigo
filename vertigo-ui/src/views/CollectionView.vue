@@ -14,7 +14,7 @@
       </button>
     </div>
   </Transition>
-  <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:gap-5 md:m-auto max-w-screen-2xl" v-if="viewMode == 'card'"
+  <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:gap-5 md:m-auto max-w-screen-3xl" v-if="viewMode == 'card'"
     :class="`grid-cols-${selectedGrid}`">
     <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
       <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">

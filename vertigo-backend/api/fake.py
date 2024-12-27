@@ -13,7 +13,6 @@ import api.models.series_entities as entities
 import api.models.associations as associations
 from api.helpers.thumbnail_processing import download_series_thumbnail
 
-from simyan.sqlite_cache import SQLiteCache
 import mokkari
 
 # session = Comicvine(api_key="97a8bbaedc58ef0da64b3a154c34016c71a8d188", cache=SQLiteCache())
