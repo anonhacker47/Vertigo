@@ -62,14 +62,7 @@
           </div>
           <div class="flex flex-row gap-16 justify-around">
             <div class="form-control">
-              <MultiSelectCombobox v-model="seriesData.writer" field="writer" placeholder="Writer" />
-
-            </div>
-            <div class="form-control">
-              <MultiSelectCombobox v-model="seriesData.artist" field="artist" placeholder="Artist" />
-            </div>
-            <div class="form-control">
-              <MultiSelectCombobox v-model="seriesData.editor" field="editor" placeholder="Editor" />
+              <MultiSelectCombobox v-model="seriesData.creator" field="creator" placeholder="Creator" />
 
             </div>
           </div>
@@ -150,9 +143,7 @@ async function getSeries() {
 
 const seriesData: Partial<Series> = reactive({
   title: "",
-  writer: [],
-  artist: [],
-  editor: [],
+  creator: [],
   description: "",
   genre: [],
   publisher: "",
@@ -201,9 +192,7 @@ async function updateSeries() {
     const formData = new FormData();
     formData.append("title", seriesData.title || "");
     formData.append("publisher", seriesData.publisher || "");
-    formData.append("writer", JSON.stringify(seriesData.writer || []));
-    formData.append("artist", JSON.stringify(seriesData.artist || []));
-    formData.append("editor", JSON.stringify(seriesData.editor || []));
+    formData.append("creator", JSON.stringify(seriesData.creator || []));
     formData.append("description", seriesData.description || "");
     formData.append("genre", JSON.stringify(seriesData.genre || []));
     formData.append("main_char", seriesData.main_char || "");

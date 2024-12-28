@@ -69,18 +69,10 @@
                 <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{ series.main_char }}</span>
               </div>
               <div class="flex flex-col md:flex-row items-center max-w-full gap-4 ">
-                <div class="font-bold text-lg">Writers</div>
+                <div class="font-bold text-lg">Creators</div>
                 <div class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
-                  <p v-for="writer in series.writer" class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold" :style="`color: rgb${themecolor}`">
-                    {{ writer }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex flex-col md:flex-row items-center gap-4">
-                <div class="font-bold">Artists</div>
-                <div class="flex flex-row gap-4  overflow-scroll justify-center md:justify-start whitespace-nowrap">
-                  <p v-for="artist in series.artist" class="bg-slate-800 rounded-md h-7 px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
-                    {{ artist }}
+                  <p v-for="creator in series.creator" class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold" :style="`color: rgb${themecolor}`">
+                    {{ creator }}
                   </p>
                 </div>
               </div>

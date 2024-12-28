@@ -90,40 +90,10 @@ def user_field_count(user_id, field, type):
             'table': associations.series_genre,
             'column': 'genre_id'
         },
-        'writer': {
-            'model': series_entities.Writer,
-            'table': associations.series_writer,
-            'column': 'writer_id'
-        },
-        'artist': {
-            'model': series_entities.Artist,
-            'table': associations.series_artist,
-            'column': 'artist_id'
-        },
-        'editor': {
-            'model': series_entities.Editor,
-            'table': associations.series_editor,
-            'column': 'editor_id'
-        },
-        'inker': {
-            'model': series_entities.Inker,
-            'table': associations.series_inker,
-            'column': 'inker_id'
-        },
-        'penciller': {
-            'model': series_entities.Penciller,
-            'table': associations.series_penciller,
-            'column': 'penciller_id'
-        },
-        'colorist': {
-            'model': series_entities.Colorist,
-            'table': associations.series_colorist,
-            'column': 'colorist_id'
-        },
-        'letterer': {
-            'model': series_entities.Letterer,
-            'table': associations.series_letterer,
-            'column': 'letterer_id'
+        'creator': {
+            'model': series_entities.Creator,
+            'table': associations.series_creator,
+            'column': 'creator_id'
         },
         'character': {
             'model': series_entities.Character,

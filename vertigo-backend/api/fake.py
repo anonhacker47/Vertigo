@@ -2,7 +2,6 @@ import random
 import click
 from flask import Blueprint
 from faker import Faker
-import requests
 from api.app import db
 from api.models.user import User
 from api.models.series import Series
@@ -206,7 +205,7 @@ def series(num):  # pragma: no cover
             print(volume.id,volume.series.name)# Check if the list is not empty
         else:
             # comic_list = get_comicid()
-            ("no volume founr")
+            ("no volume found")
             volume = get_comic_vine_info(random.randint(1, 100000))
         title=volume.series.name
         image = volume.image.__str__()
@@ -231,15 +230,9 @@ def series(num):  # pragma: no cover
         for entity_name, entity_model in {
             'publisher': entities.Publisher,
             'genre': entities.Genre,
-            'writer': entities.Writer,
-            'artist': entities.Artist,
-            'inker': entities.Inker,
-            'penciller': entities.Penciller,
-            'colorist': entities.Colorist,
-            'letterer': entities.Letterer,
+            'creator': entities.Creator,
             'character': entities.Character,
             'team': entities.Team,
-            'editor': entities.Editor
         }.items():
             if random.choice([True, False]):
                 entity_titles = [str(c.name) for c in volume.series.genres] if entity_name == 'genre' else [str(c.creator) for c in volume.credits]
@@ -248,7 +241,7 @@ def series(num):  # pragma: no cover
                     entity_titles = [volume.publisher.name]
                     entity = create_or_get_entity(entity_model, title)
                     getattr(series, entity_name).append(entity)
-                if entity_name in ['genre', 'writer']:
+                if entity_name in ['genre', 'creator']:
                     for title in entity_titles:
                         entity = create_or_get_entity(entity_model, title)
                         getattr(series, entity_name).append(entity)

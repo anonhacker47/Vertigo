@@ -9,14 +9,8 @@ def create_or_get_entities(entity_type, titles, description=None):
         'publisher': series_entities.Publisher,
         'genre': series_entities.Genre,
         'team': series_entities.Team,
-        'writer': series_entities.Writer,
-        'editor': series_entities.Editor,
-        'artist': series_entities.Artist,
-        'inker': series_entities.Inker,
-        'colorist': series_entities.Colorist,
+        'creator': series_entities.Creator,
         'character': series_entities.Character,
-        'penciller': series_entities.Penciller,
-        'letterer': series_entities.Letterer
     }[entity_type]
 
     entities = []

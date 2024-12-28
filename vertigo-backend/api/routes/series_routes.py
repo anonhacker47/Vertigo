@@ -47,16 +47,12 @@ def new():
 
     # Parse JSON fields within FormData
     genre = request.form.get('genre', '[]')
-    writer = request.form.get('writer', '[]')
-    artist = request.form.get('artist', '[]')
-    editor = request.form.get('editor', '[]')
+    creator = request.form.get('creator', '[]')
     publisher = request.form.get('publisher', '[]')
 
     entities = {
         'genre': json.loads(genre),
-        'editor': json.loads(editor),
-        'writer': json.loads(writer),
-        'artist': json.loads(artist),
+        'creator': json.loads(creator),
         'publisher': [publisher],
     }
 
@@ -146,16 +142,12 @@ def update_series(id):
 
     # Parse JSON fields within FormData
     genre = request.form.get('genre', '[]')
-    writer = request.form.get('writer', '[]')
-    artist = request.form.get('artist', '[]')
-    editor = request.form.get('editor', '[]')
+    creator = request.form.get('creator', '[]')
     publisher = request.form.get('publisher', '[]')
 
     entities = {
         'genre': json.loads(genre),
-        'editor': json.loads(editor),
-        'writer': json.loads(writer),
-        'artist': json.loads(artist),
+        'creator': json.loads(creator),
         'publisher': [publisher],
     }
 
@@ -263,21 +255,6 @@ def key():
 @authenticate(token_auth)
 def get_series_by_table(table):
     """Retrieve values from a specific table across all series objects."""
-    
-    # # Get all series objects
-    # if table_class is None:
-    #     if table == "publisher" or "main_char":
-    #         values = db.session.query(getattr(Series, table)).distinct().all()
-    #         # Extract the desired field values
-    #         values = [value[0] for value in values if value[0]]
-    #         # Remove duplicates (optional)
-    #         values = list(set(values))
-    #         values.sort() 
-    #         values = [{'id':str(i+1),'value': value} for i, value in enumerate(values)]
-    #         return jsonify(values)
-    #     else: 
-    #         abort(400, "Invalid table provided")
-    # else:
 
     if table.lower() == 'main_char':
         # Handle main_char separately by combining characters and teams
@@ -289,9 +266,7 @@ def get_series_by_table(table):
     else:
         table_class = {
             'genre': series_entities.Genre,
-            'artist': series_entities.Artist,
-            'editor': series_entities.Editor,
-            'writer': series_entities.Writer,
+            'creator': series_entities.Creator,
             'publisher': series_entities.Publisher,
         }.get(table.lower())
 

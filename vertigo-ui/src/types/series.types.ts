@@ -1,21 +1,15 @@
 export interface Series {
-    artist: string[];
     character: string[];
-    colorist: string[];
     description: string;
     dominant_color: [number, number, number];
-    editor: string[];
     genre: string[];
     id: number;
-    inker: string[];
     issue_count: number;
-    letterer: string[];
     main_char: string | null;
     main_char_id: string | null;
     main_char_type: string | null;
     manga: number;
     owned_count: number;
-    penciller: string[];
     publisher: any;
     read_count: number;
     release_date: string; 
@@ -36,5 +30,5 @@ export interface Series {
       username: string;
     };
     user_rating: number;
-    writer: string[];
+    creator: string[];
 }

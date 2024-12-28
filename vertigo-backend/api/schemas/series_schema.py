@@ -15,20 +15,12 @@ class SeriesSchema(ma.SQLAlchemySchema):
     
     title = ma.auto_field(required=True, validate=validate.Length(min=1, max=280))
     publisher = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-    writer = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-    artist = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-
-    inker = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-    penciller = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-    colorist = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-    letterer = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
+    creator = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
 
     character = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
       
     main_char = ma.String(validate=validate.Length(min=0, max=280), allow_none=True)
-    
-    editor = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-    
+        
     description = ma.auto_field(validate=validate.Length(min=0, max=1250))
 
     team = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)

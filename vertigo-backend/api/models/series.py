@@ -28,24 +28,9 @@ class Series(Updateable, db.Model):
     main_char_id = sqla.Column(sqla.Integer)
     main_char_type = sqla.Column(sqla.String(50))
 
-    writer = sqla_orm.relationship('Writer', secondary=associations.series_writer,
+    creator = sqla_orm.relationship('Creator', secondary=associations.series_creator,
                                    back_populates='series', lazy='dynamic')
     
-    artist = sqla_orm.relationship('Artist', secondary=associations.series_artist,
-                                   back_populates='series', lazy='dynamic')
-
-    inker = sqla_orm.relationship('Inker', secondary=associations.series_inker,
-                                   back_populates='series', lazy='dynamic')
-
-    penciller = sqla_orm.relationship('Penciller', secondary=associations.series_penciller,
-                                   back_populates='series', lazy='dynamic')
-    
-    colorist = sqla_orm.relationship('Colorist', secondary=associations.series_colorist,
-                                   back_populates='series', lazy='dynamic')
-    
-    letterer = sqla_orm.relationship('Letterer', secondary=associations.series_letterer,
-                                   back_populates='series', lazy='dynamic')
-
     character = sqla_orm.relationship('Character', secondary=associations.series_character,
                                    back_populates='series', lazy='dynamic')
 
@@ -54,8 +39,6 @@ class Series(Updateable, db.Model):
 
     user_rating = sqla.Column(sqla.Float)
 
-    editor = sqla_orm.relationship('Editor', secondary=associations.series_editor,
-                                   back_populates='series', lazy='dynamic')
     
     description = sqla.Column(sqla.String(1250))
 

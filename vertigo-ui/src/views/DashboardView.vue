@@ -97,9 +97,7 @@ const chartCategoryList = [
   { Name: 'Publisher', field: 'publisher' },
   { Name: 'Genre', field: 'genre' },
   { Name: 'Main Char/Team', field: 'main_char' },
-  { Name: 'Writer', field: 'writer' },
-  { Name: 'Artist', field: 'artist' },
-  { Name: 'Editor', field: 'editor' },
+  { Name: 'Creator', field: 'creator' },
 ];
 
 async function getSeriesInfo() {
