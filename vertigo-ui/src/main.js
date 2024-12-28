@@ -1,4 +1,5 @@
 import 'animate.css'
+import './index.css'
 import "./assets/main.css";
 import 'swiper/css';
 import 'swiper/css/effect-cards';

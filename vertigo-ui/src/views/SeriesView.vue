@@ -88,22 +88,22 @@
 
 
           </div>
-          <div class="flex flex-col relative  shrink-0">
-            <div class=" p-10">
-              <p class="text-xl font-bold" :style="`color: rgb${themecolor}`">
-                {{ "Description:" }}
+          <div class="flex flex-col relative shrink-0">
+            <div class="mx-8 my-5">
+              <p class="text-xl text-center font-bold" :style="`color: rgb${themecolor}`">
+                Description
               </p>
-              <p class=" text-justify">{{ series.description }}</p>
+              <p class="mt-4 text-justify">{{ series.description }}</p>
             </div>
           </div>
 
         </div>
-        <div class="flex flex-col basis-1/2 w-1/2 shrink-0  border-l border-slate-700 pt-4 pb-6">
+        <div class="flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
           <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
-          <div class="overflow-scroll" style="height: 70vh">
-            <div class="grid grid-cols-4 gap-5 px-16">
+          <div class="overflow-scroll h-full">
+            <div class="flex flex-wrap justify-between gap-10 md:px-16 px-12">
               <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned"
                 :is_read="issue.is_read" v-for="issue in issuesList" @updateStatus="updateStatus(issue, $event)"
                 :key="issue.id" />
