@@ -1,6 +1,6 @@
 <template>
   <Combobox v-model="selected" nullable>
-    <div class="relative max-w-52">
+    <div class="relative w-full">
       <div class="relative w-full cursor-default rounded-lg bg-base-10">
         <ComboboxInput class="w-full input input-bordered" autoComplete="off" @change="query = $event.target.value"
           :placeholder="placeholder" />

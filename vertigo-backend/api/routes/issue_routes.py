@@ -23,28 +23,36 @@ update_issue_schema = IssueSchema(partial=True)
 
 @issues.route('/series/<int:series_id>/issues', methods=['POST'])
 @authenticate(token_auth)
-@body(issue_schema)
-@response(issue_schema, 201)
-def new(args,series_id):
-    """Create a new issue"""
+@body(issues_schema)  # Expecting a list of issues
+@response(issues_schema, 201)
+def new(args, series_id):
+    """Create multiple new issues for a series"""
+
     user = token_auth.current_user()
     series = db.session.get(Series, series_id)
-    count = series.issue_count + 1
-    is_owned = 1 if series.owned_count == series.issue_count else 0
-    is_read = 1 if series.read_count == series.issue_count else 0
 
-    for i in range(1,count):
-        title = f"volume {i}"
-        bought_date = datetime.now(timezone.utc) if is_owned == 1 else None
-        read_date = datetime.now(timezone.utc) if is_read  == 1 else None
-        issue = Issue(user=user, series=series, title=title,
-                      is_read=is_read, is_owned=is_owned,
-                      bought_date=bought_date, read_date=read_date)
+    if not series:
+        return jsonify({"error": "Series not found"}), 404
+
+    new_issues = []
+    for issue_data in args:
+        issue = Issue(
+        user=user,
+        series=series,
+        title=issue_data["title"],
+        number=issue_data["number"],
+        is_owned=issue_data["is_owned"],
+        is_read=issue_data["is_read"],
+        bought_date=issue_data.get("bought_date") or (datetime.now(timezone.utc) if issue_data["is_owned"] else None),
+        read_date=issue_data.get("read_date") or (datetime.now(timezone.utc) if issue_data["is_read"] else None),
+        bought_price=issue_data.get("bought_price")
+        )
         db.session.add(issue)
-    
+        new_issues.append(issue)
+
     db.session.commit()
 
-    return issue
+    return new_issues
 
 
 @issues.route('/series/issues/<int:id>/', methods=['GET'])

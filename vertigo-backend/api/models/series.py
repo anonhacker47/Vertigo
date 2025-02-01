@@ -47,12 +47,15 @@ class Series(Updateable, db.Model):
     
     manga = sqla.Column(sqla.Integer)
     release_date = sqla.Column(sqla.DateTime)
+    
+    purchase_cost = sqla.Column(sqla.Float)
 
     series_format = sqla.Column(sqla.String(100))
     issue_count = sqla.Column(sqla.Integer)
 
     read_count = sqla.Column(sqla.Integer)
     owned_count = sqla.Column(sqla.Integer)
+
 
     dominant_color = sqla.Column(sqla.String(280))
     slug = sqla.Column(sqla.String(280))

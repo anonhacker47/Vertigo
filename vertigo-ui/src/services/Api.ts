@@ -27,6 +27,9 @@ export default () => {
     async (error) => {
       const originalRequest = error.config;
 
+      console.log(error.config);
+      
+
       if (error.response.status === 401 && originalRequest.url != "tokens") {
         console.log("Token Expired Refreshing");
         try {

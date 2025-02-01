@@ -1,6 +1,6 @@
 <template>
   <Combobox v-model="model" multiple>
-    <div class="relative w-52">
+    <div class="relative w-full">
       <div class="relative w-full cursor-default rounded-lg bg-base-10">
         <ComboboxInput class="w-full input input-bordered" autoComplete="off" @change="query = $event.target.value"
           :placeholder="selectedValuesPlaceholder" />
@@ -48,8 +48,8 @@
           </ComboboxOption>
         </ComboboxOptions>
       </TransitionRoot>
-      <div class="flex flex-wrap justify-center mt-2 gap-2 h-12 overflow-auto">
-        <div v-for="(item, i) in model" :key="i" class="badge badge-info p-0 bg-base-600  rounded-md">
+      <div v-if="model.length" class="flex flex-wrap justify-center mt-2 gap-2 h-12 overflow-auto">
+        <div v-for="(item, i) in model" :key="i" class="badge badge-info p-0 bg-base-600 rounded-md">
           <span class="text-white text-xs px-2 py-1">{{ item }}</span>
           <button type="button" class="ml-1 focus:outline-none self-center" @click="removeItem(item)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

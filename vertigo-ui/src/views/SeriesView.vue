@@ -102,8 +102,8 @@
           <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
-          <div class="overflow-scroll h-full">
-            <div class="flex flex-wrap justify-between gap-10 md:px-16 px-12">
+          <div class="overflow-scroll h-full flex flex-row justify-center items-start w-full">
+            <div class="flex flex-wrap flex-start items-start gap-10 md:px-16 px-12">
               <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned"
                 :is_read="issue.is_read" v-for="issue in issuesList" @updateStatus="updateStatus(issue, $event)"
                 :key="issue.id" />

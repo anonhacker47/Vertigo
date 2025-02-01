@@ -3,24 +3,38 @@ import { ApiResponse } from "@/types/api-response.types";
 import { Issue } from "@/types/issue.types";
 
 export default {
-  async fetchIssues(id: Number, orderBy: string, orderDir: string): Promise<Object> {
+  async fetchIssues(
+    id: Number,
+    orderBy: string,
+    orderDir: string
+  ): Promise<Object> {
     const response = await Api().get<ApiResponse<Issue[]>>(
       `series/${id}/issues?orderBy=${orderBy}&orderDir=${orderDir}`
     );
     const issuesList = response.data.data;
     const pagination = response.data.pagination;
-    return {issuesList, pagination};
+    return { issuesList, pagination };
   },
 
-  addIssues(id: any, data: { title: string; is_read: number; is_owned: number; }) {
-    return Api().post(`series/${id}/issues`, data);
+  addIssues(
+    seriesId: any,
+    issues: Array<{
+      title: string;
+      is_read: number;
+      is_owned: number;
+      bought_date?: string | null;
+      read_date?: string | null;
+      price?: number | null;
+    }>
+  ) {
+    return Api().post(`series/${seriesId}/issues`, issues);
   },
 
   getIssueCount(id: number) {
     return Api().get(`series/${id}/issue_count`);
   },
 
-  updateIssue(id:number, data:any) {
+  updateIssue(id: number, data: any) {
     return Api().put(`series/issues/${id}/`, data);
   },
   // removeSeries(data, headers) {

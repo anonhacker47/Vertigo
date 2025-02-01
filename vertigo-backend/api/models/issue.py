@@ -21,6 +21,8 @@ class Issue(Updateable, db.Model):
     is_read = sqla.Column(sqla.Integer)
     is_owned = sqla.Column(sqla.Integer)
 
+    bought_price = sqla.Column(sqla.Float)
+    
     bought_date = sqla.Column(sqla.DateTime)
     read_date = sqla.Column(sqla.DateTime)
 

@@ -22,6 +22,7 @@ class IssueSchema(ma.SQLAlchemySchema):
     is_read = ma.Boolean()
     is_owned = ma.Boolean() 
 
+    bought_price= ma.auto_field() 
     bought_date = ma.auto_field() 
     read_date = ma.auto_field()
 

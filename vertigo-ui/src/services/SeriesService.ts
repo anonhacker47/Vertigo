@@ -12,7 +12,7 @@ export default {
     return { seriesList, pagination };
   },
 
-  async addSeries(data: any): Promise<Series> {
+  async addSeries(data: any) {
 
     const response = await Api().post("series", data, {
       headers: {
