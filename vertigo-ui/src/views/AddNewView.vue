@@ -168,7 +168,7 @@ import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
 
 import ImageUploader from "@/components/createSeries/ImageUploader.vue";
-import SeriesForm from "@/components/createSeries/SeriesForm.vue";
+import SeriesForm from "@/components/createSeries/CreateSeriesForm.vue";
 import IssuesForm from "@/components/createSeries/IssuesForm.vue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);

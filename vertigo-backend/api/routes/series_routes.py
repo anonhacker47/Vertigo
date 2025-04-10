@@ -147,6 +147,7 @@ def update_series(id):
     owned_count = int(request.form.get('owned_count', 0))
     main_char = request.form.get('main_char', None)
     main_char_type = request.form.get('main_char_type', None)
+    thumbnail = request.form.get('thumbnail', '').strip()
 
     # Parse JSON fields within FormData
     genre = request.form.get('genre', '[]')
@@ -161,11 +162,17 @@ def update_series(id):
 
     # Handle thumbnail file if it exists
     thumbnail_filename = None
-    if 'thumbnail' in request.files:
+    # Handle thumbnail file if it is link
+    if thumbnail.startswith('http'):
+        # URL case
+        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, title)
+        if thumbnail_filename:
+            series.thumbnail = thumbnail_filename
+            series.dominant_color = dominant_color
+    # Handle thumbnail file if it exists
+    elif 'thumbnail' in request.files:
         file = request.files['thumbnail']
         thumbnail_filename, dominant_color = save_series_thumbnail(file, title)
-        if series.thumbnail:
-            delete_series_thumbnail(series.thumbnail)
         series.thumbnail = thumbnail_filename
         series.dominant_color = dominant_color
 

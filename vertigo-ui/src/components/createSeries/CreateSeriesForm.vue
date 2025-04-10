@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import type { Series } from "@/types/series.types";
-import {  reactive, Ref, watch } from 'vue'
+import {  reactive, watch } from 'vue'
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 

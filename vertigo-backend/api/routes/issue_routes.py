@@ -1,7 +1,7 @@
 import os
 from datetime  import datetime, timezone
 
-from flask import Blueprint, abort, request, send_file, send_from_directory
+from flask import Blueprint, abort, jsonify, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
 
 from api import db
