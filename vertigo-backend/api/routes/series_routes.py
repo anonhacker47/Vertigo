@@ -20,7 +20,7 @@ from api.utils.auth import token_auth
 from api.utils.series_field import create_or_get_entities, create_or_get_main_character
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import save_series_thumbnail,delete_series_thumbnail
+from api.helpers.thumbnail_processing import download_series_thumbnail, save_series_thumbnail,delete_series_thumbnail
 
 
 series = Blueprint('series', __name__)
@@ -44,6 +44,7 @@ def new():
     owned_count = int(request.form.get('owned_count', 0))
     main_char = request.form.get('main_char', None)
     main_char_type = request.form.get('main_char_type', None)
+    thumbnail = request.form.get('thumbnail', '').strip()
 
     # Parse JSON fields within FormData
     genre = request.form.get('genre', '[]')
@@ -80,8 +81,15 @@ def new():
         main_char_instance = create_or_get_main_character(main_char_type, main_char)
         series.main_char_id = main_char_instance.id
 
+    # Handle thumbnail file if it is link
+    if thumbnail.startswith('http'):
+        # URL case
+        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, title)
+        if thumbnail_filename:
+            series.thumbnail = thumbnail_filename
+            series.dominant_color = dominant_color
     # Handle thumbnail file if it exists
-    if 'thumbnail' in request.files:
+    elif 'thumbnail' in request.files:
         file = request.files['thumbnail']
         thumbnail_filename, dominant_color = save_series_thumbnail(file, title)
         series.thumbnail = thumbnail_filename

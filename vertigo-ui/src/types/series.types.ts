@@ -16,7 +16,7 @@ export interface Series {
     series_format: string;
     slug: string;
     team: string[];
-    thumbnail: string;
+    thumbnail: string | File;
     timestamp: string; 
     title: string;
     url: string;

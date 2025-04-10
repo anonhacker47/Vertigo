@@ -1,87 +1,68 @@
 <template>
   <form autocomplete="on" class="z-0 flex items-center justify-evenly flex-1 p-4 gap-6 md:gap-4 md:flex-row flex-col">
-    <div class="card w-full md:w-[22rem] bg-base-100 shadow-xl">
-      <figure class="px-5 pt-5">
-        <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl w-[24rem] h-[27rem]"
-          key="imagesrc" />
-      </figure>
-      <div class="flex flex-col p-5" v-if="true">
-        <div class="flex flex-col gap-2">
+
+    <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
+
+    <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
+
+    <!-- 
+      <div v-if="!showIssueSection" class="md:w-2/3  shadow-2xl bg-base-100 h-full w-full card justify-between p-8 flex gap-6 md:gap-10">
+        <div class="flex flex-col w-full md:flex-row gap-8 md:gap-20 justify-around">
           <div class="form-control w-full">
-            <label class="btn btn-primary" for="file">
-              Upload Image
-            </label>
-            <input type="file" @change="changeImage($event, 'file')" id="file" accept="image/*" style="display: none" />
-          </div>
-          <div class="flex justify-center">
-            <p class="text-center font-bold">OR</p>
+            <input type="text" placeholder="Series Name" v-model="seriesData.value.title" class="input w-full input-bordered"
+              required />
           </div>
           <div class="form-control w-full">
-            <input id="image" type="text" v-model="imageLinkInput" @input="changeImage($event, 'url')"
-              placeholder="paste image link here" class="input input-bordered" />
+            <select class="select  w-full select-primary" v-model="seriesData.value.series_format" required>
+              <option disabled value="">Pick Format</option>
+              <option>Trade Paperback</option>
+              <option>Hard Cover</option>
+              <option>Omnibus</option>
+              <option>Absolute Edition</option>
+              <option>Manga</option>
+            </select>
+          </div>
+          <div class="form-control w-full">
+            <SingleSelectCombobox v-model="seriesData.value.publisher" field="publisher" placeholder="Publisher" />
           </div>
         </div>
-      </div>
-    </div>
 
-    <div v-if="!showIssueSection"
-      class="card h-full w-full md:w-2/3 flex gap-6 md:gap-10 shadow-2xl bg-base-100 justify-between p-8">
-      <div class="flex flex-col w-full md:flex-row gap-8 md:gap-20 justify-around">
-        <div class="form-control w-full">
-          <input type="text" placeholder="Series Name" v-model="seriesData.title" class="input w-full input-bordered"
-            required />
+        <div class="flex flex-col md:flex-row gap-8 md:gap-20 justify-around">
+          <div class="form-control w-full">
+            <MultiSelectCombobox v-model="seriesData.value.genre" field="genre" placeholder="Genre" />
+          </div>
+          <div class="form-control w-full">
+            <SingleSelectCombobox v-model="seriesData.value.main_char" field="main_char" placeholder="Main Character/ Team" />
+          </div>
+          <div class="form-control w-full">
+            <MultiSelectCombobox v-model="seriesData.value.creator" field="creator" placeholder="Creators" />
+          </div>
         </div>
-        <div class="form-control w-full">
-          <select class="select  w-full select-primary" v-model="seriesData.series_format" required>
-            <option disabled value="">Pick Format</option>
-            <option>Trade Paperback</option>
-            <option>Hard Cover</option>
-            <option>Omnibus</option>
-            <option>Absolute Edition</option>
-            <option>Manga</option>
-          </select>
-        </div>
-        <div class="form-control w-full">
-          <SingleSelectCombobox v-model="seriesData.publisher" field="publisher" placeholder="Publisher" />
-        </div>
-      </div>
 
-      <div class="flex flex-col md:flex-row gap-8 md:gap-20 justify-around">
-        <div class="form-control w-full">
-          <MultiSelectCombobox v-model="seriesData.genre" field="genre" placeholder="Genre" />
+        <div class="flex flex-col md:flex-row gap-20 justify-around">
+          <div class="form-control w-full">
+            <textarea class="textarea textarea-bordered" placeholder="Summary"
+              v-model="seriesData.value.description"></textarea>
+          </div>
         </div>
-        <div class="form-control w-full">
-          <SingleSelectCombobox v-model="seriesData.main_char" field="main_char" placeholder="Main Character/ Team" />
-        </div>
-        <div class="form-control w-full">
-          <MultiSelectCombobox v-model="seriesData.creator" field="creator" placeholder="Creators" />
-        </div>
-      </div>
 
-      <div class="flex flex-col md:flex-row gap-20 justify-around">
-        <div class="form-control w-full">
-          <textarea class="textarea textarea-bordered" placeholder="Summary"
-            v-model="seriesData.description"></textarea>
+        <div class="flex flex-col md:flex-row gap-16 justify-around">
+          <div class="form-control w-full">
+            <button type="button" @click="router.push('collection')" class="btn btn-danger">
+              Cancel
+            </button>
+          </div>
+          <div class="form-control w-full">
+            <button @click.prevent="showIssueSection = true" :disabled="!seriesData.value.title"
+              class="btn btn-primary rounded">
+              Next
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div class="flex flex-col md:flex-row gap-16 justify-around">
-        <div class="form-control w-full">
-          <button type="button" @click="router.push('collection')" class="btn btn-danger">
-            Cancel
-          </button>
-        </div>
-        <div class="form-control w-full">
-          <button @click.prevent="showIssueSection = true" :disabled="!seriesData.title"
-            class="btn btn-primary rounded">
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
+      </div> -->
 
 
-    <div v-if="showIssueSection"
+    <!-- <div v-if="showIssueSection"
       class="card h-full  w-full md:w-2/3 flex gap-6 md:gap-8 shadow-2xl bg-base-100 justify-between p-8 ">
       <div class="form-control">
         <label class="label">Number of Issues</label>
@@ -119,19 +100,16 @@
             'border-accent': issues[n - 1].read
           }">
 
-          <!-- Issue Thumbnail -->
           <div class="relative w-full md:h-52 h-40">
             <img :src="imagesrc" alt="Issue Thumbnail"
               class="w-full h-full object-cover rounded-md brightness-80 hover:brightness-100 transition duration-300" />
 
-            <!-- Centered Issue Number -->
             <p
               class="absolute inset-0 flex items-center justify-center text-white text-3xl font-bold bg-black/50 rounded-md">
               #{{ n }}
             </p>
           </div>
 
-          <!-- Read & Have Controls -->
           <div class="flex w-full justify-around gap-2 text-sm md:text-md md:gap-4 p-4">
             <label class="cursor-pointer flex items-center gap-2"
               :class="issues[n - 1].have ? 'text-primary' : 'text-white'">
@@ -147,7 +125,6 @@
             </label>
           </div>
 
-          <!-- Purchase Details -->
           <div class="flex flex-col w-full pb-4 px-4 gap-2 text-sm md:text-md"
             v-if="issues[n - 1].have || issues[n - 1].read">
             <label class="flex flex-col" v-if="issues[n - 1].have">
@@ -168,29 +145,33 @@
       </div>
 
 
-
       <div class="flex justify-between mt-6">
         <button class="btn btn-danger" @click="showIssueSection = false">Go Back / Cancel</button>
         <button class="btn btn-primary" @click.prevent="createSeries">Create Series</button>
       </div>
-    </div>
+    </div> -->
+
+    <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" :showIssueSection="showIssueSection"
+      :seriesData="seriesData" :issues="issues" :imagesrc="imagesrc" @cancel="showIssueSection = false"
+      @submit="createSeries" />
+
   </form>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
 
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
-import SingleSelectCombobox from "../components/customInputs/SingleSelectCombobox.vue";
-import MultiSelectCombobox from "../components/customInputs/MultiSelectCombobox.vue";
-import AddIssueDetailsModal from '../components/modals/AddIssueDetailsModal.vue'
+
+import ImageUploader from "@/components/createSeries/ImageUploader.vue";
+import SeriesForm from "@/components/createSeries/SeriesForm.vue";
+import IssuesForm from "@/components/createSeries/IssuesForm.vue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
-
 
 const imageLinkInput = ref("");
 
@@ -200,20 +181,19 @@ const readAll = ref(false);
 const haveAll = ref(false);
 const issues = ref([]);
 
-const seriesData: Partial<Series> = reactive({
-  title: "",
+const seriesData = ref<Partial<Series>>({
+  title: '',
   creator: [],
-  description: "",
+  description: '',
   genre: [],
-  main_char: "",
-  series_format: "",
+  main_char: '',
+  series_format: '',
   issue_count: 1,
-  thumbnail: "",
-  publisher: "",
+  thumbnail: '',
+  publisher: '',
   read_count: 0,
-  owned_count: 0,
-});
-
+  owned_count: 0
+})
 
 function toggleAll(type: string) {
   issues.value.forEach((issue) => {
@@ -221,9 +201,8 @@ function toggleAll(type: string) {
   });
 }
 
-
 watch(
-  () => seriesData.issue_count,
+  () => seriesData.value.issue_count,
   (newCount) => {
     // Adjust the array length to match the new issue count
     haveAll.value = false;
@@ -257,34 +236,8 @@ watch(
   { deep: true }
 );
 
-function changeImage(event: any, inputType: string) {
-
-  const file = event.target.files && event.target.files[0]
-    ? URL.createObjectURL(event.target.files[0])
-    : "";
-
-  let newValue: string = "";
-  if (inputType === "file") {
-    newValue = file;
-    imageLinkInput.value = event.target.value
-  } else if (inputType === "url") {
-    newValue = event.target.value || new URL("../assets/dummy.webp", import.meta.url).href;
-  }
-
-  imagesrc.value = newValue;
-  console.log(imagesrc.value);
-  seriesData.thumbnail = event.target.files ? event.target.files[0] : "noimage";
-}
-
-function changeThumb() {
-  seriesData.thumbnail = "noimage";
-}
-
-
-
-
 async function createSeries() {
-  if (!seriesData.title.trim()) {
+  if (!seriesData.value.title.trim()) {
     console.log("Title is required!");
     return;
   }
@@ -293,19 +246,19 @@ async function createSeries() {
     // Calculate owned and read counts dynamically based on issues
     const owned_count = issues.value.filter((issue) => issue.have).length;
     const read_count = issues.value.filter((issue) => issue.read).length;
-    seriesData.issue_count = issues.value.length;
+    seriesData.value.issue_count = issues.value.length;
 
     // Prepare the payload for the series
     const payload = {
-      title: seriesData.title,
-      publisher: seriesData.publisher || "",
-      creator: seriesData.creator || [],
-      description: seriesData.description || "",
-      genre: seriesData.genre || [],
-      main_char: seriesData.main_char || "",
+      title: seriesData.value.title,
+      publisher: seriesData.value.publisher || "",
+      creator: seriesData.value.creator || [],
+      description: seriesData.value.description || "",
+      genre: seriesData.value.genre || [],
+      main_char: seriesData.value.main_char || "",
       main_char_type: "character",
-      series_format: seriesData.series_format || "",
-      issue_count: seriesData.issue_count || 0,
+      series_format: seriesData.value.series_format || "",
+      issue_count: seriesData.value.issue_count || 0,
       read_count: read_count,
       owned_count: owned_count,
     };
@@ -322,15 +275,20 @@ async function createSeries() {
         formData.append(key, payload[key]?.toString() || "");
       }
     }
-    if (seriesData.thumbnail && typeof seriesData.thumbnail !== "string") {
-      formData.append("thumbnail", seriesData.thumbnail);
+    if (seriesData.value.thumbnail) {
+      console.log(seriesData.value.thumbnail);
+
+      formData.append("thumbnail", seriesData.value.thumbnail);
+    } else {
+
+      console.log("No thumbnail provided.");
     }
 
     // Send series data to backend
     const response = await SeriesService.addSeries(formData);
     const seriesId = response?.id;
 
-    console.log("Series created successfully!", seriesData.issue_count);
+    console.log("Series created successfully!", seriesData.value.issue_count);
 
     // If there are issues, create them separately
     if (seriesId) {
@@ -342,8 +300,6 @@ async function createSeries() {
     console.error("Error creating series:", error);
   }
 }
-
-
 
 async function addIssues(seriesId) {
   try {
@@ -373,10 +329,16 @@ async function addIssues(seriesId) {
   }
 }
 
-
+function onImageChange(file: File | string) {
+  seriesData.value.thumbnail = file;
+  if (file instanceof File) {
+    imagesrc.value = URL.createObjectURL(file);
+  } else if (typeof file === 'string') {
+    imagesrc.value = file;
+  }
+  console.log("Image Changed:", seriesData.value.thumbnail);
+}
 </script>
-
-
 
 <style scoped>
 img {
