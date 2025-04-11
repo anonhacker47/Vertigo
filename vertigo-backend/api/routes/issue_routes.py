@@ -119,17 +119,7 @@ def put(data, id):
         abort(403)
     issue.update(data)
 
-    # Recalculate counts for the series
-    issues = issue.series.issue_select()
-    issues_data = db.session.scalars(issues).all()
-    is_owned_count = sum(issue.is_owned for issue in issues_data)
-    is_read_count = sum(issue.is_read for issue in issues_data)
-
-    # Update the series counts
-    issue.series.owned_count = is_owned_count
-    issue.series.read_count = is_read_count
-
-    # Check if `owned or read` is True, update `bought_date` and 'read_date'
+   # Check if `owned or read` is True, update `bought_date` and 'read_date'
     if data.get('is_owned') == False:
         issue.bought_date = None
     if data.get('is_read') == False:
@@ -138,6 +128,12 @@ def put(data, id):
         issue.bought_date = datetime.now(timezone.utc)
     if data.get('is_read'):
         issue.read_date = datetime.now(timezone.utc)
+
+    # Recalculate series counters
+    issues = issue.series.issue_select()
+    issues_data = db.session.scalars(issues).all()
+    issue.series.owned_count = sum(i.is_owned for i in issues_data)
+    issue.series.read_count = sum(i.is_read for i in issues_data)
 
     db.session.commit()
     return issue

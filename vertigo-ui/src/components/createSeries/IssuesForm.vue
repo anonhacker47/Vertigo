@@ -4,8 +4,8 @@
         class="card h-full w-full md:w-2/3 flex flex-col gap-6 md:gap-8 shadow-2xl bg-base-100 p-8">
         <!-- Issue Count Input -->
         <div class="form-control">
-            <label class="label">Number of Issues</label>
-            <input type="number" v-model.number="seriesData.issue_count" min="1" class="input input-bordered" />
+            <label class="label" for="issue-count">Number of Issues</label>
+            <input id="issue-count" type="number" v-model.number="seriesData.issue_count" min="1" class="input input-bordered" />
         </div>
 
         <!-- Select All Toggles -->
@@ -77,7 +77,7 @@
 
         <div class="flex justify-between mt-6">
             <button class="btn btn-danger" @click="$emit('cancel')">Go Back / Cancel</button>
-            <button class="btn btn-primary" @click.prevent="$emit('submit')">Create Series</button>
+            <button class="btn btn-primary" :disabled="seriesData.issue_count < 1" @click.prevent="$emit('submit')">Create Series</button>
         </div>
     </div>
 </template>

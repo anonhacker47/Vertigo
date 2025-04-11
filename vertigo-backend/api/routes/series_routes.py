@@ -138,66 +138,76 @@ def update_series(id):
     if series.user != user:
         abort(403)
 
-    # Parse FormData fields
-    title = request.form.get('title', '')
-    description = request.form.get('description', '')
-    series_format = request.form.get('series_format', '')
-    issue_count = int(request.form.get('issue_count', 0))
-    read_count = int(request.form.get('read_count', 0))
-    owned_count = int(request.form.get('owned_count', 0))
-    main_char = request.form.get('main_char', None)
-    main_char_type = request.form.get('main_char_type', None)
-    thumbnail = request.form.get('thumbnail', '').strip()
+    form = request.form
 
-    # Parse JSON fields within FormData
-    genre = request.form.get('genre', '[]')
-    creator = request.form.get('creator', '[]')
-    publisher = request.form.get('publisher', '[]')
+    # Update fields only if present
+    if 'title' in form:
+        series.title = form.get('title', '').strip()
 
-    entities = {
-        'genre': json.loads(genre),
-        'creator': json.loads(creator),
-        'publisher': [publisher],
-    }
+    if 'description' in form:
+        series.description = form.get('description', '').strip()
 
-    # Handle thumbnail file if it exists
-    thumbnail_filename = None
-    # Handle thumbnail file if it is link
-    if thumbnail.startswith('http'):
-        # URL case
-        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, title)
-        if thumbnail_filename:
-            series.thumbnail = thumbnail_filename
-            series.dominant_color = dominant_color
-    # Handle thumbnail file if it exists
-    elif 'thumbnail' in request.files:
-        file = request.files['thumbnail']
-        thumbnail_filename, dominant_color = save_series_thumbnail(file, title)
-        series.thumbnail = thumbnail_filename
-        series.dominant_color = dominant_color
+    if 'series_format' in form:
+        series.series_format = form.get('series_format', '').strip()
 
-    # Update series instance
-    series.title = title
-    series.description = description
-    series.series_format = series_format
-    series.issue_count = issue_count
-    series.read_count = read_count
-    series.owned_count = owned_count
-    series.main_char_type = main_char_type
+    if 'issue_count' in form:
+        series.issue_count = int(form.get('issue_count', 0))
 
-    # Handle entities
+    if 'read_count' in form:
+        series.read_count = int(form.get('read_count', 0))
+
+    if 'owned_count' in form:
+        series.owned_count = int(form.get('owned_count', 0))
+
+    if 'user_rating' in form:
+        rating = form.get('user_rating')
+        if rating in (None, '', 'null'):
+            series.user_rating = None
+        else:
+            series.user_rating = float(rating)
+    
+        if 'main_char_type' in form:
+            series.main_char_type = form.get('main_char_type')
+
+    # Handle JSON fields if present
+    entities = {}
+    if 'genre' in form:
+        entities['genre'] = json.loads(form.get('genre', '[]'))
+
+    if 'creator' in form:
+        entities['creator'] = json.loads(form.get('creator', '[]'))
+
+    if 'publisher' in form:
+        entities['publisher'] = [form.get('publisher')] if form.get('publisher') else []
+
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
         setattr(series, entity_type, entity_items)
 
     # Handle main character
-    if main_char:
+    if 'main_char' in form and form.get('main_char'):
+        main_char = form.get('main_char')
+        main_char_type = form.get('main_char_type')
         main_char_instance = create_or_get_main_character(main_char_type, main_char)
         series.main_char_id = main_char_instance.id
         series.main_char_type = main_char_type
-    else:
+    elif 'main_char' in form:
+        # explicitly unset if sent but empty
         series.main_char_id = None
         series.main_char_type = None
+
+    # Handle thumbnail
+    thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
+    if thumbnail.startswith('http'):
+        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, form.get('title', ''))
+        if thumbnail_filename:
+            series.thumbnail = thumbnail_filename
+            series.dominant_color = dominant_color
+    elif 'thumbnail' in request.files:
+        file = request.files['thumbnail']
+        thumbnail_filename, dominant_color = save_series_thumbnail(file, form.get('title', ''))
+        series.thumbnail = thumbnail_filename
+        series.dominant_color = dominant_color
 
     db.session.commit()
     return series_schema.dump(series)

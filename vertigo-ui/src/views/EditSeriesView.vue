@@ -56,7 +56,7 @@ async function updateSeries() {
     formData.append("read_count", String(data.read_count || 0));
     formData.append("owned_count", String(data.owned_count || 0));
     formData.append("main_char", data.main_char || "");
-    formData.append("main_char_type", data.main_char_type || "");
+    formData.append("main_char_type", data.main_char_type || "character");
 
     // Convert arrays to JSON strings
     formData.append("genre", JSON.stringify(data.genre || []));

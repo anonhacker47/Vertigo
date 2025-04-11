@@ -1,9 +1,9 @@
 <template>
-  <div v-if="series" class="bg-no-repeat bg-center h-full bg-cover"
-    :style="{ backgroundImage: 'url(' + image + ')' }">
-    <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
+  <div v-if="series" class="bg-no-repeat bg-center h-full bg-cover" :style="{ backgroundImage: 'url(' + image + ')' }">
+    <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.90)">
       <HeaderItem />
-      <div class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
+      <div
+        class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
         <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
           <p class="font-bold text-3xl truncate" :style="`color: rgb${themecolor}`">
             {{ series.title }}
@@ -34,7 +34,7 @@
           </div>
         </div>
         <div class="flex flex-1 justify-center md:justify-end items-center w-1/3">
-          <Rating :modelValue="series.user_rating" :cancel="false" :stars="5" />
+          <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
       </div>
 
@@ -54,30 +54,37 @@
             <div class="flex flex-col basis-2/3 shrink-0 overflow-scroll gap-4">
               <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
                 <span class=" font-bold text-lg">Publisher</span>
-                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{ series.publisher }}</span>
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+                  series.publisher }}</span>
               </div>
-              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4"> 
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
                 <div class="font-bold text-lg">Genre</div>
-                <div class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap ">
-                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md  px-4 py-1 text-sm font-bold " :style="`color: rgb${themecolor}`">
+                <div
+                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap ">
+                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md  px-4 py-1 text-sm font-bold "
+                    :style="`color: rgb${themecolor}`">
                     {{ genre }}
                   </p>
                 </div>
               </div>
               <div class="flex flex-col md:flex-row items-center gap-4">
                 <span class="font-bold text-lg">Main Character/Team</span>
-                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{ series.main_char }}</span>
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+                  series.main_char }}</span>
               </div>
               <div class="flex flex-col md:flex-row items-center max-w-full gap-4 ">
                 <div class="font-bold text-lg">Creators</div>
-                <div class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
-                  <p v-for="creator in series.creator" class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold" :style="`color: rgb${themecolor}`">
+                <div
+                  class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
+                  <p v-for="creator in series.creator"
+                    class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold"
+                    :style="`color: rgb${themecolor}`">
                     {{ creator }}
                   </p>
                 </div>
               </div>
-            
-            
+
+
 
             </div>
 
@@ -98,15 +105,16 @@
           </div>
 
         </div>
-        <div class="flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
+        <div
+          class="flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
           <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
           <div class="overflow-scroll h-full flex flex-row justify-center items-start w-full">
             <div class="flex flex-wrap flex-start items-start gap-10 md:px-16 px-12">
-              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned"
-                :is_read="issue.is_read" v-for="issue in issuesList" @updateStatus="updateStatus(issue, $event)"
-                :key="issue.id" />
+              <IssueCarditem :bought_price="issue.bought_price" :image="image" :bought_date="issue.bought_date" :read_date="issue.read_date"
+                :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
+                v-for="issue in issuesList" @updateStatus="updateStatus(issue, $event)" :key="issue.id" />
             </div>
           </div>
         </div>
@@ -115,7 +123,6 @@
   </div>
 </template>
 
-<style scoped></style>
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
@@ -130,7 +137,6 @@ import HeaderItem from "../components/HeaderItem.vue";
 import IssueCarditem from "../components/cards/IssueCarditem.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
-import DetailCardItem from "../components/cards/DetailCardItem.vue";
 import EditIcon from "../assets/EditIcon.vue";
 import Rating from "primevue/rating";
 
@@ -195,23 +201,48 @@ async function getIssueCount() {
   }
 }
 
-async function updateStatus(issue: { [x: string]: any; id: any; }, field: string | number) {
-  issue[field] = !issue[field];
+async function updateStatus(issue: { [x: string]: any; id: any }, payload: { status: string; value: boolean; date?: string }) {
+  const { status, value, date } = payload;
+
+  issue[status] = value;
+  if (date) {
+    const dateField = status === 'is_owned' ? 'bought_date' : 'read_date';
+    issue[dateField] = date;
+  }
+
   try {
-    const updateData = { [field]: issue[field] }; // Use square brackets to set dynamic property name
-    const response = await IssueService.updateIssue(
-      issue.id,
-      updateData);
-    console.log(response.data[field]);
+    const updateData: any = { [status]: value };
+    if (date) {
+      const dateField = status === 'is_owned' ? 'bought_date' : 'read_date';
+      const isoDate = new Date(date).toISOString();
+      updateData[dateField] = isoDate;
+    }
+
+    const response = await IssueService.updateIssue(issue.id, updateData);
+    console.log(response.data);
     getIssueCount();
   } catch (error) {
     console.log(error);
   }
 }
 
+async function updateRating(newRating: number) {
+  try {
+    const formData = new FormData();
+    formData.append("user_rating", String(newRating));
+
+    await SeriesService.updateSeries(Number(route.params.Id), formData); // or use a PATCH method if available
+    await getSeries(); // re-fetch the full series data to reflect the change
+    console.log("Rating updated and series reloaded.");
+  } catch (error) {
+    console.error("Failed to update rating:", error);
+  }
+}
 
 onMounted(() => {
-  getSeries(), getIssues(), getIssueCount();
+  getSeries();
+  getIssues();
+  getIssueCount();
 });
 
 </script>
