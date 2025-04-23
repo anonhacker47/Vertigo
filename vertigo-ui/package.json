@@ -1,13 +1,14 @@
 {
   "name": "vertigo-ui",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "serve": "vite preview",
-    "build": "vite build",
+    "build": "vite build --emptyOutDir",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "dev": "vite",
     "preview": "vite preview --port 4173",
+    "release": "node ../scripts/release.js",
     "tailwind": "tailwindcss -i ./src/input.css -o ../vertigo-backend/api/wwwroot/static/output.css",
     "lint-fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx,json,css,scss,md}'"
   },

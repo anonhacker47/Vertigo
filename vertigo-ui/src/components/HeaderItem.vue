@@ -41,7 +41,7 @@
         <div class="flex flex-col lg:flex-row list-none">
           <div class="dropdown dropdown-hover">
             <button tabindex="0">
-              <img class="inline-block h-10 w-10 rounded-md hover:opacity-75 cursor-pointer" :src="imagesrc" alt="" />
+              <img class="inline-block h-10 w-10 rounded-md hover:opacity-75 cursor-pointer" @error="changeThumb()" :src="imagesrc" alt="" />
             </button>
             <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52"
               tabindex="0">
@@ -69,6 +69,11 @@ const userStore = useUserStore();
 const route = useRouter();
 const imagesrc = ref('')
 
+const dummy = new URL("../assets/user.svg", import.meta.url).href;
+
+function changeThumb() {
+    imagesrc.value = dummy;
+  }
 
 function logout(): void {
   userStore.logout();
