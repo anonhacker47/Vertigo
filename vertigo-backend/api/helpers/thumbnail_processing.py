@@ -13,7 +13,7 @@ import re
 import uuid
 from PIL import Image
 
-def download_series_thumbnail(url, title):
+def download_series_thumbnail(url, title,path):
     if url != "noimage":
         request = requests.get(url, stream=True)
         ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
@@ -37,20 +37,21 @@ def download_series_thumbnail(url, title):
 
         if request.status_code == 200:
             request.raw.decode_content = True
-            with open(current_app.config['cover_path']+"/"+filename, 'wb') as f:
+            with open(current_app.config[path]+"/"+filename, 'wb') as f:
                 shutil.copyfileobj(request.raw, f)
 
             print('Image successfully Downloaded: ', filename)
-
+            if path == "cover_path":
             # Logic for determining dominant color and saving it to the database
-            dominant_color = calculate_dominant_color(filename)
-            return filename, dominant_color
-
+                dominant_color = calculate_dominant_color(filename,path)
+                return filename, dominant_color
+            else:
+                return filename
     else:
         print('Image Couldn\'t be retrieved')
         return None, None
 
-def save_series_thumbnail(file, title):
+def save_series_thumbnail(file, title,path):
     if not isinstance(file, str):
         ext = re.search('\.(\w+)(?!.*\.)', file.filename).group(1)
 
@@ -72,19 +73,22 @@ def save_series_thumbnail(file, title):
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
 
         if file:
-            file.save(current_app.config['cover_path']+"/"+filename)
+            file.save(current_app.config[path]+"/"+filename)
 
             print('Image successfully Downloaded: ', filename)
 
             # Logic for determining dominant color and saving it to the database
-            dominant_color = calculate_dominant_color(filename)
-            return filename, dominant_color
-
+            if path == "cover_path":
+            # Logic for determining dominant color and saving it to the database
+                dominant_color = calculate_dominant_color(filename,path)
+                return filename, dominant_color
+            else:
+                return filename
     else:
         print('Image Couldn\'t be retrieved')
         return None, None
 
-def calculate_dominant_color(filename):
+def calculate_dominant_color(filename,path):
     def increase_brightness(color):
         for i in range(len(color)):
             if 100 < color[i] < 150:
@@ -112,11 +116,11 @@ def calculate_dominant_color(filename):
                 i += 1
         return dominant_color
 
-    im = Image.open(current_app.config['cover_path']+"/"+filename)
+    im = Image.open(current_app.config[path]+"/"+filename)
     dominant_color = get_dominant_color(im)
     return f"({dominant_color[0]},{dominant_color[1]},{dominant_color[2]})"
 
 def delete_series_thumbnail(filename):
-    file_path = os.path.join(current_app.config['cover_path'], filename)
+    file_path = os.path.join(current_app.config[path], filename)
     if os.path.exists(file_path):
         os.remove(file_path)

@@ -8,8 +8,8 @@ export default {
     getUserIssueStats(userId) {
         return Api().get(`users/${userId}/issues/stats`);
     },
-    getUserFieldCount(userId, field, type) {
-        return Api().get(`users/${userId}/${field}/${type}/count`);
+    getUserFieldCount(userId, field, type,count) {
+        return Api().get(`users/${userId}/${field}/${type}/count?count=${count}`);
     },
     getRecentPurchaseList(userId) {
         return Api().get(`users/${userId}/recent_purchases`);

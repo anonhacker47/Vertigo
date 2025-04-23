@@ -89,7 +89,7 @@
             </div>
 
             <RouterLink :to="{ name: 'EditSeries', params: { Link: series.slug, Id: series.id } }"
-              class="absolute right-0 top-2 cursor-pointer w-7 h-7">
+              class="absolute right-0 top-2 cursor-pointer w-12 h-12 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400 hover:border-2 rounded-full flex items-center justify-center">
               <EditIcon class="w-7 h-7" :fill-color="`rgb${themecolor}`" />
             </RouterLink>
 
@@ -106,21 +106,52 @@
 
         </div>
         <div
-          class="flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
+          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
           <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
           <div class="overflow-scroll h-full flex flex-row justify-center items-start w-full">
             <div class="flex flex-wrap flex-start items-start gap-10 md:px-16 px-12">
-              <IssueCarditem :bought_price="issue.bought_price" :image="image" :bought_date="issue.bought_date" :read_date="issue.read_date"
-                :themecolor="themecolor" :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
-                v-for="issue in issuesList" @updateStatus="updateStatus(issue, $event)" :key="issue.id" />
+              <IssueCarditem :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1"
+                :preferred_currency="preferred_currency" :bought_price="issue.bought_price" :image="image"
+                :bought_date="issue.bought_date" :read_date="issue.read_date" :themecolor="themecolor"
+                :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
+                v-for="(issue, index) in issuesList" @updateStatus="updateStatus(issue, $event)" :key="issue.id"
+                @deleteIssue="confirmDelete(issue)" />
+
+              <div v-if="editMode" @click="addIssue"
+                class="w-44 h-64 flex relative flex-col items-center bg-cover bg-center  justify-center rounded-lg border-green-500 border-2 overflow-hidden shadow-lg cursor-pointer bg-zinc-800 border-dashed  hover:bg-zinc-700 transition-all"
+                :style="`background-image: url(${image})`">
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3">
+                  <div class="flex flex-col items-center justify-center text-white gap-2">
+                    <img src="@/assets/add.svg" alt="Add" class="w-12 h-12 opacity-80" />
+                    <p class="text-white text-md font-bold">Add Issue</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
+          <button @click="toggleEditMode"
+            class="mt-4 absolute right-2 -top-2  w-12 h-12 cursor-pointer hover:scale-110 rounded-full transition duration-200 ease-in-out hover:border-emerald-400 hover:border-2 flex items-center justify-center"
+            :class="editMode ? ' border-green-700' : ' border-zinc-500'">
+            <EditIcon class="w-7 h-7" :fill="editMode ? 'white' : `rgb${themecolor}`" />
+          </button>
         </div>
       </div>
     </div>
+
+    <ConfirmDialog>
+      <template #message="slotProps">
+        <p class="font-bold">
+          Do you really want to delete the Issue
+          <span class="text-red-500">{{ slotProps.message.message }}</span>?
+        </p>
+      </template>
+    </ConfirmDialog>
+
   </div>
+
 </template>
 
 
@@ -139,18 +170,79 @@ import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import EditIcon from "../assets/EditIcon.vue";
 import Rating from "primevue/rating";
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 
-const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
-const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
-const teamUrl = new URL("../assets/group.png", import.meta.url).href;
+
+const confirm = useConfirm();
+const toast = useToast();
+const message = ref();
+
+
+async function addIssue() {
+  try {
+    const response = await IssueService.createIssue(Number(route.params.Id));
+    getIssues();
+    getIssueCount();
+    toggleEditMode();
+  } catch (error) {
+    message.value = error;
+  }
+}
+
+async function deleteIssue(issueToDelete: Issue) {
+
+  try {
+    const response = await IssueService.removeIssue(issueToDelete.id)
+    getIssues();
+    getIssueCount();
+  } catch (error) {
+    message.value = error;
+  }
+}
+
+const confirmDelete = (issueToDelete: Issue) => {
+  confirm.require({
+    message: issueToDelete.title,
+    header: 'Confirm Deletion',
+    icon: 'pi pi-info-circle',
+    rejectLabel: 'Cancel',
+    rejectProps: {
+      label: 'Cancel',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: 'Delete',
+      severity: 'danger'
+    },
+    accept: () => {
+      deleteIssue(issueToDelete);
+      toast.add({ severity: 'success', summary: 'Confirmed', detail: `Issue ${issueToDelete.title} deleted`, life: 3000 });
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+    }
+  });
+};
+
+
+const toggleEditMode = (): void => {
+  editMode.value = !editMode.value;
+  console.log("ediotMode", editMode.value);
+
+};
 
 const userstore = useUserStore();
+
+const { preferred_currency: preferred_currency } = userstore.getUser();
 
 const route = useRoute();
 const series = ref<Series | null>(null);
 const issuesList = ref<Issue[]>([]);
 
 const pagination = ref()
+const editMode = ref(false);
 
 const updatedSeries = reactive({ value: series });;
 const issueCount = ref({
@@ -160,7 +252,8 @@ const issueCount = ref({
 });
 const themecolor = ref<string | null>("(212, 222, 252)");
 const image = ref<string | null>();
-const placeholder = "https://upload.wikimedia.org/wikipedia/commons/c/cd/Placeholder_male_superhero_c.png"
+const placeholder = new URL("../assets/dummy.webp", import.meta.url).href;
+
 
 async function getSeries() {
   try {
@@ -182,6 +275,11 @@ async function getIssues() {
   try {
     const result: any = await IssueService.fetchIssues(Number(route.params.Id), "title", "asc");
     issuesList.value = result.issuesList;
+    issuesList.value = issuesList.value.map(issue => ({
+      ...issue,
+      bought_date: issue.bought_date ? new Date(issue.bought_date) : null,
+      read_date: issue.read_date ? new Date(issue.read_date) : null,
+    }));
     pagination.value = result.pagination;
   } catch (error) {
     console.log(error);

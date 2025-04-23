@@ -40,6 +40,9 @@ class User(Updateable, db.Model):
                                    lazy='noload')
     issue = sqla_orm.relationship('Issue', back_populates='user',
                                   lazy='noload')
+    
+    preferred_currency = sqla.Column(sqla.String(3), default='USD')
+    profile_picture = sqla.Column(sqla.String(280))
 
     following = sqla_orm.relationship(
         'User', secondary=followers,
@@ -161,4 +164,3 @@ class User(Updateable, db.Model):
         return db.session.scalars(User.select().where(
             User.id == self.id, User.following.contains(
                 user))).one_or_none() is not None
-    

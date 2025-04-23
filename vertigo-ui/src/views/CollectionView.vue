@@ -14,7 +14,7 @@
       </button>
     </div>
   </Transition>
-  <div class="grid gap-3 md:pb-6 pt-2 pb-8 md:gap-5 md:m-auto max-w-screen-3xl" v-if="viewMode == 'card'"
+  <div class="grid gap-3 md:pb-6 pt-2 md:gap-5 md:m-auto max-w-screen-3xl" v-if="viewMode == 'card'"
     :class="`grid-cols-${selectedGrid}`">
     <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
       <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
@@ -28,26 +28,31 @@
   </div>
   <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut">
-    <div class="mx-5 pb-10" v-if="viewMode === 'list'" key="listView">
+    <div class="mx-5" v-if="viewMode === 'list'" key="listView">
       <CollectionTable v-if="seriesList && seriesList.length" :seriesList="seriesList" :deleteMode="deleteMode"
         :confirmDelete="confirmDelete" />
     </div>
   </Transition>
+
+  <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
+    :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
+
   <NotificationToast position="bottom-center" />
   <ConfirmDialog>
     <template #message="slotProps">
       <p class="font-bold">
         Do you really want to delete the series
-        <span class="text-red-500">{{ slotProps.message.message }}</span>?
+        <span class="text-red-500">{{ slotProps.message.message }}</span> ?
       </p>
     </template>
   </ConfirmDialog>
+
 </template>
 
 <script setup lang="ts">
 import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";
@@ -56,6 +61,13 @@ import CollectionDropDownMenu from '@/components/dropdowns/CollectionDropDownMen
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { Series } from '@/types/series.types';
+import Paginator from 'primevue/paginator';
+
+const onPageChange = (event: any) => {
+  if (event.rows > 0) {
+    getseriesList(event.first, event.rows);
+  }
+};
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -77,7 +89,7 @@ const confirmDelete = (id: number, title: any) => {
     },
     accept: () => {
       deleteSeries(id);
-      toast.add({ severity: 'error', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
+      toast.add({ severity: 'success', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
@@ -87,10 +99,14 @@ const confirmDelete = (id: number, title: any) => {
 
 const { width } = useWindowSize();
 const seriesList = ref<Series[]>([]);
-const pagination = ref({});
+const pagination = ref({
+  total: 0,
+  limit: 25,
+  offset: 0
+});
 const userstore = useUserStore();
 const userPreferences = useUserPreferences();
-const userId = userstore.getUser();
+const { id: userId } = userstore.getUser();
 const message = ref();
 const deleteMode = ref(false);
 const selectedGrid = ref<number>(userPreferences.cardsPerLine);
@@ -138,9 +154,11 @@ const toggleDelete = (): void => {
   deleteMode.value = !deleteMode.value;
 };
 
-const getseriesList = async () => {
+const getseriesList = async (offset = 0, limit = pagination.value?.limit || 25) => {
+  if (limit === 0) return;
+
   try {
-    const result: any = await SeriesService.fetchSeries(userId, orderBy.value, orderDir.value);
+    const result: any = await SeriesService.fetchSeries(userId, orderBy.value, orderDir.value, limit, offset);
     seriesList.value = result.seriesList;
     pagination.value = result.pagination;
   } catch (error) {
@@ -180,7 +198,7 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  getseriesList();
+  getseriesList(pagination.value.offset, 25);
 });
 </script>
 

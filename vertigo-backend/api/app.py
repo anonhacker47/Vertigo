@@ -21,6 +21,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     app.config['cover_path'] = os.path.abspath("./Config/Covers/")
+    app.config['user_path'] = os.path.abspath("./Config/User/")
     app.config['sql_path'] = os.path.abspath("./Config/")
 
     # Check if 'sql_path' exists and create it if not

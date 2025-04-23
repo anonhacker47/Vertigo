@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import DashboardView from "../views/DashboardView.vue";
+import SettingsView from "@/views/SettingsView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,6 +17,15 @@ const router = createRouter({
       path: "/dashboard",
       name: "Dashboard",
       component: DashboardView,
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+    },
+    {
+      path: "/settings",
+      name: "Settings",
+      component: SettingsView,
       meta: {
         requiresAuth: true,
         showHeaderItem: true,

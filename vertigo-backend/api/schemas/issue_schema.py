@@ -10,6 +10,7 @@ class IssueSchema(ma.SQLAlchemySchema):
         model = Issue
         include_fk = True
         ordered = True
+        exclude = ("series", "user")
 
     id = ma.auto_field(dump_only=True)
     url = ma.String(dump_only=True)
@@ -38,3 +39,9 @@ class IssueSchema(ma.SQLAlchemySchema):
     def fix_datetimes(self, data, **kwargs):
         data['timestamp'] += 'Z'
         return data
+
+
+class SlimIssueSchema(IssueSchema):
+    class Meta:
+        model = Issue
+        exclude = ("series", "user")

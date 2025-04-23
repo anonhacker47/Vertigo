@@ -9,7 +9,7 @@ from api.models.user import User
 from api.models.series import Series
 from api.models.issue import Issue
 
-from api.schemas.issue_schema import IssueSchema
+from api.schemas.issue_schema import IssueSchema, SlimIssueSchema
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
@@ -53,6 +53,53 @@ def new(args, series_id):
     db.session.commit()
 
     return new_issues
+
+@issues.route('/series/<int:series_id>/single_issue', methods=['POST'])
+@authenticate(token_auth)
+@response(issue_schema)
+@other_responses({404: 'Series not found'})
+def create_single_issue(series_id):
+    """Create a new issue for a series"""
+    user = token_auth.current_user()
+    series = db.session.get(Series, series_id) or abort(404)
+
+    # Get all issues for this series and sort them by number
+    issues_query = series.issue_select()
+    issues_data = db.session.scalars(issues_query).all()
+    sorted_issues = sorted(issues_data, key=lambda issue: issue.number)
+
+    # Determine the last issue
+    if not sorted_issues:
+        abort(400, "No existing issues in series to base new issue on")
+
+    last_issue = sorted_issues[-1]
+
+    new_issue = Issue(
+        title=last_issue.number + 1,
+        number=last_issue.number + 1,
+        user=user,
+        series=series,
+        is_read=False,
+        is_owned=False,
+        bought_price=None,
+        bought_date=None,
+        read_date=None,
+        slug=None,
+    )
+
+    db.session.add(new_issue)
+    db.session.commit()
+
+    # Recalculate counts
+    issues_query = series.issue_select()
+    updated_issues = db.session.scalars(issues_query).all()
+    series.owned_count = sum(i.is_owned for i in updated_issues)
+    series.read_count = sum(i.is_read for i in updated_issues)
+    series.issue_count = len(updated_issues)
+
+    db.session.commit()
+
+    return new_issue
 
 
 @issues.route('/series/issues/<int:id>/', methods=['GET'])
@@ -120,14 +167,17 @@ def put(data, id):
     issue.update(data)
 
    # Check if `owned or read` is True, update `bought_date` and 'read_date'
-    if data.get('is_owned') == False:
+    if data.get('is_owned') is False:
         issue.bought_date = None
-    if data.get('is_read') == False:
+        issue.bought_price = None
+    elif data.get('is_owned') is True:
+        issue.bought_date = data.get('bought_date') or datetime.now(timezone.utc)
+
+# Read status handling
+    if data.get('is_read') is False:
         issue.read_date = None
-    if data.get('is_owned'):
-        issue.bought_date = datetime.now(timezone.utc)
-    if data.get('is_read'):
-        issue.read_date = datetime.now(timezone.utc)
+    elif data.get('is_read') is True:
+        issue.read_date = data.get('read_date') or datetime.now(timezone.utc)
 
     # Recalculate series counters
     issues = issue.series.issue_select()
@@ -139,17 +189,36 @@ def put(data, id):
     return issue
 
 
-# @series.route('/series/<int:id>', methods=['DELETE'])
-# @authenticate(token_auth)
-# @other_responses({403: 'Not allowed to delete the series'})
-# def delete(id):
-#     """Delete a series"""
-#     series = db.session.get(Series, id) or abort(404)
-#     if series.user != token_auth.current_user():
-#         abort(403)
-#     db.session.delete(series)
-#     db.session.commit()
-#     return '', 204
+@issues.route('/series/issues/<int:id>/', methods=['DELETE'])
+@authenticate(token_auth)
+@other_responses({403: 'Not allowed to delete the series'})
+def delete(id):
+    """Delete an issue"""
+    issue = db.session.get(Issue, id) or abort(404)
+    if issue.user != token_auth.current_user():
+        abort(403)
+
+    issues = issue.series.issue_select()
+    issues_data = db.session.scalars(issues).all()
+    sorted_issues = sorted(issues_data, key=lambda issue: issue.number)
+
+    is_last = sorted_issues and sorted_issues[-1].number == issue.number
+
+    if is_last:
+        db.session.delete(issue)
+            # Recalculate series counters
+        issues = issue.series.issue_select()
+        issues_data = db.session.scalars(issues).all()
+        issue.series.owned_count = sum(i.is_owned for i in issues_data)
+        issue.series.read_count = sum(i.is_read for i in issues_data)
+        issue.series.issue_count = len(issues_data)
+
+        db.session.commit()
+        return '', 204
+    else:
+        return jsonify({"error": "Cannot delete issues that are not the last in the series"}), 403
+
+
 
 
 # @series.route('/feed', methods=['GET'])

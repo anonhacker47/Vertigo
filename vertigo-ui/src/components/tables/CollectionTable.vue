@@ -1,63 +1,69 @@
 <template>
-	<DataTable class="mt-5 rounded-lg rounded-table" :value="seriesList" @row-click="navigate"  rowHover  :rows="10">
-		<Column field="title" sortable header="Series" class="max-w-md">
+	<DataTable class="mt-5 rounded-lg rounded-table" :value="seriesList" @row-click="navigate" rowHover :rows="10">
+		<Column field="title" header="Series" class="max-w-md">
 			<template #body="{ data }">
-					<div class="flex items-center gap-4">
-						<img :src="SeriesService.getImagebyId(data.id)" class="h-16 w-12 ml-2 object-fill rounded-sm"
-							alt="Series Thumbnail" />
-						<span class="text-large font-extrabold overflow-hidden whitespace-nowrap text-ellipsis">{{ data.title }}</span>
-					</div>
+				<div class="flex items-center gap-4">
+					<img :src="SeriesService.getImagebyId(data.id)" @error="(e) => e.target.src = placeholder"
+						class="h-16 w-12 ml-2 object-fill rounded-sm" alt="Series Thumbnail" />
+					<span class="text-large font-extrabold overflow-hidden whitespace-nowrap text-ellipsis">{{
+						data.title }}</span>
+				</div>
 			</template>
 		</Column>
-		<Column field="publisher" sortable header="Publisher">
+		<Column field="publisher" header="Publisher" class="hidden md:table-cell">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					{{ data.publisher }}
 				</div>
 			</template>
 		</Column>
-		<Column field="series_format" sortable header="Format">
+		<Column field="series_format" header="Format" class="hidden md:table-cell">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					{{ data.series_format }}
 				</div>
 			</template>
 		</Column>
-		<Column field="timestamp" sortable header="Date Added">
+		<Column field="timestamp" header="Date Added" class="hidden md:table-cell">
 			<template #body="{ data }">
 				<div class="flex justify-center">
-					{{ new Date(data.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) }}
+					{{ new Date(data.timestamp).toLocaleDateString('en-US', {
+						day: 'numeric', month: 'long', year:
+							'numeric'
+					}) }}
 				</div>
 			</template>
 		</Column>
-		<Column field="user_rating" sortable header="Rating">
+		<Column field="user_rating" header="Rating" class="hidden md:table-cell">
 			<template #body="{ data }">
 				<div class="flex justify-center">
 					<Rating :modelValue="data.user_rating" readonly disabled :stars="5" :cancel="false" />
 				</div>
 			</template>
 		</Column>
-		<Column field="owned_count" sortable header="Owned/Books" :bodyStyle="{ 'text-align': 'center' }">
+		<Column field="owned_count" header="Owned/Books" :bodyStyle="{ 'text-align': 'center' }">
 			<template #body="{ data }">
-				{{ data.owned_count || 0 +'/'+data.issue_count }}
+				{{ data.owned_count + '/' + data.issue_count }}
 			</template>
 		</Column>
-		<Column field="read_count" sortable header="Read/Books" :bodyStyle="{ 'text-align': 'center' }">
+		<Column field="read_count" header="Read/Books" :bodyStyle="{ 'text-align': 'center' }">
 			<template #body="{ data }">
-				{{ data.read_count || 0 +'/'+data.issue_count }}
+				{{ data.read_count + '/' + data.issue_count }}
 			</template>
 		</Column>
 		<Column headerStyle="width: 5rem" bodyClass="text-center" header="Actions" v-if="deleteMode">
 			<template #body="{ data }">
 				<div class="flex justify-center">
-					<button class="p-button-rounded p-button-danger p-button-text" @click="confirmDelete(data.id,data.title)"><TrashIcon class="h-5 w-5 text-red-500"  />
+					<button class="p-button-rounded p-button-danger p-button-text"
+						@click="confirmDelete(data.id, data.title)">
+						<TrashIcon class="h-5 w-5 text-red-500" />
 					</button>
 				</div>
 			</template>
 		</Column>
 	</DataTable>
 </template>
-  
+
 
 <script setup lang="ts">
 import DataTable from 'primevue/datatable';
@@ -69,6 +75,8 @@ import Rating from 'primevue/rating'
 import 'primeicons/primeicons.css'
 import { TrashIcon } from '@heroicons/vue/20/solid'
 
+const dummy = new URL("@/assets/dummy.webp", import.meta.url).href;
+const placeholder = ref(dummy);
 
 const props = defineProps({
 	seriesList: {
@@ -88,6 +96,11 @@ const props = defineProps({
 const router = useRouter();
 
 const navigate = (event: any) => {
+
+	if (props.deleteMode) {
+		return;
+	}
+
 	const data = event.data;
 	router.push({
 		name: 'SeriesDetail',
@@ -98,16 +111,18 @@ const navigate = (event: any) => {
 </script>
 
 <style>
-.p-datatable-column-header-content{
+.p-datatable-column-header-content {
 	justify-content: center !important;
 }
 
-.p-datatable .p-datatable-tbody > tr:hover {
+.p-datatable .p-datatable-tbody>tr:hover {
 	cursor: pointer;
 }
+
 .rounded-table {
 	border-radius: 10px;
-	overflow: hidden; /* Ensure content does not overflow the rounded corners */
+	overflow: hidden;
+	/* Ensure content does not overflow the rounded corners */
 }
 
 /* Optional: Apply border and box shadow for better visibility */
@@ -116,7 +131,7 @@ const navigate = (event: any) => {
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.rounded-table .p-datatable .p-datatable-tbody > tr {
+.rounded-table .p-datatable .p-datatable-tbody>tr {
 	border-radius: 10px;
 }
 

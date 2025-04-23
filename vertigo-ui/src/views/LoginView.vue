@@ -74,7 +74,7 @@ async function login() {
       const headers = userStore.getTokenHeader();
       try {
         const userResponse = await AuthenticationService.getUser();
-        userStore.addUser(userResponse.data.id);
+        userStore.addUser(userResponse.data);
       } catch (error) {
         message.value = error;
       }
@@ -83,8 +83,15 @@ async function login() {
       userStore.isUserLoggedIn = false;
     }
   } catch (error) {
-    message.value = error;
+    message.value = extractErrorMessage(error);
   }
+}
+
+function extractErrorMessage(error: any): string {
+  if (error.response && error.response.data && error.response.data.message) {
+    return error.response.data.message;
+  }
+  return "An unknown error occurred. Please try again.";
 }
 
 const fetchImages = async () => {

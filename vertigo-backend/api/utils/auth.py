@@ -20,11 +20,19 @@ def verify_password(username, password):
 
 @basic_auth.error_handler
 def basic_auth_error(status=401):
-    error = (Forbidden if status == 403 else Unauthorized)()
+    if status == 403:
+        error = Forbidden()
+        message = "Forbidden"
+        description = error.description
+    else:
+        error = Unauthorized()
+        message = "Invalid username or password"
+        description = "The username or password is incorrect."
+
     return {
         'code': error.code,
-        'message': error.name,
-        'description': error.description,
+        'message': message,
+        'description': description,
     }, error.code, {'WWW-Authenticate': 'Form'}
 
 

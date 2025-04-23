@@ -22,12 +22,14 @@
           </button>
           <ul tabindex="0" class="dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box z-50 ">
             <li>
-              <RouterLink to="/dashboard" class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
+              <RouterLink to="/dashboard"
+                class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
                 Dashboard
               </RouterLink>
             </li>
             <li>
-              <RouterLink to="/collection" class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700k">
+              <RouterLink to="/collection"
+                class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700k">
                 Collection
               </RouterLink>
             </li>
@@ -39,13 +41,12 @@
         <div class="flex flex-col lg:flex-row list-none">
           <div class="dropdown dropdown-hover">
             <button tabindex="0">
-              <img class="inline-block h-10 w-10 rounded-md hover:opacity-75 cursor-pointer" src="../assets/avatar.png"
-                alt="" />
+              <img class="inline-block h-10 w-10 rounded-md hover:opacity-75 cursor-pointer" :src="imagesrc" alt="" />
             </button>
             <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52"
               tabindex="0">
               <li>
-                <RouterLink to="/login" class="hover:text-blue-400 "> Settings</RouterLink>
+                <RouterLink to="/settings" class="hover:text-blue-400 "> Settings</RouterLink>
               </li>
               <li>
                 <a @click="logout" class="hover:text-blue-400 "> Log-out </a>
@@ -61,14 +62,41 @@
 <script setup lang="ts">
 import { useUserStore } from "../store/user";
 import { useRouter } from "vue-router";
+import AuthenticationService from '@/services/AuthenticationService'
+import { onMounted, ref, watch } from "vue";
 
 const userStore = useUserStore();
 const route = useRouter();
+const imagesrc = ref('')
+
 
 function logout(): void {
   userStore.logout();
   route.push("/");
 }
+
+watch(
+  () => userStore.user?.profile_picture,
+  async (newVal, oldVal) => {
+    if (newVal && newVal !== oldVal) {
+      imagesrc.value = await AuthenticationService.getUserPicture();
+    }
+  }
+);
+
+
+onMounted(async () => {
+  const user = userStore.getUser();
+
+  if (user && user.profile_picture) {
+    try {
+      imagesrc.value = await AuthenticationService.getUserPicture();
+    } catch (error) {
+      console.error("Failed to load profile picture:", error);
+    }
+  }
+});
+
 </script>
 
 <style scoped>
@@ -86,6 +114,4 @@ img:hover {
 .router-link-active {
   color: #38bdf8;
 }
-
-
 </style>

@@ -9,6 +9,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
         include_fk = True
         ordered = True
         unknown = EXCLUDE  # Ignore unknown fields
+        exclude = ["user"]
 
     id = ma.auto_field(dump_only=True)
     url = ma.String(dump_only=True)

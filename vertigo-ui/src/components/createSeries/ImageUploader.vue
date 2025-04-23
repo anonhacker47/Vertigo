@@ -1,8 +1,7 @@
 <template>
-  <div class="card w-full md:w-[22rem] bg-base-100 shadow-xl">
+  <div class="card w-full h-full bg-base-100 shadow-xl">
     <figure class="px-5 pt-5">
-      <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl w-[24rem] h-[27rem]"
-        :key="imagesrc" />
+      <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl h-full w-full" />
     </figure>
     <div class="flex flex-col p-5">
       <div class="flex flex-col gap-2">
@@ -27,8 +26,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 
-
-
 const props = defineProps<{
   modelValue: string;
 }>();
@@ -37,7 +34,7 @@ const emit = defineEmits<{
   (e: "image-change", file: File | string): void;
 }>();
 
-const dummy = new URL("../assets/dummy.webp", import.meta.url).href;
+const dummy = new URL("../../assets/dummy.webp", import.meta.url).href;
 const imagesrc = ref<string>(props.modelValue || dummy);
 const imageLinkInput = ref<string>("");
 
@@ -69,8 +66,11 @@ function changeImage(event: any, inputType: string) {
 }
 
 watch(() => props.modelValue, (val) => {
-  imagesrc.value = val || dummy;
+  if (val && val !== imagesrc.value) {
+    imagesrc.value = val;
+  }
 });
+
 
 function changeThumb() {
   imagesrc.value = dummy;

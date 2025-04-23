@@ -3,24 +3,24 @@ import { defineStore } from "pinia";
 // Define the state type
 interface UserState {
   isUserLoggedIn: boolean;
-  userId: string | null;
+  user: Record<string, any> | null;
 }
 
 // Define the actions type
 export const useUserStore = defineStore("user", {
   state: (): UserState => ({
     isUserLoggedIn: false,
-    userId: null,
+    user: null,
   }),
   actions: {
     addToken(token: string) {
       localStorage.setItem("token", token);
       localStorage.setItem("isUserLoggedIn", "true");
     },
-    addUser(userId: string) {
-      this.userId = userId;
+    addUser(user: string) {
+      this.user = user;
       this.isUserLoggedIn = true; 
-      localStorage.setItem("userId", userId);
+      localStorage.setItem("user", JSON.stringify(user));
     },
     getRefrehToken(token: string) {
       // This method is supposed to set the token in the state, but `token` is not in the state.
@@ -39,15 +39,15 @@ export const useUserStore = defineStore("user", {
       const token = localStorage.getItem("token");
       return token;
     },
-    getUser(): string | null {
-      const user = localStorage.getItem("userId");
-      return user;
+    getUser(): object | null {
+      const user = localStorage.getItem("user");
+      return JSON.parse(user);
     },
     logout() {
       this.isUserLoggedIn = false;
-      this.userId = null;
+      this.user = null;
       localStorage.removeItem("token");
       localStorage.removeItem("isUserLoggedIn");
-      localStorage.removeItem("userId");    },
+      localStorage.removeItem("user");    },
   },
 });

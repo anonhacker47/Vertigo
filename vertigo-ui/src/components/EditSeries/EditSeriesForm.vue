@@ -48,7 +48,7 @@
                 </button>
             </div>
             <div class="form-control w-full">
-                <button @click.prevent="updateSeries" :disabled="!localSeriesData.title" class="btn btn-primary rounded">
+                <button @click.prevent="updateSeries" :disabled="!localSeriesData.title || !localSeriesData.series_format" class="btn btn-primary rounded">
                     Next
                 </button>
             </div>

@@ -84,14 +84,14 @@ def new():
     # Handle thumbnail file if it is link
     if thumbnail.startswith('http'):
         # URL case
-        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, title)
+        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, title,'cover_path')
         if thumbnail_filename:
             series.thumbnail = thumbnail_filename
             series.dominant_color = dominant_color
     # Handle thumbnail file if it exists
     elif 'thumbnail' in request.files:
         file = request.files['thumbnail']
-        thumbnail_filename, dominant_color = save_series_thumbnail(file, title)
+        thumbnail_filename, dominant_color = save_series_thumbnail(file, title,'cover_path')
         series.thumbnail = thumbnail_filename
         series.dominant_color = dominant_color
 
@@ -199,13 +199,13 @@ def update_series(id):
     # Handle thumbnail
     thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
     if thumbnail.startswith('http'):
-        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, form.get('title', ''))
+        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, form.get('title', ''),'cover_path')
         if thumbnail_filename:
             series.thumbnail = thumbnail_filename
             series.dominant_color = dominant_color
     elif 'thumbnail' in request.files:
         file = request.files['thumbnail']
-        thumbnail_filename, dominant_color = save_series_thumbnail(file, form.get('title', ''))
+        thumbnail_filename, dominant_color = save_series_thumbnail(file, form.get('title', ''),'cover_path')
         series.thumbnail = thumbnail_filename
         series.dominant_color = dominant_color
 

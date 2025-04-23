@@ -22,6 +22,8 @@
     "axios": "^1.7.3",
     "color-thief-node": "^1.0.4",
     "colorthief": "npm:@pioug/colorthief@^3.0.1",
+    "currency-codes": "^2.2.0",
+    "currency-symbol-map": "^5.1.0",
     "echarts": "^5.5.1",
     "gsap": "^3.12.5",
     "pinia": "^2.2.0",

@@ -41,20 +41,14 @@
 import { ref } from "vue";
 import AuthenticationService from "../services/AuthenticationService";
 import PanelCardItem from "../components/cards/PanelCardItem.vue"
+import { useRouter } from "vue-router";
 
 let username = ref("");
 let email = ref("");
 let password = ref("");
 const message = ref('');
 
-// function submitHandler(values) {
-//     //do something with the form data
-//     username=values.username;
-//     email_id=values.email_id;
-//     password=values.email_id;
-//     console.log(values);
-
-//   }
+const router = useRouter();
 
 async function register(values: { username: string; email: string; password: string; }) {
   try {
@@ -62,6 +56,9 @@ async function register(values: { username: string; email: string; password: str
       username: values.username,
       email: values.email,
       password: values.password,
+    });
+    router.push({
+      name: "Default",
     });
   } catch (error) {
     message.value = error.response.data.errors;

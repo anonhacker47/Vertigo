@@ -1,7 +1,9 @@
 <template>
   <form autocomplete="on" class="z-0 flex items-center justify-evenly flex-1 p-4 gap-6 md:gap-4 md:flex-row flex-col">
 
-    <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
+    <div class="w-[24rem] h-[38rem]">
+      <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
+    </div>
 
     <EditSeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @update-series="updateSeries" />
 
@@ -27,9 +29,7 @@ const seriesId = Number(route.params.Id);
 
 
 const showIssueSection = ref(false);
-const readAll = ref(false);
-const haveAll = ref(false);
-const issues = ref([]);
+
 
 async function getSeries() {
   try {

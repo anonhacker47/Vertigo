@@ -1,5 +1,5 @@
 from apifairy.decorators import other_responses
-from flask import Blueprint, abort
+from flask import Blueprint, abort, current_app, jsonify,request, send_file
 from apifairy import authenticate, body, response
 
 from api import db
@@ -8,6 +8,7 @@ from api.schemas.user_schema import UserSchema, UpdateUserSchema
 from api.schemas.empty_schema import EmptySchema
 
 from api.utils.auth import token_auth
+from api.helpers.thumbnail_processing import download_series_thumbnail, save_series_thumbnail,delete_series_thumbnail
 
 users = Blueprint('users', __name__)
 user_schema = UserSchema()
@@ -63,17 +64,65 @@ def me():
 
 @users.route('/me', methods=['PUT'])
 @authenticate(token_auth)
-@body(update_user_schema)
+# @body(update_user_schema)
 @response(user_schema)
-def put(data):
-    """Edit user information"""
+def put():
+    """Edit user information (multipart/form-data supported)"""
     user = token_auth.current_user()
-    if 'password' in data and ('old_password' not in data or
-                               not user.verify_password(data['old_password'])):
-        abort(400)
-    user.update(data)
+    form = request.form
+
+    # Text field updates
+    if 'username' in form:
+        user.username = form.get('username').strip()
+    if 'email' in form:
+        user.email = form.get('email').strip()
+    if 'preferred_currency' in form:
+        currency = form.get('preferred_currency').strip().upper()
+        if len(currency) != 3 or not currency.isalpha():
+            abort(400, description="Invalid currency code")
+        user.preferred_currency = currency
+
+    # Handle password change
+    if 'password' in form:
+        if 'old_password' not in form or not user.verify_password(form.get('old_password')):
+            abort(400, description="Old password missing or incorrect")
+        user.password = form.get('password')
+
+    # Handle profile picture
+    profile_picture = form.get('profile_picture', '').strip() if 'profile_picture' in form else ''
+    if profile_picture.startswith('http'):
+        picture_filename = download_series_thumbnail(profile_picture, user.username,'user_path')
+        if picture_filename:
+            user.profile_picture = picture_filename
+    elif 'profile_picture' in request.files:
+        file = request.files['profile_picture']
+        picture_filename = save_series_thumbnail(file, user.username,'user_path')
+        if picture_filename:
+            user.profile_picture = picture_filename
+
     db.session.commit()
     return user
+
+@users.route('me/profile-picture/',methods=['GET'])
+@authenticate(token_auth)
+def get_profile_picture():
+    """Retrieve the User profile picture"""
+    user = token_auth.current_user()
+
+    if user is None:
+        return jsonify("User not found"), 404
+
+    if user.profile_picture is None:
+        return jsonify("noimage")
+
+    try:
+        return send_file(current_app.config['user_path'] + f"\\{user.profile_picture}")
+    except FileNotFoundError:
+        return jsonify("Image file not found"), 404
+    except Exception as e:
+        # Handle other potential exceptions (e.g., permission errors)
+        return jsonify(f"Error retrieving image: {str(e)}"), 500
+   
 
 
 # @users.route('/me/following', methods=['GET'])

@@ -1,12 +1,20 @@
 <template>
-  <div class="w-44 h-64 flex flex-col rounded-lg border-2 overflow-hidden shadow-lg bg-zinc-900"
+  <div :class="{ 'animate-wiggle': editMode && is_last }" class="w-44 h-64 flex relative flex-col rounded-lg border-2 overflow-hidden shadow-lg bg-zinc-900"
     :style="`border-color: rgb${themecolor};`">
+    <!-- <button v-if="is_last" @click="$emit('deleteIssue')"
+      class="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-colors z-10" title="Delete">
+      ✕
+    </button> -->
+    <div v-if="editMode && is_last" @click.prevent="$emit('deleteIssue')"
+      class="absolute top-0 right-0 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
+      <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
+    </div>
     <!-- Cover Image -->
     <div class="h-[70%] w-full bg-cover bg-center relative" :style="`background-image: url(${image})`">
       <!-- Title Overlay -->
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3">
-        <p class="text-white text-2xl font-semibold text-center leading-snug uppercase tracking-wide">
-          {{ title }}
+        <p class="text-white text-2xl font-semibold text-center leading-snug tracking-wide">
+          Vol. {{ title }}
         </p>
       </div>
     </div>
@@ -34,13 +42,16 @@
       <div v-if="is_owned" class="flex flex-col gap-1 border-b border-zinc-700 pb-2">
         <div class="flex items-center gap-3 cursor-pointer hover:bg-zinc-700 px-2 py-1 rounded transition-all"
           @click="handlePriceClick">
-          <img src="../../assets/price-tag.svg" alt="Price" class="w-5 h-5 -scale-x-100" />
+          <!-- <img src="../../assets/price-tag.svg" alt="Price" class="w-5 h-5 -scale-x-100" /> -->
+          <span class="truncate ml-1 justify-center items-center flex text-emerald-500 text-xl">
+            {{ symbol }}
+          </span>
           <span class="truncate">
-            {{ bought_price !== null ? bought_price : 'Add Price' }}
+            {{ props.bought_price !== null ? `${props.bought_price}` : 'Add Price' }}
           </span>
         </div>
         <input v-if="showPriceInput" type="number" min="0" step="0.01" placeholder="Enter Price"
-          class="bg-zinc-800 text-white rounded px-2 py-1" @change="handlePriceChange" :value="bought_price ?? ''" />
+          class="bg-zinc-800 text-white rounded px-2 py-1" @change="handlePriceChange" :value="props.bought_price ?? ''" />
       </div>
 
       <!-- Read Row -->
@@ -64,8 +75,9 @@
 
 
 <script setup lang="ts">
-import { ref } from 'vue';
-
+import { ref, watch } from 'vue';
+import { computed } from 'vue'
+import getSymbolFromCurrency from 'currency-symbol-map'
 
 const props = defineProps({
   image: String,
@@ -76,7 +88,18 @@ const props = defineProps({
   bought_date: Date,
   read_date: Date,
   bought_price: Number,
+  preferred_currency: String,
+  is_last: Boolean,
+  edit_mode: Boolean,
 })
+
+const editMode = computed(() => props.edit_mode)
+
+watch(editMode, (newVal, oldVal) => {
+  console.log('editMode changed:', oldVal, '→', newVal)
+})
+
+const symbol = getSymbolFromCurrency(props.preferred_currency)
 
 function formatDate(dateStr: Date | string): string {
   return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -89,20 +112,17 @@ const showOwnedDatePicker = ref(false);
 const showReadDatePicker = ref(false);
 const showPriceInput = ref(false);
 
-const bought_price = ref<number | null>(props.bought_price ?? null);
-
 function handlePriceClick() {
   showPriceInput.value = true;
 }
 
 function handlePriceChange(event: Event) {
   const price = parseFloat((event.target as HTMLInputElement).value);
-  bought_price.value = price;
   emit('updateStatus', { status: 'bought_price', value: price });
   showPriceInput.value = false;
 }
 
-const emit = defineEmits(['updateStatus', 'updateDate']);
+const emit = defineEmits(['updateStatus', 'updateDate', 'deleteIssue']);
 
 function handleStatusClick(status: 'is_owned' | 'is_read') {
   if (status === 'is_owned' && !props.is_owned) {

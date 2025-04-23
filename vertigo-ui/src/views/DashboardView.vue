@@ -24,10 +24,10 @@
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </button>
-          <div class="card compact dropdown-content z-[1] shadow bg-base-100 rounded-box w-64">
+          <div class="card compact dropdown-content z-[1] shadow bg-base-100 border-green-400 border-2 rounded-box w-64">
             <div class="card-body">
-              <h2 class="card-title">You needed more info?</h2>
-              <p>Here is a description!</p>
+              <h2 class="card-title">Explore insights from your collection!</h2>
+              <p>Use the dropdowns below to filter and compare stats across different aspects of your collection.</p>
             </div>
           </div>
         </div>
@@ -41,6 +41,11 @@
           <div class="relative w-1/2">
             <select class="select  select-primary select-bordered w-full" v-model="selectedCategory" @change="fetchData">
               <option v-for="item in chartCategoryList" :key="item.Name" :value="item.field">{{item.Name}}</option>
+            </select>
+          </div>
+          <div class="relative w-1/2">
+            <select class="select  select-primary select-bordered w-full" v-model="selectedCount" @change="fetchData">
+              <option v-for="item in countList" :key="item.Name" :value="item.field">{{item.Name}}</option>
             </select>
           </div>
         </div>
@@ -78,10 +83,10 @@ import DashboardService from '../services/DashboardService';
 import {Series} from "@/types/series.types";
 
 const userstore = useUserStore();
-const userId = userstore.getUser();
-
+const { id: userId } = userstore.getUser();
 const selectedType = ref('series');
 const selectedCategory = ref('publisher');
+const selectedCount = ref(10);
 
 const seriesInfo = ref({ totalSeriesCount: 0, collectedSeriesCount: 0, readSeriesCount: 0 });
 const issueInfo = ref({ totalIssueCount: 0, collectedIssueCount: 0, readIssueCount: 0 });
@@ -98,6 +103,14 @@ const chartCategoryList = [
   { Name: 'Genre', field: 'genre' },
   { Name: 'Main Char/Team', field: 'main_char' },
   { Name: 'Creator', field: 'creator' },
+];
+
+const countList = [
+  { Name: '5', field: '5' },
+  { Name: '10', field: '10' },
+  { Name: '50', field: '50' },
+  { Name: '100', field: '100' },
+  { Name: 'All', field: '-1' },
 ];
 
 async function getSeriesInfo() {
@@ -124,12 +137,12 @@ async function getIssueInfo() {
 }
 
 async function fetchData() {
-  await getUserFieldCountAsync(Number(userId), selectedCategory.value, selectedType.value);
+  await getUserFieldCountAsync(Number(userId), selectedCategory.value, selectedType.value,selectedCount.value);
 };
 
-async function getUserFieldCountAsync(userId: Series["user"]["id"], field: string, type: string) {
+async function getUserFieldCountAsync(userId: Series["user"]["id"], field: string, type: string,count: number = 10) {
   try {
-    const response = await DashboardService.getUserFieldCount(userId, field, type);
+    const response = await DashboardService.getUserFieldCount(userId, field, type,count);
     chartData.value = response.data;
     // console.log(chartData.value);
   } catch (error) {

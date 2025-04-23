@@ -17,10 +17,21 @@ class UserSchema(ma.SQLAlchemySchema):
                                                    validate.Email()])
     password = ma.String(required=True, load_only=True,
                          validate=validate.Length(min=3))
-    avatar_url = ma.String(dump_only=True)
     first_seen = ma.auto_field(dump_only=True)
     series_url = ma.URLFor('series.user_all', values={'id': '<id>'},
                           dump_only=True)
+    
+    profile_picture = ma.String()
+    preferred_currency = ma.String(
+        validate=validate.Length(equal=3),
+        metadata={"description": "Three-letter ISO currency code, e.g. USD, EUR, INR"}
+    )
+
+    @validates('preferred_currency')
+    def validate_currency_code(self, value):
+        if not value.isupper() or len(value) != 3:
+            raise ValidationError("Preferred currency must be a 3-letter uppercase code.")
+        
 
     @validates('username')
     def validate_username(self, value):
@@ -48,8 +59,9 @@ class UserSchema(ma.SQLAlchemySchema):
 
 class UpdateUserSchema(UserSchema):
     old_password = ma.String(load_only=True, validate=validate.Length(min=3))
-
+    
     @validates('old_password')
     def validate_old_password(self, value):
         if not token_auth.current_user().verify_password(value):
             raise ValidationError('Password is incorrect')
+

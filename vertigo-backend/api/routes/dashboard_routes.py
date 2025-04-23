@@ -1,4 +1,4 @@
-from flask import jsonify, url_for
+from flask import jsonify, request, url_for
 from sqlalchemy import desc,func
 from datetime import datetime, timedelta, timezone
 
@@ -78,7 +78,8 @@ def user_issues_stats(user_id):
 @other_responses({404: {'description': 'User not found'}})
 def user_field_count(user_id, field, type):
     """Retrieve count of series by field for a user"""
-    
+    count = request.args.get('count', default=10, type=int)
+
     field_mappings = {
         'publisher': {
             'model': series_entities.Publisher,
@@ -126,7 +127,7 @@ def user_field_count(user_id, field, type):
             .filter(Series.user_id == user_id)
             .group_by(field_model.title)
             .order_by(desc('value'))
-            # .limit(7)
+            .limit(count)
             .all()
         )
     else:
@@ -138,7 +139,7 @@ def user_field_count(user_id, field, type):
             .filter(Series.user_id == user_id)
             .group_by(field_model.title)
             .order_by(desc('value'))
-            # .limit(7)
+            .limit(count)
             .all()
         )
 

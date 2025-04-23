@@ -37,13 +37,13 @@ export default {
   updateIssue(id: number, data: any) {
     return Api().put(`series/issues/${id}/`, data);
   },
-  // removeSeries(data, headers) {
-  //   return Api().delete(`series/${data}`, headers);
-  // },
-  // getSeriesbyId(id, headers) {
-  //   return Api().get(`series/${id}`, headers);
-  // },
-  // getImagebyId(id) {
-  //   return Api().defaults.baseURL + `/series/images/${id}`;
-  // },
+
+  removeIssue(id: number) {
+    return Api().delete(`series/issues/${id}/`);
+  },
+
+  createIssue(seriesId: number) {
+    return Api().post(`series/${seriesId}/single_issue`);
+  },
+
 };
