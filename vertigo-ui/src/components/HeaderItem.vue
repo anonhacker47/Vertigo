@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-transparent border-b border-slate-700 flex flex-wrap items-center justify-between py-5">
+  <nav class="bg-transparent border-b border-slate-700 flex flex-wrap items-center justify-between py-3">
     <div class="w-full flex-row container px-4 mx-auto flex flex-wrap items-center justify-between">
       <div class="relative flex justify-start">
         <RouterLink to="/"><img class="" src="../assets/logo.svg" alt="" width="40" height="40" /></RouterLink>
@@ -41,7 +41,7 @@
         <div class="flex flex-col lg:flex-row list-none">
           <div class="dropdown dropdown-hover">
             <button tabindex="0">
-              <img class="inline-block h-10 w-10 rounded-md hover:opacity-75 cursor-pointer" @error="changeThumb()" :src="imagesrc" alt="" />
+              <img class="inline-block h-12 w-12 rounded-md hover:opacity-75 cursor-pointer" @error="changeThumb()" :src="imagesrc" alt="" />
             </button>
             <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52"
               tabindex="0">

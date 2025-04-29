@@ -1,20 +1,23 @@
 import Api from "./Api";
 
 export default {
-    getUserSeriesStats(userId) {
-        return Api().get(`users/${userId}/series/stats`);
+    getUserSeriesStats() {
+        return Api().get(`users/series/stats`);
     },
 
-    getUserIssueStats(userId) {
-        return Api().get(`users/${userId}/issues/stats`);
+    getUserIssueStats() {
+        return Api().get(`users/issues/stats`);
     },
-    getUserFieldCount(userId, field, type,count) {
-        return Api().get(`users/${userId}/${field}/${type}/count?count=${count}`);
+    getUserFieldCount(field, type,count) {
+        return Api().get(`users/${field}/${type}/count?count=${count}`);
     },
-    getRecentPurchaseList(userId) {
-        return Api().get(`users/${userId}/recent_purchases`);
+    getRecentPurchaseList() {
+        return Api().get(`users/recent_purchases`);
     },
-    getPurchasesPerMonth(userId) {
-        return Api().get(`users/${userId}/purchases_per_month`);
-    }
+    getPurchasesPerMonth() {
+        return Api().get(`users/purchases_per_month`);
+    },
+    getTotalSpent() {
+        return Api().get(`users/total_spent`);   
+    },
 }

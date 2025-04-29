@@ -6,7 +6,7 @@
         <section class="border-sky-900 border-2  rounded-xl shadow p-6">
             <h2 class="text-xl font-semibold mb-2">Profile Picture</h2>
             <p class="text-sm text-sky-600 mb-4">Upload a profile picture for your account.</p>
-            <div class="h-1/2 w-1/2">
+            <div class="h-[36rem] w-full">
                 <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
             </div>
         </section>

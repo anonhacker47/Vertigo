@@ -259,6 +259,7 @@ def get_series_image(id):
         return jsonify("noimage")
 
     try:
+        print(current_app.config['cover_path']+ f"\\{series.thumbnail}")
         return send_file(current_app.config['cover_path'] + f"\\{series.thumbnail}")
     except FileNotFoundError:
         return jsonify("Image file not found"), 404

@@ -16,15 +16,22 @@
   </Transition>
   <div class="grid gap-3 md:pb-6 pt-2 md:gap-5 md:m-auto max-w-screen-3xl" v-if="viewMode == 'card'"
     :class="`grid-cols-${selectedGrid}`">
-    <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
-      <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
+    <template v-if="seriesList.length > 0">
+      <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
+        <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
 
-        <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
-          :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
-          @confirmDelete="confirmDelete" />
+          <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
+            :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
+            @confirmDelete="confirmDelete" />
 
+        </div>
+      </TransitionGroup>
+    </template>
+    <template v-else>
+      <div class="text-center col-span-full py-10 text-slate-400">
+        No series found. Start by adding a new one!
       </div>
-    </TransitionGroup>
+    </template>
   </div>
   <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut">

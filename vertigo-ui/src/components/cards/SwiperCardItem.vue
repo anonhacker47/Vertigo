@@ -10,7 +10,7 @@
                     name: 'SeriesDetail',
                     params: { Link: issue.slug, Id: issue.series_id },
                 }">
-                    <img :src="issue.image" alt="" class="rounded-md w-[14rem] h-[263px]" />
+                    <img :src="issue.image" alt="" class="rounded-md w-[14rem] h-[303px]" />
                 </RouterLink>
             </div>
             <div class="flex flex-col items-center justify-center text-center mt-8">
@@ -36,7 +36,6 @@
 <script setup lang="ts">
 import { Swiper, SwiperSlide } from "swiper/vue";
 import "swiper/css";
-// import 'swiper/css/effect-cards';
 import "swiper/css/navigation";
 
 import { EffectCards, Navigation, Autoplay } from "swiper/modules";

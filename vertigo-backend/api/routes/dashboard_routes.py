@@ -29,11 +29,15 @@ issues_schema = IssueSchema(many=True)
 update_issue_schema = IssueSchema(partial=True)
 
 
-@dashboard.route('/users/<int:user_id>/series/stats', methods=['GET'])
+@dashboard.route('/users/series/stats', methods=['GET'])
 @authenticate(token_auth)
 @other_responses({404: {'description': 'User not found'}})
-def user_series_stats(user_id):
+def user_series_stats():
     """Retrieve series count stats from a user"""
+
+    user = token_auth.current_user()
+    user_id = user.id if user else None
+
     series_count = db.session.query(Series).filter_by(user_id=user_id).count()
     completed_series_count = (
         db.session.query(Series)
@@ -52,11 +56,15 @@ def user_series_stats(user_id):
 
 
 
-@dashboard.route('/users/<int:user_id>/issues/stats', methods=['GET'])
+@dashboard.route('/users/issues/stats', methods=['GET'])
 @authenticate(token_auth)
 @other_responses({404: {'description': 'User not found'}})
-def user_issues_stats(user_id):
+def user_issues_stats():
     """Retrieve issues count stats from a user"""
+    
+    user = token_auth.current_user()
+    user_id = user.id if user else None
+
     issue_count = db.session.query(Issue).filter_by(user_id=user_id).count()
     completed_issue_count = (
         db.session.query(Issue)
@@ -73,10 +81,14 @@ def user_issues_stats(user_id):
     return jsonify({'totalIssueCount': issue_count, 'collectedIssueCount': completed_issue_count,'readIssueCount': read_issue_count})
 
 
-@dashboard.route('/users/<int:user_id>/<string:field>/<string:type>/count', methods=['GET'])
+@dashboard.route('/users/<string:field>/<string:type>/count', methods=['GET'])
 @authenticate(token_auth)
 @other_responses({404: {'description': 'User not found'}})
-def user_field_count(user_id, field, type):
+def user_field_count(field, type):
+
+    user = token_auth.current_user()
+    user_id = user.id if user else None
+
     """Retrieve count of series by field for a user"""
     count = request.args.get('count', default=10, type=int)
 
@@ -146,11 +158,13 @@ def user_field_count(user_id, field, type):
     field_count_json = [{'value': item[1], 'name': item[0]} for item in field_count]
     return jsonify(field_count_json)
 
-@dashboard.route('/users/<int:user_id>/recent_purchases', methods=['GET'])
+@dashboard.route('/users/recent_purchases', methods=['GET'])
 @authenticate(token_auth)
 @other_responses({404: {'description': 'User not found'}})
-def get_recent_purchases(user_id):
+def get_recent_purchases():
     """Get recent purchases for user"""
+    user = token_auth.current_user()
+    user_id = user.id if user else None
 
     recent_purchases = (
         db.session.query(
@@ -182,10 +196,13 @@ def get_recent_purchases(user_id):
     
     return jsonify(result)
 
-@dashboard.route('/users/<int:user_id>/purchases_per_month', methods=['GET'])
+@dashboard.route('/users/purchases_per_month', methods=['GET'])
 @authenticate(token_auth)
 @other_responses({404: {'description': 'User not found'}})
-def get_purchases_per_month(user_id):
+def get_purchases_per_month():
+
+    user = token_auth.current_user()
+    user_id = user.id if user else None
     """Get purchases per month for a user"""
     # Calculate the start and end dates for the previous 12 months
     end_date = datetime.now(timezone.utc)  # Start of the current month
@@ -205,3 +222,22 @@ def get_purchases_per_month(user_id):
     result = [{'month': month, 'count': count} for month, count in purchases_per_month]
     return jsonify(result)
 
+
+@dashboard.route('/users/total_spent', methods=['GET'])
+@authenticate(token_auth)
+@other_responses({404: {'description': 'User not found'}})
+def get_total_spent():
+    """Get total amount spent on issues for a user"""
+
+    user = token_auth.current_user()
+    user_id = user.id if user else None
+
+    total_spent = (
+        db.session.query(func.coalesce(func.sum(Issue.bought_price), 0))
+        .join(Series, Series.id == Issue.series_id)
+        .filter(Issue.is_owned == 1)
+        .filter(Series.user_id == user_id)
+        .scalar()
+    )
+
+    return jsonify({'totalSpent': round(total_spent, 2)})

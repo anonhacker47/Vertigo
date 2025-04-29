@@ -34,6 +34,11 @@ def create_app(config_class=Config):
         os.makedirs(app.config['cover_path'])
         print("The 'cover_path' directory is created!")    
 
+        # Check if 'cover_path' exists and create it if not
+    if not os.path.exists(app.config['user_path']):
+        os.makedirs(app.config['user_path'])
+        print("The 'User' directory is created!")  
+
     # extensions
     from api import models  
 

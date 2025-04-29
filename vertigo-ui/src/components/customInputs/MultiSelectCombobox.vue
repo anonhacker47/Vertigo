@@ -2,7 +2,7 @@
   <Combobox v-model="model" multiple>
     <div class="relative w-full">
       <div class="relative w-full cursor-default rounded-lg bg-base-10">
-        <ComboboxInput class="w-full input input-bordered" autoComplete="off" @change="query = $event.target.value"
+        <ComboboxInput class="w-full input input-bordered"    :displayValue="() => query" @keydown.enter.prevent="handleEnter" autoComplete="off" @change="query = $event.target.value"
           :placeholder="selectedValuesPlaceholder" />
         <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
           <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts"> 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import {
   Combobox,
   ComboboxInput,
@@ -139,5 +139,15 @@ const addCustomItem = (value: any) => {
     model.value.push(value);
   }
   query.value = '';
+}
+
+watch(model, () => {
+  query.value = ''
+})
+
+const handleEnter = () => {
+  if (queryItem.value) {
+    addCustomItem(queryItem.value)
+  }
 }
 </script>

@@ -22,15 +22,17 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-8 md:gap-20 justify-around">
-            <div class="form-control w-full">
-                <MultiSelectCombobox v-model="localSeriesData.genre" field="genre" placeholder="Genre" />
+            <div class="form-control w-full text-center">
+                <MultiSelectCombobox v-model="localSeriesData.genre" field="genre" placeholder="Select Genre(s)" />
+                <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple options</p>
             </div>
             <div class="form-control w-full">
                 <SingleSelectCombobox v-model="localSeriesData.main_char" field="main_char"
                     placeholder="Main Character/ Team" />
             </div>
-            <div class="form-control w-full">
-                <MultiSelectCombobox v-model="localSeriesData.creator" field="creator" placeholder="Creators" />
+            <div class="form-control w-full text-center">
+                <MultiSelectCombobox v-model="localSeriesData.creator" field="creator" placeholder="Select Creator(s)" />
+                <p v-if="localSeriesData.creator.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple options</p>
             </div>
         </div>
 

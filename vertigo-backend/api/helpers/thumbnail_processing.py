@@ -37,7 +37,7 @@ def download_series_thumbnail(url, title,path):
 
         if request.status_code == 200:
             request.raw.decode_content = True
-            with open(current_app.config[path]+"/"+filename, 'wb') as f:
+            with open(current_app.config[path]+"\\"+filename, 'wb') as f:
                 shutil.copyfileobj(request.raw, f)
 
             print('Image successfully Downloaded: ', filename)
@@ -73,7 +73,7 @@ def save_series_thumbnail(file, title,path):
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
 
         if file:
-            file.save(current_app.config[path]+"/"+filename)
+            file.save(current_app.config[path]+"\\"+filename)
 
             print('Image successfully Downloaded: ', filename)
 
@@ -116,7 +116,7 @@ def calculate_dominant_color(filename,path):
                 i += 1
         return dominant_color
 
-    im = Image.open(current_app.config[path]+"/"+filename)
+    im = Image.open(current_app.config[path]+"\\"+filename)
     dominant_color = get_dominant_color(im)
     return f"({dominant_color[0]},{dominant_color[1]},{dominant_color[2]})"
 

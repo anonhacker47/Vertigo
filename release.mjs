@@ -1,8 +1,13 @@
+import { fileURLToPath } from 'url';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const rootDir = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Actual project paths
+const rootDir = path.resolve(__dirname);
 const uiDir = path.join(rootDir, 'vertigo-ui');
 const backendDir = path.join(rootDir, 'vertigo-backend');
 const buildDir = path.resolve(rootDir, '../Build');
@@ -14,20 +19,42 @@ const versionedBuildPath = path.join(buildDir, `vertigo_${version}`);
 
 // Step 2: Build frontend
 console.log('📦 Building frontend...');
-execSync('npm run build', { cwd: "vertigo-backend/api/wwwroot", stdio: 'inherit' });
+try {
+  // Changed to use absolute path and proper Windows commands
+  const buildCommand = process.platform === 'win32' ? 'npm.cmd run build' : 'npm run build';
+  execSync(buildCommand, { 
+    cwd: uiDir,  // Fixed path
+    stdio: 'inherit',
+    shell: true,
+    env: process.env  // Explicitly pass environment
+  });
+} catch (error) {
+  console.error('🚨 Frontend build failed!');
+  process.exit(1);
+}
 
 // Step 3: Prepare versioned folder
 console.log(`📁 Creating versioned folder: ${versionedBuildPath}`);
-if (!fs.existsSync(buildDir)) fs.mkdirSync(buildDir);
+if (!fs.existsSync(buildDir)) fs.mkdirSync(buildDir, { recursive: true });
 if (fs.existsSync(versionedBuildPath)) fs.rmSync(versionedBuildPath, { recursive: true });
 fs.mkdirSync(versionedBuildPath);
 
 // Step 4: Copy folders
 console.log('📤 Copying backend and (optionally) frontend sources...');
-execSync(`cp -r "${backendDir}" "${versionedBuildPath}/vertigo-backend"`);
+try {
+  // Windows-safe copy command
+  const copyCommand = process.platform === 'win32' 
+    ? `xcopy /E /I "${backendDir}" "${versionedBuildPath}"`
+    : `cp -r "${backendDir}" "${versionedBuildPath}/vertigo-backend"`;
+  
+  execSync(copyCommand, { stdio: 'inherit', shell: true });
+} catch (error) {
+  console.error('🚨 Copy operation failed!');
+  process.exit(1);
+}
 
 // Step 5: Remove unwanted folders from backend copy
-const backendCopyPath = path.join(versionedBuildPath, 'vertigo-backend');
+const backendCopyPath = path.join(versionedBuildPath);
 const removeDirs = ['Config', 'env'];
 
 removeDirs.forEach(dir => {
