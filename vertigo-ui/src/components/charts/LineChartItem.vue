@@ -43,7 +43,10 @@ const option: any = ref({
     padding: [25, 0, 0, 0],
     textStyle: {
       fontSize: '1.25rem',
-      color: '#F9FAFB'
+      color: '#F9FAFB',
+      fontFamily: 'Nunito',
+      fontWeight: 'bold',
+
     }
   },
   tooltip: {

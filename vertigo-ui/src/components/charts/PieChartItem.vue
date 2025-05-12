@@ -1,36 +1,36 @@
 <template>
-	<v-chart class="flex justify-center min-h-96 md:h-full w-full relative" :option="option" :autoresize="true" />
+  <v-chart class="flex justify-center min-h-96 md:h-full w-full relative" :option="option" :autoresize="true" />
 </template>
 
 <script setup lang="ts">
 import { use } from 'echarts/core';
 import { PieChart } from 'echarts/charts';
 import {
-	TitleComponent,
-	TooltipComponent,
-	LegendComponent,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
 } from 'echarts/components';
 import { SVGRenderer } from 'echarts/renderers'
 import VChart, { THEME_KEY } from 'vue-echarts';
 import { ref, provide, watch } from 'vue';
 
 const props = defineProps({
-	title: {
-		type: String,
-		required: true,
-	},
-	data: {
-		type: Array,
-		required: true,
-	},
+  title: {
+    type: String,
+    required: true,
+  },
+  data: {
+    type: Array,
+    required: true,
+  },
 });
 
 use([
-	SVGRenderer,
-	PieChart,
-	TitleComponent,
-	TooltipComponent,
-	LegendComponent,
+  SVGRenderer,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
 ]);
 
 provide(THEME_KEY, 'dark');
@@ -45,14 +45,17 @@ const option: any = ref({
     padding: [25, 0, 0, 0],
     textStyle: {
       fontSize: '1.25rem',
-      color: '#F9FAFB'
+      color: '#F9FAFB',
+      fontFamily: 'Nunito',
+      fontWeight: 'bold',
+
     }
   },
   tooltip: {
     trigger: 'item',
     formatter: '{b} : {c} ({d}%)',
   },
-  
+
   // legend: {
   //   top: '15%',
   //   left: 'center'
@@ -64,7 +67,7 @@ const option: any = ref({
       radius: '45%',
       // padAngle: 5,
       center: ['50%', '46	%'],
-	 minShowLabelAngle:2,
+      minShowLabelAngle: 2,
       // itemStyle: {
       //   borderRadius: 10,
       //   borderColor: '#0F172A',
@@ -75,11 +78,11 @@ const option: any = ref({
       //   position: 'center',
       //   color:'white'
       // },
-	//   label:{
-	// 	show:true,
-	// 	fontWeight:'medium',
-	// 	color:'#c7d0dd'
-	//   },
+      //   label:{
+      // 	show:true,
+      // 	fontWeight:'medium',
+      // 	color:'#c7d0dd'
+      //   },
       data: props.data,
       emphasis: {
         itemStyle: {

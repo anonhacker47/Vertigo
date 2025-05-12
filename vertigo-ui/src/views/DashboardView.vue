@@ -56,7 +56,7 @@
 
       <div class="card md:w-[20%] card-compact relative basis-1/3 w-full h-full bg-base-100 shadow-xl">
         <div
-          class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
+          class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases</div>
         <div class="mt-6 h-full w-full flex items-center justify-center">
           <SwiperCardItem v-if="recentPurchasedIssues && recentPurchasedIssues.length > 0"
