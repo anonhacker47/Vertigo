@@ -37,7 +37,7 @@
     "tailwindcss-primeui": "^0.3.4",
     "vue": "^3.4.35",
     "vue-echarts": "^7.0.1",
-    "vue-router": "^4.4.2",
+    "vue-router": "^4.5.1",
     "vue-window-size": "^2.0.0",
     "webfontloader": "^1.6.28"
   },
