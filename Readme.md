@@ -44,7 +44,6 @@ This will automatically set up and launch the webapp in http://localhost:6166
 
 > **Note:** If the app seems slow on the first launch, simply close and rerun the script — this is a known behavior during initial setup and should resolve on relaunch.
 <br/>
-<br/>
 
 ## Developer Guide:
 
