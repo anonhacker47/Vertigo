@@ -20,17 +20,12 @@ class SeriesSchema(ma.SQLAlchemySchema):
 
     character = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
       
-    main_char = ma.String(validate=validate.Length(min=0, max=280), allow_none=True)
+    main_character = ma.List(ma.String(validate=validate.Length(min=0, max=280), allow_none=True))
         
     description = ma.auto_field(validate=validate.Length(min=0, max=1250))
 
-    team = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-
     user_rating = ma.auto_field()
 
-    main_char_id = ma.auto_field()
-    main_char_type = ma.String(validate=validate.OneOf(['character', 'team']), allow_none=True)
-    
     manga = ma.Integer(validate=validate.OneOf([0, 1]), allow_none=True)
 
     release_date = ma.auto_field() 
@@ -55,4 +50,6 @@ class SeriesSchema(ma.SQLAlchemySchema):
             data['timestamp'] += 'Z'
         if 'publisher' in data and isinstance(data['publisher'], list):
             data['publisher'] = data['publisher'][0] if data['publisher'] else None
+        if 'main_character' in data and isinstance(data['main_character'], list):
+            data['main_character'] = data['main_character'][0] if data['main_character'] else None
         return data

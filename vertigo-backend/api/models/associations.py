@@ -1,8 +1,4 @@
-from time import time
-
-import jwt
 import sqlalchemy as sqla
-
 from api.app import db
 
 SERIES_ID_FOREIGN_KEY = 'series.id'
@@ -22,13 +18,7 @@ series_creator = sqla.Table('series_creator', db.Model.metadata,
     sqla.Column('creator_id', sqla.Integer, sqla.ForeignKey('creator.id'), primary_key=True)
 )
 
-series_character = sqla.Table('series_character', db.Model.metadata,
+series_main_character = sqla.Table('series_main_character', db.Model.metadata,
     sqla.Column('series_id', sqla.Integer, sqla.ForeignKey(SERIES_ID_FOREIGN_KEY), primary_key=True),
-    sqla.Column('character_id', sqla.Integer, sqla.ForeignKey('character.id'), primary_key=True)
+    sqla.Column('main_character_id', sqla.Integer, sqla.ForeignKey('main_character.id'), primary_key=True)
 )
-
-series_team = sqla.Table('series_team', db.Model.metadata,
-    sqla.Column('series_id', sqla.Integer, sqla.ForeignKey(SERIES_ID_FOREIGN_KEY), primary_key=True),
-    sqla.Column('team_id', sqla.Integer, sqla.ForeignKey('team.id'), primary_key=True)
-)
-

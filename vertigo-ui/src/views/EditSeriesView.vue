@@ -55,9 +55,7 @@ async function updateSeries() {
     formData.append("issue_count", String(data.issue_count || 0));
     formData.append("read_count", String(data.read_count || 0));
     formData.append("owned_count", String(data.owned_count || 0));
-    formData.append("main_char", data.main_char || "");
-    formData.append("main_char_type", data.main_char_type || "character");
-
+    formData.append("main_character", data.main_character || "");
     // Convert arrays to JSON strings
     formData.append("genre", JSON.stringify(data.genre || []));
     formData.append("creator", JSON.stringify(data.creator || []));
@@ -88,7 +86,7 @@ const seriesData = ref<Partial<Series>>({
   creator: [],
   description: '',
   genre: [],
-  main_char: '',
+  main_character: '',
   series_format: '',
   issue_count: 1,
   thumbnail: '',

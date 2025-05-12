@@ -1,39 +1,46 @@
 <template>
-    <div class="max-w-3xl mx-auto p-6 space-y-10">
+    <div class="mx-auto p-6 space-y-10">
         <h1 class="text-3xl font-bold text-primary">Settings</h1>
 
-        <!-- Profile Picture -->
-        <section class="border-sky-900 border-2  rounded-xl shadow p-6">
-            <h2 class="text-xl font-semibold mb-2">Profile Picture</h2>
-            <p class="text-sm text-sky-600 mb-4">Upload a profile picture for your account.</p>
-            <div class="h-[36rem] w-full">
-                <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
-            </div>
-        </section>
+        <div class="flex flex-row gap-4 w-full justify-around ">
 
-        <!-- Preferred Currency -->
-        <section class="border-sky-900 border-2 rounded-xl shadow p-6">
-            <h2 class="text-xl font-semibold mb-2">Preferred Currency</h2>
-            <p class="text-sm text-sky-600 mb-4">Select your preferred currency for price display.</p>
-            <select v-model="preferredCurrency"
-                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option v-for="currency in currencyList" :key="currency.code" :value="currency.code">
-                    {{ currency.code }} - {{ currency.currency }}
-                </option>
-            </select>
-        </section>
+            <!-- Profile Picture -->
+            <section class="max-w-2xl border-sky-900 border-2  rounded-xl shadow p-6">
+                <h2 class="text-xl font-semibold mb-2">Profile Picture</h2>
+                <p class="text-sm text-sky-600 mb-4">Upload a profile picture for your account.</p>
+                <div class="h-[36rem] w-full">
+                    <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
+                </div>
+            </section>
 
-        <section class="border-sky-900 border-2 rounded-xl shadow p-6">
-            <h2 class="text-xl font-semibold mb-2">Change Password</h2>
-            <p class="text-sm text-sky-600 mb-4">Update your account password.</p>
-            <div class="space-y-4">
-                <input type="password" v-model="oldPassword" placeholder="Old Password"
-                    class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="password" v-model="newPassword" placeholder="New Password"
-                    class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-        </section>
+            <!-- Preferred Currency -->
+            <section class="border-sky-900 border-2 rounded-xl shadow p-6 flex flex-col gap-4">
+                <div>
 
+                    <h2 class="text-xl font-semibold mb-2">Preferred Currency</h2>
+                    <p class="text-sm text-sky-600 mb-4">Select your preferred currency for price display.</p>
+                    <select v-model="preferredCurrency"
+                        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option v-for="currency in currencyList" :key="currency.code" :value="currency.code">
+                            {{ currency.code }} - {{ currency.currency }}
+                        </option>
+                    </select>
+                </div>
+                <div>
+
+                    <h2 class="text-xl font-semibold my-2">Change Password</h2>
+                    <p class="text-sm text-sky-600 mb-4">Update your account password.</p>
+                    <div class="space-y-4">
+                        <input type="password" v-model="oldPassword" placeholder="Old Password"
+                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="password" v-model="newPassword" placeholder="New Password"
+                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                </div>
+            </section>
+
+
+        </div>
         <div class="flex justify-end gap-4">
             <button @click="cancelSettings"
                 class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-all shadow">
@@ -45,7 +52,6 @@
             </button>
         </div>
     </div>
-    <NotificationToast position="bottom-center" />
 </template>
 
 

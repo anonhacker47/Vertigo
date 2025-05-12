@@ -5,7 +5,7 @@ export interface Series {
     genre: string[];
     id: number;
     issue_count: number;
-    main_char: string | null;
+    main_character: string | null;
     main_char_id: string | null;
     main_char_type: string | null;
     manga: number;

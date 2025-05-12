@@ -26,12 +26,15 @@ import SeriesService from "../services/SeriesService";
 import ImageUploader from "@/components/createSeries/ImageUploader.vue";
 import SeriesForm from "@/components/createSeries/CreateSeriesForm.vue";
 import IssuesForm from "@/components/createSeries/IssuesForm.vue";
+import { useToast } from "primevue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 
 const imageLinkInput = ref("");
 
 const router = useRouter();
+const toast = useToast();
+
 const showIssueSection = ref(false);
 const readAll = ref(false);
 const haveAll = ref(false);
@@ -42,7 +45,7 @@ const seriesData = ref<Partial<Series>>({
   creator: [],
   description: '',
   genre: [],
-  main_char: '',
+  main_character: '',
   series_format: '',
   issue_count: 1,
   thumbnail: '',
@@ -94,35 +97,28 @@ watch(
 
 async function createSeries() {
   if (!seriesData.value.title.trim()) {
-    console.log("Title is required!");
+    toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Title is required.', life: 3000 });
     return;
   }
 
   try {
-    // Calculate owned and read counts dynamically based on issues
     const owned_count = issues.value.filter((issue) => issue.have).length;
     const read_count = issues.value.filter((issue) => issue.read).length;
     seriesData.value.issue_count = issues.value.length;
 
-    // Prepare the payload for the series
     const payload = {
       title: seriesData.value.title,
       publisher: seriesData.value.publisher || "",
       creator: seriesData.value.creator || [],
       description: seriesData.value.description || "",
       genre: seriesData.value.genre || [],
-      main_char: seriesData.value.main_char || "",
-      main_char_type: "character",
+      main_character: seriesData.value.main_character || "",
       series_format: seriesData.value.series_format || "",
       issue_count: seriesData.value.issue_count || 0,
       read_count: read_count,
       owned_count: owned_count,
     };
 
-    console.log(payload);
-
-
-    // Append the image if available
     const formData = new FormData();
     for (const key in payload) {
       if (Array.isArray(payload[key])) {
@@ -131,31 +127,27 @@ async function createSeries() {
         formData.append(key, payload[key]?.toString() || "");
       }
     }
+
     if (seriesData.value.thumbnail) {
-      console.log(seriesData.value.thumbnail);
-
       formData.append("thumbnail", seriesData.value.thumbnail);
-    } else {
-
-      console.log("No thumbnail provided.");
     }
 
-    // Send series data to backend
     const response = await SeriesService.addSeries(formData);
     const seriesId = response?.id;
 
-    console.log("Series created successfully!", seriesData.value.issue_count);
-
-    // If there are issues, create them separately
     if (seriesId) {
-      await addIssues(response.id);
+      await addIssues(seriesId);
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Series created successfully!', life: 3000 });
+      router.push({ name: "SeriesDetail", params: { Link: response.slug, Id: seriesId } });
     } else {
-      console.log("Series Creation Failed!");
+      toast.add({ severity: 'error', summary: 'Failure', detail: 'Series creation failed.', life: 3000 });
     }
   } catch (error) {
     console.error("Error creating series:", error);
+    toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Unexpected error.', life: 3000 });
   }
 }
+
 
 async function addIssues(seriesId) {
   try {
@@ -178,7 +170,6 @@ async function addIssues(seriesId) {
 
     // Send all issues in a single API call
     await IssueService.addIssues(seriesId, issuePayload);
-
     console.log("Issues added successfully!");
   } catch (error) {
     console.error("Error adding issues:", error.response?.data || error);

@@ -25,20 +25,14 @@ class Series(Updateable, db.Model):
     genre = sqla_orm.relationship('Genre', secondary=associations.series_genre, 
                                   back_populates='series', lazy='dynamic')
     
-    main_char_id = sqla.Column(sqla.Integer)
-    main_char_type = sqla.Column(sqla.String(50))
 
     creator = sqla_orm.relationship('Creator', secondary=associations.series_creator,
                                    back_populates='series', lazy='dynamic')
     
-    character = sqla_orm.relationship('Character', secondary=associations.series_character,
-                                   back_populates='series', lazy='dynamic')
-
-    team = sqla_orm.relationship('Team', secondary=associations.series_team,
+    main_character = sqla_orm.relationship('MainCharacter', secondary=associations.series_main_character,
                                    back_populates='series', lazy='dynamic')
 
     user_rating = sqla.Column(sqla.Float)
-
     
     description = sqla.Column(sqla.String(1250))
 
@@ -81,11 +75,3 @@ class Series(Updateable, db.Model):
     @property
     def url(self):
         return url_for('series.get', id=self.id)
-
-    @property
-    def main_char(self):
-        if self.main_char_type == 'character':
-            return db.session.query(entities.Character).get(self.main_char_id)
-        elif self.main_char_type == 'team':
-            return db.session.query(entities.Team).get(self.main_char_id)
-        return None

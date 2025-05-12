@@ -20,6 +20,7 @@ onMounted(() => {
 <template>
     <HeaderItem v-cloak v-if="showNavbar"></HeaderItem>
     <RouterView />
+    <NotificationToast position="bottom-center" />
 </template>
 
 <style >

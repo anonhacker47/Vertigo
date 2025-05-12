@@ -42,7 +42,7 @@
         <div class="flex flex-col mb-6 mr-2 md:basis-1/2 md:w-1/2 w-full">
           <div class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4">
             <div class="flex flex-col basis-1/3 px-28 md:px-4">
-              <img v-if="image != 'noimage'" :src="image" alt="" class="rounded-lg border-2"
+              <img v-if="image != 'noimage'" :src="image" alt="" class="rounded-lg border-2 max-h-96"
                 :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
               <div class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
                 :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
@@ -70,7 +70,7 @@
               <div class="flex flex-col md:flex-row items-center gap-4">
                 <span class="font-bold text-lg">Main Character/Team</span>
                 <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
-                  series.main_char }}</span>
+                  series.main_character }}</span>
               </div>
               <div class="flex flex-col md:flex-row items-center max-w-full gap-4 ">
                 <div class="font-bold text-lg">Creators</div>
@@ -184,9 +184,10 @@ async function addIssue() {
     const response = await IssueService.createIssue(Number(route.params.Id));
     getIssues();
     getIssueCount();
-    toggleEditMode();
+    toast.add({ severity: 'success', summary: 'Success', detail: `Issue ${response.data.title} added`, life: 3000 });
   } catch (error) {
     message.value = error;
+    toast.add({ severity: 'error', summary: 'Error', detail: message.value, life: 3000 });
   }
 }
 
@@ -198,6 +199,7 @@ async function deleteIssue(issueToDelete: Issue) {
     getIssueCount();
   } catch (error) {
     message.value = error;
+    toast.add({ severity: 'error', summary: 'Error', detail: message.value, life: 3000 });
   }
 }
 

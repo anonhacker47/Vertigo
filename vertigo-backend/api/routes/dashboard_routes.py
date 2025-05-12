@@ -108,18 +108,12 @@ def user_field_count(field, type):
             'table': associations.series_creator,
             'column': 'creator_id'
         },
-        'character': {
-            'model': series_entities.Character,
-            'table': associations.series_character,
-            'column': 'character_id'
-        },
-        'team': {
-            'model': series_entities.Team,
-            'table': associations.series_team,
-            'column': 'team_id'
+        'main_character': {
+            'model': series_entities.MainCharacter,
+            'table': associations.series_main_character,
+            'column': 'main_character_id'
         }
     }
-
 
     if field not in field_mappings:
         abort(400, description='Field not supported')
@@ -200,20 +194,21 @@ def get_recent_purchases():
 @authenticate(token_auth)
 @other_responses({404: {'description': 'User not found'}})
 def get_purchases_per_month():
-
     user = token_auth.current_user()
     user_id = user.id if user else None
-    """Get purchases per month for a user"""
-    # Calculate the start and end dates for the previous 12 months
-    end_date = datetime.now(timezone.utc)  # Start of the current month
-    start_date = end_date - timedelta(days=365)  # Roughly a year ago
 
-    # Query to get purchases per month for the specified user
+    # Get the year from query params or default to current year
+    year = request.args.get('year', default=datetime.now().year, type=int)
+
+    # Calculate start and end of that year
+    start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
     purchases_per_month = db.session.query(
         func.strftime('%Y-%m', Issue.bought_date).label('month'),
         func.count(Issue.id).label('count')
     ).join(Series, Series.id == Issue.series_id) \
-     .filter(Issue.bought_date.between(start_date, end_date)) \
+     .filter(Issue.bought_date >= start_date, Issue.bought_date < end_date) \
      .filter(Series.user_id == user_id) \
      .group_by('month') \
      .order_by('month') \

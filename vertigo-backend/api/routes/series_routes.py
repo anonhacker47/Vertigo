@@ -17,7 +17,7 @@ from api.schemas.series_schema import SeriesSchema
 from api.schemas.empty_schema import EmptySchema
 
 from api.utils.auth import token_auth
-from api.utils.series_field import create_or_get_entities, create_or_get_main_character
+from api.utils.series_field import create_or_get_entities
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
 from api.helpers.thumbnail_processing import download_series_thumbnail, save_series_thumbnail,delete_series_thumbnail
@@ -42,8 +42,7 @@ def new():
     issue_count = int(request.form.get('issue_count', 0))
     read_count = int(request.form.get('read_count', 0))
     owned_count = int(request.form.get('owned_count', 0))
-    main_char = request.form.get('main_char', None)
-    main_char_type = request.form.get('main_char_type', None)
+    main_character = request.form.get('main_character', None)
     thumbnail = request.form.get('thumbnail', '').strip()
 
     # Parse JSON fields within FormData
@@ -55,6 +54,7 @@ def new():
         'genre': json.loads(genre),
         'creator': json.loads(creator),
         'publisher': [publisher],
+        'main_character': [main_character] if main_character else []
     }
 
     # Create series instance
@@ -66,8 +66,6 @@ def new():
         issue_count=issue_count,
         read_count=read_count,
         owned_count=owned_count,
-        main_char_id=None,  # This will be updated if main_char is provided
-        main_char_type=main_char_type,
     )
     db.session.add(series)
 
@@ -77,9 +75,6 @@ def new():
         for item in entity_items:
             getattr(series, entity_type).append(item)
 
-    if main_char:
-        main_char_instance = create_or_get_main_character(main_char_type, main_char)
-        series.main_char_id = main_char_instance.id
 
     # Handle thumbnail file if it is link
     if thumbnail.startswith('http'):
@@ -165,9 +160,6 @@ def update_series(id):
             series.user_rating = None
         else:
             series.user_rating = float(rating)
-    
-        if 'main_char_type' in form:
-            series.main_char_type = form.get('main_char_type')
 
     # Handle JSON fields if present
     entities = {}
@@ -180,21 +172,12 @@ def update_series(id):
     if 'publisher' in form:
         entities['publisher'] = [form.get('publisher')] if form.get('publisher') else []
 
+    if 'main_character' in form and form.get('main_character'):
+        entities['main_character'] = [form.get('main_character')]
+
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
         setattr(series, entity_type, entity_items)
-
-    # Handle main character
-    if 'main_char' in form and form.get('main_char'):
-        main_char = form.get('main_char')
-        main_char_type = form.get('main_char_type')
-        main_char_instance = create_or_get_main_character(main_char_type, main_char)
-        series.main_char_id = main_char_instance.id
-        series.main_char_type = main_char_type
-    elif 'main_char' in form:
-        # explicitly unset if sent but empty
-        series.main_char_id = None
-        series.main_char_type = None
 
     # Handle thumbnail
     thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
@@ -259,7 +242,7 @@ def get_series_image(id):
         return jsonify("noimage")
 
     try:
-        print(current_app.config['cover_path']+ f"\\{series.thumbnail}")
+        # print(current_app.config['cover_path']+ f"\\{series.thumbnail}")
         return send_file(current_app.config['cover_path'] + f"\\{series.thumbnail}")
     except FileNotFoundError:
         return jsonify("Image file not found"), 404
@@ -282,25 +265,16 @@ def key():
 def get_series_by_table(table):
     """Retrieve values from a specific table across all series objects."""
 
-    if table.lower() == 'main_char':
-        # Handle main_char separately by combining characters and teams
-        characters = db.session.query(series_entities.Character.title).distinct().all()
-        teams = db.session.query(series_entities.Team.title).distinct().all()
-        
-        # Combine results and remove duplicates
-        values = {char.title for char in characters} | {team.title for team in teams}
-    else:
-        table_class = {
-            'genre': series_entities.Genre,
-            'creator': series_entities.Creator,
-            'publisher': series_entities.Publisher,
-        }.get(table.lower())
-
-        if table_class is None:
-            return jsonify({'error': 'Invalid table name'}), 400
-
-        values = db.session.query(table_class.title).distinct().all()
-        values = {value.title for value in values}
+    table_class = {
+        'main_character': series_entities.MainCharacter,
+        'genre': series_entities.Genre,
+        'creator': series_entities.Creator,
+        'publisher': series_entities.Publisher,
+    }.get(table.lower())
+    if table_class is None:
+        return jsonify({'error': 'Invalid table name'}), 400
+    values = db.session.query(table_class.title).distinct().all()
+    values = {value.title for value in values}
 
     # Sort and format the final list
     values = sorted(values)

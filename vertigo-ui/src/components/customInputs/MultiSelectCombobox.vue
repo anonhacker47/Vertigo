@@ -108,7 +108,7 @@ async function getSeriesFields() {
 let query = ref('')
 
 const queryItem = computed(() => {
-  return query.value === '' ? null : query.value
+  return query.value === '' ? null : query.value.trim()
 })
 
 let filteredItems = computed(() =>

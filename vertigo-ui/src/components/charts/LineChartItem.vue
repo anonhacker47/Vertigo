@@ -1,5 +1,12 @@
 <template>
-  <v-chart class="flex shrink-0 justify-center min-h-96 md:h-full w-full relative" :option="option" :autoresize="true" />
+  <div class="flex items-center justify-center min-h-96 md:h-full w-full relative">
+    <template v-if="hasData">
+      <v-chart class="flex shrink-0 justify-center w-full h-full" :option="option" :autoresize="true" />
+    </template>
+    <template v-else>
+      <div class="text-gray-400 text-lg text-center">No purchase data available to display</div>
+    </template>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -7,10 +14,12 @@ import { use } from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-import { onMounted, ref, provide, watch } from 'vue';
+import { onMounted, ref, provide, watch, computed } from 'vue';
 use([GridComponent, LineChart, SVGRenderer])
 
 import VChart, { THEME_KEY } from 'vue-echarts';
+
+const hasData = computed(() => props.xData.length > 0 && props.yData.length > 0)
 
 const props = defineProps({
   xData: {

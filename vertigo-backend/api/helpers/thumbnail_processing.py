@@ -30,7 +30,7 @@ def download_series_thumbnail(url, title,path):
                 img = Image.open(request.raw)
                 extension = f".{img.format}"
             except Exception as e:
-                print(url)  # here you get the file causing the exception
+                # print(url)  # here you get the file causing the exception
                 print(e)
 
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
@@ -67,7 +67,6 @@ def save_series_thumbnail(file, title,path):
                 img = Image.open(file.raw)
                 extension = f".{img.format}"
             except Exception as e:
-                print(file)  # here you get the file causing the exception
                 print(e)
 
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
@@ -75,7 +74,7 @@ def save_series_thumbnail(file, title,path):
         if file:
             file.save(current_app.config[path]+"\\"+filename)
 
-            print('Image successfully Downloaded: ', filename)
+            # print('Image successfully Downloaded: ', filename)
 
             # Logic for determining dominant color and saving it to the database
             if path == "cover_path":

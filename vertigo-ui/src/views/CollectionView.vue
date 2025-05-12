@@ -44,7 +44,7 @@
   <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
     :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
 
-  <NotificationToast position="bottom-center" />
+
   <ConfirmDialog>
     <template #message="slotProps">
       <p class="font-bold">

@@ -36,6 +36,32 @@ class Publisher(Updateable, db.Model):
     def url(self):
         return url_for('publisher.get', id=self.id)
 
+class MainCharacter(Updateable, db.Model):
+    __tablename__ = 'main_character'
+
+    id = sqla.Column(sqla.Integer, primary_key=True)
+    title = sqla.Column(sqla.String(280), nullable=False)
+    description = sqla.Column(sqla.String(1250))
+
+    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
+                            nullable=False)
+    
+    series = sqla_orm.relationship('Series', secondary=associations.series_main_character, back_populates='main_character',
+                                   lazy='noload')
+
+    def __init__(self, *args, **kwargs):
+        if 'slug' not in kwargs:
+            kwargs['slug'] = slugify(kwargs.get('title', ''))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return '{}'.format(self.title)
+
+    @property
+    def url(self):
+        return url_for('main_character.get', id=self.id)
 
 class Creator(Updateable, db.Model):
     __tablename__ = 'creator'
@@ -64,33 +90,6 @@ class Creator(Updateable, db.Model):
     def url(self):
         return url_for('creator.get', id=self.id)
 
-class Character(Updateable, db.Model):
-    __tablename__ = 'character'
-
-    id = sqla.Column(sqla.Integer, primary_key=True)
-    title = sqla.Column(sqla.String(280), nullable=False)
-    description = sqla.Column(sqla.String(1250))
-
-    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
-                            nullable=False)
-    
-    series = sqla_orm.relationship('Series', secondary=associations.series_character, back_populates='character',
-                                   lazy='noload')
-
-    def __init__(self, *args, **kwargs):
-        if 'slug' not in kwargs:
-            kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __repr__(self):
-        return '{}'.format(self.title)
-
-    @property
-    def url(self):
-        return url_for('character.get', id=self.id)
-
 class Genre(Updateable, db.Model):
     __tablename__ = 'genre'
 
@@ -117,30 +116,3 @@ class Genre(Updateable, db.Model):
     @property
     def url(self):
         return url_for('genre.get', id=self.id)
-
-class Team(Updateable, db.Model):
-    __tablename__ = 'team'
-
-    id = sqla.Column(sqla.Integer, primary_key=True)
-    title = sqla.Column(sqla.String(280), nullable=False)
-    description = sqla.Column(sqla.String(1250))
-
-    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
-                            nullable=False)
-    
-    series = sqla_orm.relationship('Series', secondary=associations.series_team, back_populates='team',
-                                   lazy='noload')
-
-    def __init__(self, *args, **kwargs):
-        if 'slug' not in kwargs:
-            kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __repr__(self):
-        return '{}'.format(self.title)
-
-    @property
-    def url(self):
-        return url_for('team.get', id=self.id)

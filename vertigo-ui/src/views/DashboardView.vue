@@ -57,31 +57,42 @@
       <div class="card md:w-[20%] card-compact relative basis-1/3 w-full h-full bg-base-100 shadow-xl">
         <div
           class="card-title text-xl text-center font-['Microsoft_YaHei'] justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
-          Recent Purchases </div>
-        <div class="mt-6 h-full ">
-          <SwiperCardItem :recentPurchasedIssues="recentPurchasedIssues" />
+          Recent Purchases</div>
+        <div class="mt-6 h-full w-full flex items-center justify-center">
+          <SwiperCardItem v-if="recentPurchasedIssues && recentPurchasedIssues.length > 0"
+            :recentPurchasedIssues="recentPurchasedIssues" />
+          <div v-else class="flex items-center justify-center h-full text-gray-400 text-lg">
+            No recent purchases found.
+          </div>
         </div>
       </div>
 
-      <div class="card relative basis-1/2 md:w-[40%] flex bg-base-100 shadow-xl">
+      <div class="card relative basis-1/2 md:w-[40%] flex items-center bg-base-100 shadow-xl">
         <LineChartItem :x-data="purchaseData" :y-data="dates" />
+        <div class="mb-4 w-1/6 flex no-wrap items-center justify-center">
+          <!-- <label for="year" class="mr-2 text-sm">Select Year:</label> -->
+          <select v-model="selectedYear" id="year" class="p-1 select select-primary select-bordered w-full">
+            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+          </select>
+        </div>
       </div>
 
     </div>
   </div>
-  <Dialog v-model:visible="showModal" modal header="💰 Total Spent" :style="{ width: '28rem' }" class="rounded-2xl shadow-2xl">
-  <div class="flex flex-col items-center justify-center gap-4 p-6">
-    <div class="text-4xl font-extrabold text-primary">
-      {{symbol}} {{ totalSpent }}
+  <Dialog v-model:visible="showModal" modal header="💰 Total Spent" :style="{ width: '28rem' }"
+    class="rounded-2xl shadow-2xl">
+    <div class="flex flex-col items-center justify-center gap-4 p-6">
+      <div class="text-4xl font-extrabold text-primary">
+        {{ symbol }} {{ totalSpent }}
+      </div>
+      <div class="text-lg font-semibold text-gray-400">
+        Impressive!
+      </div>
+      <div class="text-sm text-gray-400 italic">
+        Keep collecting and expanding your library 📚
+      </div>
     </div>
-    <div class="text-lg font-semibold text-gray-400">
-      Impressive!
-    </div>
-    <div class="text-sm text-gray-400 italic">
-      Keep collecting and expanding your library 📚
-    </div>
-  </div>
-</Dialog>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -89,7 +100,7 @@ import { useUserStore } from "../store/user";
 import InsightCardItem from '../components/cards/InsightCardItem.vue'
 import AddSeriesCardItem from '../components/cards/AddSeriesCardItem.vue'
 
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import PieChartItem from '../components/charts/PieChartItem.vue';
 import LineChartItem from '../components/charts/LineChartItem.vue';
 import SwiperCardItem from '../components/cards/SwiperCardItem.vue';
@@ -115,6 +126,9 @@ const symbol = getSymbolFromCurrency(preferred_currency)
 
 const recentPurchasedIssues = ref([]);
 
+const selectedYear = ref(new Date().getFullYear())
+const years = Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - i)
+
 const infoClickCount = ref(0);
 const showModal = ref(false);
 const totalSpent = ref(0);
@@ -126,7 +140,7 @@ const chartTypeList = [
 const chartCategoryList = [
   { Name: 'Publisher', field: 'publisher' },
   { Name: 'Genre', field: 'genre' },
-  { Name: 'Main Char/Team', field: 'main_char' },
+  { Name: 'Main Char/Team', field: 'main_character' },
   { Name: 'Creator', field: 'creator' },
 ];
 
@@ -184,24 +198,26 @@ async function getRecentPurchases() {
   }
 }
 
-async function getPurchasesPerMonth() {
+async function getPurchasesPerMonth(year: number) {
   try {
-    const response = await DashboardService.getPurchasesPerMonth();
-    dates.value = response.data.map((item: { month: any; }) => item.month)
-    purchaseData.value = response.data.map((item: { count: any; }) => item.count)
-
+    const response = await DashboardService.getPurchasesPerMonth(year);
+    dates.value = response.data.map((item: { month: any }) => item.month)
+    purchaseData.value = response.data.map((item: { count: any }) => item.count)
   } catch (error) {
     console.log(error);
   }
 }
 
+watch(selectedYear, (newYear) => {
+  getPurchasesPerMonth(newYear)
+})
 
 onMounted(async () => {
   await getSeriesInfo();
   await getIssueInfo();
   await fetchData();
   await getRecentPurchases();
-  await getPurchasesPerMonth();
+  await getPurchasesPerMonth(selectedYear.value);
 });
 
 const dates = ref([]);

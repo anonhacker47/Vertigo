@@ -9,6 +9,7 @@
             <div class="form-control w-full">
                 <select class="select  w-full select-primary" v-model="localSeriesData.series_format" required>
                     <option disabled value="">Pick Format</option>
+                    <option>Single Issues</option>
                     <option>Trade Paperback</option>
                     <option>Hard Cover</option>
                     <option>Omnibus</option>
@@ -27,7 +28,7 @@
                 <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple options</p>
             </div>
             <div class="form-control w-full">
-                <SingleSelectCombobox v-model="localSeriesData.main_char" field="main_char"
+                <SingleSelectCombobox v-model="localSeriesData.main_character" field="main_character"
                     placeholder="Main Character/ Team" />
             </div>
             <div class="form-control w-full text-center">

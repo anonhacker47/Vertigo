@@ -9,6 +9,7 @@
             <div class="form-control w-full">
                 <select class="select  w-full select-primary" v-model="localSeriesData.series_format" required>
                     <option disabled value="">Pick Format</option>
+                    <option>Single Issues</option>
                     <option>Trade Paperback</option>
                     <option>Hard Cover</option>
                     <option>Omnibus</option>
@@ -26,7 +27,7 @@
                 <MultiSelectCombobox v-model="localSeriesData.genre" field="genre" placeholder="Genre" />
             </div>
             <div class="form-control w-full">
-                <SingleSelectCombobox v-model="localSeriesData.main_char" field="main_char"
+                <SingleSelectCombobox v-model="localSeriesData.main_character" field="main_character"
                     placeholder="Main Character/ Team" />
             </div>
             <div class="form-control w-full">
@@ -48,8 +49,10 @@
                 </button>
             </div>
             <div class="form-control w-full">
-                <button @click.prevent="updateSeries" :disabled="!localSeriesData.title || !localSeriesData.series_format" class="btn btn-primary rounded">
-                    Edit
+                <button @click.prevent="updateSeries"
+                    :disabled="!localSeriesData.title || !localSeriesData.series_format"
+                    class="btn btn-primary rounded">
+                    Save Details
                 </button>
             </div>
         </div>
@@ -58,7 +61,7 @@
 
 <script setup lang="ts">
 import type { Series } from "@/types/series.types";
-import {  reactive, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 import { useRouter } from "vue-router";
@@ -66,8 +69,8 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const props = defineProps<{
-  modelValue: Partial<Series>,
-  showIssueSection: boolean
+    modelValue: Partial<Series>,
+    showIssueSection: boolean
 }>()
 
 const emit = defineEmits(['update:modelValue', 'updateSeries'])
@@ -75,23 +78,23 @@ const emit = defineEmits(['update:modelValue', 'updateSeries'])
 const localSeriesData = reactive({ ...props.modelValue })
 
 watch(localSeriesData, (val) => {
-  const { thumbnail, ...rest } = val;
-  emit('update:modelValue', {
-    ...rest,
-    thumbnail: props.modelValue.thumbnail, // preserve the original thumbnail
-  });
+    const { thumbnail, ...rest } = val;
+    emit('update:modelValue', {
+        ...rest,
+        thumbnail: props.modelValue.thumbnail, // preserve the original thumbnail
+    });
 }, { deep: true });
 
 watch(
-  () => props.modelValue,
-  (newVal) => {
-    Object.assign(localSeriesData, newVal);
-  },
-  { deep: true }
+    () => props.modelValue,
+    (newVal) => {
+        Object.assign(localSeriesData, newVal);
+    },
+    { deep: true }
 );
 
 const updateSeries = () => {
-  emit('updateSeries')
+    emit('updateSeries')
 }
 
 </script>
