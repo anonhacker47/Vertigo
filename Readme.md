@@ -29,7 +29,20 @@
 Feel free to reach out if you have anything else you'd like to see!
 
 ## Getting Started:
-Vertigo is not released yet, and is under active development, but if you can try it out using the Developer Guide below.
+
+Vertigo has now entered its **Alpha release** stage! You can try it out by downloading the latest ZIP from the [releases section](https://github.com/anonhacker47/vertigo/releases).
+
+After extracting the ZIP, run the app using the appropriate script for your operating system:
+
+- **Linux/macOS**:  
+  Run `launch.sh`
+
+- **Windows**:  
+  Run `launch.bat`
+
+This will automatically set up and launch the webapp in http://localhost:6166
+
+> **Note:** If the app seems slow on the first launch, simply close and rerun the script — this is a known behavior during initial setup and should resolve on relaunch.
 <br/>
 <br/>
 
