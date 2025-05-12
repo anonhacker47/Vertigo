@@ -1,0 +1,10 @@
+version: 2
+updates:
+    - package-ecosystem: "npm"
+      directory: "/vertigo-ui"
+      schedule:
+          interval: "daily"
+    - package-ecosystem: "pip"
+      directory: "/vertigo-backend"
+      schedule:
+          interval: "daily"

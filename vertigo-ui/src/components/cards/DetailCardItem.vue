@@ -6,23 +6,29 @@
   </div>
 </div>
   <div class="flex flex-col ml-2">
-    <div class="text-xs font-bold">
+    <p class="text-xs font-bold">
       {{field}}
-    </div>
-    <div class="text-primary font-medium">
-      {{detail}}
-    </div>
+    </p>
+    <p class="text-primary font-medium">
+      {{detailString}}
+    </p>
   </div>
 </div>
 </template>
-<script setup>
+<script setup lang="ts">
+import { computed } from 'vue';
+
 
 
 const props = defineProps({
     icon :String,
     field : String,
-    detail : String
-})
+    detail: [String, Array]
+  })
+
+const detailString = computed(() => {
+  return Array.isArray(props.detail) ? props.detail.join(", ") : props.detail;
+});
 </script>
 <style>
 

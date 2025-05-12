@@ -1,10 +1,12 @@
 from functools import wraps
 from flask import abort,request
 from apifairy import arguments, response
-from api.models import User, Series, Issue
+from api.models.user import User
+from api.models.series import Series
+from api.models.issue import Issue
 import sqlalchemy as sqla
 from api.app import db
-from api.schemas import StringPaginationSchema, PaginatedCollection
+from api.schemas.pagination_schema import StringPaginationSchema, paginated_collection
 
 
 def paginated_response(schema, max_limit=25, order_by=None,
@@ -15,8 +17,8 @@ def paginated_response(schema, max_limit=25, order_by=None,
         def paginate(*args, **kwargs):
             args = list(args)
             pagination = args.pop(-1)
-            order_by_object = request.args.get('orderby')
-            order_by_dir = request.args.get('orderdir')
+            order_by_object = request.args.get('orderBy')
+            order_by_dir = request.args.get('orderDir')
             nonlocal order_by
             nonlocal order_direction
             
@@ -24,7 +26,6 @@ def paginated_response(schema, max_limit=25, order_by=None,
                 order_direction = 'desc'
             elif order_by_dir == 'asc': 
                 order_direction = 'asc'
-            print(order_direction)
 
             if order_by == Series.timestamp or order_by == Series.title:
                 if order_by_object is not None:
@@ -35,14 +36,12 @@ def paginated_response(schema, max_limit=25, order_by=None,
 
             select_query = f(*args, **kwargs)
 
-            print(order_by)
             if order_by is not None:
                 if "Issue" in str(order_by):
                     o = sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer()).desc() if order_direction == 'desc' else sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer()).asc()                        # Convert the volume number to an integer for proper sorting
                 else:
                     o = order_by.desc() if order_direction == 'desc' else order_by
                 select_query = select_query.order_by(o)
-                            # print(select_query)
 
                 count = db.session.scalar(sqla.select(
                     sqla.func.count()).select_from(select_query))
@@ -82,7 +81,7 @@ def paginated_response(schema, max_limit=25, order_by=None,
             }}
 
         # wrap with APIFairy's arguments and response decorators
-        return arguments(pagination_schema)(response(PaginatedCollection(
+        return arguments(pagination_schema)(response(paginated_collection(
             schema, pagination_schema=pagination_schema))(paginate))
 
     return inner

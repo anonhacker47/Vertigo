@@ -1,1 +1,0 @@
-import{A as r}from"./index.746d02c0.js";const u={getIssues(s,e,i,t){return r().get(`series/${e}/issues?orderby=${i}&orderdir=${t}`,s)},addIssues(s,e){return r().post(`series/${s}/issues`,e)}};export{u as I};

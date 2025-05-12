@@ -13,6 +13,7 @@ def http_error(error):
         'code': error.code,
         'message': error.name,
         'description': error.description,
+        'errors': error.data if hasattr(error, 'data') else None,
     }, error.code
 
 

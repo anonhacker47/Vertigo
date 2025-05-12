@@ -20,7 +20,7 @@ class Config:
     # security options
     SECRET_KEY = os.environ.get('SECRET_KEY', 'top-secret!')
     DISABLE_AUTH = as_bool(os.environ.get('DISABLE_AUTH'))
-    ACCESS_TOKEN_MINUTES = int(os.environ.get('ACCESS_TOKEN_MINUTES') or '15')
+    ACCESS_TOKEN_MINUTES = int(os.environ.get('ACCESS_TOKEN_MINUTES') or '60')
     REFRESH_TOKEN_DAYS = int(os.environ.get('REFRESH_TOKEN_DAYS') or '7')
     REFRESH_TOKEN_IN_COOKIE = as_bool(os.environ.get(
         'REFRESH_TOKEN_IN_COOKIE') or 'YES')
@@ -32,8 +32,8 @@ class Config:
     CORS_SUPPORTS_CREDENTIALS = True
 
     # API documentation
-    APIFAIRY_TITLE = 'Microblog API'
-    APIFAIRY_VERSION = '1.0'
+    APIFAIRY_TITLE = 'Vertigo API'
+    APIFAIRY_VERSION = '0.0.1'
     APIFAIRY_UI = os.environ.get('DOCS_UI', 'elements')
 
     # email options

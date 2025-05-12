@@ -14,7 +14,6 @@ cors = CORS()
 mail = Mail()
 apifairy = APIFairy()
 
-
 def create_app(config_class=Config):
     app = Flask(__name__,
             static_folder = "./wwwroot/static",
@@ -22,6 +21,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     app.config['cover_path'] = os.path.abspath("./Config/Covers/")
+    app.config['user_path'] = os.path.abspath("./Config/User/")
     app.config['sql_path'] = os.path.abspath("./Config/")
 
     # Check if 'sql_path' exists and create it if not
@@ -34,8 +34,14 @@ def create_app(config_class=Config):
         os.makedirs(app.config['cover_path'])
         print("The 'cover_path' directory is created!")    
 
+        # Check if 'cover_path' exists and create it if not
+    if not os.path.exists(app.config['user_path']):
+        os.makedirs(app.config['user_path'])
+        print("The 'User' directory is created!")  
+
     # extensions
-    from api import models
+    from api import models  
+
     db.init_app(app)
     ma.init_app(app)
     if app.config['USE_CORS']:  # pragma: no branch
@@ -44,16 +50,21 @@ def create_app(config_class=Config):
     apifairy.init_app(app)
 
     # blueprints
+
+    # from api.fake import fake
+    # app.register_blueprint(fake)
     from api.errors import errors
     app.register_blueprint(errors)
-    from api.tokens import tokens
+    from api.routes.tokens_routes import tokens
     app.register_blueprint(tokens, url_prefix='/api')
-    from api.users import users
+    from api.routes.users_routes import users
     app.register_blueprint(users, url_prefix='/api')
-    from api.series import series
+    from api.routes.series_routes import series
     app.register_blueprint(series, url_prefix='/api') 
-    from api.issue import issues
+    from api.routes.issue_routes import issues
     app.register_blueprint(issues, url_prefix='/api') 
+    from api.routes.dashboard_routes import dashboard
+    app.register_blueprint(dashboard, url_prefix='/api') 
 
     # define the shell context
     @app.shell_context_processor

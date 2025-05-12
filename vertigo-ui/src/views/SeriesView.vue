@@ -1,314 +1,298 @@
 <template>
-  <div class="top-0 right-0 absolute bottom-0 left-0 bg-no-repeat bg-center h-screen bg-cover"
-    :style="{ backgroundImage: 'url(' + image + ')' }">
-    <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.95)">
+  <div v-if="series" class="bg-no-repeat bg-center h-full bg-cover" :style="{ backgroundImage: 'url(' + image + ')' }">
+    <div class="flex flex-col min-h-screen min-w-screen " style="background: rgba(18,25,43,0.90)">
       <HeaderItem />
-
-      <div class="flex justify-end items-center py-4 pr-20 border-b border-slate-700">
-        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
-          <div class="px-5 flex flex-row items-center">
-            <img class="" src="../assets/collection.svg" alt="" width="28" height="28" />
-            <p class="pl-2 text-primary font-bold text-lg">
-              {{ issueCount.total_count }}
-            </p>
+      <div
+        class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
+        <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
+          <p class="font-bold text-3xl truncate" :style="`color: rgb${themecolor}`">
+            {{ series.title }}
+          </p>
+        </div>
+        <div class="flex flex-1 justify-center items-center md:w-1/4 gap-5">
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
+            <div class="flex flex-row items-center">
+              <img class="" src="../assets/wishlist.svg" alt="" width="28" height="28" />
+              <p class="pl-2 text-primary font-bold text-lg">
+                {{ issueCount.total_count }}
+              </p>
+            </div>
+          </div>
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
+            <div class="flex flex-row items-center">
+              <img src="../assets/collection.svg" alt="" width="28" height="28" />
+              <p class="pl-2 text-primary font-bold text-lg">{{ issueCount.owned_count + "/" + issueCount.total_count }}
+              </p>
+            </div>
+          </div>
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
+            <div class="flex flex-row items-center">
+              <img src="../assets/read.svg" alt="" width="28" height="28" />
+              <p class="pl-2 text-primary font-bold text-lg">{{ issueCount.read_count + "/" + issueCount.total_count }}
+              </p>
+            </div>
           </div>
         </div>
-        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
-          <div class="px-5 flex flex-row items-center">
-            <img src="../assets/cart.svg" alt="" width="23" height="23" />
-            <!-- <div class="radial-progress text-accent ml-2" style="--value:66; --size:2.5rem;" role="progressbar"> -->
-            <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.have_count + "/" + issueCount.total_count }}</p>
-            <!-- </div> -->
-          </div>
-        </div>
-        <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
-          <div class="px-5 flex flex-row items-center">
-            <img src="../assets/read.svg" alt="" width="25" height="25" />
-            <!-- <div class="radial-progress text-warning ml-2" style="--value:100; --size:2.5rem" role="progressbar"> -->
-            <p class="ml-2 text-primary font-bold text-lg">{{ issueCount.read_count + "/" + issueCount.total_count }}</p>
-            <!-- </div> -->
-          </div>
+        <div class="flex flex-1 justify-center md:justify-end items-center w-1/3">
+          <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
       </div>
 
       <div class="flex flex-col md:flex-row grow">
-        <div class="flex flex-row pb-6 pr-2 basis-1/2">
-          <div class="flex flex-row flex-grow relative">
-
-            <img v-if="image != 'noimage'" :src="image" alt=""
-              class="w-40 h-56 rounded-lg mt-8 ml-16 border-2" :style="`border-color: rgb${themecolor}`"
-              @error="image = placeholder" />
-            <div class="flex flex-col mt-8 ml-8 w-[26rem]">
-              <span class="text-4xl font-bold text-ellipsis inlnie-block -nowrap overflow-clip" :style="`color: rgb${themecolor}`">
-                {{ series.title }}
-              </span>
-              <p class="text-xl font-bold uppercase" :style="`color: rgb${themecolor}`">
-                {{ series.publisher }}
-              </p>
-              <p class="text-base text-white mt-4 font-normal" :style="`color: rgb${themecolor}`">
-                {{ series.summary }}
-              </p>
-              <div class="flex flex-row flex-grow max-h-52 justify-around items-center">
-                <!-- Column 1 -->
-                <div class="flex flex-col align-middle self-center h-full justify-around items-start">
-                  <DetailCardItem :icon="publisherUrl" field="Publisher" :detail="series.publisher" />
-                  <DetailCardItem :icon="genreUrl" field="Genre" :detail="series.genre" />
+        <div class="flex flex-col mb-6 mr-2 md:basis-1/2 md:w-1/2 w-full">
+          <div class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4">
+            <div class="flex flex-col basis-1/3 px-28 md:px-4">
+              <img v-if="image != 'noimage'" :src="image" alt="" class="rounded-lg border-2 max-h-96"
+                :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
+              <div class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
+                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
+                <p class="text-sm font-bold">
+                  {{ series.series_format }}
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-col basis-2/3 shrink-0 overflow-scroll gap-4">
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
+                <span class=" font-bold text-lg">Publisher</span>
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+                  series.publisher }}</span>
+              </div>
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
+                <div class="font-bold text-lg">Genre</div>
+                <div
+                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap ">
+                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md  px-4 py-1 text-sm font-bold "
+                    :style="`color: rgb${themecolor}`">
+                    {{ genre }}
+                  </p>
                 </div>
-
-                <!-- Column 2 -->
-                <div class="flex flex-col align-middle h-full justify-around items-start">
-                  <DetailCardItem :icon="teamUrl" field="Main Character/Team" :detail="series.main_char" />
-                  <DetailCardItem :icon="teamUrl" field="Writer" :detail="series.writer" />
-                </div>
-
-                <!-- Column 3 -->
-                <div class="flex flex-col align-middle h-full justify-around items-start">
-                  <DetailCardItem :icon="teamUrl" field="Artist" :detail="series.artist" />
-                  <DetailCardItem :icon="teamUrl" field="Editor" :detail="series.editor" />
+              </div>
+              <div class="flex flex-col md:flex-row items-center gap-4">
+                <span class="font-bold text-lg">Main Character/Team</span>
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+                  series.main_character }}</span>
+              </div>
+              <div class="flex flex-col md:flex-row items-center max-w-full gap-4 ">
+                <div class="font-bold text-lg">Creators</div>
+                <div
+                  class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
+                  <p v-for="creator in series.creator"
+                    class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold"
+                    :style="`color: rgb${themecolor}`">
+                    {{ creator }}
+                  </p>
                 </div>
               </div>
 
+
+
             </div>
 
-            <EditIcon class="absolute right-0 top-2 cursor-pointer w-7 h-7" :fill-color="`rgb${themecolor}`"
-              @click="showModal = true" />
+            <RouterLink :to="{ name: 'EditSeries', params: { Link: series.slug, Id: series.id } }"
+              class="absolute right-0 top-2 cursor-pointer w-12 h-12 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400 hover:border-2 rounded-full flex items-center justify-center">
+              <EditIcon class="w-7 h-7" :fill-color="`rgb${themecolor}`" />
+            </RouterLink>
 
-            <EditSeriesModal :title="`Edit Series`" @close-modal="closeModal()" @esc="closeModal()" @submit-form="handleUpdate()" :modal-ref="showModal">
-
-              <div class="flex h-full flex-row justify-left items-center justify-around">
-                <div class="flex flex-col h-full justify-center items-center">
-                  <img v-if="image != 'noimage'" :src="image" alt=""
-                    class="md:h-[45vh] md:w-[15vw] rounded-lg mt-2 mr-2 mb-6 border-2"
-                    :style="`border-color: rgb${themecolor}`" @error="image = placeholder" />
-                  <!-- <input type="file" @change="onFileChange" class="file-input w-full max-w-xs" /> -->
-                  <input type="text" @input="changeImage" placeholder="paste image link here" class="input input-bordered" required />
-                </div>
-                <div class="flex flex-col justify-start items-stretch ml-14">
-                  <div class="flex flex-row gap-16 mb-5  justify-between">
-                    <!-- <div class="w-[13rem]"> -->
-                    <div class="flex h-full flex-row justify-left items-around">
-
-                      <input type="text" placeholder="Series Name" v-model="updatedSeries.value.title"
-                        class="input  input-bordered" required />
-                    </div>
-                    <div class="form-control">
-                      <select class="select select-primary w-[16em]" v-model="updatedSeries.value.series_format" required>
-                        <option disabled value="">Pick Format</option>
-                        <option>TPB</option>
-                        <option>HC</option>
-                        <option>OMNI</option>
-                        <option>ABS</option>
-                        <option>MANGA</option>
-                      </select>
-                    </div>
-                    <div class="form-control">
-                      <input type="number" v-model.number="updatedSeries.value.books_count" placeholder="Book Count"
-                        class="input input-bordered" disabled />
-                    </div>
-                  </div>
-                  <div class="flex flex-row gap-16 my-5 justify-around">
-                    <div class="form-control">
-                      <!-- <input type="text" placeholder="Publisher" v-model="updatedSeries.publisher"
-                        class="input w-[13rem] input-bordered" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.publisher" field="publisher" placeholder="Publisher" />
-
-                    </div>
-                    <div class="form-control">
-                      <!-- <input type="text" placeholder="Genre" v-model="updatedSeries.genre"
-                        class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.genre" field="genre" placeholder="Genre" />
-
-                    </div>
-                    <div class="form-control">
-                      <!-- <input type="text" v-model="updatedSeries.main_char" placeholder="Main Character/Team"
-                        class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.main_char" field="main_char"
-                        placeholder="Main Character/Team" />
-                    </div>
-                  </div>
-                  <div class="flex flex-row gap-16 my-5 justify-around">
-                    <div class="form-control">
-                      <!-- <input type="text" placeholder="Writer" v-model="updatedSeries.writer"
-                        class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.writer" field="writer" placeholder="Writer" />
-
-                    </div>
-                    <div class="form-control">
-                      <!-- <input type="text" v-model="updatedSeries.artist" placeholder="Artist"
-                        class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.artist" field="artist" placeholder="Artist" />
-
-                    </div>
-                    <div class="form-control">
-                      <!-- <input type="text" v-model="updatedSeries.editor" placeholder="Editor"
-                        class="input input-bordered w-[13rem]" /> -->
-                      <TypeAheadInput v-model="updatedSeries.value.editor" field="editor" placeholder="Editor" />
-                    </div>
-                  </div>
-                  <div class="flex flex-row gap-16 mb-3 justify-around">
-                    <div class="form-control w-full">
-                      <textarea class="textarea textarea-bordered h-24 " placeholder="Summary"
-                        v-model="updatedSeries.value.summary"></textarea>
-                    </div>
-                    <!-- <div class="flex flex-row gap-16 justify-around">
-            <div class="form-control w-full">
-              <button @click="createSeries" class="btn btn-primary">
-                Edit Series
-              </button>
-            </div>
-            <div class="form-control w-full">
-              <button
-                type="button"
-                @click="router.push('home')"
-                class="btn btn-danger"
-              >
-                Cancel
-              </button>s
-            </div>
-          </div> -->
-                  </div>
-                </div>
-              </div>
-            </EditSeriesModal>
 
           </div>
+          <div class="flex flex-col relative shrink-0">
+            <div class="mx-8 my-5">
+              <p class="text-xl text-center font-bold" :style="`color: rgb${themecolor}`">
+                Description
+              </p>
+              <p class="mt-4 text-justify">{{ series.description }}</p>
+            </div>
+          </div>
+
         </div>
-        <div class="flex flex-col basis-1/2 flex-grow border-l border-slate-700 pt-4 pb-6">
-          <h1 class="flex pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
+        <div
+          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
+          <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
-          <div class="overflow-scroll" style="height: 70vh">
-            <div class="grid grid-cols-4 gap-5 px-16">
-              <!-- <div class="flex flex-row justify-center items-start" > -->
-              <IssueCarditem :image="image" :themecolor="themecolor" :title="issue.title" :have_whole="issue.have_whole"
-                :read_whole="issue.read_whole" v-for="issue in issues" @updateStatus="updateStatus(issue, $event)"
-                :key="issue" />
-              <!-- </div> -->
+          <div class="overflow-scroll h-full flex flex-row justify-center items-start w-full">
+            <div class="flex flex-wrap flex-start items-start gap-10 md:px-16 px-12">
+              <IssueCarditem :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1"
+                :preferred_currency="preferred_currency" :bought_price="issue.bought_price" :image="image"
+                :bought_date="issue.bought_date" :read_date="issue.read_date" :themecolor="themecolor"
+                :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
+                v-for="(issue, index) in issuesList" @updateStatus="updateStatus(issue, $event)" :key="issue.id"
+                @deleteIssue="confirmDelete(issue)" />
+
+              <div v-if="editMode" @click="addIssue"
+                class="w-44 h-64 flex relative flex-col items-center bg-cover bg-center  justify-center rounded-lg border-green-500 border-2 overflow-hidden shadow-lg cursor-pointer bg-zinc-800 border-dashed  hover:bg-zinc-700 transition-all"
+                :style="`background-image: url(${image})`">
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3">
+                  <div class="flex flex-col items-center justify-center text-white gap-2">
+                    <img src="@/assets/add.svg" alt="Add" class="w-12 h-12 opacity-80" />
+                    <p class="text-white text-md font-bold">Add Issue</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
+          <button @click="toggleEditMode"
+            class="mt-4 absolute right-2 -top-2  w-12 h-12 cursor-pointer hover:scale-110 rounded-full transition duration-200 ease-in-out hover:border-emerald-400 hover:border-2 flex items-center justify-center"
+            :class="editMode ? ' border-green-700' : ' border-zinc-500'">
+            <EditIcon class="w-7 h-7" :fill="editMode ? 'white' : `rgb${themecolor}`" />
+          </button>
         </div>
       </div>
     </div>
+
+    <ConfirmDialog>
+      <template #message="slotProps">
+        <p class="font-bold">
+          Do you really want to delete the Issue
+          <span class="text-red-500">{{ slotProps.message.message }}</span>?
+        </p>
+      </template>
+    </ConfirmDialog>
+
   </div>
+
 </template>
 
-<style scoped></style>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
 import { useRoute } from "vue-router";
+import { useUserStore } from "../store/user";
+
+
+import type { Series } from "@/types/series.types";
+import type { Issue } from "@/types/issue.types";
+
 import HeaderItem from "../components/HeaderItem.vue";
 import IssueCarditem from "../components/cards/IssueCarditem.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
-import TokenService from "../services/TokenService";
-import DetailCardItem from "../components/cards/DetailCardItem.vue";
 import EditIcon from "../assets/EditIcon.vue";
-import EditSeriesModal from "../components/modals/EditSeriesModal.vue";
-import TypeAheadInput from "../components/TypeAheadInput.vue";
+import Rating from "primevue/rating";
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 
-const publisherUrl = new URL("../assets/paypal.png", import.meta.url).href;
-const genreUrl = new URL("../assets/grid.png", import.meta.url).href;
-const teamUrl = new URL("../assets/group.png", import.meta.url).href;
 
-const headers = TokenService.getTokenHeader("");
-const route = useRoute("");
-const series = ref("");
-const issues = ref("");
+const confirm = useConfirm();
+const toast = useToast();
+const message = ref();
+
+
+async function addIssue() {
+  try {
+    const response = await IssueService.createIssue(Number(route.params.Id));
+    getIssues();
+    getIssueCount();
+    toast.add({ severity: 'success', summary: 'Success', detail: `Issue ${response.data.title} added`, life: 3000 });
+  } catch (error) {
+    message.value = error;
+    toast.add({ severity: 'error', summary: 'Error', detail: message.value, life: 3000 });
+  }
+}
+
+async function deleteIssue(issueToDelete: Issue) {
+
+  try {
+    const response = await IssueService.removeIssue(issueToDelete.id)
+    getIssues();
+    getIssueCount();
+  } catch (error) {
+    message.value = error;
+    toast.add({ severity: 'error', summary: 'Error', detail: message.value, life: 3000 });
+  }
+}
+
+const confirmDelete = (issueToDelete: Issue) => {
+  confirm.require({
+    message: issueToDelete.title,
+    header: 'Confirm Deletion',
+    icon: 'pi pi-info-circle',
+    rejectLabel: 'Cancel',
+    rejectProps: {
+      label: 'Cancel',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: 'Delete',
+      severity: 'danger'
+    },
+    accept: () => {
+      deleteIssue(issueToDelete);
+      toast.add({ severity: 'success', summary: 'Confirmed', detail: `Issue ${issueToDelete.title} deleted`, life: 3000 });
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+    }
+  });
+};
+
+
+const toggleEditMode = (): void => {
+  editMode.value = !editMode.value;
+  console.log("ediotMode", editMode.value);
+
+};
+
+const userstore = useUserStore();
+
+const { preferred_currency: preferred_currency } = userstore.getUser();
+
+const route = useRoute();
+const series = ref<Series | null>(null);
+const issuesList = ref<Issue[]>([]);
+
+const pagination = ref()
+const editMode = ref(false);
+
 const updatedSeries = reactive({ value: series });;
 const issueCount = ref({
-  have_count: 0,
+  owned_count: 0,
   read_count: 0,
   total_count: 0,
 });
-const themecolor = ref("(212, 222, 252)");
-const image = ref();
-const placeholder = "https://upload.wikimedia.org/wikipedia/commons/c/cd/Placeholder_male_superhero_c.png"
-const showModal = ref(false);
-const imageChanged = ref(false);
+const themecolor = ref<string | null>("(212, 222, 252)");
+const image = ref<string | null>();
+const placeholder = new URL("../assets/dummy.webp", import.meta.url).href;
 
-function closeModal() {
-  image.value = SeriesService.getImagebyId(series.value.id);
-  getSeries();
-  showModal.value = false
-}
-
-// const props = defineProps({
-//   id: Number,
-// });
-
-// const issuestyle = reactive({
-//   borderColor: `rgb${themecolor}`,
-//   backgroundImage: `${"url(" + image + ")"}`,
-// });
 
 async function getSeries() {
   try {
-    const response = await SeriesService.getSeriesbyId(route.params.Id, {
-      headers,
-    });
-    series.value = response.data;
-    themecolor.value =
-      response.data.dominant_color.slice(0, -1) +
-      response.data.dominant_color.slice(-1);
-    image.value = SeriesService.getImagebyId(series.value.id);
-    console.log("getSeries",image.value);
+    const response = await SeriesService.getSeriesbyId(Number(route.params.Id))
+    series.value = response;
+    themecolor.value = response.dominant_color.slice(0, -1).toString() + response.dominant_color.slice(-1).toString();
+
+    if (series.value) {
+      image.value = `${SeriesService.getImagebyId(series.value.id)}?t=${Date.now()}`;
+      console.log("getSeries", image.value);
+    }
 
   } catch (error) {
-    // console.log(error);
+    console.log(error);
   }
 }
 
 async function getIssues() {
   try {
-    const response = await IssueService.getIssues(
-      { headers },
-      route.params.Id,
-      "title",
-      "asc"
-    );
-    issues.value = response.data.data;
-    console.log(issues);
+    const result: any = await IssueService.fetchIssues(Number(route.params.Id), "title", "asc");
+    issuesList.value = result.issuesList;
+    issuesList.value = issuesList.value.map(issue => ({
+      ...issue,
+      bought_date: issue.bought_date ? new Date(issue.bought_date) : null,
+      read_date: issue.read_date ? new Date(issue.read_date) : null,
+    }));
+    pagination.value = result.pagination;
   } catch (error) {
     console.log(error);
   }
 }
 
-async function handleUpdate(){
-
-  let seriesData =     {
-        title: updatedSeries.value.title,
-        publisher:  updatedSeries.value.publisher,
-        writer:  updatedSeries.value.writer,
-        artist:  updatedSeries.value.artist,
-        editor:  updatedSeries.value.editor,
-        summary:  updatedSeries.value.summary,
-        genre:  updatedSeries.value.genre,
-        main_char:  updatedSeries.value.main_char,
-        series_format:  updatedSeries.value.series_format,
-      }
-    
-  if (imageChanged.value){
-    seriesData.thumbnail = image.value
-  }
-
-  try{
-    const response = await SeriesService.updateSeries(route.params.Id,seriesData
-    );
-    series.value = response.data;
-    image.value = SeriesService.getImagebyId(series.value.id);
-    showModal.value = false
-    console.log(series);
-    imageChanged.value = false
-  }catch(error){
-    console.log(error);
-  }
-}
 
 async function getIssueCount() {
   try {
     const response = await IssueService.getIssueCount(
-      route.params.Id,
+      Number(route.params.Id),
     );
     issueCount.value = response.data;
     console.log(issueCount);
@@ -317,40 +301,49 @@ async function getIssueCount() {
   }
 }
 
-async function updateStatus(issue, field) {
-  issue[field] = (issue[field] === 0) ? 1 : 0;
+async function updateStatus(issue: { [x: string]: any; id: any }, payload: { status: string; value: boolean; date?: string }) {
+  const { status, value, date } = payload;
+
+  issue[status] = value;
+  if (date) {
+    const dateField = status === 'is_owned' ? 'bought_date' : 'read_date';
+    issue[dateField] = date;
+  }
+
   try {
-    const updateData = { [field]: issue[field] }; // Use square brackets to set dynamic property name
-    const response = await IssueService.updateIssue(
-      issue.id,
-      updateData);
-    console.log(response.data[field]);
+    const updateData: any = { [status]: value };
+    if (date) {
+      const dateField = status === 'is_owned' ? 'bought_date' : 'read_date';
+      const isoDate = new Date(date).toISOString();
+      updateData[dateField] = isoDate;
+    }
+
+    const response = await IssueService.updateIssue(issue.id, updateData);
+    console.log(response.data);
     getIssueCount();
   } catch (error) {
     console.log(error);
   }
 }
 
+async function updateRating(newRating: number) {
+  try {
+    const formData = new FormData();
+    formData.append("user_rating", String(newRating));
 
-// function onFileChange(e) {
-//   const file = e.target.files[0];
-//   const url = URL.createObjectURL(file);
-//   image.value = url
-//   imageChanged.value = true
-// }
-
-function changeImage(event) {
-  event.target.value
-    ? (image.value = event.target.value)
-    : (imagesrc.value = new URL("../assets/dummy.webp", import.meta.url).href);
-      imageChanged.value = true
+    await SeriesService.updateSeries(Number(route.params.Id), formData); // or use a PATCH method if available
+    await getSeries(); // re-fetch the full series data to reflect the change
+    console.log("Rating updated and series reloaded.");
+  } catch (error) {
+    console.error("Failed to update rating:", error);
+  }
 }
 
 onMounted(() => {
-  getSeries(), getIssues(), getIssueCount();
+  getSeries();
+  getIssues();
+  getIssueCount();
 });
-
-
 
 </script>
 

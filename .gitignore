@@ -1,5 +1,7 @@
 __pycache__/
 *.py[cod]
+vertigo-backend/__pycache__
+vertigo-backend/api/__pycache__
 vertigo-backend/.DS_Store
 vertigo-backend/.env
 vertigo-backend/*.pyc
@@ -25,3 +27,4 @@ vertigo-backend/.coverage.*
 vertigo-backend/*,cover
 vertigo-backend/Config/
 .vscode/*
+vertigo-ui/.env.development
