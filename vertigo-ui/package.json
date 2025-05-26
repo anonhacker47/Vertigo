@@ -33,7 +33,7 @@
     "primevue": "^4.0.4",
     "requirejs": "^2.3.7",
     "roboto-fontface": "*",
-    "swiper": "^11.1.9",
+    "swiper": "^11.2.8",
     "tailwindcss-primeui": "^0.3.4",
     "vue": "^3.4.35",
     "vue-echarts": "^7.0.1",
