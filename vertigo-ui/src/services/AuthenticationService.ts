@@ -31,10 +31,21 @@ export default {
     const response = await Api().get("me/profile-picture/", {
       responseType: "blob",
     });
-    return URL.createObjectURL(response.data) ;
+    return URL.createObjectURL(response.data);
   },
 
   refreshToken(data: any) {
     return Api().put("tokens", data);
+  },
+
+  async exportCollection() {
+    const response = await Api().get("export_data", {
+      responseType: "blob", // ensure you receive a binary file
+    });
+    return response.data;
+  },
+
+  async deleteAllData() {
+    return Api().delete("/delete_all_data");
   },
 };

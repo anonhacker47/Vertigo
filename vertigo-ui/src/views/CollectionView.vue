@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";

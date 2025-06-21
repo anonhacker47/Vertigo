@@ -52,6 +52,14 @@ def new(args, series_id):
 
     db.session.commit()
 
+    issues_query = series.issue_select()
+    issues_data = db.session.scalars(issues_query).all()
+    series.owned_count = sum(i.is_owned for i in issues_data)
+    series.read_count = sum(i.is_read for i in issues_data)
+    series.issue_count = len(issues_data)
+    series.purchase_cost = sum(i.bought_price or 0 for i in issues_data if i.is_owned)
+    db.session.commit()
+
     return new_issues
 
 @issues.route('/series/<int:series_id>/single_issue', methods=['POST'])
@@ -96,6 +104,7 @@ def create_single_issue(series_id):
     series.owned_count = sum(i.is_owned for i in updated_issues)
     series.read_count = sum(i.is_read for i in updated_issues)
     series.issue_count = len(updated_issues)
+    series.purchase_cost = sum(i.bought_price or 0 for i in updated_issues if i.is_owned)
 
     db.session.commit()
 
@@ -185,6 +194,10 @@ def put(data, id):
     issue.series.owned_count = sum(i.is_owned for i in issues_data)
     issue.series.read_count = sum(i.is_read for i in issues_data)
 
+    issue.series.purchase_cost = sum(
+        i.bought_price or 0 for i in issues_data if i.is_owned
+    )
+
     db.session.commit()
     return issue
 
@@ -212,7 +225,9 @@ def delete(id):
         issue.series.owned_count = sum(i.is_owned for i in issues_data)
         issue.series.read_count = sum(i.is_read for i in issues_data)
         issue.series.issue_count = len(issues_data)
-
+        issue.series.purchase_cost = sum(
+            i.bought_price or 0 for i in issues_data if i.is_owned
+        )
         db.session.commit()
         return '', 204
     else:

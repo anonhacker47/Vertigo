@@ -13,7 +13,7 @@ import re
 import uuid
 from PIL import Image
 
-def download_series_thumbnail(url, title,path):
+def download_series_thumbnail(url, title, path):
     if url != "noimage":
         request = requests.get(url, stream=True)
         ext = re.search('\.(\w+)(?!.*\.)', url).group(1)

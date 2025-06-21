@@ -40,6 +40,45 @@
             </section>
 
 
+            <section class="border-2 border-sky-900 rounded-xl shadow p-6 flex flex-col gap-6">
+                <!-- Export Section -->
+                <div class="space-y-3">
+                    <h2 class="text-xl font-semibold">Export Collection</h2>
+                    <p class="text-sm text-sky-600">
+                        Download your comic series and issue data as an Excel (.xlsx) file.
+                    </p>
+                    <button @click="handleExport"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-md transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        📤 Export to Excel
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-200 my-2"></div>
+
+                <!-- Clean Section -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 text-red-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13 16h-1v-4h-1m1-4h.01M12 9v2m0 4v.01m0 0h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="text-md font-semibold">Danger Zone: Clean Data</h3>
+                    </div>
+                    <p class="text-sm text-red-500">
+                        This will permanently delete <strong>all your saved series and issues</strong>. This action
+                        <u>cannot be undone</u>. Please proceed with caution.
+                    </p>
+                    <button @click="confirmClean"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-md transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500">
+                        🗑️ Clean Data Permanently
+                    </button>
+                </div>
+            </section>
+
+            <!-- PrimeVue ConfirmDialog component -->
+            <ConfirmDialog />
+
         </div>
         <div class="flex justify-end gap-4">
             <button @click="cancelSettings"
@@ -62,10 +101,12 @@ import currencyCodes from 'currency-codes'
 import ImageUploader from '@/components/createSeries/ImageUploader.vue'
 import AuthenticationService from '@/services/AuthenticationService'
 import { useToast } from "primevue/usetoast";
+import { useConfirm } from 'primevue/useconfirm'
 
 const preferredCurrency = ref()
 const userStore = useUserStore()
 const toast = useToast();
+const confirm = useConfirm()
 
 // Reactive ref for profile picture source
 const imagesrc = ref('')
@@ -88,6 +129,43 @@ watch(
     { immediate: true }
 )
 
+const confirmClean = () => {
+    confirm.require({
+        message: 'This will permanently delete all your series and issues. Continue?',
+        header: 'Confirm Deletion',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Yes, Delete',
+        rejectLabel: 'Cancel',
+        acceptClass: 'p-button-danger',
+        accept: async () => {
+            try {
+                await handleClean()
+                toast.add({
+                    severity: 'success',
+                    summary: 'Data Deleted',
+                    detail: 'Your collection was deleted successfully.',
+                    life: 3000
+                })
+            } catch (err) {
+                console.error('Failed to delete user data:', err)
+                toast.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Failed to delete your data.',
+                    life: 3000
+                })
+            }
+        },
+        reject: () => {
+            toast.add({
+                severity: 'info',
+                summary: 'Cancelled',
+                detail: 'Your data is safe.',
+                life: 3000
+            })
+        }
+    })
+}
 
 // On image change
 function onImageChange(file: File | string) {
@@ -192,5 +270,37 @@ async function cancelSettings() {
     preferredCurrency.value = user?.preferred_currency ?? '';
 }
 
+const handleExport = async () => {
+    try {
+        const data = await AuthenticationService.exportCollection();
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'comic_collection.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
+        toast.add({
+            severity: 'success',
+            summary: 'Export Successful',
+            detail: 'Your comic collection has been downloaded.',
+            life: 3000
+        });
+    } catch (error) {
+        console.error('Export failed:', error);
+
+        toast.add({
+            severity: 'error',
+            summary: 'Export Failed',
+            detail: 'There was a problem exporting your collection.',
+            life: 4000
+        });
+    }
+};
+
+const handleClean = async () => {
+    await AuthenticationService.deleteAllData()
+}
 </script>
