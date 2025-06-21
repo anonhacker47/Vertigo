@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";
@@ -106,11 +106,6 @@ const confirmDelete = (id: number, title: any) => {
 
 const { width } = useWindowSize();
 const seriesList = ref<Series[]>([]);
-const pagination = ref({
-  total: 0,
-  limit: 25,
-  offset: 0
-});
 const userstore = useUserStore();
 const userPreferences = useUserPreferences();
 const { id: userId } = userstore.getUser();
@@ -137,6 +132,24 @@ let cardHeightMultiplier = [19, 14, 9, 7.5];
 let cardWidthMultiplier = [12, 9.2, 6, 5];
 const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
 const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
+
+const computeLimit = (gridValue: number) => Math.floor(25 / gridValue) * gridValue;
+
+const pagination = ref({
+  total: 0,
+  limit: computeLimit(selectedGrid.value),
+  offset: 0
+});
+
+watch(selectedGrid, (newVal) => {
+  pagination.value.limit = computeLimit(newVal);
+  cardHeightMD.value = cardHeightMultiplierMD[newVal - 2];
+  cardWidthMD.value = cardWidthMultiplierMD[newVal - 2];
+  cardHeight.value = cardHeightMultiplier[newVal - 2];
+  cardWidth.value = cardWidthMultiplier[newVal - 2];
+
+  getseriesList(0, pagination.value.limit); // Refetch on grid change
+});
 
 
 async function deleteSeries(id: number) {
@@ -174,14 +187,11 @@ const getseriesList = async (offset = 0, limit = pagination.value?.limit || 25) 
 };
 
 function changeGrid(selected: any) {
-  userPreferences.setCardsPerLine(selected.target.value);
-  selectedGrid.value = parseInt(selected.target.value);
-  cardHeightMD.value = cardHeightMultiplierMD[selectedGrid.value - 2];
-  cardWidthMD.value = cardWidthMultiplierMD[selectedGrid.value - 2];
-  cardHeight.value = cardHeightMultiplier[selectedGrid.value - 2];
-  cardWidth.value = cardWidthMultiplier[selectedGrid.value - 2];
-  console.log(selectedGrid.value);
+  const newVal = parseInt(selected.target.value);
+  userPreferences.setCardsPerLine(newVal);
+  selectedGrid.value = newVal;
 }
+
 
 function orderDirection(values: any) {
   userPreferences.setorderDir(values.target.value)
@@ -205,7 +215,8 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  getseriesList(pagination.value.offset, 25);
+  pagination.value.limit = computeLimit(selectedGrid.value);
+  getseriesList(pagination.value.offset, pagination.value.limit);
 });
 </script>
 
