@@ -100,14 +100,14 @@
               <p class="text-xl text-center font-bold" :style="`color: rgb${themecolor}`">
                 Description
               </p>
-              <p class="mt-4 text-justify">{{ series.description }}</p>
+              <p class="mt-4 text-white text-justify">{{ series.description }}</p>
             </div>
           </div>
 
         </div>
         <div
           class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6">
-          <h1 class="flex justify-center pb-4 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
+          <h1 class="flex justify-center py-2 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
           <div class="overflow-scroll h-full flex flex-row justify-center items-start w-full">
