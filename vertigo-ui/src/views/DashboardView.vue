@@ -13,7 +13,7 @@
 
       <AddSeriesCardItem />
     </div>
-    <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 md:h-[68vh]">
+    <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 md:h-[66vh]">
       <div class="card relative h-full basis-1/2  items-center bg-base-100 shadow-xl">
         <PieChartItem :title="chartTitle" :data="chartData" />
 
@@ -58,7 +58,7 @@
         <div
           class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases</div>
-        <div class="mt-6 h-full w-full flex items-center justify-center">
+        <div class="mt-4 h-full w-full flex items-top justify-center">
           <SwiperCardItem v-if="recentPurchasedIssues && recentPurchasedIssues.length > 0"
             :recentPurchasedIssues="recentPurchasedIssues" />
           <div v-else class="flex items-center justify-center h-full text-gray-400 text-lg">
