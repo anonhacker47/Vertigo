@@ -17,3 +17,6 @@ pillow
 python-slugify
 mokkari
 babel
+pandas
+openpyxl
+babel
