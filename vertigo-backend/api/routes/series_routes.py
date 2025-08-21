@@ -243,7 +243,7 @@ def get_series_image(id):
 
     try:
         # print(current_app.config['cover_path']+ f"\\{series.thumbnail}")
-        return send_file(current_app.config['cover_path'] + f"\\{series.thumbnail}")
+        return send_file(os.path.join(current_app.config['cover_path'], series.thumbnail))
     except FileNotFoundError:
         return jsonify("Image file not found"), 404
     except Exception as e:

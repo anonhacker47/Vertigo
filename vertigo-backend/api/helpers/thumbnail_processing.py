@@ -16,7 +16,7 @@ from PIL import Image
 def download_series_thumbnail(url, title, path):
     if url != "noimage":
         request = requests.get(url, stream=True)
-        ext = re.search('\.(\w+)(?!.*\.)', url).group(1)
+        ext = re.search(r'\.(\w+)(?!.*\.)', url).group(1)
 
         if "webp" in ext:
             extension = ".webp"
@@ -37,7 +37,8 @@ def download_series_thumbnail(url, title, path):
 
         if request.status_code == 200:
             request.raw.decode_content = True
-            with open(current_app.config[path]+"\\"+filename, 'wb') as f:
+            save_path = os.path.join(current_app.config[path], filename)
+            with open(save_path, 'wb') as f:
                 shutil.copyfileobj(request.raw, f)
 
             print('Image successfully Downloaded: ', filename)
@@ -53,7 +54,7 @@ def download_series_thumbnail(url, title, path):
 
 def save_series_thumbnail(file, title,path):
     if not isinstance(file, str):
-        ext = re.search('\.(\w+)(?!.*\.)', file.filename).group(1)
+        ext = re.search(r'\.(\w+)(?!.*\.)', file.filename).group(1)
 
         if "webp" in ext:
             extension = ".webp"
@@ -72,7 +73,7 @@ def save_series_thumbnail(file, title,path):
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
 
         if file:
-            file.save(current_app.config[path]+"\\"+filename)
+            file.save(os.path.join(current_app.config[path],filename))
 
             # print('Image successfully Downloaded: ', filename)
 
@@ -115,7 +116,7 @@ def calculate_dominant_color(filename,path):
                 i += 1
         return dominant_color
 
-    im = Image.open(current_app.config[path]+"\\"+filename)
+    im = Image.open(os.path.join(current_app.config[path], filename))
     dominant_color = get_dominant_color(im)
     return f"({dominant_color[0]},{dominant_color[1]},{dominant_color[2]})"
 

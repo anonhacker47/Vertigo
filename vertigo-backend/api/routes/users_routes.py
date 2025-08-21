@@ -127,7 +127,7 @@ def get_profile_picture():
         return jsonify("noimage")
 
     try:
-        return send_file(current_app.config['user_path'] + f"\\{user.profile_picture}")
+        return send_file(os.path.join(current_app.config['user_path'],user.profile_picture))
     except FileNotFoundError:
         return jsonify("Image file not found"), 404
     except Exception as e:
