@@ -9,7 +9,7 @@ from api.app import db
 from api.schemas.pagination_schema import StringPaginationSchema, paginated_collection
 
 
-def paginated_response(schema, max_limit=25, order_by=None,
+def paginated_response(schema, max_limit=100, order_by=None,
                        order_direction='desc',
                        pagination_schema=StringPaginationSchema):
     def inner(f):

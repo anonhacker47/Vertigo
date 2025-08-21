@@ -1,29 +1,64 @@
 <template>
-  <Transition enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div v-if="true" class="flex justify-around items-center py-2 border-b border-slate-700">
-      <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary justify-center">
+  <Transition
+    enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut animate__faster"
+  >
+    <div
+      v-if="true"
+      class="flex justify-around items-center py-2 border-b border-slate-700"
+    >
+      <RouterLink
+        :to="{ name: 'AddNewSeries' }"
+        class="btn btn-primary justify-center"
+      >
         Add Series
       </RouterLink>
 
-      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
-        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
-        v-model:orderBy="orderBy" v-model:orderDir="orderDir" />
-      <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
+      <CollectionDropDownMenu
+        :getScreenWidth="getScreenWidth"
+        :selectedGrid="selectedGrid"
+        :changeGrid="changeGrid"
+        :orderDirection="orderDirection"
+        :orderByProperties="orderByProperties"
+        v-model:viewMode="viewMode"
+        v-model:orderBy="orderBy"
+        v-model:orderDir="orderDir"
+        v-model:itemsPerPage="pagination.limit"
+      />
+      <button
+        class="btn"
+        :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
+        @click="toggleDelete"
+      >
         Delete Mode
       </button>
     </div>
   </Transition>
-  <div class="grid gap-3 md:pb-6 pt-2 md:gap-5 md:m-auto max-w-screen-3xl" v-if="viewMode == 'card'"
-    :class="`grid-cols-${selectedGrid}`">
+  <div
+    class="grid gap-3 md:pb-6 pt-2 md:gap-5 md:m-auto max-w-screen-3xl"
+    v-if="viewMode == 'card'"
+    :class="`grid-cols-${selectedGrid}`"
+  >
     <template v-if="seriesList.length > 0">
-      <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
-        <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
-
-          <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
-            :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
-            @confirmDelete="confirmDelete" />
-
+      <TransitionGroup
+        :key="sortKey"
+        enter-active-class="animate__animated animate__zoomInDown"
+      >
+        <div
+          class="flex flex-row relative justify-center items-start"
+          v-for="series in seriesList"
+          :key="series.id"
+        >
+          <CollectionCardItem
+            :class="{ 'animate-wiggle': deleteMode }"
+            :series="series"
+            :cardHeightMD="cardHeightMD"
+            :cardWidthMD="cardWidthMD"
+            :cardHeight="cardHeight"
+            :cardWidth="cardWidth"
+            :deleteMode="deleteMode"
+            @confirmDelete="confirmDelete"
+          />
         </div>
       </TransitionGroup>
     </template>
@@ -33,17 +68,29 @@
       </div>
     </template>
   </div>
-  <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut">
+  <Transition
+    name="list"
+    enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut"
+  >
     <div class="mx-5" v-if="viewMode === 'list'" key="listView">
-      <CollectionTable v-if="seriesList && seriesList.length" :seriesList="seriesList" :deleteMode="deleteMode"
-        :confirmDelete="confirmDelete" />
+      <CollectionTable
+        v-if="seriesList && seriesList.length"
+        :seriesList="seriesList"
+        :deleteMode="deleteMode"
+        :confirmDelete="confirmDelete"
+      />
     </div>
   </Transition>
 
-  <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
-    :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
-
+  <Paginator
+    v-if="pagination.total"
+    :rows="pagination.limit"
+    :totalRecords="pagination.total"
+    :first="pagination.offset"
+    @page="onPageChange"
+    class="mx-auto max-w-fit py-4"
+  />
 
   <ConfirmDialog>
     <template #message="slotProps">
@@ -53,7 +100,6 @@
       </p>
     </template>
   </ConfirmDialog>
-
 </template>
 
 <script setup lang="ts">
@@ -63,12 +109,12 @@ import { onMounted, ref, watch } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";
-import { useWindowSize } from 'vue-window-size';
-import CollectionDropDownMenu from '@/components/dropdowns/CollectionDropDownMenu.vue';
+import { useWindowSize } from "vue-window-size";
+import CollectionDropDownMenu from "@/components/dropdowns/CollectionDropDownMenu.vue";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import { Series } from '@/types/series.types';
-import Paginator from 'primevue/paginator';
+import { Series } from "@/types/series.types";
+import Paginator from "primevue/paginator";
 
 const onPageChange = (event: any) => {
   if (event.rows > 0) {
@@ -82,25 +128,30 @@ const toast = useToast();
 const confirmDelete = (id: number, title: any) => {
   confirm.require({
     message: title,
-    header: 'Confirm Deletion',
-    icon: 'pi pi-info-circle',
-    rejectLabel: 'Cancel',
+    header: "Confirm Deletion",
+    icon: "pi pi-info-circle",
+    rejectLabel: "Cancel",
     rejectProps: {
-      label: 'Cancel',
-      severity: 'secondary',
-      outlined: true
+      label: "Cancel",
+      severity: "secondary",
+      outlined: true,
     },
     acceptProps: {
-      label: 'Delete',
-      severity: 'danger'
+      label: "Delete",
+      severity: "danger",
     },
     accept: () => {
       deleteSeries(id);
-      toast.add({ severity: 'success', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
+      toast.add({
+        severity: "success",
+        summary: "Confirmed",
+        detail: `${title} deleted`,
+        life: 3000,
+      });
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-    }
+    },
   });
 };
 
@@ -133,16 +184,20 @@ let cardWidthMultiplier = [12, 9.2, 6, 5];
 const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
 const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
 
-const computeLimit = (gridValue: number) => Math.floor(25 / gridValue) * gridValue;
-
 const pagination = ref({
   total: 0,
-  limit: computeLimit(selectedGrid.value),
-  offset: 0
+  limit: 25,
+  offset: 0,
 });
 
+watch(
+  () => pagination.value.limit,
+  (newLimit) => {
+    getseriesList(0, newLimit);
+  },
+);
+
 watch(selectedGrid, (newVal) => {
-  pagination.value.limit = computeLimit(newVal);
   cardHeightMD.value = cardHeightMultiplierMD[newVal - 2];
   cardWidthMD.value = cardWidthMultiplierMD[newVal - 2];
   cardHeight.value = cardHeightMultiplier[newVal - 2];
@@ -151,12 +206,11 @@ watch(selectedGrid, (newVal) => {
   getseriesList(0, pagination.value.limit); // Refetch on grid change
 });
 
-
 async function deleteSeries(id: number) {
   const idToRemove = id;
   seriesList.value.splice(
     seriesList.value.findIndex((a) => a.id === idToRemove),
-    1
+    1,
   );
 
   try {
@@ -174,15 +228,21 @@ const toggleDelete = (): void => {
   deleteMode.value = !deleteMode.value;
 };
 
-const getseriesList = async (offset = 0, limit = pagination.value?.limit || 25) => {
+const getseriesList = async (offset = 0, limit = pagination.value?.limit) => {
   if (limit === 0) return;
 
   try {
-    const result: any = await SeriesService.fetchSeries(userId, orderBy.value, orderDir.value, limit, offset);
+    const result: any = await SeriesService.fetchSeries(
+      userId,
+      orderBy.value,
+      orderDir.value,
+      limit,
+      offset,
+    );
     seriesList.value = result.seriesList;
     pagination.value = result.pagination;
   } catch (error) {
-    console.error('Error loading series:', error);
+    console.error("Error loading series:", error);
   }
 };
 
@@ -192,19 +252,17 @@ function changeGrid(selected: any) {
   selectedGrid.value = newVal;
 }
 
-
 function orderDirection(values: any) {
-  userPreferences.setorderDir(values.target.value)
+  userPreferences.setorderDir(values.target.value);
   orderDir.value = values.target.value;
-  seriesList.value = []
+  seriesList.value = [];
   getseriesList();
-
 }
 
 function orderByProperties(values: any) {
   userPreferences.setorderBy(values.target.value);
   orderBy.value = values.target.value;
-  seriesList.value = []
+  seriesList.value = [];
   getseriesList();
 }
 
@@ -215,7 +273,6 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  pagination.value.limit = computeLimit(selectedGrid.value);
   getseriesList(pagination.value.offset, pagination.value.limit);
 });
 </script>
@@ -229,14 +286,15 @@ onMounted(() => {
   background: var(--bg-gradient);
 }
 
-
 .drp {
   margin-left: -84px;
 }
 
 .range::-moz-range-thumb {
   color: #1fb2a6;
-  box-shadow: 0 0 0 3px #1fb2a6 inset, var(--focus-shadow, 0 0),
+  box-shadow:
+    0 0 0 3px #1fb2a6 inset,
+    var(--focus-shadow, 0 0),
     calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
 }
 </style>
