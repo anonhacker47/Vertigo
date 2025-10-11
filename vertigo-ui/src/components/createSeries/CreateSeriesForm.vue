@@ -66,7 +66,6 @@ import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 
 
-
 const props = defineProps<{
   modelValue: Partial<Series>,
   showIssueSection: boolean

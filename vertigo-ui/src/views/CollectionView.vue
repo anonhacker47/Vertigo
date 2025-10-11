@@ -1,64 +1,37 @@
 <template>
-  <Transition
-    enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut animate__faster"
-  >
-    <div
-      v-if="true"
-      class="flex justify-around items-center py-2 border-b border-slate-700"
-    >
-      <RouterLink
-        :to="{ name: 'AddNewSeries' }"
-        class="btn btn-primary justify-center"
-      >
+  <Transition enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut animate__faster">
+    <div v-if="true" class="flex justify-around items-center py-2 border-b bg-base-100 border-slate-700">
+      <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary justify-center">
         Add Series
       </RouterLink>
 
-      <CollectionDropDownMenu
-        :getScreenWidth="getScreenWidth"
-        :selectedGrid="selectedGrid"
-        :changeGrid="changeGrid"
-        :orderDirection="orderDirection"
-        :orderByProperties="orderByProperties"
-        v-model:viewMode="viewMode"
-        v-model:orderBy="orderBy"
-        v-model:orderDir="orderDir"
-        v-model:itemsPerPage="pagination.limit"
-      />
-      <button
-        class="btn"
-        :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
-        @click="toggleDelete"
-      >
+      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
+        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
+        v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
+      <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
         Delete Mode
       </button>
     </div>
   </Transition>
-  <div
-    class="grid gap-3 md:pb-6 pt-2 md:gap-5 md:m-auto max-w-screen-3xl"
-    v-if="viewMode == 'card'"
-    :class="`grid-cols-${selectedGrid}`"
-  >
+
+  <SearchSeriesForm @search="handleSearch" />
+
+  <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
+    <div class="flex justify-center items-center">
+      <span  class="loading-ring  text-success h-44 w-44 loading"></span >
+    </div>
+  </div>
+
+  <!-- Card View -->
+  <div v-else-if="viewMode == 'card'"
+    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-screen-3xl grid-cols-${selectedGrid}`">
     <template v-if="seriesList.length > 0">
-      <TransitionGroup
-        :key="sortKey"
-        enter-active-class="animate__animated animate__zoomInDown"
-      >
-        <div
-          class="flex flex-row relative  justify-center items-start"
-          v-for="series in seriesList"
-          :key="series.id"
-        >
-          <CollectionCardItem
-            :class="{ 'animate-wiggle': deleteMode }"
-            :series="series"
-            :cardHeightMD="cardHeightMD"
-            :cardWidthMD="cardWidthMD"
-            :cardHeight="cardHeight"
-            :cardWidth="cardWidth"
-            :deleteMode="deleteMode"
-            @confirmDelete="confirmDelete"
-          />
+      <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
+        <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
+          <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
+            :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
+            @confirmDelete="confirmDelete" />
         </div>
       </TransitionGroup>
     </template>
@@ -68,29 +41,18 @@
       </div>
     </template>
   </div>
-  <Transition
-    name="list"
-    enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut"
-  >
+
+
+  <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut">
     <div class="mx-5" v-if="viewMode === 'list'" key="listView">
-      <CollectionTable
-        v-if="seriesList && seriesList.length"
-        :seriesList="seriesList"
-        :deleteMode="deleteMode"
-        :confirmDelete="confirmDelete"
-      />
+      <CollectionTable v-if="seriesList && seriesList.length" :seriesList="seriesList" :deleteMode="deleteMode"
+        :confirmDelete="confirmDelete" />
     </div>
   </Transition>
 
-  <Paginator
-    v-if="pagination.total"
-    :rows="pagination.limit"
-    :totalRecords="pagination.total"
-    :first="pagination.offset"
-    @page="onPageChange"
-    class="mx-auto max-w-fit py-4"
-  />
+  <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
+    :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
 
   <ConfirmDialog>
     <template #message="slotProps">
@@ -115,10 +77,11 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { Series } from "@/types/series.types";
 import Paginator from "primevue/paginator";
+import SearchSeriesForm from "@/components/forms/SearchSeriesForm.vue";
 
 const onPageChange = (event: any) => {
   if (event.rows > 0) {
-    getseriesList(event.first, event.rows);
+    getseriesList(currentFilter.value, event.first, event.rows);
   }
 };
 
@@ -169,6 +132,7 @@ const orderDir = ref(userPreferences.orderDir);
 const viewMode = ref(userPreferences.viewMode); // Default to user preference
 
 const sortKey = ref(true);
+const loading = ref(false);
 
 // Custom heights and width for each column vallues
 // cardHeight for mobile devices
@@ -190,12 +154,16 @@ const pagination = ref({
   offset: 0,
 });
 
-watch(
-  () => pagination.value.limit,
-  (newLimit) => {
-    getseriesList(0, newLimit);
-  },
-);
+const currentFilter = ref({});
+
+const handleSearch = (filters) => {
+  currentFilter.value = filters;
+  getseriesList(currentFilter.value, 0, pagination.value.limit); // offset=0 on new search
+};
+
+watch(() => pagination.value.limit, (newLimit) => {
+  getseriesList(currentFilter.value, 0, newLimit);
+});
 
 watch(selectedGrid, (newVal) => {
   cardHeightMD.value = cardHeightMultiplierMD[newVal - 2];
@@ -203,7 +171,6 @@ watch(selectedGrid, (newVal) => {
   cardHeight.value = cardHeightMultiplier[newVal - 2];
   cardWidth.value = cardWidthMultiplier[newVal - 2];
 
-  getseriesList(0, pagination.value.limit); // Refetch on grid change
 });
 
 async function deleteSeries(id: number) {
@@ -228,9 +195,13 @@ const toggleDelete = (): void => {
   deleteMode.value = !deleteMode.value;
 };
 
-const getseriesList = async (offset = 0, limit = pagination.value?.limit) => {
+const getseriesList = async (
+  filter = currentFilter.value,
+  offset = 0,
+  limit = pagination.value.limit
+) => {
   if (limit === 0) return;
-
+  loading.value = true;
   try {
     const result: any = await SeriesService.fetchSeries(
       userId,
@@ -238,11 +209,20 @@ const getseriesList = async (offset = 0, limit = pagination.value?.limit) => {
       orderDir.value,
       limit,
       offset,
+      filter
     );
     seriesList.value = result.seriesList;
     pagination.value = result.pagination;
   } catch (error) {
     console.error("Error loading series:", error);
+    toast.add({
+      severity: "error",
+      summary: "Error",
+      detail: "Failed to load series.",
+      life: 3000,
+    });
+  } finally {
+    loading.value = false; // stop loading
   }
 };
 
@@ -273,7 +253,8 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  getseriesList(pagination.value.offset, pagination.value.limit);
+  // getseriesList(pagination.value.offset, pagination.value.limit);
+  getseriesList({});
 });
 </script>
 
