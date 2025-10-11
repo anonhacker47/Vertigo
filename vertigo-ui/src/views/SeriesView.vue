@@ -77,9 +77,9 @@
         </div>
       </div>
 
-      <div class="flex flex-col md:flex-row grow">
+      <div class="flex flex-col md:flex-row grow h-[86vh]">
         <div
-          class="flex flex-col relative mb-6 mr-2 md:basis-1/2 md:w-1/2 w-full"
+          class="flex flex-col relative mr-2 md:basis-1/2 md:w-1/2 w-full overflow-hidden"
         >
           <div
             class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4"
@@ -195,7 +195,7 @@
           </div>
         </div>
         <div
-          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700 mb-6"
+          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700"
         >
           <h1
             class="flex justify-center py-2 px-4 font-bold text-3xl"
@@ -204,10 +204,10 @@
             Issues
           </h1>
           <div
-            class="overflow-scroll h-full flex flex-row justify-center items-start w-full"
+            class="overflow-scroll h-full flex flex-row justify-center mx-auto items-start w-full"
           >
             <div
-              class="flex flex-wrap flex-start items-start gap-10 md:px-16 px-12"
+              class="flex flex-wrap flex-start gap-10 w-[82%] my-4 "
             >
               <IssueCarditem
                 :edit_mode="editMode"

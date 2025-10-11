@@ -58,7 +58,7 @@
         <div
           class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases</div>
-        <div class="mt-4 h-full w-full flex items-top justify-center">
+        <div class="mt-4 h-full w-full flex items-center justify-center">
           <SwiperCardItem v-if="recentPurchasedIssues && recentPurchasedIssues.length > 0"
             :recentPurchasedIssues="recentPurchasedIssues" />
           <div v-else class="flex items-center justify-center h-full text-gray-400 text-lg">

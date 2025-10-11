@@ -45,7 +45,7 @@
         enter-active-class="animate__animated animate__zoomInDown"
       >
         <div
-          class="flex flex-row relative justify-center items-start"
+          class="flex flex-row relative  justify-center items-start"
           v-for="series in seriesList"
           :key="series.id"
         >
