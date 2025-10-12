@@ -76,35 +76,17 @@ import {
 import { CheckIcon, ChevronUpDownIcon,TrashIcon } from '@heroicons/vue/20/solid'
 import SeriesService from '@/services/SeriesService';
 
-const items = ref([])
 const props = defineProps({
   field: String,
-  placeholder: String
+  placeholder: String,
+  items: Array
 })
 
 const model = defineModel({
   type: Array,
-  default: []
+  default: [],
 })
 
-onMounted(() => {
-  getSeriesFields();
-});
-
-
-async function getSeriesFields() {
-  try {
-    const response = await SeriesService.getSeriesFieldValues(
-      `${props.field}`,
-    );
-
-    items.value = response.data;
-
-    console.log("items2multiple",items.value);
-  } catch (error) {
-    console.log(error);
-  }
-}
 let query = ref('')
 
 const queryItem = computed(() => {
@@ -113,8 +95,8 @@ const queryItem = computed(() => {
 
 let filteredItems = computed(() =>
   query.value === ''
-    ? items.value
-    : items.value.filter((item: { value: string; }) =>
+    ? props.items
+    : props.items.filter((item: { value: string; }) =>
       item.value
         .toLowerCase()
         .replace(/\s+/g, '')
@@ -132,8 +114,8 @@ const removeItem = (item: any) => {
 }
 
 const addCustomItem = (value: any) => {
-  if (!items.value.find((item: { value: any; }) => item.value === value)) {
-    items.value.push({ id: value, value: value });
+  if (!props.items.find((item: { value: any; }) => item.value === value)) {
+    props.items.push({ id: value, value: value });
   }
   if (!model.value.includes(value)) {
     model.value.push(value);

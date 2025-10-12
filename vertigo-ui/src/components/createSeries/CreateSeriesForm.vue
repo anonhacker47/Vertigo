@@ -1,7 +1,7 @@
 <template>
     <div v-if="!showIssueSection"
-        class="card h-full w-full md:w-2/3 flex gap-6 md:gap-10 shadow-2xl bg-base-100 justify-between p-8">
-        <div class="flex flex-col w-full md:flex-row gap-8 md:gap-20 justify-around">
+        class="card h-full w-full md:w-2/3 flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
+        <div class="flex pb-8 flex-col w-full md:flex-row gap-8 md:gap-20 justify-around">
             <div class="form-control w-full">
                 <input type="text" placeholder="Series Name" v-model="localSeriesData.title"
                     class="input w-full input-bordered" required />
@@ -18,29 +18,44 @@
                 </select>
             </div>
             <div class="form-control w-full">
-                <SingleSelectCombobox v-model="localSeriesData.publisher" field="publisher" placeholder="Publisher" />
+                <SingleSelectCombobox v-model="localSeriesData.publisher" :items="seriesFieldValues.publisher || []"
+                    field="publisher" placeholder="Publisher" />
             </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-8 md:gap-20 justify-around">
+        <div class="flex flex-col md:flex-row pb-12 gap-8 md:gap-20 justify-around">
             <div class="form-control w-full text-center">
-                <MultiSelectCombobox v-model="localSeriesData.genre" field="genre" placeholder="Select Genre(s)" />
-                <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple options</p>
+                <MultiSelectCombobox v-model="localSeriesData.genre" :items="seriesFieldValues.genre || []"
+                    field="genre" placeholder="Select Genre(s)" />
+                <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple
+                    options</p>
             </div>
             <div class="form-control w-full">
-                <SingleSelectCombobox v-model="localSeriesData.main_character" field="main_character"
+                <SingleSelectCombobox :items="seriesFieldValues.main_character || []"
+                    v-model="localSeriesData.main_character" field="main_character"
                     placeholder="Main Character/ Team" />
             </div>
             <div class="form-control w-full text-center">
-                <MultiSelectCombobox v-model="localSeriesData.creator" field="creator" placeholder="Select Creator(s)" />
-                <p v-if="localSeriesData.creator.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple options</p>
+                <MultiSelectCombobox v-model="localSeriesData.creator" :items="seriesFieldValues.creator || []"
+                    field="creator" placeholder="Select Creator(s)" />
+                <p v-if="localSeriesData.creator.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple
+                    options</p>
             </div>
         </div>
 
         <div class="flex flex-col md:flex-row gap-20 justify-around">
-            <div class="form-control w-full">
-                <textarea class="textarea textarea-bordered" placeholder="Summary"
-                    v-model="localSeriesData.description"></textarea>
+            <div class="form-control w-full relative">
+                <textarea class="textarea textarea-bordered h-32" placeholder="Summary"
+                    v-model="localSeriesData.description" @input="validateDescription"></textarea>
+                <p class="text-sm mt-2" :class="{
+                    'text-gray-400': descriptionLength <= 1250,
+                    'text-red-500': descriptionLength > 1250
+                }">
+                    {{ descriptionLength }}/1250 characters
+                </p>
+                <p v-if="descriptionError" class="text-red-500 text-sm absolute bottom-[-1.5rem]">
+                    {{ descriptionError }}
+                </p>
             </div>
         </div>
 
@@ -51,7 +66,8 @@
                 </button>
             </div>
             <div class="form-control w-full">
-                <button @click.prevent="goToNext" :disabled="!localSeriesData.title || !localSeriesData.series_format" class="btn btn-primary rounded">
+                <button @click.prevent="goToNext" :disabled="!localSeriesData.title || !localSeriesData.series_format"
+                    class="btn btn-primary rounded">
                     Next
                 </button>
             </div>
@@ -61,14 +77,17 @@
 
 <script setup lang="ts">
 import type { Series } from "@/types/series.types";
-import {  reactive, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
+import SeriesService from "@/services/SeriesService";
 
+const seriesFields = ['publisher', 'genre', 'main_character', 'creator'];
+const seriesFieldValues = ref({});
 
 const props = defineProps<{
-  modelValue: Partial<Series>,
-  showIssueSection: boolean
+    modelValue: Partial<Series>,
+    showIssueSection: boolean
 }>()
 
 const emit = defineEmits(['update:modelValue', 'next'])
@@ -76,15 +95,47 @@ const emit = defineEmits(['update:modelValue', 'next'])
 const localSeriesData = reactive({ ...props.modelValue })
 
 watch(localSeriesData, (val) => {
-  const { thumbnail, ...rest } = val;
-  emit('update:modelValue', {
-    ...rest,
-    thumbnail: props.modelValue.thumbnail, // preserve the original thumbnail
-  });
+    const { thumbnail, ...rest } = val;
+    emit('update:modelValue', {
+        ...rest,
+        thumbnail: props.modelValue.thumbnail, // preserve the original thumbnail
+    });
 }, { deep: true });
 
 const goToNext = () => {
-  emit('next')
+    emit('next')
+}
+
+const descriptionLength = ref(0);
+const descriptionError = ref("");
+
+function validateDescription() {
+    descriptionLength.value = localSeriesData.description?.length || 0;
+
+    if (descriptionLength.value > 1250) {
+        descriptionError.value = "Description cannot exceed 1250 characters.";
+    } else {
+        descriptionError.value = "";
+    }
+}
+
+onMounted(() => {
+    getSeriesFields();
+});
+
+async function getSeriesFields() {
+    try {
+
+        for (const field of seriesFields) {
+            const response = await SeriesService.getSeriesFieldValues(field);
+            seriesFieldValues.value[field] = response.data;
+        }
+
+        console.log(seriesFieldValues.value);
+
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 </script>
