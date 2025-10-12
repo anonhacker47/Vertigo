@@ -44,3 +44,5 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER=os.environ.get('MAIL_DEFAULT_SENDER',
                                        'donotreply@microblog.example.com')
+    
+    SERVER_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
