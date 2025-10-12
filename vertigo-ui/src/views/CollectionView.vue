@@ -16,7 +16,6 @@
   </Transition>
 
   <SearchSeriesForm @search="handleSearch" />
-
   <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
     <div class="flex justify-center items-center">
       <span  class="loading-ring  text-success h-44 w-44 loading"></span >
