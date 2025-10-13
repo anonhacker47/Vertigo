@@ -22,7 +22,7 @@ if errorlevel 1 (
 REM === Step 4: Run the app ===
 echo [INFO] Launching app...
 start "" http://localhost:6166
-call .\.venv\Scripts\activate.bat && python -m vertigo.py
+call .\env\Scripts\activate.bat && python -m vertigo.py
 if errorlevel 1 (
     echo [ERROR] Failed to launch app.
     exit /b 1
