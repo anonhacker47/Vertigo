@@ -28,13 +28,13 @@ class UserSchema(ma.SQLAlchemySchema):
     )
 
     @validates('preferred_currency')
-    def validate_currency_code(self, value):
+    def validate_currency_code(self, value,data_key):
         if not value.isupper() or len(value) != 3:
             raise ValidationError("Preferred currency must be a 3-letter uppercase code.")
         
 
     @validates('username')
-    def validate_username(self, value):
+    def validate_username(self, value,data_key):
         if not value[0].isalpha():
             raise ValidationError('Username must start with a letter')
         user = token_auth.current_user()
@@ -44,7 +44,7 @@ class UserSchema(ma.SQLAlchemySchema):
             raise ValidationError(f"The username '{value}' is already taken. Please choose another one.")
 
     @validates('email')
-    def validate_email(self, value):
+    def validate_email(self, value,data_key):
         user = token_auth.current_user()
         old_email = user.email if user else None
         if value != old_email and \
@@ -52,7 +52,7 @@ class UserSchema(ma.SQLAlchemySchema):
              raise ValidationError(f"The email '{value}' is already in use. Please use a different email address.")
 
     @post_dump
-    def fix_datetimes(self, data, **kwargs):
+    def fix_datetimes(self, data,**kwargs):
         if 'timestamp' in data:
             data['timestamp'] += 'Z'
         return data
