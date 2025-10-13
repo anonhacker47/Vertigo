@@ -19,12 +19,23 @@ export default {
     return Api().get("me");
   },
 
-  updateUser(data: any) {
-    return Api().put("me", data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  async updateUser(data: any) {
+    try {
+      const response = await Api()
+        .put("me", data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.description ||
+        error.response?.data?.message ||
+        error.message ||
+        "An unknown error occurred while updating user settings.";
+
+      throw new Error(errorMessage);
+    }
   },
 
   async getUserPicture() {
