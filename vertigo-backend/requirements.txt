@@ -139,6 +139,8 @@ tzdata==2025.2
     #   pandas
 urllib3==2.5.0
     # via requests
+waitress==3.0.2
+    # via -r requirements.in
 webargs==8.7.0
     # via apifairy
 werkzeug==3.1.3

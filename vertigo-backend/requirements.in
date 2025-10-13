@@ -20,3 +20,4 @@ babel
 pandas
 openpyxl
 babel
+waitress
