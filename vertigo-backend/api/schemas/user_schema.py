@@ -41,7 +41,7 @@ class UserSchema(ma.SQLAlchemySchema):
         old_username = user.username if user else None
         if value != old_username and \
                 db.session.scalar(User.select().filter_by(username=value)):
-            raise ValidationError('Use a different username.')
+            raise ValidationError(f"The username '{value}' is already taken. Please choose another one.")
 
     @validates('email')
     def validate_email(self, value):
@@ -49,7 +49,7 @@ class UserSchema(ma.SQLAlchemySchema):
         old_email = user.email if user else None
         if value != old_email and \
                 db.session.scalar(User.select().filter_by(email=value)):
-            raise ValidationError('Use a different email.')
+             raise ValidationError(f"The email '{value}' is already in use. Please use a different email address.")
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):

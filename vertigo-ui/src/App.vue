@@ -12,8 +12,6 @@ const showNavbar = computed(() => {
 });
 
 onMounted(() => {   
-    // console.log("App Version:", __APP_VERSION__);
-    console.log(showNavbar);
 });
 </script>
 
