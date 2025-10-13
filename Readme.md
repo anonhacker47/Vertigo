@@ -23,8 +23,8 @@
 - [x] Search and filter options based on various criteria such as title, publisher etc.
 - [x] Track reading progress (read/unread, backlog and ratings if needed).
 - [x] Generate insightful statistics on collection.
+- [x] Export User Data to commonly used formats like spreadsheets.
 - [ ] Explore options to integrate with external APIs for automatic fetching of details.
-- [ ] Backup/Export User Data to commonly used formats.
 
 Feel free to reach out if you have anything else you'd like to see!
 
