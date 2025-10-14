@@ -4,7 +4,7 @@
   <h3 align="center">Vertigo</h3>
 
   <p align="center">
-    Vertigo is a web app designed to help you organize, manage, and track your comic book collection with ease. Created using <a href="https://vuejs.org/">Vue.js</a> and <a href="https://flask.palletsprojects.com/en/3.0.x/">Flask</a>
+    Vertigo is a web app designed to help you catalog and track your comic book collection with ease. Created using <a href="https://vuejs.org/">Vue.js</a> and <a href="https://flask.palletsprojects.com/en/3.0.x/">Flask</a>
     <br />
     <br />
   </p>
