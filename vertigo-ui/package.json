@@ -35,7 +35,7 @@
     "roboto-fontface": "*",
     "swiper": "^11.1.9",
     "tailwindcss-primeui": "^0.3.4",
-    "vue": "^3.4.35",
+    "vue": "^3.5.22",
     "vue-echarts": "^7.0.1",
     "vue-router": "^4.4.2",
     "vue-window-size": "^2.0.0",
