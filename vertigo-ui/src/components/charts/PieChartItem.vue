@@ -1,5 +1,10 @@
 <template>
-  <v-chart class="flex justify-center min-h-96 md:h-full w-full relative" :option="option" :autoresize="true" />
+  <div class="flex justify-center min-h-96 md:h-full w-full relative">
+    <v-chart v-if="props.data.length" class="w-full h-full" :option="option" :autoresize="true" />
+    <div v-else class="flex items-center justify-center w-full h-full text-gray-400 text-lg">
+      No data available to display
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

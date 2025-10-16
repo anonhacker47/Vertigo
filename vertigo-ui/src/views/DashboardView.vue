@@ -14,7 +14,7 @@
       <AddSeriesCardItem />
     </div>
     <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 md:min-h-[66vh]">
-      <div class="card relative basis-1/2 sm:w-[40%] items-center bg-base-100 shadow-xl">
+      <div class="card relative basis-1/2 sm:w-[35%] items-center bg-base-100 shadow-xl">
         <PieChartItem :title="chartTitle" :data="chartData" />
 
         <div class="dropdown dropdown-end absolute top-3 right-3">
@@ -54,7 +54,7 @@
 
       </div>
 
-      <div class="card w-full sm:w-[20%] card-compact relative bg-base-100 shadow-xl">
+      <div class="card w-full sm:w-[30%] card-compact relative bg-base-100 shadow-xl">
         <div
           class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases</div>
@@ -67,11 +67,11 @@
         </div>
       </div>
 
-      <div class="card relative basis-1/2 sm:w-[40%] flex items-center bg-base-100 shadow-xl">
+      <div class="card relative basis-1/2 sm:w-[35%] flex items-center bg-base-100 shadow-xl">
         <LineChartItem :x-data="purchaseData" :y-data="dates" />
-        <div class="mb-4 w-1/6 flex no-wrap items-center justify-center">
+        <div class="mb-4 w-1/8 flex no-wrap items-center justify-center">
           <!-- <label for="year" class="mr-2 text-sm">Select Year:</label> -->
-          <select v-model="selectedYear" id="year" class="p-1 select select-primary select-bordered w-full">
+          <select v-model="selectedYear" id="year" class="select select-primary select-bordered w-full">
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
           </select>
         </div>
