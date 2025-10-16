@@ -317,12 +317,12 @@ def get_series_with_thumbnail():
     series_with_thumbnail = db.session.query(Series.id).filter(Series.thumbnail.isnot(None)).all()
     series_ids = [series[0] for series in series_with_thumbnail]
     
-    # Ensure the list has at least 30 IDs
-    while len(series_ids) < 80:
-        series_ids.extend(series_ids)
-    
-    # Randomize the list and select the first 30
-    random.shuffle(series_ids)
-    series_ids = series_ids[:80]
+    if series_ids:
+        while len(series_ids) < 80:
+            series_ids.extend(series_ids)
+        random.shuffle(series_ids)
+        series_ids = series_ids[:80]
+    else:
+        series_ids = []
     
     return jsonify(series_ids)
