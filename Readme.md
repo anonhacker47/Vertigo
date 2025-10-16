@@ -10,7 +10,15 @@
   </p>
  
   <p align='center'>
-<img alt="Vertigo Homepage Screenshot" src="./.github/images/screenshot.png" style="width: 90%" />
+    <h3 align="center">Dashboard</h3>
+<img alt="Vertigo Dashboard Screenshot" src="./.github/images/dashboard.png" style="width: 90%" />
+</p>
+ <br />
+ <br />
+ 
+  <p align='center'>
+    <h3 align="center">Collection</h3>
+<img alt="Vertigo Collection Page Screenshot" src="./.github/images/collection.png" style="width: 90%" />
 </p>
  <br />
  <br />
@@ -19,6 +27,7 @@
 > **⚠ Disclaimer ⚠**: Vertigo is WIP and under active development. Expect occasional bugs, incomplete features, and potential breaking changes as I add new features and improve functionality. Only the basic CRUD is done till now.
 
 ## Goals:
+
 - [x] A responsive modern web app to track and curate physical comicbook collection
 - [x] Search and filter options based on various criteria such as title, publisher etc.
 - [x] Track reading progress (read/unread, backlog and ratings if needed).
@@ -58,6 +67,7 @@ cd vertigo-comic-collection
 ```
 
 ### Setup
+
 Set up a Python 3 virtualenv and install the dependencies on it:
 
 ```bash
@@ -66,12 +76,14 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
 Create the db and run flask app:
 
 ```bash
 alembic upgrade head
 flask run
 ```
+
 By default, You can try out the app from http://localhost:5000/ .
 <br/>
 <br/>
@@ -79,15 +91,20 @@ By default, You can try out the app from http://localhost:5000/ .
 > If you want to tinker with the Frontend follow the below instructions.
 
 #### Frontend Setup
+
 Install the dependencies:
+
 ```bash
 cd vertigo-ui
 npm install
 ```
+
 Run the Vue.js frontend:
+
 ```bash
 npm run dev
 ```
+
 Voila! you can find the frontend at http://localhost:5173/
 
 <br/>
