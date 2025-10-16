@@ -5,26 +5,21 @@
 
   <p align="center">
     Vertigo is a web app designed to help you catalogue and track your comic book collection with ease. Created using <a href="https://vuejs.org/">Vue.js</a> and <a href="https://flask.palletsprojects.com/en/3.0.x/">Flask</a>
-    <br />
-    <br />
   </p>
  
   <p align='center'>
     <h3 align="center">Dashboard</h3>
 <img alt="Vertigo Dashboard Screenshot" src="./.github/images/dashboard.png" style="width: 90%" />
 </p>
- <br />
- <br />
- 
+
   <p align='center'>
     <h3 align="center">Collection</h3>
 <img alt="Vertigo Collection Page Screenshot" src="./.github/images/collection.png" style="width: 90%" />
 </p>
  <br />
- <br />
 </div>
 
-> **⚠ Disclaimer ⚠**: Vertigo is WIP and under active development. Expect occasional bugs, incomplete features, and potential breaking changes as I add new features and improve functionality. Only the basic CRUD is done till now.
+> **⚠ Disclaimer ⚠**: Vertigo is WIP and under active development. Expect occasional bugs, incomplete features, and potential breaking changes as I add new features and improve functionality.
 
 ## Goals:
 
