@@ -30,14 +30,14 @@
               </li>
             </ul>
           </ComboboxOption>
-          <ComboboxOption v-slot="{ active, selected }" v-if="queryItem" :value="queryItem" @click="addCustomItem(queryItem)" class="relative cursor-pointer">
+          <ComboboxOption v-slot="{ active, selected }" v-if="queryItem" :value="queryItem" class="relative cursor-pointer">
             <ul>
               <li class="relative cursor-default select-none py-3 pl-10 pr-4" :class="{
                 'bg-base-300 text-white': active,
                 'text-white': !active,
               }">
                 <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
-                  {{ query }}
+                  Create "{{ query }}""
                 </span>
                 <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
                   :class="{ 'text-white': active, 'text-teal-600': !active }">
@@ -123,9 +123,13 @@ const addCustomItem = (value: any) => {
   query.value = '';
 }
 
-watch(model, () => {
-  query.value = ''
-})
+watch(model, (newVal, oldVal) => {
+  const last = newVal[newVal.length - 1];
+  if (last && !props.items.find((item: { value: string }) => item.value === last)) {
+    addCustomItem(last);
+  }
+  query.value = '';
+});
 
 const handleEnter = () => {
   if (queryItem.value) {
