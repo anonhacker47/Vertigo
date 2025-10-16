@@ -4,7 +4,7 @@
   <h3 align="center">Vertigo</h3>
 
   <p align="center">
-    Vertigo is a web app designed to help you catalog and track your comic book collection with ease. Created using <a href="https://vuejs.org/">Vue.js</a> and <a href="https://flask.palletsprojects.com/en/3.0.x/">Flask</a>
+    Vertigo is a web app designed to help you catalogue and track your comic book collection with ease. Created using <a href="https://vuejs.org/">Vue.js</a> and <a href="https://flask.palletsprojects.com/en/3.0.x/">Flask</a>
     <br />
     <br />
   </p>
@@ -23,8 +23,8 @@
 - [x] Search and filter options based on various criteria such as title, publisher etc.
 - [x] Track reading progress (read/unread, backlog and ratings if needed).
 - [x] Generate insightful statistics on collection.
+- [x] Export User Data to commonly used formats like spreadsheets.
 - [ ] Explore options to integrate with external APIs for automatic fetching of details.
-- [ ] Backup/Export User Data to commonly used formats.
 
 Feel free to reach out if you have anything else you'd like to see!
 
@@ -34,15 +34,13 @@ Vertigo has now entered its **Alpha release** stage! You can try it out by downl
 
 After extracting the ZIP, run the app using the appropriate script for your operating system:
 
-- **Linux/macOS**:  
+- **Linux**:  
   Run `launch.sh`
 
 - **Windows**:  
   Run `launch.bat`
 
-This will automatically set up and launch the webapp in http://localhost:6166
-
-> **Note:** If the app seems slow on the first launch, simply close and rerun the script — this is a known behavior during initial setup and should resolve on relaunch.
+This will set up and launch the webapp in http://localhost:6166
 <br/>
 
 ## Developer Guide:

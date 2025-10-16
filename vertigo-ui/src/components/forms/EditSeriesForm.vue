@@ -26,18 +26,18 @@
         <div class="flex flex-col md:flex-row pb-12 gap-8 md:gap-20 justify-around">
             <div class="form-control w-full text-center">
                 <MultiSelectCombobox v-model="localSeriesData.genre" :items="seriesFieldValues.genre || []"
-                    field="genre" placeholder="Select Genre(s)" />
+                    field="genre" placeholder="Genre" />
                 <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple
                     options</p>
             </div>
             <div class="form-control w-full">
-                <SingleSelectCombobox :items="seriesFieldValues.main_character || []"
-                    v-model="localSeriesData.main_character" field="main_character"
+                <SingleSelectCombobox v-model="localSeriesData.main_character"
+                    :items="seriesFieldValues.main_character || []" field="main_character"
                     placeholder="Main Character/ Team" />
             </div>
             <div class="form-control w-full text-center">
                 <MultiSelectCombobox v-model="localSeriesData.creator" :items="seriesFieldValues.creator || []"
-                    field="creator" placeholder="Select Creator(s)" />
+                    field="creator" placeholder="Creators" />
                 <p v-if="localSeriesData.creator.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple
                     options</p>
             </div>
@@ -61,14 +61,15 @@
 
         <div class="flex flex-col md:flex-row gap-16 justify-around">
             <div class="form-control w-full">
-                <button type="button" @click="$router.push('collection')" class="btn btn-danger">
+                <button type="button" @click="$router.back" class="btn btn-danger">
                     Cancel
                 </button>
             </div>
             <div class="form-control w-full">
-                <button @click.prevent="goToNext" :disabled="!localSeriesData.title || !localSeriesData.series_format"
+                <button @click.prevent="updateSeries"
+                    :disabled="!localSeriesData.title || !localSeriesData.series_format"
                     class="btn btn-primary rounded">
-                    Next
+                    Save Details
                 </button>
             </div>
         </div>
@@ -80,8 +81,10 @@ import type { Series } from "@/types/series.types";
 import { onMounted, reactive, ref, watch } from 'vue'
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
+import { useRouter } from "vue-router";
 import SeriesService from "@/services/SeriesService";
 
+const router = useRouter();
 const seriesFields = ['publisher', 'genre', 'main_character', 'creator'];
 const seriesFieldValues = ref({});
 
@@ -90,7 +93,7 @@ const props = defineProps<{
     showIssueSection: boolean
 }>()
 
-const emit = defineEmits(['update:modelValue', 'next'])
+const emit = defineEmits(['update:modelValue', 'updateSeries'])
 
 const localSeriesData = reactive({ ...props.modelValue })
 
@@ -102,8 +105,16 @@ watch(localSeriesData, (val) => {
     });
 }, { deep: true });
 
-const goToNext = () => {
-    emit('next')
+watch(
+    () => props.modelValue,
+    (newVal) => {
+        Object.assign(localSeriesData, newVal);
+    },
+    { deep: true }
+);
+
+const updateSeries = () => {
+    emit('updateSeries')
 }
 
 const descriptionLength = ref(0);

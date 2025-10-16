@@ -1,12 +1,13 @@
 import os
 from pydoc import render_doc
-from flask import Flask, redirect, url_for, request, render_template
+from flask import Flask, redirect, send_file, send_from_directory, url_for, request, render_template
 from alchemical.flask import Alchemical
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_mail import Mail
 from apifairy import APIFairy
 from config import Config
+import importlib.util
 
 db = Alchemical()
 ma = Marshmallow()
@@ -50,9 +51,10 @@ def create_app(config_class=Config):
     apifairy.init_app(app)
 
     # blueprints
+    if importlib.util.find_spec("api.fake"):
+        from api.fake import fake
+        app.register_blueprint(fake)
 
-    # from api.fake import fake
-    # app.register_blueprint(fake)
     from api.errors import errors
     app.register_blueprint(errors)
     from api.routes.tokens_routes import tokens
@@ -81,6 +83,22 @@ def create_app(config_class=Config):
     @app.route('/<path:path>')
     def index(path):
         return render_template('index.html')
+    
+    @app.route('/favicon.ico')
+    def favicon():
+        try:
+            # Absolute path to the favicon
+            favicon_path = os.path.join(app.root_path, 'wwwroot', 'favicon.ico')
+    
+            if not os.path.exists(favicon_path):
+                print(f"⚠️ favicon.ico not found at {favicon_path}")
+                return '', 204  # No Content if missing
+    
+            return send_file(favicon_path, mimetype='image/vnd.microsoft.icon')
+    
+        except Exception as e:
+            print(f"⚠️ Error serving favicon.ico: {e}")
+            return '', 204  # Prevent 500 JSON
     
     @app.route('/api/docs')
     def docs():  # pragma: no cover

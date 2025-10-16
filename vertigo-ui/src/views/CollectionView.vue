@@ -1,29 +1,36 @@
 <template>
   <Transition enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div v-if="true" class="flex justify-around items-center py-2 border-b border-slate-700">
+    <div v-if="true" class="flex justify-around items-center py-2 border-b bg-base-100 border-slate-700">
       <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary justify-center">
         Add Series
       </RouterLink>
 
       <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
         :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
-        v-model:orderBy="orderBy" v-model:orderDir="orderDir" />
+        v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
       <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
         Delete Mode
       </button>
     </div>
   </Transition>
-  <div class="grid gap-3 md:pb-6 pt-2 md:gap-5 md:m-auto max-w-screen-3xl" v-if="viewMode == 'card'"
-    :class="`grid-cols-${selectedGrid}`">
+
+  <SearchSeriesForm @search="handleSearch" />
+  <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
+    <div class="flex justify-center items-center">
+      <span  class="loading-ring  text-success h-44 w-44 loading"></span >
+    </div>
+  </div>
+
+  <!-- Card View -->
+  <div v-else-if="viewMode == 'card'"
+    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-screen-3xl grid-cols-${selectedGrid}`">
     <template v-if="seriesList.length > 0">
       <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
-
           <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
             :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
             @confirmDelete="confirmDelete" />
-
         </div>
       </TransitionGroup>
     </template>
@@ -33,6 +40,8 @@
       </div>
     </template>
   </div>
+
+
   <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut">
     <div class="mx-5" v-if="viewMode === 'list'" key="listView">
@@ -44,7 +53,6 @@
   <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
     :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
 
-
   <ConfirmDialog>
     <template #message="slotProps">
       <p class="font-bold">
@@ -53,26 +61,26 @@
       </p>
     </template>
   </ConfirmDialog>
-
 </template>
 
 <script setup lang="ts">
 import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";
-import { useWindowSize } from 'vue-window-size';
-import CollectionDropDownMenu from '@/components/dropdowns/CollectionDropDownMenu.vue';
+import { useWindowSize } from "vue-window-size";
+import CollectionDropDownMenu from "@/components/dropdowns/CollectionDropDownMenu.vue";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import { Series } from '@/types/series.types';
-import Paginator from 'primevue/paginator';
+import { Series } from "@/types/series.types";
+import Paginator from "primevue/paginator";
+import SearchSeriesForm from "@/components/forms/SearchSeriesForm.vue";
 
 const onPageChange = (event: any) => {
   if (event.rows > 0) {
-    getseriesList(event.first, event.rows);
+    getseriesList(currentFilter.value, event.first, event.rows);
   }
 };
 
@@ -82,35 +90,35 @@ const toast = useToast();
 const confirmDelete = (id: number, title: any) => {
   confirm.require({
     message: title,
-    header: 'Confirm Deletion',
-    icon: 'pi pi-info-circle',
-    rejectLabel: 'Cancel',
+    header: "Confirm Deletion",
+    icon: "pi pi-info-circle",
+    rejectLabel: "Cancel",
     rejectProps: {
-      label: 'Cancel',
-      severity: 'secondary',
-      outlined: true
+      label: "Cancel",
+      severity: "secondary",
+      outlined: true,
     },
     acceptProps: {
-      label: 'Delete',
-      severity: 'danger'
+      label: "Delete",
+      severity: "danger",
     },
     accept: () => {
       deleteSeries(id);
-      toast.add({ severity: 'success', summary: 'Confirmed', detail: `${title} deleted`, life: 3000 });
+      toast.add({
+        severity: "success",
+        summary: "Confirmed",
+        detail: `${title} deleted`,
+        life: 3000,
+      });
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-    }
+    },
   });
 };
 
 const { width } = useWindowSize();
 const seriesList = ref<Series[]>([]);
-const pagination = ref({
-  total: 0,
-  limit: 25,
-  offset: 0
-});
 const userstore = useUserStore();
 const userPreferences = useUserPreferences();
 const { id: userId } = userstore.getUser();
@@ -123,6 +131,7 @@ const orderDir = ref(userPreferences.orderDir);
 const viewMode = ref(userPreferences.viewMode); // Default to user preference
 
 const sortKey = ref(true);
+const loading = ref(false);
 
 // Custom heights and width for each column vallues
 // cardHeight for mobile devices
@@ -138,12 +147,36 @@ let cardWidthMultiplier = [12, 9.2, 6, 5];
 const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
 const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
 
+const pagination = ref({
+  total: 0,
+  limit: 25,
+  offset: 0,
+});
+
+const currentFilter = ref({});
+
+const handleSearch = (filters) => {
+  currentFilter.value = filters;
+  getseriesList(currentFilter.value, 0, pagination.value.limit); // offset=0 on new search
+};
+
+watch(() => pagination.value.limit, (newLimit) => {
+  getseriesList(currentFilter.value, 0, newLimit);
+});
+
+watch(selectedGrid, (newVal) => {
+  cardHeightMD.value = cardHeightMultiplierMD[newVal - 2];
+  cardWidthMD.value = cardWidthMultiplierMD[newVal - 2];
+  cardHeight.value = cardHeightMultiplier[newVal - 2];
+  cardWidth.value = cardWidthMultiplier[newVal - 2];
+
+});
 
 async function deleteSeries(id: number) {
   const idToRemove = id;
   seriesList.value.splice(
     seriesList.value.findIndex((a) => a.id === idToRemove),
-    1
+    1,
   );
 
   try {
@@ -161,40 +194,54 @@ const toggleDelete = (): void => {
   deleteMode.value = !deleteMode.value;
 };
 
-const getseriesList = async (offset = 0, limit = pagination.value?.limit || 25) => {
+const getseriesList = async (
+  filter = currentFilter.value,
+  offset = 0,
+  limit = pagination.value.limit
+) => {
   if (limit === 0) return;
-
+  loading.value = true;
   try {
-    const result: any = await SeriesService.fetchSeries(userId, orderBy.value, orderDir.value, limit, offset);
+    const result: any = await SeriesService.fetchSeries(
+      userId,
+      orderBy.value,
+      orderDir.value,
+      limit,
+      offset,
+      filter
+    );
     seriesList.value = result.seriesList;
     pagination.value = result.pagination;
   } catch (error) {
-    console.error('Error loading series:', error);
+    console.error("Error loading series:", error);
+    toast.add({
+      severity: "error",
+      summary: "Error",
+      detail: "Failed to load series.",
+      life: 3000,
+    });
+  } finally {
+    loading.value = false; // stop loading
   }
 };
 
 function changeGrid(selected: any) {
-  userPreferences.setCardsPerLine(selected.target.value);
-  selectedGrid.value = parseInt(selected.target.value);
-  cardHeightMD.value = cardHeightMultiplierMD[selectedGrid.value - 2];
-  cardWidthMD.value = cardWidthMultiplierMD[selectedGrid.value - 2];
-  cardHeight.value = cardHeightMultiplier[selectedGrid.value - 2];
-  cardWidth.value = cardWidthMultiplier[selectedGrid.value - 2];
-  console.log(selectedGrid.value);
+  const newVal = parseInt(selected.target.value);
+  userPreferences.setCardsPerLine(newVal);
+  selectedGrid.value = newVal;
 }
 
 function orderDirection(values: any) {
-  userPreferences.setorderDir(values.target.value)
+  userPreferences.setorderDir(values.target.value);
   orderDir.value = values.target.value;
-  seriesList.value = []
+  seriesList.value = [];
   getseriesList();
-
 }
 
 function orderByProperties(values: any) {
   userPreferences.setorderBy(values.target.value);
   orderBy.value = values.target.value;
-  seriesList.value = []
+  seriesList.value = [];
   getseriesList();
 }
 
@@ -205,7 +252,8 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  getseriesList(pagination.value.offset, 25);
+  // getseriesList(pagination.value.offset, pagination.value.limit);
+  getseriesList({});
 });
 </script>
 
@@ -218,14 +266,15 @@ onMounted(() => {
   background: var(--bg-gradient);
 }
 
-
 .drp {
   margin-left: -84px;
 }
 
 .range::-moz-range-thumb {
   color: #1fb2a6;
-  box-shadow: 0 0 0 3px #1fb2a6 inset, var(--focus-shadow, 0 0),
+  box-shadow:
+    0 0 0 3px #1fb2a6 inset,
+    var(--focus-shadow, 0 0),
     calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
 }
 </style>

@@ -1,16 +1,16 @@
 <template>
-  <div :class="{ 'animate-wiggle': editMode && is_last }" class="w-44 h-64 flex relative flex-col rounded-lg border-2 overflow-hidden shadow-lg bg-zinc-900"
+  <div :class="{ 'animate-wiggle': editMode && is_last }" class="w-44 h-64 flex relative flex-col rounded-lg border-2 shadow-lg bg-zinc-900"
     :style="`border-color: rgb${themecolor};`">
     <!-- <button v-if="is_last" @click="$emit('deleteIssue')"
       class="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-colors z-10" title="Delete">
       ✕
     </button> -->
     <div v-if="editMode && is_last" @click.prevent="$emit('deleteIssue')"
-      class="absolute top-0 right-0 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
+      class="absolute -top-3 -right-3 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
       <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
     </div>
     <!-- Cover Image -->
-    <div class="h-[70%] w-full bg-cover bg-center relative" :style="`background-image: url(${image})`">
+    <div class="h-[70%] w-full bg-cover bg-center relative rounded-t-lg overflow-hidden" :style="`background-image: url(${image})`">
       <!-- Title Overlay -->
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3">
         <p class="text-white text-2xl font-semibold text-center leading-snug tracking-wide">
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Bottom Section -->
-    <div class="space-y-1 text-white text-sm font-semibold px-2 py-2">
+    <div class="space-y-1 text-white text-sm bg-base-100 rounded-b-lg font-semibold px-2 py-2">
 
       <!-- Owned Row -->
       <div class="flex flex-col gap-1">

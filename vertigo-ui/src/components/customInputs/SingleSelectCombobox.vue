@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import {
   Combobox,
   ComboboxInput,
@@ -63,33 +63,15 @@ import {
   TransitionRoot,
 } from '@headlessui/vue'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
-import SeriesService from '@/services/SeriesService';
 
-const items = ref([])
 const props = defineProps({
   field: String,
-  placeholder: String
+  placeholder: String,
+  items: Array,
 })
 
 let selected = ref([])
 
-onMounted(() => {
-  getSeriesFields();
-});
-
-async function getSeriesFields() {
-  try {
-    const response = await SeriesService.getSeriesFieldValues(
-      `${props.field}`,
-    );
-
-    items.value = response.data;
-
-    console.log(items.value);
-  } catch (error) {
-    console.log(error);
-  }
-}
 let query = ref('')
 
 const queryPerson = computed(() => {
@@ -98,8 +80,8 @@ const queryPerson = computed(() => {
 
 let filteredItems = computed(() =>
   query.value === ''
-    ? items.value
-    : items.value.filter((item) =>
+    ? props.items
+    : props.items.filter((item:string) =>
       item.value
         .toLowerCase()
         .replace(/\s+/g, '')

@@ -6,7 +6,7 @@ import sqlite3
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
-
+from sqlalchemy import or_
 from api import db
 from api.models.user import User
 from api.models.series import Series
@@ -118,9 +118,32 @@ def all():
                     pagination_schema=DateTimePaginationSchema)
 @other_responses({404: 'User not found'})
 def user_all(id):
-    """Retrieve all series from a user"""
+    """Retrieve all series of a user with optional search and filters"""
     user = db.session.get(User, id) or abort(404)
-    return user.series_select()
+    qs = user.series_select() 
+    
+    # Optional search & filters from query parameters
+    search_query = request.args.get("query", "").strip()
+    genre = request.args.get("genre")
+    publisher = request.args.get("publisher")
+    series_format = request.args.get("series_format")
+
+    # Apply filters conditionally
+    if search_query:
+        qs = qs.filter(
+            or_(
+                Series.title.ilike(f"%{search_query}%"),
+                Series.description.ilike(f"%{search_query}%")
+            )
+        )
+    if genre:
+        qs = qs.filter(Series.genre.any(title=genre))
+    if publisher:
+        qs = qs.filter(Series.publisher.any(title=publisher))
+    if series_format:
+        qs = qs.filter(Series.series_format == series_format)
+
+    return qs
 
 
 @series.route('/series/<int:id>', methods=['PUT'])
@@ -243,7 +266,7 @@ def get_series_image(id):
 
     try:
         # print(current_app.config['cover_path']+ f"\\{series.thumbnail}")
-        return send_file(current_app.config['cover_path'] + f"\\{series.thumbnail}")
+        return send_file(os.path.join(current_app.config['cover_path'], series.thumbnail))
     except FileNotFoundError:
         return jsonify("Image file not found"), 404
     except Exception as e:
@@ -270,9 +293,16 @@ def get_series_by_table(table):
         'genre': series_entities.Genre,
         'creator': series_entities.Creator,
         'publisher': series_entities.Publisher,
+        'series_format': Series.series_format
     }.get(table.lower())
     if table_class is None:
         return jsonify({'error': 'Invalid table name'}), 400
+        
+    if table == 'series_format':
+        values = db.session.query(Series.series_format).distinct().filter(Series.series_format.isnot(None)).all()
+        values = {value[0] for value in values if value[0]}
+        return jsonify(sorted(list(values)))
+    
     values = db.session.query(table_class.title).distinct().all()
     values = {value.title for value in values}
 
@@ -287,12 +317,12 @@ def get_series_with_thumbnail():
     series_with_thumbnail = db.session.query(Series.id).filter(Series.thumbnail.isnot(None)).all()
     series_ids = [series[0] for series in series_with_thumbnail]
     
-    # Ensure the list has at least 30 IDs
-    while len(series_ids) < 80:
-        series_ids.extend(series_ids)
-    
-    # Randomize the list and select the first 30
-    random.shuffle(series_ids)
-    series_ids = series_ids[:80]
+    if series_ids:
+        while len(series_ids) < 80:
+            series_ids.extend(series_ids)
+        random.shuffle(series_ids)
+        series_ids = series_ids[:80]
+    else:
+        series_ids = []
     
     return jsonify(series_ids)

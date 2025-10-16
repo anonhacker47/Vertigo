@@ -19,7 +19,7 @@ import type { Series } from "@/types/series.types";
 import SeriesService from "../services/SeriesService";
 
 import ImageUploader from "@/components/createSeries/ImageUploader.vue";
-import EditSeriesForm from "@/components/EditSeries/EditSeriesForm.vue";
+import EditSeriesForm from "@/components/forms/EditSeriesForm.vue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 const router = useRouter();

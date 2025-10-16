@@ -3,6 +3,7 @@ import HeaderItem from "./components/HeaderItem.vue";
 import { useUserStore } from "./store/user";
 import { onMounted, computed, ref, Ref } from "vue";
 import { useRoute } from "vue-router";
+import '@/assets/fonts/fonts.css'
 
 const store = useUserStore();
 const route = useRoute();
@@ -12,8 +13,6 @@ const showNavbar = computed(() => {
 });
 
 onMounted(() => {   
-    // console.log("App Version:", __APP_VERSION__);
-    console.log(showNavbar);
 });
 </script>
 

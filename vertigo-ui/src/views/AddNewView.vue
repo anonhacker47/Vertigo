@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import {  ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
@@ -185,6 +185,7 @@ function onImageChange(file: File | string) {
   }
   console.log("Image Changed:", seriesData.value.thumbnail);
 }
+
 </script>
 
 <style scoped>

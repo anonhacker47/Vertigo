@@ -1,5 +1,5 @@
 <template>
-	<DataTable class="mt-5 rounded-lg rounded-table" :value="seriesList" @row-click="navigate" rowHover :rows="10">
+	<DataTable class="rounded-lg rounded-table" :value="seriesList" @row-click="navigate" rowHover :rows="10">
 		<Column field="title" header="Series" class="max-w-md">
 			<template #body="{ data }">
 				<div class="flex items-center gap-4">

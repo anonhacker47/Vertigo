@@ -93,33 +93,34 @@ def revoke():
     db.session.commit()
     return {}
 
+# TODO:The password reset endpoints are commented out for now. have to implement smtp server first.
 
-@tokens.route('/tokens/reset', methods=['POST'])
-@body(PasswordResetRequestSchema)
-@response(EmptySchema, status_code=204,
-          description='Password reset email sent')
-def reset(args):
-    """Request a password reset token"""
-    user = db.session.scalar(User.select().filter_by(email=args['email']))
-    if user is not None:
-        reset_token = user.generate_reset_token()
-        reset_url = current_app.config['PASSWORD_RESET_URL'] + \
-            '?token=' + reset_token
-        send_email(args['email'], 'Reset Your Password', 'reset',
-                   username=user.username, token=reset_token, url=reset_url)
-    return {}
+# @tokens.route('/tokens/reset', methods=['POST'])
+# @body(PasswordResetRequestSchema)
+# @response(EmptySchema, status_code=204,
+#           description='Password reset email sent')
+# def reset(args):
+#     """Request a password reset token"""
+#     user = db.session.scalar(User.select().filter_by(email=args['email']))
+#     if user is not None:
+#         reset_token = user.generate_reset_token()
+#         reset_url = current_app.config['PASSWORD_RESET_URL'] + \
+#             '?token=' + reset_token
+#         send_email(args['email'], 'Reset Your Password', 'reset',
+#                    username=user.username, token=reset_token, url=reset_url)
+#     return {}
 
 
-@tokens.route('/tokens/reset', methods=['PUT'])
-@body(PasswordResetSchema)
-@response(EmptySchema, status_code=204,
-          description='Password reset successful')
-@other_responses({400: 'Invalid reset token'})
-def password_reset(args):
-    """Reset a user password"""
-    user = User.verify_reset_token(args['token'])
-    if user is None:
-        abort(400)
-    user.password = args['new_password']
-    db.session.commit()
-    return {}
+# @tokens.route('/tokens/reset', methods=['PUT'])
+# @body(PasswordResetSchema)
+# @response(EmptySchema, status_code=204,
+#           description='Password reset successful')
+# @other_responses({400: 'Invalid reset token'})
+# def password_reset(args):
+#     """Reset a user password"""
+#     user = User.verify_reset_token(args['token'])
+#     if user is None:
+#         abort(400)
+#     user.password = args['new_password']
+#     db.session.commit()
+#     return {}

@@ -31,10 +31,12 @@ class SeriesSchema(ma.SQLAlchemySchema):
     release_date = ma.auto_field() 
         
     series_format = ma.auto_field(validate=validate.Length(min=1, max=100), allow_none=True)
+
     
     issue_count = ma.auto_field()
     read_count = ma.auto_field()
     owned_count = ma.auto_field()
+    purchase_cost = ma.auto_field()
     
     genre = ma.List(ma.String, allow_none=True)
     

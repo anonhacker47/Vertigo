@@ -4,10 +4,10 @@
       name: 'SeriesDetail',
       params: { Link: series.slug, Id: series.id },
     }">
-    <div class="flex items-end flex h-full w-full" @mouseenter="activate" @mouseleave="activate">
+    <div class="items-end relative flex h-full w-full" @mouseenter="activate" @mouseleave="activate">
       <div class="flex h-full w-full items-end">
         <div id="image_container"
-          class="h-full relative rounded flex-col relative md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center">
+          class="h-full relative rounded flex-col md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center">
           <img v-if="displayedImage !== Image" :src="displayedImage" @error="handleImageError" alt=""
             class="slideritem h-full w-full md:rounded-t" />
 
@@ -38,13 +38,13 @@
           </div>
         </div>
       </div>
-      <TransitionGroup enter-active-class="animate__animated animate__bounceIn"
+      <Transition enter-active-class="animate__animated animate__bounceIn"
         leave-active-class="animate__animated animate__bounceOut">
         <div v-if="deleteMode" @click.prevent="confirmDelete(series.id, series.title)"
-          class="absolute top-0 right-0 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
+          class="absolute -top-3 -right-3 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
           <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
         </div>
-      </TransitionGroup>
+      </Transition>
     </div>
   </RouterLink>
 </template>

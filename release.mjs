@@ -55,7 +55,7 @@ try {
 
 // Step 5: Remove unwanted folders from backend copy
 const backendCopyPath = path.join(versionedBuildPath);
-const removeDirs = ['Config', 'env'];
+const removeDirs = ['Config', 'env','__pycache__',"tests"];
 
 removeDirs.forEach(dir => {
   const fullPath = path.join(backendCopyPath, dir);
