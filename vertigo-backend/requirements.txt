@@ -26,8 +26,6 @@ charset-normalizer==3.4.3
     # via requests
 click==8.3.0
     # via flask
-colorama==0.4.6
-    # via click
 et-xmlfile==2.0.0
     # via openpyxl
 faker==37.11.0
@@ -93,7 +91,7 @@ packaging==25.0
     #   webargs
 pandas==2.3.3
     # via -r requirements.in
-pillow==11.3.0
+pillow==12.0.0
     # via -r requirements.in
 pydantic==2.12.0
     # via mokkari
