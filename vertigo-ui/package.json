@@ -46,7 +46,7 @@
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/eslint-config-prettier": "^9.0.0",
     "autoprefixer": "^10.4.21",
-    "daisyui": "^4.12.24",
+    "daisyui": "^5.3.8",
     "eslint": "^9.37.0",
     "eslint-plugin-vue": "^9.33.0",
     "postcss": "^8.5.6",
