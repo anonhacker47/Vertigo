@@ -26,8 +26,6 @@ charset-normalizer==3.4.3
     # via requests
 click==8.3.0
     # via flask
-colorama==0.4.6
-    # via click
 et-xmlfile==2.0.0
     # via openpyxl
 faker==37.11.0
@@ -105,7 +103,7 @@ pyrate-limiter==3.9.0
     # via mokkari
 python-dateutil==2.9.0.post0
     # via pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via -r requirements.in
 python-slugify==8.0.4
     # via -r requirements.in
