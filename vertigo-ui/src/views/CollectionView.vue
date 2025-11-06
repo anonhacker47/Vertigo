@@ -181,7 +181,6 @@ async function deleteSeries(id: number) {
 
   try {
     const response = await SeriesService.removeSeries(id);
-    // setPrimaryKey();
     getseriesList();
   } catch (error) {
     message.value = error;
@@ -252,7 +251,6 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  // getseriesList(pagination.value.offset, pagination.value.limit);
   getseriesList({});
 });
 </script>

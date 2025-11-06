@@ -125,6 +125,7 @@ def user_all(id):
     # Optional search & filters from query parameters
     search_query = request.args.get("query", "").strip()
     genre = request.args.get("genre")
+    creator = request.args.get("creator")
     publisher = request.args.get("publisher")
     series_format = request.args.get("series_format")
 
@@ -138,6 +139,8 @@ def user_all(id):
         )
     if genre:
         qs = qs.filter(Series.genre.any(title=genre))
+    if creator:
+        qs = qs.filter(Series.creator.any(title=creator))    
     if publisher:
         qs = qs.filter(Series.publisher.any(title=publisher))
     if series_format:

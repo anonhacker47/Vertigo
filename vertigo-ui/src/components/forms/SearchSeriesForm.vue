@@ -44,9 +44,9 @@ const selectedPublisher = ref("");
 const applySearch = () => {
     emit("search", {
         query: searchQuery.value,
-        genre: selectedGenre.value,
-        creator: selectedCreator.value,
-        publisher: selectedPublisher.value,
+        genre: selectedGenre.value.value,
+        creator: selectedCreator.value.value,
+        publisher: selectedPublisher.value.value,
         series_format: selectedFormat.value,
     });
 };

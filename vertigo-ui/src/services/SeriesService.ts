@@ -1,13 +1,8 @@
 import Api from "@/services/Api";
 import { Series } from "@/types/series.types";
 import { ApiResponse } from "@/types/api-response.types";
+import { SeriesFilterFields } from "@/types/series-filter.types";
 
-interface SeriesFilters {
-  query?: string;
-  genre?: string;
-  publisher?: string;
-  series_format?: string;
-}
 
 export default {
   async fetchSeries(
@@ -16,7 +11,7 @@ export default {
     orderDir: string,
     limit: number,
     offset = 0,
-    filters: SeriesFilters = {}
+    filters: SeriesFilterFields = {}
   ): Promise<{ seriesList: Series[]; pagination: any }> {
     // Build query params
     const params = new URLSearchParams({
@@ -27,6 +22,7 @@ export default {
     });
 
     if (filters.query) params.append("query", filters.query);
+    if (filters.creator) params.append("creator", filters.creator);
     if (filters.genre) params.append("genre", filters.genre);
     if (filters.publisher) params.append("publisher", filters.publisher);
     if (filters.series_format)
