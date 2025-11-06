@@ -97,6 +97,7 @@ def calculate_dominant_color(filename,path):
 
     def get_dominant_color(pil_img, palette_size=16):
         img = pil_img.copy()
+        img = img.convert("RGB")
         img.thumbnail((100, 100))
         paletted = img.convert('P', palette=Image.ADAPTIVE, colors=palette_size)
         palette = paletted.getpalette()
