@@ -269,8 +269,8 @@
     <ConfirmDialog>
       <template #message="slotProps">
         <p class="font-bold">
-          Do you really want to delete the Issue
-          <span class="text-red-500">{{ slotProps.message.message }}</span
+          Do you really want to delete the
+          <span>{{ slotProps.message.message }}</span
           >?
         </p>
       </template>
@@ -340,7 +340,7 @@ async function deleteIssue(issueToDelete: Issue) {
 
 const confirmDelete = (issueToDelete: Issue) => {
   confirm.require({
-    message: issueToDelete.title,
+    message: `Issue ${issueToDelete.title}`,
     header: "Confirm Deletion",
     icon: "pi pi-info-circle",
     rejectLabel: "Cancel",
@@ -414,7 +414,7 @@ async function getSeries() {
 
 const confirmSeriesDelete = (id: number, title: any) => {
   confirm.require({
-    message: title,
+    message:`Series ${title}`,
     header: "Confirm Deletion",
     icon: "pi pi-info-circle",
     rejectLabel: "Cancel",
