@@ -21,10 +21,10 @@
                     <div>
                         <h2 class="text-xl font-semibold mb-2">Preferred Currency</h2>
                         <p class="text-sm text-sky-600 mb-4">
-                            Select your preferred currency for price display.
+                            Select your preferred currency.
                         </p>
                         <select v-model="preferredCurrency"
-                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full select rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option v-for="currency in currencyList" :key="currency.code" :value="currency.code">
                                 {{ currency.code }} - {{ currency.currency }}
                             </option>
@@ -55,11 +55,11 @@
 
                     <div class="space-y-4 my-6">
                         <input type="password" v-model="oldPassword" placeholder="Old Password"
-                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            class="w-full p-3 input rounded-md focus:outline-none input-primary" />
                         <input type="password" v-model="newPassword" placeholder="New Password"
-                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            class="w-full p-3  rounded-md input focus:outline-none input-primary" />
                         <input type="password" v-model="confirmPassword" placeholder="Confirm New Password"
-                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            class="w-full p-3  rounded-md input input-primary" />
                     </div>
                 </div>
 
