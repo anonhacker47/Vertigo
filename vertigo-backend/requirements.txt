@@ -26,11 +26,9 @@ charset-normalizer==3.4.3
     # via requests
 click==8.3.0
     # via flask
-colorama==0.4.6
-    # via click
 et-xmlfile==2.0.0
     # via openpyxl
-faker==37.11.0
+faker==37.12.0
     # via -r requirements.in
 flask==3.1.2
     # via
