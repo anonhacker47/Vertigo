@@ -1,56 +1,26 @@
 <template>
-  <div
-    v-if="series"
-    class="bg-no-repeat bg-center h-full bg-cover"
-    :style="{ backgroundImage: 'url(' + image + ')' }"
-  >
-    <div
-      class="flex flex-col min-h-screen min-w-screen"
-      style="background: rgba(18, 25, 43, 0.9)"
-    >
+  <div v-if="series" class="bg-no-repeat bg-center h-full bg-cover" :style="{ backgroundImage: 'url(' + image + ')' }">
+    <div class="flex flex-col min-h-screen min-w-screen" style="background: rgba(18, 25, 43, 0.9)">
       <HeaderItem />
       <div
-        class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap"
-      >
-        <div
-          class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words"
-        >
-          <p
-            class="font-bold text-3xl truncate"
-            :style="`color: rgb${themecolor}`"
-          >
+        class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
+        <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
+          <p :style="themecolor ? { color: `rgb${themecolor}` } : {}" class="font-bold text-3xl truncate text-primary">
             {{ series.title }}
           </p>
         </div>
         <div class="flex flex-1 justify-center items-center md:w-1/4 gap-5">
-          <div
-            class="tooltip tooltip-success tooltip-bottom"
-            data-tip="Number of Issues"
-          >
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
             <div class="flex flex-row items-center">
-              <img
-                class=""
-                src="../assets/wishlist.svg"
-                alt=""
-                width="28"
-                height="28"
-              />
+              <img class="" src="../assets/wishlist.svg" alt="" width="28" height="28" />
               <p class="pl-2 text-primary font-bold text-lg">
                 {{ issueCount.total_count }}
               </p>
             </div>
           </div>
-          <div
-            class="tooltip tooltip-success tooltip-bottom"
-            data-tip="Collected"
-          >
+          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
             <div class="flex flex-row items-center">
-              <img
-                src="../assets/collection.svg"
-                alt=""
-                width="28"
-                height="28"
-              />
+              <img src="../assets/collection.svg" alt="" width="28" height="28" />
               <p class="pl-2 text-primary font-bold text-lg">
                 {{ issueCount.owned_count + "/" + issueCount.total_count }}
               </p>
@@ -65,112 +35,78 @@
             </div>
           </div>
         </div>
-        <div
-          class="flex flex-1 justify-center md:justify-end items-center w-1/3"
-        >
-          <Rating
-            @update:model-value="updateRating"
-            :modelValue="series.user_rating"
-            :cancel="false"
-            :stars="5"
-          />
+        <div class="flex flex-1 justify-center md:justify-end items-center w-1/3">
+          <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
       </div>
 
       <div class="flex flex-col md:flex-row grow h-[86vh]">
-        <div
-          class="flex flex-col relative mr-2 md:basis-1/2 md:w-1/2 w-full overflow-hidden"
-        >
-          <div
-            class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4"
-          >
+        <div class="flex flex-col relative mr-2 md:basis-1/2 md:w-1/2 w-full overflow-hidden">
+          <div class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4">
             <div class="flex flex-col basis-1/3 px-28 md:px-4">
-              <img
-                v-if="image != 'noimage'"
-                :src="image"
-                alt=""
-                class="rounded-lg border-2 max-h-96"
-                :style="`border-color: rgb${themecolor}`"
-                @error="image = placeholder"
-              />
-              <div
-                class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
-                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`"
-              >
+              <img v-if="image && image !== 'noimage'" :src="image" alt=""
+                class="rounded-lg border-2 border-primary max-h-96 object-cover w-full h-full"
+                :style="themecolor ? { borderColor: `rgb${themecolor}` } : {}" />
+
+              <!-- Fallback title block -->
+              <div v-else
+                class="w-full border-2 rounded-lg h-full flex bg-slate-900 items-center justify-center p-4 text-center">
+                <span class="text-4xl text-primary font-semibold opacity-70">
+                  {{ series.title }}
+                </span>
+              </div>
+              <div class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
+                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
                 <p class="text-sm font-bold">
                   {{ series.series_format }}
                 </p>
               </div>
             </div>
             <div class="flex flex-col basis-2/3 shrink-0 overflow-scroll gap-4">
-              <div
-                class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4"
-              >
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
                 <span class="font-bold text-lg">Publisher</span>
-                <span
-                  class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1"
-                  :style="`color: rgb${themecolor}`"
-                  >{{ series.publisher }}</span
-                >
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+                  series.publisher }}</span>
               </div>
-              <div
-                class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4"
-              >
+              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
                 <div class="font-bold text-lg">Genre</div>
                 <div
-                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap"
-                >
-                  <p
-                    v-for="genre in series.genre"
-                    class="bg-slate-800 rounded-md px-4 py-1 text-sm font-bold"
-                    :style="`color: rgb${themecolor}`"
-                  >
+                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap">
+                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md px-4 py-1 text-sm font-bold"
+                    :style="`color: rgb${themecolor}`">
                     {{ genre }}
                   </p>
                 </div>
               </div>
               <div class="flex flex-col md:flex-row items-center gap-4">
                 <span class="font-bold text-lg">Main Character/Team</span>
-                <span
-                  class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1"
-                  :style="`color: rgb${themecolor}`"
-                  >{{ series.main_character }}</span
-                >
+                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+                  series.main_character }}</span>
               </div>
-              <div
-                class="flex flex-col md:flex-row items-center max-w-full gap-4"
-              >
+              <div class="flex flex-col md:flex-row items-center max-w-full gap-4">
                 <div class="font-bold text-lg">Creators</div>
                 <div
-                  class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no"
-                >
-                  <p
-                    v-for="creator in series.creator"
+                  class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
+                  <p v-for="creator in series.creator"
                     class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold"
-                    :style="`color: rgb${themecolor}`"
-                  >
+                    :style="`color: rgb${themecolor}`">
                     {{ creator }}
                   </p>
                 </div>
               </div>
             </div>
 
-            <RouterLink
-              :to="{
-                name: 'EditSeries',
-                params: { Link: series.slug, Id: series.id },
-              }"
-              class="absolute right-0 top-2 cursor-pointer w-12 h-12 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400 hover:border-2 rounded-full flex items-center justify-center"
-            >
-              <EditIcon class="w-7 h-7" :fill-color="`rgb${themecolor}`" />
+            <RouterLink :to="{
+              name: 'EditSeries',
+              params: { Link: series.slug, Id: series.id },
+            }"
+              class="absolute right-0 top-2 cursor-pointer w-12 h-12 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400 hover:border-2 rounded-full flex items-center justify-center">
+              <EditIcon class="w-7 h-7 fill-slate-300" :fill-color="`rgb${themecolor}`" />
             </RouterLink>
           </div>
           <div class="flex flex-col relative shrink-0">
             <div class="mx-8 my-5">
-              <p
-                class="text-xl text-center font-bold"
-                :style="`color: rgb${themecolor}`"
-              >
+              <p class="text-xl text-center font-bold" :style="`color: rgb${themecolor}`">
                 Description
               </p>
               <p class="mt-4 text-white text-justify">
@@ -180,87 +116,42 @@
           </div>
 
           <div class="absolute rounded-full bottom-2 right-2">
-            <button
-              @click.prevent="confirmSeriesDelete(series.id, series.title)"
-              class="rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out"
-            >
-              <img
-                src="@/assets/remove.svg"
-                alt=""
-                height="30"
-                width="30"
-                class="min-w-[25px] min-h-[25px]"
-              />
+            <button @click.prevent="confirmSeriesDelete(series.id, series.title)"
+              class="rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
+              <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
             </button>
           </div>
         </div>
         <div
-          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700"
-        >
-          <h1
-            class="flex justify-center py-2 px-4 font-bold text-3xl"
-            :style="`color: rgb${themecolor}`"
-          >
+          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700">
+          <h1 class="flex justify-center py-2 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
             Issues
           </h1>
-          <div
-            class="overflow-scroll h-full flex flex-row justify-center mx-auto items-start w-full"
-          >
-            <div
-              class="flex flex-wrap flex-start gap-10 w-[82%] my-4 "
-            >
-              <IssueCarditem
-                :edit_mode="editMode"
-                :is_last="
-                  index === issuesList.length - 1 && issuesList.length > 1
-                "
-                :preferred_currency="preferred_currency"
-                :bought_price="issue.bought_price"
-                :image="image"
-                :bought_date="issue.bought_date"
-                :read_date="issue.read_date"
-                :themecolor="themecolor"
-                :title="issue.title"
-                :is_owned="issue.is_owned"
-                :is_read="issue.is_read"
-                v-for="(issue, index) in issuesList"
-                @updateStatus="updateStatus(issue, $event)"
-                :key="issue.id"
-                @deleteIssue="confirmDelete(issue)"
-              />
+          <div class="overflow-scroll h-full flex flex-row justify-center mx-auto items-start w-full">
+            <div class="flex flex-wrap flex-start gap-10 w-[82%] my-4 ">
+              <IssueCarditem :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1
+                " :preferred_currency="preferred_currency" :bought_price="issue.bought_price" :image="image"
+                :bought_date="issue.bought_date" :read_date="issue.read_date" :themecolor="themecolor"
+                :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
+                v-for="(issue, index) in issuesList" @updateStatus="updateStatus(issue, $event)" :key="issue.id"
+                @deleteIssue="confirmDelete(issue)" />
 
-              <div
-                v-if="editMode"
-                @click="addIssue"
+              <div v-if="editMode" @click="addIssue"
                 class="w-44 h-64 flex relative flex-col items-center bg-cover bg-center justify-center rounded-lg border-green-500 border-2 overflow-hidden shadow-lg cursor-pointer bg-zinc-800 border-dashed hover:bg-zinc-700 transition-all"
-                :style="`background-image: url(${image})`"
-              >
-                <div
-                  class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3"
-                >
-                  <div
-                    class="flex flex-col items-center justify-center text-white gap-2"
-                  >
-                    <img
-                      src="@/assets/add.svg"
-                      alt="Add"
-                      class="w-12 h-12 opacity-80"
-                    />
+                :style="`background-image: url(${image})`">
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3">
+                  <div class="flex flex-col items-center justify-center text-white gap-2">
+                    <img src="@/assets/add.svg" alt="Add" class="w-12 h-12 opacity-80" />
                     <p class="text-white text-md font-bold">Add Issue</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <button
-            @click="toggleEditMode"
+          <button @click="toggleEditMode"
             class="mt-4 absolute right-2 -top-2 w-12 h-12 cursor-pointer hover:scale-110 rounded-full transition duration-200 ease-in-out hover:border-emerald-400 hover:border-2 flex items-center justify-center"
-            :class="editMode ? ' border-green-700' : ' border-zinc-500'"
-          >
-            <EditIcon
-              class="w-7 h-7"
-              :fill="editMode ? 'white' : `rgb${themecolor}`"
-            />
+            :class="editMode ? ' border-green-700' : ' border-zinc-500'">
+            <EditIcon class="w-7 h-7" :fill="editMode ? 'white' : `rgb${themecolor}`" />
           </button>
         </div>
       </div>
@@ -270,8 +161,7 @@
       <template #message="slotProps">
         <p class="font-bold">
           Do you really want to delete the
-          <span>{{ slotProps.message.message }}</span
-          >?
+          <span>{{ slotProps.message.message }}</span>?
         </p>
       </template>
     </ConfirmDialog>
@@ -391,19 +281,20 @@ const issueCount = ref({
   read_count: 0,
   total_count: 0,
 });
-const themecolor = ref<string | null>("(212, 222, 252)");
-const image = ref<string | null>();
-const placeholder = new URL("../assets/dummy.webp", import.meta.url).href;
+const themecolor = ref<string | null>(null);
+const image = ref<string | null>(null);
 
 async function getSeries() {
   try {
     const response = await SeriesService.getSeriesbyId(Number(route.params.Id));
     series.value = response;
-    themecolor.value =
-      response.dominant_color.slice(0, -1).toString() +
-      response.dominant_color.slice(-1).toString();
+    if (response.dominant_color) {
+      themecolor.value =
+        response.dominant_color.slice(0, -1).toString() +
+        response.dominant_color.slice(-1).toString();
+    }
 
-    if (series.value) {
+    if (response.thumbnail) {
       image.value = `${SeriesService.getImagebyId(series.value.id)}?t=${Date.now()}`;
       console.log("getSeries", image.value);
     }
@@ -414,7 +305,7 @@ async function getSeries() {
 
 const confirmSeriesDelete = (id: number, title: any) => {
   confirm.require({
-    message:`Series ${title}`,
+    message: `Series ${title}`,
     header: "Confirm Deletion",
     icon: "pi pi-info-circle",
     rejectLabel: "Cancel",
