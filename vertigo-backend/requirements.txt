@@ -6,7 +6,7 @@
 #
 alchemical==1.0.2
     # via -r requirements.in
-alembic==1.17.0
+alembic==1.17.1
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -26,8 +26,6 @@ charset-normalizer==3.4.3
     # via requests
 click==8.3.0
     # via flask
-colorama==0.4.6
-    # via click
 et-xmlfile==2.0.0
     # via openpyxl
 faker==37.11.0
