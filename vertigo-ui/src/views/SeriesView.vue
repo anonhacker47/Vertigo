@@ -1,5 +1,6 @@
 <template>
-  <div v-if="series" class="bg-no-repeat bg-center h-full bg-cover" :style="{ backgroundImage: 'url(' + image + ')' }">
+  <div v-if="series" :key="series.id" class="bg-no-repeat bg-center h-full bg-cover"
+    :style="{ backgroundImage: 'url(' + image + ')' }">
     <div class="flex flex-col min-h-screen min-w-screen" style="background: rgba(18, 25, 43, 0.9)">
       <HeaderItem />
       <div
@@ -113,13 +114,26 @@
                 {{ series.description }}
               </p>
             </div>
-          </div>
 
-          <div class="absolute rounded-full bottom-2 right-2">
-            <button @click.prevent="confirmSeriesDelete(series.id, series.title)"
-              class="rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
-              <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
-            </button>
+          </div>
+          <div class="flex absolute w-full pl-2 bottom-4 flex-row justify-between mt-6">
+            <!-- Previous Button -->
+            <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
+              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition"
+              :style="`color: rgb${themecolor}`">
+              ← Previous Series
+            </RouterLink>
+
+            <!-- Spacer when no previous -->
+            <div v-else></div>
+
+            <!-- Next Button -->
+            <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
+              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition"
+              :style="`color: rgb${themecolor}`">
+              Next Series →
+            </RouterLink>
+
           </div>
         </div>
         <div
@@ -169,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive } from "vue";
+import { onMounted, ref, reactive, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../store/user";
 
@@ -184,11 +198,12 @@ import EditIcon from "../assets/EditIcon.vue";
 import Rating from "primevue/rating";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import DeleteIcon from "../assets/remove.svg";
 
 const confirm = useConfirm();
 const toast = useToast();
+
 const message = ref();
+const neighbours = ref({ next: null, previous: null });
 
 async function addIssue() {
   try {
@@ -284,9 +299,9 @@ const issueCount = ref({
 const themecolor = ref<string | null>(null);
 const image = ref<string | null>(null);
 
-async function getSeries() {
+async function getSeries(id: number) {
   try {
-    const response = await SeriesService.getSeriesbyId(Number(route.params.Id));
+    const response = await SeriesService.getSeriesbyId(id);
     series.value = response;
     if (response.dominant_color) {
       themecolor.value =
@@ -301,49 +316,6 @@ async function getSeries() {
   } catch (error) {
     console.log(error);
   }
-}
-
-const confirmSeriesDelete = (id: number, title: any) => {
-  confirm.require({
-    message: `Series ${title}`,
-    header: "Confirm Deletion",
-    icon: "pi pi-info-circle",
-    rejectLabel: "Cancel",
-    rejectProps: {
-      label: "Cancel",
-      severity: "secondary",
-      outlined: true,
-    },
-    acceptProps: {
-      label: "Delete",
-      severity: "danger",
-    },
-    accept: () => {
-      deleteSeries(id);
-      toast.add({
-        severity: "success",
-        summary: "Confirmed",
-        detail: `${title} deleted`,
-        life: 3000,
-      });
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-    },
-  });
-};
-
-async function deleteSeries(id: number) {
-  const idToRemove = id;
-
-  try {
-    const response = await SeriesService.removeSeries(id);
-    router.push({ name: "Collection" });
-  } catch (error) {
-    message.value = error;
-  }
-
-  console.log(message);
 }
 
 async function getIssues() {
@@ -409,17 +381,37 @@ async function updateRating(newRating: number) {
     formData.append("user_rating", String(newRating));
 
     await SeriesService.updateSeries(Number(route.params.Id), formData); // or use a PATCH method if available
-    await getSeries(); // re-fetch the full series data to reflect the change
+    await getSeries(Number(route.params.Id)); // re-fetch the full series data to reflect the change
     console.log("Rating updated and series reloaded.");
   } catch (error) {
     console.error("Failed to update rating:", error);
   }
 }
 
+async function getNeighbours(id: number) {
+  const res = await SeriesService.getSeriesNeighbours(id);
+  neighbours.value = res.data;
+  console.log(res)
+}
+
+watch(
+  () => route.params.Id,
+  (newId) => {
+    image.value = null;      // clear old image
+    series.value = null;
+    themecolor.value=null;
+    getSeries(Number(newId));
+    getIssues();
+    getIssueCount();
+    getNeighbours(Number(newId));
+  }
+);
+
 onMounted(() => {
-  getSeries();
+  getSeries(Number(route.params.Id));
   getIssues();
   getIssueCount();
+  getNeighbours(Number(route.params.Id));
 });
 </script>
 

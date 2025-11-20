@@ -329,3 +329,41 @@ def get_series_with_thumbnail():
         series_ids = []
     
     return jsonify(series_ids)
+
+@series.route('/series/<int:id>/neighbors', methods=['GET'])
+@authenticate(token_auth)
+def neighbors(id):
+    """Retrieve the previous and next series based on alphabetical order."""
+
+    user = token_auth.current_user()
+
+    series_obj = db.session.get(Series, id) or abort(404)
+    current_title = series_obj.title
+
+    prev_series = (
+        db.session.query(Series)
+        .filter(Series.user_id == user.id, Series.title < current_title)
+        .order_by(Series.title.desc())
+        .first()
+    )
+
+    # Next series for the same user
+    next_series = (
+        db.session.query(Series)
+        .filter(Series.user_id == user.id, Series.title > current_title)
+        .order_by(Series.title.asc())
+        .first()
+    )
+
+    def format_item(item):
+        if item is None:
+            return None
+        return {
+            "id": item.id,
+            "slug": item.slug,   # adjust field name
+        }
+
+    return jsonify({
+        "previous": format_item(prev_series),
+        "next": format_item(next_series),
+    })

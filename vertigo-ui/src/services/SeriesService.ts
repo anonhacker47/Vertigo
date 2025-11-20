@@ -3,7 +3,6 @@ import { Series } from "@/types/series.types";
 import { ApiResponse } from "@/types/api-response.types";
 import { SeriesFilterFields } from "@/types/series-filter.types";
 
-
 export default {
   async fetchSeries(
     userId: string,
@@ -78,5 +77,9 @@ export default {
 
   getSeriesThumbBg() {
     return Api().get(`/series/thumbnail/bg`);
+  },
+
+  getSeriesNeighbours(id: number) {
+    return Api().get(`/series/${id}/neighbors`);
   },
 };

@@ -59,20 +59,37 @@
             </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-16 justify-around">
-            <div class="form-control w-full">
-                <button type="button" @click="$router.back" class="btn btn-danger">
-                    Cancel
-                </button>
+        <div class="flex flex-col gap-4 justify-around">
+            <div class="flex flex-col md:flex-row gap-16 justify-around">
+                <div class="form-control w-full">
+                    <button type="button" @click="$router.back" class="btn btn-danger">
+                        Cancel
+                    </button>
+                </div>
+                <div class="form-control w-full">
+                    <button @click.prevent="updateSeries"
+                        :disabled="!localSeriesData.title || !localSeriesData.series_format"
+                        class="btn btn-primary rounded">
+                        Save Details
+                    </button>
+                </div>
             </div>
             <div class="form-control w-full">
-                <button @click.prevent="updateSeries"
-                    :disabled="!localSeriesData.title || !localSeriesData.series_format"
-                    class="btn btn-primary rounded">
-                    Save Details
+                <button @click.prevent="confirmSeriesDelete(localSeriesData.id, localSeriesData.title)"
+                    :disabled="!localSeriesData.title || !localSeriesData.series_format" class="btn btn-error rounded">
+                    Delete Series
                 </button>
             </div>
         </div>
+
+        <ConfirmDialog>
+            <template #message="slotProps">
+                <p class="font-bold">
+                    Do you really want to delete the
+                    <span>{{ slotProps.message.message }}</span>?
+                </p>
+            </template>
+        </ConfirmDialog>
     </div>
 </template>
 
@@ -83,10 +100,16 @@ import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 import { useRouter } from "vue-router";
 import SeriesService from "@/services/SeriesService";
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 
 const router = useRouter();
 const seriesFields = ['publisher', 'genre', 'main_character', 'creator'];
 const seriesFieldValues = ref({});
+
+const confirm = useConfirm();
+const toast = useToast();
+const message = ref();
 
 const props = defineProps<{
     modelValue: Partial<Series>,
@@ -147,6 +170,49 @@ async function getSeriesFields() {
     } catch (error) {
         console.log(error);
     }
+}
+
+const confirmSeriesDelete = (id: number, title: any) => {
+    confirm.require({
+        message: `Series ${title}`,
+        header: "Confirm Deletion",
+        icon: "pi pi-info-circle",
+        rejectLabel: "Cancel",
+        rejectProps: {
+            label: "Cancel",
+            severity: "secondary",
+            outlined: true,
+        },
+        acceptProps: {
+            label: "Delete",
+            severity: "danger",
+        },
+        accept: () => {
+            deleteSeries(id);
+            toast.add({
+                severity: "success",
+                summary: "Confirmed",
+                detail: `${title} deleted`,
+                life: 3000,
+            });
+        },
+        reject: () => {
+            // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+        },
+    });
+};
+
+async function deleteSeries(id: number) {
+    const idToRemove = id;
+
+    try {
+        const response = await SeriesService.removeSeries(id);
+        router.push({ name: "Collection" });
+    } catch (error) {
+        message.value = error;
+    }
+
+    console.log(message);
 }
 
 </script>

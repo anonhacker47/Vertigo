@@ -144,5 +144,3 @@ function handleDateChange(status: 'is_owned' | 'is_read', event: Event) {
 }
 
 </script>
-
-<style scoped></style>
