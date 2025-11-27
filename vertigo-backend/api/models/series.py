@@ -29,7 +29,7 @@ class Series(Updateable, db.Model):
     creator = sqla_orm.relationship('Creator', secondary=associations.series_creator,
                                    back_populates='series', lazy='dynamic')
     
-    main_character = sqla_orm.relationship('MainCharacter', secondary=associations.series_main_character,
+    character = sqla_orm.relationship('Character', secondary=associations.series_character,
                                    back_populates='series', lazy='dynamic')
 
     user_rating = sqla.Column(sqla.Float)

@@ -9,7 +9,7 @@ def create_or_get_entities(entity_type, titles, description=None):
         'publisher': series_entities.Publisher,
         'genre': series_entities.Genre,
         'creator': series_entities.Creator,
-        'main_character': series_entities.MainCharacter,
+        'character': series_entities.Character,
     }[entity_type]
 
     entities = []

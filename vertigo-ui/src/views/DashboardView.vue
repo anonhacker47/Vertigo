@@ -140,7 +140,7 @@ const chartTypeList = [
 const chartCategoryList = [
   { Name: 'Publisher', field: 'publisher' },
   { Name: 'Genre', field: 'genre' },
-  { Name: 'Main Char/Team', field: 'main_character' },
+  { Name: 'Main Char/Team', field: 'character' },
   { Name: 'Creator', field: 'creator' },
 ];
 

@@ -42,7 +42,7 @@ def new():
     issue_count = int(request.form.get('issue_count', 0))
     read_count = int(request.form.get('read_count', 0))
     owned_count = int(request.form.get('owned_count', 0))
-    main_character = request.form.get('main_character', None)
+    character = request.form.get('character', '[]')
     thumbnail = request.form.get('thumbnail', '').strip()
 
     # Parse JSON fields within FormData
@@ -54,7 +54,7 @@ def new():
         'genre': json.loads(genre),
         'creator': json.loads(creator),
         'publisher': [publisher],
-        'main_character': [main_character] if main_character else []
+        'character': json.loads(character)
     }
 
     # Create series instance
@@ -198,8 +198,8 @@ def update_series(id):
     if 'publisher' in form:
         entities['publisher'] = [form.get('publisher')] if form.get('publisher') else []
 
-    if 'main_character' in form and form.get('main_character'):
-        entities['main_character'] = [form.get('main_character')]
+    if 'character' in form and form.get('character'):
+        entities['character'] = json.loads(form.get('character', '[]'))
 
     for entity_type, titles in entities.items():
         entity_items = create_or_get_entities(entity_type, titles)
@@ -292,7 +292,7 @@ def get_series_by_table(table):
     """Retrieve values from a specific table across all series objects."""
 
     table_class = {
-        'main_character': series_entities.MainCharacter,
+        'character': series_entities.Character,
         'genre': series_entities.Genre,
         'creator': series_entities.Creator,
         'publisher': series_entities.Publisher,
@@ -304,7 +304,7 @@ def get_series_by_table(table):
     if table == 'series_format':
         values = db.session.query(Series.series_format).distinct().filter(Series.series_format.isnot(None)).all()
         values = {value[0] for value in values if value[0]}
-        return jsonify(sorted(list(values)))
+        return jsonify(sorted(values))
     
     values = db.session.query(table_class.title).distinct().all()
     values = {value.title for value in values}

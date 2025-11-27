@@ -67,6 +67,7 @@
               <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
                 <span class="font-bold text-lg">Publisher</span>
                 <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+
                   series.publisher }}</span>
               </div>
               <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
@@ -80,9 +81,14 @@
                 </div>
               </div>
               <div class="flex flex-col md:flex-row items-center gap-4">
-                <span class="font-bold text-lg">Main Character/Team</span>
-                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
-                  series.main_character }}</span>
+                <span class="font-bold text-lg">Characters</span>
+                <div
+                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap">
+                  <p v-for="character in series.character" class="bg-slate-800 rounded-md px-4 py-1 text-sm font-bold"
+                    :style="`color: rgb${themecolor}`">
+                    {{ character }}
+                  </p>
+                </div>
               </div>
               <div class="flex flex-col md:flex-row items-center max-w-full gap-4">
                 <div class="font-bold text-lg">Creators</div>

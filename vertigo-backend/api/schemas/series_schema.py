@@ -17,10 +17,8 @@ class SeriesSchema(ma.SQLAlchemySchema):
     title = ma.auto_field(required=True, validate=validate.Length(min=1, max=280))
     publisher = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
     creator = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
-
-    character = ma.List(ma.String(validate=validate.Length(min=0, max=280)), allow_none=True)
       
-    main_character = ma.List(ma.String(validate=validate.Length(min=0, max=280), allow_none=True))
+    character = ma.List(ma.String(validate=validate.Length(min=0, max=280), allow_none=True))
         
     description = ma.auto_field(validate=validate.Length(min=0, max=1250))
 
@@ -52,6 +50,4 @@ class SeriesSchema(ma.SQLAlchemySchema):
             data['timestamp'] += 'Z'
         if 'publisher' in data and isinstance(data['publisher'], list):
             data['publisher'] = data['publisher'][0] if data['publisher'] else None
-        if 'main_character' in data and isinstance(data['main_character'], list):
-            data['main_character'] = data['main_character'][0] if data['main_character'] else None
         return data
