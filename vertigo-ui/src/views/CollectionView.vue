@@ -1,30 +1,70 @@
 <template>
   <Transition enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div v-if="true" class="flex justify-around items-center py-2 border-b bg-base-100 border-slate-700">
-      <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary justify-center">
-        Add Series
-      </RouterLink>
+
+    <div v-if="true"
+      class="flex md:hidden flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 px-4 md:px-12 gap-4">
+
+      <div class="flex flex-col items-center text-center w-full md:w-auto">
+        <h1 class="text-2xl md:text-3xl font-bold text-white">
+          Series Collection
+        </h1>
+        <p class="text-sm text-slate-400 mt-1">
+          Total series: {{ pagination.total }}
+        </p>
+      </div>
 
       <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
         :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
         v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
-      <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
-        Delete Mode
-      </button>
+      <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
+        <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary flex-1 md:flex-none">
+          Add Series
+        </RouterLink>
+        <button class="btn flex-1 md:flex-none" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
+          @click="toggleDelete">
+          Delete Mode
+        </button>
+      </div>
     </div>
   </Transition>
 
-  <SearchSeriesForm @search="handleSearch" />
+  <Transition enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut animate__faster">
+    <div v-if="true"
+      class="hidden md:flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
+      <div class="flex flex-col md:flex-row justify-between gap- items-center container mx-auto"> <!-- Left button -->
+        <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary"> Add Series </RouterLink>
+        <div class="md:ml-16 flex flex-col items-center text-center">
+          <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
+          <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.total }} </p>
+        </div>
+        <div class="flex flex-col md:flex-row items-center gap-2">
+          <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
+            Delete Mode </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <div class="flex md:flex-row flex-col items-center justify-between py-4 w-full max-w-7xl mx-auto">
+    <div class="hidden md:flex">
+      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
+        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
+        v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
+    </div>
+    <SearchSeriesForm @search="handleSearch" />
+  </div>
+
   <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
     <div class="flex justify-center items-center">
-      <span  class="loading-ring  text-success h-44 w-44 loading"></span >
+      <span class="loading-ring  text-success h-44 w-44 loading"></span>
     </div>
   </div>
 
   <!-- Card View -->
   <div v-else-if="viewMode == 'card'"
-    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-screen-3xl grid-cols-${selectedGrid}`">
+    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto mx-2 max-w-screen-3xl grid-cols-${selectedGrid}`">
     <template v-if="seriesList.length > 0">
       <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
@@ -66,7 +106,7 @@
 <script setup lang="ts">
 import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";
@@ -128,7 +168,10 @@ const selectedGrid = ref<number>(userPreferences.cardsPerLine);
 const orderBy = ref(userPreferences.orderBy);
 const orderDir = ref(userPreferences.orderDir);
 
-const viewMode = ref(userPreferences.viewMode); // Default to user preference
+const viewMode = computed({
+  get: () => userPreferences.viewMode,
+  set: (val) => userPreferences.setViewMode(val)
+});
 
 const sortKey = ref(true);
 const loading = ref(false);

@@ -1,6 +1,6 @@
 <template>
-    <div class="flex md:flex-row flex-col items-center justify-between gap-3 py-6 w-full max-w-6xl mx-auto"> <!-- Search Input -->
-        <InputText v-model="searchQuery" placeholder="Search series..." class="w-full md:w-52"
+    <div class="flex md:flex-row flex-col items-center justify-between gap-3 w-full max-w-6xl mx-auto px-4"> <!-- Search Input -->
+        <InputText v-model="searchQuery" placeholder="Search Series..." class="w-full md:w-52"
             @keyup.enter="applySearch" />
 
         <!-- Filters -->
@@ -20,8 +20,8 @@
             scrollHeight="200px" showClear />
 
         <!-- Buttons -->
-        <Button label="Search" icon="pi pi-search" class="p-button-info w-32" @click="applySearch" />
-        <Button v-if="isSearched" label="Reset" icon="pi pi-times" class="p-button-danger w-32" @click="resetSearch" />
+        <Button label="Search" icon="pi pi-search" class="p-button-info w-full md:w-32" @click="applySearch" />
+        <Button v-if="isSearched" label="Reset" icon="pi pi-times" class="p-button-danger w-full md:w-32" @click="resetSearch" />
     </div>
 </template>
 
