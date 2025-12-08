@@ -83,14 +83,6 @@
             </div>
         </div>
 
-        <ConfirmDialog>
-            <template #message="slotProps">
-                <p class="font-bold">
-                    Do you really want to delete the
-                    <span>{{ slotProps.message.message }}</span>?
-                </p>
-            </template>
-        </ConfirmDialog>
     </div>
 </template>
 
@@ -101,14 +93,14 @@ import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 import { useRouter } from "vue-router";
 import SeriesService from "@/services/SeriesService";
-import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import { useConfirmAction } from "@/composables/useConfirmAction";
 
 const router = useRouter();
 const seriesFields = ['publisher', 'genre', 'character', 'creator'];
 const seriesFieldValues = ref({});
 
-const confirm = useConfirm();
+const { confirmAction } = useConfirmAction();
 const toast = useToast();
 const message = ref();
 
@@ -171,45 +163,31 @@ async function getSeriesFields() {
 }
 
 const confirmSeriesDelete = (id: number, title: any) => {
-    confirm.require({
+    confirmAction({
         message: `Series ${title}`,
         header: "Confirm Deletion",
-        icon: "pi pi-info-circle",
-        rejectLabel: "Cancel",
-        rejectProps: {
-            label: "Cancel",
-            severity: "secondary",
-            outlined: true,
-        },
-        acceptProps: {
-            label: "Delete",
-            severity: "danger",
-        },
-        accept: () => {
+        acceptLabel: "Delete",
+        severity: "danger",
+        successMessage: `$Series ${title} deleted`,
+        onAccept: () => {
             deleteSeries(id);
             toast.add({
                 severity: "success",
                 summary: "Confirmed",
-                detail: `${title} deleted`,
+                detail: `Series ${title} deleted`,
                 life: 3000,
             });
-        },
-        reject: () => {
-            // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
         },
     });
 };
 
 async function deleteSeries(id: number) {
-    const idToRemove = id;
-
     try {
-        const response = await SeriesService.removeSeries(id);
+        await SeriesService.removeSeries(id);
         router.push({ name: "Collection" });
     } catch (error) {
         message.value = error;
     }
-
     console.log(message);
 }
 </script>

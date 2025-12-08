@@ -1,7 +1,7 @@
 from api.app import db
 import api.models.series_entities as series_entities
 
-def create_or_get_entities(entity_type, titles, description=None):
+def create_or_get_entities(entity_type, titles,user, description=None):
     if not titles:  # Check for empty or None list
         return []
 
@@ -19,7 +19,7 @@ def create_or_get_entities(entity_type, titles, description=None):
             if existing_entity:
                 entities.append(existing_entity)
             else:
-                new_entity = entity_class(title=title, description=description)
+                new_entity = entity_class(title=title, description=description,user=user)
                 db.session.add(new_entity)
                 db.session.commit()
                 entities.append(new_entity)

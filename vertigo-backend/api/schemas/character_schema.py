@@ -1,13 +1,14 @@
 from marshmallow import validate, post_dump
 from sqlalchemy import func
 from api import ma, db
+from api.models.series_entities import Genre
 from api.utils.auth import token_auth
-from api.models.series_entities import Publisher
-from api.models.series import Series
 from api.models import associations
-class PublisherSchema(ma.SQLAlchemySchema):
+from api.models.series import Series
+
+class CharacterSchema(ma.SQLAlchemySchema):
     class Meta:
-        model = Publisher
+        model = Genre
         include_fk = True
         ordered = True
 
@@ -20,8 +21,9 @@ class PublisherSchema(ma.SQLAlchemySchema):
         min=0, max=1250))
     
     thumbnail = ma.String()
-    slug = ma.String()
 
+    
+    slug = ma.String()
     timestamp = ma.auto_field(dump_only=True)
 
     @post_dump
@@ -30,7 +32,7 @@ class PublisherSchema(ma.SQLAlchemySchema):
             data['timestamp'] += 'Z'
         return data
     
-class PublisherDetailSchema(PublisherSchema):
+class CharacterDetailSchema(CharacterSchema):
     series_count = ma.Method("get_series_count")
 
     def get_series_count(self, obj):
@@ -38,10 +40,10 @@ class PublisherDetailSchema(PublisherSchema):
 
         stmt = (
             db.session.query(func.count())
-            .select_from(associations.series_publisher)
-            .join(Series, Series.id == associations.series_publisher.c.series_id)
+            .select_from(associations.series_character)
+            .join(Series, Series.id == associations.series_character.c.series_id)
             .filter(
-                associations.series_publisher.c.publisher_id == obj.id,
+                associations.series_character.c.character_id == obj.id,
                 Series.user_id == user.id
             )
         )

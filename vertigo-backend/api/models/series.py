@@ -8,7 +8,7 @@ from api.models.issue import Issue
 from flask import current_app, url_for
 
 from api.app import db
-from api.helpers.thumbnail_processing import save_series_thumbnail
+from api.helpers.thumbnail_processing import save_thumbnail
 from api.models.updatable import Updateable
 import api.models.associations as associations
 import api.models.series_entities as entities

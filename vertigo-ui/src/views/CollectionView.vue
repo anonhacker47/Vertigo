@@ -18,7 +18,7 @@
         :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
         v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
       <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
-        <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary flex-1 md:flex-none">
+        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary flex-1 md:flex-none">
           Add Series
         </RouterLink>
         <button class="btn flex-1 md:flex-none" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
@@ -34,7 +34,7 @@
     <div v-if="true"
       class="hidden md:flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
       <div class="flex flex-col md:flex-row justify-between gap- items-center container mx-auto"> <!-- Left button -->
-        <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary"> Add Series </RouterLink>
+        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary"> Add Series </RouterLink>
         <div class="md:ml-16 flex flex-col items-center text-center">
           <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
           <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.total }} </p>
@@ -93,14 +93,6 @@
   <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
     :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
 
-  <ConfirmDialog>
-    <template #message="slotProps">
-      <p class="font-bold">
-        Do you really want to delete the series
-        <span class="text-red-500">{{ slotProps.message.message }}</span> ?
-      </p>
-    </template>
-  </ConfirmDialog>
 </template>
 
 <script setup lang="ts">
@@ -117,6 +109,7 @@ import { useToast } from "primevue/usetoast";
 import { Series } from "@/types/series.types";
 import Paginator from "primevue/paginator";
 import SearchSeriesForm from "@/components/forms/SearchSeriesForm.vue";
+import { useConfirmAction } from "@/composables/useConfirmAction";
 
 const onPageChange = (event: any) => {
   if (event.rows > 0) {
@@ -124,37 +117,26 @@ const onPageChange = (event: any) => {
   }
 };
 
-const confirm = useConfirm();
 const toast = useToast();
+const { confirmAction } = useConfirmAction();
 
 const confirmDelete = (id: number, title: any) => {
-  confirm.require({
-    message: title,
-    header: "Confirm Deletion",
-    icon: "pi pi-info-circle",
-    rejectLabel: "Cancel",
-    rejectProps: {
-      label: "Cancel",
-      severity: "secondary",
-      outlined: true,
-    },
-    acceptProps: {
-      label: "Delete",
-      severity: "danger",
-    },
-    accept: () => {
-      deleteSeries(id);
-      toast.add({
-        severity: "success",
-        summary: "Confirmed",
-        detail: `${title} deleted`,
-        life: 3000,
-      });
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-    },
-  });
+    confirmAction({
+        message: `Series ${title}`,
+        header: "Confirm Deletion",
+        acceptLabel: "Delete",
+        severity: "danger",
+        successMessage: `$Series ${title} deleted`,
+        onAccept: () => {
+            deleteSeries(id);
+            toast.add({
+                severity: "success",
+                summary: "Confirmed",
+                detail: `Series ${title} deleted`,
+                life: 3000,
+            });
+        },
+    });
 };
 
 const { width } = useWindowSize();
@@ -216,14 +198,8 @@ watch(selectedGrid, (newVal) => {
 });
 
 async function deleteSeries(id: number) {
-  const idToRemove = id;
-  seriesList.value.splice(
-    seriesList.value.findIndex((a) => a.id === idToRemove),
-    1,
-  );
-
   try {
-    const response = await SeriesService.removeSeries(id);
+    await SeriesService.removeSeries(id);
     getseriesList();
   } catch (error) {
     message.value = error;

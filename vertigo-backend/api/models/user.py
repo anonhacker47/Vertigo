@@ -13,6 +13,7 @@ from api.app import db
 from api.models.updatable import Updateable
 from api.models.token import Token
 from api.models.series import Series
+from api.models import series_entities
 
 
 followers = sqla.Table(
@@ -41,6 +42,18 @@ class User(Updateable, db.Model):
     issue = sqla_orm.relationship('Issue', back_populates='user',
                                   lazy='noload')
     
+    publisher = sqla_orm.relationship('Publisher', back_populates='user',
+                                  lazy='noload')
+    
+    genre = sqla_orm.relationship('Genre', back_populates='user',
+                                  lazy='noload')    
+
+    creator = sqla_orm.relationship('Creator', back_populates='user',
+                                  lazy='noload')
+
+    character = sqla_orm.relationship('Character', back_populates='user',
+                                  lazy='noload')
+            
     preferred_currency = sqla.Column(sqla.String(3), default='USD')
     profile_picture = sqla.Column(sqla.String(280))
 
@@ -57,6 +70,18 @@ class User(Updateable, db.Model):
 
     def series_select(self):
         return Series.select().where(sqla_orm.with_parent(self, User.series))
+
+    def publisher_select(self):
+        return series_entities.Publisher.select().where(sqla_orm.with_parent(self, User.publisher))
+
+    def creator_select(self):
+        return series_entities.Creator.select().where(sqla_orm.with_parent(self, User.creator))
+
+    def genre_select(self):
+        return series_entities.Genre.select().where(sqla_orm.with_parent(self, User.genre))
+
+    def character_select(self):
+        return series_entities.Character.select().where(sqla_orm.with_parent(self, User.character))
 
     def covers_select(id):
         return Series.select().where(Series.id == id)

@@ -6,16 +6,21 @@ import uuid
 from PIL import Image
 from flask import current_app
 from slugify import slugify
-
+from api.utils.files import get_user_path
 import requests
 import shutil
 import re
 import uuid
 from PIL import Image
 
-def download_series_thumbnail(url, title, path):
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
+}
+
+def download_thumbnail(url, title, user_id, folder):
     if url != "noimage":
-        request = requests.get(url, stream=True)
+
+        request = requests.get(url, stream=True,headers=headers)
         ext = re.search(r'\.(\w+)(?!.*\.)', url).group(1)
 
         if "webp" in ext:
@@ -34,25 +39,28 @@ def download_series_thumbnail(url, title, path):
                 print(e)
 
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
-
         if request.status_code == 200:
+            print("user_id")
             request.raw.decode_content = True
-            save_path = os.path.join(current_app.config[path], filename)
+            save_dir = get_user_path(user_id, folder)
+            save_path = os.path.join(save_dir, filename)
             with open(save_path, 'wb') as f:
                 shutil.copyfileobj(request.raw, f)
 
             print('Image successfully Downloaded: ', filename)
-            if path == "cover_path":
+            if "Covers" in folder:
             # Logic for determining dominant color and saving it to the database
-                dominant_color = calculate_dominant_color(filename,path)
+                dominant_color = calculate_dominant_color(filename,save_dir)
                 return filename, dominant_color
             else:
                 return filename
+        else:
+            print('Image Retrieval Failed')
     else:
         print('Image Couldn\'t be retrieved')
         return None, None
 
-def save_series_thumbnail(file, title,path):
+def save_thumbnail(file, title, user_id, folder):
     if not isinstance(file, str):
         ext = re.search(r'\.(\w+)(?!.*\.)', file.filename).group(1)
 
@@ -73,14 +81,17 @@ def save_series_thumbnail(file, title,path):
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
 
         if file:
-            file.save(os.path.join(current_app.config[path],filename))
+            save_dir = get_user_path(user_id, folder)
+            save_path = os.path.join(save_dir, filename)
 
-            # print('Image successfully Downloaded: ', filename)
+            file.save(save_path)
+
+            print('Image successfully Downloaded: ', filename)
 
             # Logic for determining dominant color and saving it to the database
-            if path == "cover_path":
+            if "Covers" in folder:
             # Logic for determining dominant color and saving it to the database
-                dominant_color = calculate_dominant_color(filename,path)
+                dominant_color = calculate_dominant_color(filename,save_dir)
                 return filename, dominant_color
             else:
                 return filename
@@ -88,7 +99,7 @@ def save_series_thumbnail(file, title,path):
         print('Image Couldn\'t be retrieved')
         return None, None
 
-def calculate_dominant_color(filename,path):
+def calculate_dominant_color(filename,folder_path):
     def increase_brightness(color):
         for i in range(len(color)):
             if 100 < color[i] < 150:
@@ -116,12 +127,49 @@ def calculate_dominant_color(filename,path):
             else:
                 i += 1
         return dominant_color
-
-    im = Image.open(os.path.join(current_app.config[path], filename))
+    
+    path = os.path.join(folder_path, filename)
+    im = Image.open(path)
     dominant_color = get_dominant_color(im)
     return f"({dominant_color[0]},{dominant_color[1]},{dominant_color[2]})"
 
-def delete_series_thumbnail(filename):
-    file_path = os.path.join(current_app.config[path], filename)
+def delete_thumbnail(filename, user_id, folder):
+    base = get_user_path(user_id, folder)
+    file_path = os.path.join(base, filename)
+
     if os.path.exists(file_path):
         os.remove(file_path)
+
+def delete_user_images(user_id):
+    """
+    Deletes all files inside:
+        Covers/
+        Entities/Publisher/
+        Entities/Creator/
+        Entities/Character/
+    Does NOT delete 'Avatar/'
+    Does NOT delete folder structure
+    """
+
+    base = os.path.join(current_app.config["user_path"], str(user_id))
+
+    delete_folders = [
+        "Covers",
+        "Entities/Publisher",
+        "Entities/Creator",
+        "Entities/Character",
+    ]
+
+    for folder in delete_folders:
+        folder_path = os.path.join(base, folder)
+
+        if not os.path.exists(folder_path):
+            continue
+
+        # Remove all files inside the folder
+        for root, dirs, files in os.walk(folder_path):
+            for f in files:
+                try:
+                    os.remove(os.path.join(root, f))
+                except Exception as e:
+                    print(f"Error deleting file {f}: {e}")

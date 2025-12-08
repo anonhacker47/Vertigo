@@ -28,7 +28,7 @@ export const useUserPreferences = defineStore("userPreferences", {
             this.orderBy = orderBy;
             localStorage.setItem('orderBy', orderBy);
         },
-        setCardsPerLine(cardsPerLine: number) {
+        setCardsPerLine(cardsPerLine: number) { 
             this.cardsPerLine = cardsPerLine;
             localStorage.setItem('cardsPerLine', cardsPerLine.toString());
         },

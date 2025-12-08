@@ -3,9 +3,11 @@ from apifairy.decorators import other_responses
 from flask import Blueprint, abort, current_app, jsonify,request, send_file
 from apifairy import authenticate, body, response
 
+import sqlalchemy as sqla
 from api import db
 from api.models.user import User
 from api.models.series import Series
+from api.utils.files import get_user_path, init_user_folders
 import pandas as pd
 from io import BytesIO
 from flask import send_file
@@ -13,13 +15,11 @@ from api.schemas.user_schema import UserSchema, UpdateUserSchema
 from sqlalchemy.orm import selectinload
 
 from api.utils.auth import token_auth
-from api.helpers.thumbnail_processing import download_series_thumbnail, save_series_thumbnail
-from openpyxl.utils import get_column_letter
-from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Alignment
-from openpyxl.drawing.image import Image as OpenpyxlImage
+from api.helpers.thumbnail_processing import delete_user_images, download_thumbnail, save_thumbnail
+
 from api.helpers.excel_processing import create_stats_sheet, format_series_sheet, format_issues_sheet
 from babel.numbers import get_currency_symbol
+from api.models.series_entities import Character, Creator, Genre, Publisher
 
 users = Blueprint('users', __name__)
 user_schema = UserSchema()
@@ -35,6 +35,7 @@ def new(args):
     user = User(**args)
     db.session.add(user)
     db.session.commit()
+    init_user_folders(user.id)
     return user
 
 
@@ -102,12 +103,12 @@ def put():
     # Handle profile picture
     profile_picture = form.get('profile_picture', '').strip() if 'profile_picture' in form else ''
     if profile_picture.startswith('http'):
-        picture_filename = download_series_thumbnail(profile_picture, user.username,'user_path')
+        picture_filename = download_thumbnail(profile_picture, user.username,user.id,'Avatar')
         if picture_filename:
             user.profile_picture = picture_filename
     elif 'profile_picture' in request.files:
         file = request.files['profile_picture']
-        picture_filename = save_series_thumbnail(file, user.username,'user_path')
+        picture_filename = save_thumbnail(file, user.username,user.id,'Avatar')
         if picture_filename:
             user.profile_picture = picture_filename
 
@@ -123,11 +124,16 @@ def get_profile_picture():
     if user is None:
         return jsonify("User not found"), 404
 
-    if user.profile_picture is None:
-        return jsonify("noimage")
+
+    if not user.profile_picture:
+        return jsonify("noimage"), 200
+
+    # Build the correct user avatar folder path
+    avatar_dir = get_user_path(user.id, "Avatar")
+    file_path = os.path.join(avatar_dir, user.profile_picture)
 
     try:
-        return send_file(os.path.join(current_app.config['user_path'],user.profile_picture))
+        return send_file(file_path)
     except FileNotFoundError:
         return jsonify("Image file not found"), 404
     except Exception as e:
@@ -215,21 +221,36 @@ def export_data():
 @users.route('/delete_all_data', methods=['DELETE'])
 @authenticate(token_auth)
 def delete_all_user_data():
-    """Delete all series and issues for the current user"""
     user = token_auth.current_user()
+    deleted_counts = {}
 
-    # Get all series belonging to the user
+    # --- DELETE SERIES ---
     series_stmt = user.series_select().options(selectinload(Series.issue))
     series_list = db.session.execute(series_stmt).scalars().all()
 
-    # Delete each series (cascades will handle issues)
     for s in series_list:
         db.session.delete(s)
 
+    deleted_counts["series"] = len(series_list)
+
+    # --- DELETE ENTITIES ---
+    entity_models = [Publisher, Character, Creator, Genre]
+
+    for model in entity_models:
+        stmt = sqla.select(model).filter_by(user_id=user.id)
+        items = db.session.execute(stmt).scalars().all()
+
+        for item in items:
+            db.session.delete(item)
+
+        deleted_counts[model.__tablename__] = len(items)
+    delete_user_images(user.id)
     db.session.commit()
 
-    return jsonify({"message": f"Deleted {len(series_list)} series and associated issues."}), 200
-
+    return jsonify({
+        "message": "Deleted user data.",
+        "deleted": deleted_counts
+    }), 200
 
 
 # @users.route('/me/following', methods=['GET'])

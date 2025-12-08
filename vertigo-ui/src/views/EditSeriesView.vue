@@ -36,7 +36,7 @@ async function getSeries() {
     const response = await SeriesService.getSeriesbyId(seriesId)
     seriesData.value = { ...response };
     console.log(seriesData);
-    imagesrc.value = `${SeriesService.getImagebyId(seriesId)}?t=${Date.now()}`
+    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}?t=${Date.now()}`
   } catch (error) {
     console.log(error);
   }

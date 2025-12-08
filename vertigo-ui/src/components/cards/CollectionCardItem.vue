@@ -64,7 +64,7 @@ const props = defineProps({
 
 const emit = defineEmits(['confirmDelete']);
 
-const displayedImage = ref(SeriesService.getImagebyId(props.series.id));
+const displayedImage = ref(SeriesService.getSeriesImageById(props.series.id));
 const Image = "noimage";
 
 const active = ref(false);

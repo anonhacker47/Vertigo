@@ -16,18 +16,20 @@ from api.models.issue import Issue
 from api.schemas.series_schema import SeriesSchema
 from api.schemas.empty_schema import EmptySchema
 
+from api.utils.files import get_user_path
+
 from api.utils.auth import token_auth
 from api.utils.series_field import create_or_get_entities
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import download_series_thumbnail, save_series_thumbnail,delete_series_thumbnail
+from api.helpers.thumbnail_processing import download_thumbnail, save_thumbnail,delete_thumbnail
 
 
 series = Blueprint('series', __name__)
 series_schema = SeriesSchema()
 multi_series_schema = SeriesSchema(many=True)
 update_series_schema = SeriesSchema(partial=True)
-
+series_thumbnail_folder = "Covers"
 
 @series.route('/series', methods=['POST'])
 @authenticate(token_auth)
@@ -57,7 +59,6 @@ def new():
         'character': json.loads(character)
     }
 
-    # Create series instance
     series = Series(
         user=user,
         title=title,
@@ -71,27 +72,27 @@ def new():
 
     # Handle entities
     for entity_type, titles in entities.items():
-        entity_items = create_or_get_entities(entity_type, titles)
+        entity_items = create_or_get_entities(entity_type, titles, user)
         for item in entity_items:
             getattr(series, entity_type).append(item)
 
 
-    # Handle thumbnail file if it is link
     if thumbnail.startswith('http'):
-        # URL case
-        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, title,'cover_path')
+
+        thumbnail_filename, dominant_color = download_thumbnail(thumbnail, title,user.id,series_thumbnail_folder)
         if thumbnail_filename:
             series.thumbnail = thumbnail_filename
             series.dominant_color = dominant_color
-    # Handle thumbnail file if it exists
+
     elif 'thumbnail' in request.files:
         file = request.files['thumbnail']
-        thumbnail_filename, dominant_color = save_series_thumbnail(file, title,'cover_path')
+        thumbnail_filename, dominant_color = save_thumbnail(file, title,user.id,series_thumbnail_folder)
         series.thumbnail = thumbnail_filename
         series.dominant_color = dominant_color
 
     db.session.commit()
     return series_schema.dump(series), 201
+
 
 @series.route('/series/<int:id>', methods=['GET'])
 @authenticate(token_auth)
@@ -100,6 +101,7 @@ def new():
 def get(id):
     """Retrieve a series by id"""
     return db.session.get(Series, id) or abort(404)
+
 
 @series.route('/series', methods=['GET'])
 @authenticate(token_auth)
@@ -161,7 +163,6 @@ def update_series(id):
 
     form = request.form
 
-    # Update fields only if present
     if 'title' in form:
         series.title = form.get('title', '').strip()
 
@@ -187,7 +188,6 @@ def update_series(id):
         else:
             series.user_rating = float(rating)
 
-    # Handle JSON fields if present
     entities = {}
     if 'genre' in form:
         entities['genre'] = json.loads(form.get('genre', '[]'))
@@ -202,22 +202,55 @@ def update_series(id):
         entities['character'] = json.loads(form.get('character', '[]'))
 
     for entity_type, titles in entities.items():
-        entity_items = create_or_get_entities(entity_type, titles)
+        entity_items = create_or_get_entities(entity_type, titles,user)
         setattr(series, entity_type, entity_items)
 
-    # Handle thumbnail
     thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
-    if thumbnail.startswith('http'):
-        thumbnail_filename, dominant_color = download_series_thumbnail(thumbnail, form.get('title', ''),'cover_path')
-        if thumbnail_filename:
-            series.thumbnail = thumbnail_filename
-            series.dominant_color = dominant_color
-    elif 'thumbnail' in request.files:
-        file = request.files['thumbnail']
-        thumbnail_filename, dominant_color = save_series_thumbnail(file, form.get('title', ''),'cover_path')
-        series.thumbnail = thumbnail_filename
-        series.dominant_color = dominant_color
+    if thumbnail or 'thumbnail' in request.files:
 
+        old_filename = series.thumbnail  
+        new_filename = None
+        new_color = None
+        error_occurred = False
+
+        if thumbnail == old_filename:
+            error_occurred = False
+
+        else:
+            try:
+                if thumbnail.startswith('http'):
+                    new_filename, new_color = download_thumbnail(
+                        thumbnail,
+                        series.title,
+                        user.id,
+                        series_thumbnail_folder
+                    )
+    
+                elif 'thumbnail' in request.files:
+                    file = request.files['thumbnail']
+                    new_filename, new_color = save_thumbnail(
+                        file,
+                        series.title,
+                        user.id,
+                        series_thumbnail_folder
+                    )
+    
+                if not new_filename:
+                    error_occurred = True
+    
+            except Exception as e:
+                error_occurred = True
+                print("Thumbnail update failed:", e)
+    
+            if error_occurred:
+                return jsonify({"error": "Failed to update thumbnail"}), 400
+    
+            if old_filename:
+                delete_thumbnail(old_filename, user.id, series_thumbnail_folder)
+    
+            series.thumbnail = new_filename
+            series.dominant_color = new_color
+  
     db.session.commit()
     return series_schema.dump(series)
 
@@ -230,17 +263,21 @@ def delete(id):
     series = db.session.get(Series, id) or abort(404)
     if series.user != token_auth.current_user():
         abort(403)
-    thumbnail =  series.thumbnail 
 
     issues = db.session.query(Issue).filter(Issue.series_id==id).all()
     for issue in issues:
         db.session.delete(issue)    
     db.session.delete(series)
+
+    if series.thumbnail:    
+
+        cover_dir = get_user_path(series.user.id, series_thumbnail_folder)
+        file_path = os.path.join(cover_dir, series.thumbnail)
     
-    if os.path.exists(current_app.config['cover_path']+f"\\{thumbnail}"):
-        os.remove(current_app.config['cover_path']+f"\\{thumbnail}")
-    else:
-        print("The file does not exist") 
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        else:
+            print("The file does not exist") 
 
     db.session.commit()
     return '', 204
@@ -256,24 +293,30 @@ def feed():
     user = token_auth.current_user()
     return user.followed_series_select()
 
+
 @series.route('series/image/<int:id>',methods=['GET'])
 def get_series_image(id):
     """Retrieve the series thumbnail"""
     series = db.session.get(Series, id)
+
+    user = series.user
+    user_id = user.id
+
 
     if series is None:
         return jsonify("Series not found"), 404
 
     if series.thumbnail is None:
         return jsonify("noimage")
+    
+    base = get_user_path(user_id, series_thumbnail_folder)
+    file_path = os.path.join(base, series.thumbnail)
 
     try:
-        # print(current_app.config['cover_path']+ f"\\{series.thumbnail}")
-        return send_file(os.path.join(current_app.config['cover_path'], series.thumbnail))
+        return send_file(file_path)
     except FileNotFoundError:
         return jsonify("Image file not found"), 404
     except Exception as e:
-        # Handle other potential exceptions (e.g., permission errors)
         return jsonify(f"Error retrieving image: {str(e)}"), 500
     
 @series.route('/series/key', methods=['GET'])
@@ -347,7 +390,6 @@ def neighbors(id):
         .first()
     )
 
-    # Next series for the same user
     next_series = (
         db.session.query(Series)
         .filter(Series.user_id == user.id, Series.title > current_title)
@@ -360,7 +402,7 @@ def neighbors(id):
             return None
         return {
             "id": item.id,
-            "slug": item.slug,   # adjust field name
+            "slug": item.slug,
         }
 
     return jsonify({

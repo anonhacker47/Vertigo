@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col w-screen">
-    <div class="w-full flex flex-col md:flex-row md:gap-12 gap-8 items-center md:h-40 pt-4 pl-8 pr-8 justify-around">
+    <div class="w-full flex flex-col md:flex-row md:gap-12 gap-8 items-center md:h-40 mt-8 px-8 justify-around">
       <InsightCardItem :border="true" icon="collection" :multipleData="true" titleA="My Series" titleB="My Issues"
         :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount"
         :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
@@ -140,7 +140,7 @@ const chartTypeList = [
 const chartCategoryList = [
   { Name: 'Publisher', field: 'publisher' },
   { Name: 'Genre', field: 'genre' },
-  { Name: 'Main Char/Team', field: 'character' },
+  { Name: 'Character', field: 'character' },
   { Name: 'Creator', field: 'creator' },
 ];
 

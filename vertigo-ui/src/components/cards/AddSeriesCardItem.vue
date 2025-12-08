@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="card relative w-full h-full py-6 border bg-slate-800   text-gray-800 border-gray-700 first-letter:marker:shadow-xl">
-		<RouterLink :to="{ name: 'AddNewSeries' }" class="card-body  flex-row justify-between items-center group"
+		<RouterLink :to="{ name: 'AddSeries' }" class="card-body  flex-row justify-between items-center group"
 			@mouseover="isHovered = true" @mouseleave="isHovered = false">
 			<div class="flex flex-col">
 				<span class="card-title text-xl text-primary">Add New Series</span>

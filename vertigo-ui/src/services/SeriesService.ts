@@ -4,6 +4,7 @@ import { ApiResponse } from "@/types/api-response.types";
 import { SeriesFilterFields } from "@/types/series-filter.types";
 
 export default {
+  
   async fetchSeries(
     userId: string,
     orderBy: string,
@@ -63,7 +64,7 @@ export default {
     return response.data;
   },
 
-  getImagebyId(id: Series["id"]) {
+  getSeriesImageById(id: Series["id"]) {
     return Api().defaults.baseURL + `/series/image/${id}`;
   },
 

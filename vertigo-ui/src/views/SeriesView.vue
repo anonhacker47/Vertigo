@@ -1,8 +1,6 @@
 <template>
-  <div v-if="series" :key="series.id" class="bg-no-repeat bg-center h-full bg-cover"
-    :style="{ backgroundImage: 'url(' + image + ')' }">
-    <div class="flex flex-col min-h-screen min-w-screen" style="background: rgba(18, 25, 43, 0.9)">
-      <HeaderItem />
+  <div v-if="series" :key="series.id" class="bg-no-repeat bg-center bg-cover h-full">
+    <div class="flex flex-col min-w-screen" style="background: rgba(18, 25, 43, 0.9)">
       <div
         class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
         <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
@@ -176,36 +174,26 @@
         </div>
       </div>
     </div>
-
-    <ConfirmDialog>
-      <template #message="slotProps">
-        <p class="font-bold">
-          Do you really want to delete the
-          <span>{{ slotProps.message.message }}</span>?
-        </p>
-      </template>
-    </ConfirmDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, watch } from "vue";
+import { onMounted, ref, reactive, watch, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../store/user";
 
 import type { Series } from "@/types/series.types";
 import type { Issue } from "@/types/issue.types";
 
-import HeaderItem from "../components/HeaderItem.vue";
 import IssueCarditem from "../components/cards/IssueCarditem.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
-import EditIcon from "../assets/EditIcon.vue";
+import EditIcon from "@/assets/EditIcon.vue";
 import Rating from "primevue/rating";
-import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import { useConfirmAction } from "@/composables/useConfirmAction";
 
-const confirm = useConfirm();
+const { confirmAction } = useConfirmAction();
 const toast = useToast();
 
 const message = ref();
@@ -249,33 +237,14 @@ async function deleteIssue(issueToDelete: Issue) {
   }
 }
 
-const confirmDelete = (issueToDelete: Issue) => {
-  confirm.require({
-    message: `Issue ${issueToDelete.title}`,
+const confirmDelete = (issue: Issue) => {
+  confirmAction({
+    message: `Issue ${issue.title}`,
     header: "Confirm Deletion",
-    icon: "pi pi-info-circle",
-    rejectLabel: "Cancel",
-    rejectProps: {
-      label: "Cancel",
-      severity: "secondary",
-      outlined: true,
-    },
-    acceptProps: {
-      label: "Delete",
-      severity: "danger",
-    },
-    accept: () => {
-      deleteIssue(issueToDelete);
-      toast.add({
-        severity: "success",
-        summary: "Confirmed",
-        detail: `Issue ${issueToDelete.title} deleted`,
-        life: 3000,
-      });
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-    },
+    acceptLabel: "Delete",
+    severity: "danger",
+    successMessage: `${issue.title} deleted`,
+    onAccept: () => deleteIssue(issue),
   });
 };
 
@@ -288,7 +257,6 @@ const userstore = useUserStore();
 
 const { preferred_currency: preferred_currency } = userstore.getUser();
 
-const router = useRouter();
 const route = useRoute();
 const series = ref<Series | null>(null);
 const issuesList = ref<Issue[]>([]);
@@ -316,7 +284,7 @@ async function getSeries(id: number) {
     }
 
     if (response.thumbnail) {
-      image.value = `${SeriesService.getImagebyId(series.value.id)}?t=${Date.now()}`;
+      image.value = `${SeriesService.getSeriesImageById(series.value.id)}?t=${Date.now()}`;
       console.log("getSeries", image.value);
     }
   } catch (error) {
@@ -405,7 +373,7 @@ watch(
   (newId) => {
     image.value = null;      // clear old image
     series.value = null;
-    themecolor.value=null;
+    themecolor.value = null;
     getSeries(Number(newId));
     getIssues();
     getIssueCount();
@@ -419,6 +387,25 @@ onMounted(() => {
   getIssueCount();
   getNeighbours(Number(route.params.Id));
 });
+
+watch(image, (newImage) => {
+  if (newImage) {
+    const app = document.querySelector('#app');
+    if (app) {
+      app.style.background = `url(${newImage}) center/cover no-repeat fixed`;
+    }
+  }
+});
+
+onUnmounted(() => {
+  const app = document.querySelector('#app');
+  if (app) {
+    app.style.background = '';
+  }
+});
+
+
+
 </script>
 
 <style scoped>
