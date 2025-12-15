@@ -34,14 +34,25 @@ const showIssueSection = ref(false);
 async function getSeries() {
   try {
     const response = await SeriesService.getSeriesbyId(seriesId)
-    seriesData.value = { ...response };
-    console.log(seriesData);
+
+    seriesData.value = {
+      ...response,
+      character: Array.isArray(response.character)
+        ? response.character.map((c: any) => c.title)
+        : [],
+      creator: Array.isArray(response.creator)
+        ? response.creator.map((c: any) => c.title)
+        : [],
+      publisher: response.publisher
+        ? response.publisher.title
+        : null,
+    }
+
     imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}?t=${Date.now()}`
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
 }
-
 async function updateSeries() {
   try {
     const formData = new FormData();

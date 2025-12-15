@@ -1,7 +1,10 @@
 <template>
-  <nav :class="['fixed top-0 left-0 right-0 z-50 border-b border-slate-700 flex flex-wrap items-center justify-between py-3',
-    props.transparentHeader ? 'bg-transparent' : 'bg-base-100']" :style="props.transparentHeader
-      ? { background: 'rgba(18, 25, 43, 0.9)' } : {}">
+  <nav :class="[
+    'fixed top-0 left-0 right-0 z-50 border-b border-slate-700 flex flex-wrap items-center justify-between py-3',
+    props.transparentHeader
+      ? 'bg-[rgba(18,25,43,0.9)] md:bg-transparent'
+      : 'bg-[rgba(18,25,43,0.9)]'
+  ]">
     <div class="relative flex justify-start">
       <RouterLink to="/"><img class="" src="@/assets/logo.svg" alt="" width="40" height="40" /></RouterLink>
     </div>
@@ -16,6 +19,7 @@
         <button tabindex="0"
           class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent">
           Browse
+          <i class="pi pi-chevron-down"></i>
         </button>
         <ul class=" z-50 dropdown-content menu p-2 shadow bg-base-200 text-white text-lg rounded-box w-52" tabindex="0">
           <li>
@@ -43,24 +47,32 @@
 
     </div>
 
+
+
     <div class="flex md:hidden">
       <div class="dropdown dropdown-bottom dropdown-center">
         <button tabindex="0" class="btn btn-ghost btn-circle">
-          <img src="../assets/menu.svg" class="h-5 w-5" alt="menu icon" />
+          <img :src="menuIcon" class="h-5 w-5" alt="menu icon" />
         </button>
-        <ul tabindex="0" class="dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box z-50 ">
+        <ul tabindex="0" class="dropdown-content mt-3 shadow bg-base-100 text-center rounded-box z-50">
           <li>
-            <RouterLink to="/dashboard"
-              class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
+            <RouterLink to="/dashboard" class="block text-white p-2 px-4 text-xl hover:bg-slate-800 rounded-box">
               Dashboard
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/collection"
-              class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700k">
+            <RouterLink to="/collection" class="block text-white rounded-box p-2 px-4 text-xl hover:bg-slate-800">
               Collection
             </RouterLink>
           </li>
+          <div class="text-white text-xl my-2 border-t-2 border-slate-700">
+            <div class="text-sm text-center mt-1 text-slate-400">Browse</div>
+            <div class="mt-2 flex flex-col gap-2">
+              <RouterLink :to="{ name: 'PublisherList' }" class="px-4 hover:bg-slate-800 rounded-box">Publishers</RouterLink>
+              <RouterLink :to="{ name: 'CreatorList' }" class="px-4 hover:bg-slate-800 rounded-box">Creators</RouterLink>
+              <RouterLink :to="{ name: 'CharacterList' }" class=" px-4 hover:bg-slate-800 rounded-box">Characters</RouterLink>
+            </div>
+          </div>
         </ul>
       </div>
     </div>
@@ -69,7 +81,7 @@
       <div class="flex flex-col lg:flex-row list-none">
         <div class="dropdown dropdown-hover">
           <button tabindex="0">
-            <img class="inline-block h-12 w-12 rounded-md hover:opacity-75 cursor-pointer" @error="changeThumb()"
+            <img class="inline-block h-9 w-9 rounded-md hover:opacity-75 cursor-pointer" @error="changeThumb()"
               :src="imagesrc" alt="" />
           </button>
           <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52"
@@ -88,53 +100,84 @@
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from "@/store/user";
-import { useRouter } from "vue-router";
+import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/user'
 import AuthenticationService from '@/services/AuthenticationService'
-import { onMounted, ref, watch } from "vue";
-
-const userStore = useUserStore();
-const route = useRouter();
-const imagesrc = ref('')
+import menuIcon from '@/assets/menu.svg'
 
 const props = defineProps<{
   transparentHeader?: boolean
-}>();
+}>()
 
-const dummy = new URL("../assets/user.svg", import.meta.url).href;
+const router = useRouter()
+const userStore = useUserStore()
+
+const imagesrc = ref('')
+const mobileOpen = ref(false)
+const profileMenu = ref()
+
+const dummy = new URL('@/assets/user.svg', import.meta.url).href
 
 function changeThumb() {
-  imagesrc.value = dummy;
+  imagesrc.value = dummy
 }
 
-function logout(): void {
-  userStore.logout();
-  route.push("/");
+function logout() {
+  userStore.logout()
+  router.push('/')
 }
+
+/* Unified menu structure */
+const menuItems = [
+  {
+    label: 'Dashboard',
+    command: () => router.push('/dashboard')
+  },
+  {
+    label: 'Collection',
+    command: () => router.push('/collection')
+  },
+  {
+    label: 'Browse',
+    items: [
+      { label: 'Publishers', command: () => router.push({ name: 'PublisherList' }) },
+      { label: 'Creators', command: () => router.push({ name: 'CreatorList' }) },
+      { label: 'Characters', command: () => router.push({ name: 'CharacterList' }) }
+    ]
+  }
+]
+
+const profileItems = [
+  {
+    label: 'Settings',
+    icon: 'pi pi-cog',
+    command: () => router.push('/settings')
+  },
+  {
+    label: 'Log out',
+    icon: 'pi pi-sign-out',
+    command: logout
+  }
+]
 
 watch(
   () => userStore.user?.profile_picture,
-  async (newVal, oldVal) => {
-    if (newVal && newVal !== oldVal) {
-      imagesrc.value = await AuthenticationService.getUserPicture();
-    }
+  async (val) => {
+    if (val) imagesrc.value = await AuthenticationService.getUserPicture()
   }
-);
-
+)
 
 onMounted(async () => {
-  const user = userStore.getUser();
-
-  if (user && user.profile_picture) {
-    try {
-      imagesrc.value = await AuthenticationService.getUserPicture();
-    } catch (error) {
-      console.error("Failed to load profile picture:", error);
-    }
+  const user = userStore.getUser()
+  if (user?.profile_picture) {
+    imagesrc.value = await AuthenticationService.getUserPicture()
+  } else {
+    imagesrc.value = dummy
   }
-});
-
+})
 </script>
+
 
 <style scoped>
 nav {

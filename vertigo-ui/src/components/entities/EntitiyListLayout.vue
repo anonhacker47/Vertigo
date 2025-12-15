@@ -2,7 +2,7 @@
     <Transition enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut animate__faster">
         <div class="flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700">
-            <div class="flex flex-col md:flex-row justify-between items-center container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between gap-4 items-center container mx-auto">
                 <RouterLink :to="{ name: `Add${pascalType}` }" class="btn btn-primary flex-1 md:flex-none">
                     Add {{ pascalType }}
                 </RouterLink>

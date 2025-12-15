@@ -1,6 +1,6 @@
 <template>
-  <div v-if="series" :key="series.id" class="bg-no-repeat bg-center bg-cover h-full">
-    <div class="flex flex-col min-w-screen" style="background: rgba(18, 25, 43, 0.9)">
+  <div v-if="series" :key="series.id" class="bg-no-repeat bg-center bg-cover">
+    <div class="flex flex-col min-w-screen">
       <div
         class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
         <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
@@ -37,9 +37,30 @@
         <div class="flex flex-1 justify-center md:justify-end items-center w-1/3">
           <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
+        <div class="md:hidden flex w-full flex-row justify-between ">
+          <!-- Previous Button -->
+          <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
+            class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center"
+            :style="`color: rgb${themecolor}`">
+            <i class="pi pi-chevron-left"></i>
+            <span>Previous Series </span>
+          </RouterLink>
+
+          <!-- Spacer when no previous -->
+          <div v-else></div>
+
+          <!-- Next Button -->
+          <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
+            class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center"
+            :style="`color: rgb${themecolor}`">
+            <span>Next Series </span>
+            <i class="pi pi-chevron-right"></i>
+          </RouterLink>
+
+        </div>
       </div>
 
-      <div class="flex flex-col md:flex-row grow h-[86vh]">
+      <div class="flex flex-col md:flex-row grow md:h-[calc(100vh-140px)]">
         <div class="flex flex-col relative mr-2 md:basis-1/2 md:w-1/2 w-full overflow-hidden">
           <div class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4">
             <div class="flex flex-col basis-1/3 px-28 md:px-4">
@@ -54,52 +75,79 @@
                   {{ series.title }}
                 </span>
               </div>
-              <div class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm bg-slate-800"
+              <div
+                class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm text-slate-300 bg-slate-800"
                 :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
                 <p class="text-sm font-bold">
                   {{ series.series_format }}
                 </p>
               </div>
             </div>
-            <div class="flex flex-col basis-2/3 shrink-0 overflow-scroll gap-4">
-              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
-                <span class="font-bold text-lg">Publisher</span>
-                <span class="text-sm font-bold bg-slate-800 rounded-md px-4 py-1" :style="`color: rgb${themecolor}`">{{
+            <div class="basis-2/3 shrink-0 overflow-y-auto mty-4">
 
-                  series.publisher }}</span>
-              </div>
-              <div class="flex flex-col md:flex-row justify-center md:justify-start items-center gap-4">
-                <div class="font-bold text-lg">Genre</div>
-                <div
-                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap">
-                  <p v-for="genre in series.genre" class="bg-slate-800 rounded-md px-4 py-1 text-sm font-bold"
-                    :style="`color: rgb${themecolor}`">
-                    {{ genre }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex flex-col md:flex-row items-center gap-4">
-                <span class="font-bold text-lg">Characters</span>
-                <div
-                  class="flex flex-row gap-4 max-w-md justify-center md:justify-start overflow-scroll whitespace-nowrap flex-wrap">
-                  <p v-for="character in series.character" class="bg-slate-800 rounded-md px-4 py-1 text-sm font-bold"
-                    :style="`color: rgb${themecolor}`">
-                    {{ character }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex flex-col md:flex-row items-center max-w-full gap-4">
-                <div class="font-bold text-lg">Creators</div>
-                <div
-                  class="flex flex-row gap-4 overflow-scroll whitespace-nowrap justify-center md:justify-start flex-wrap md:flex-no">
-                  <p v-for="creator in series.creator"
-                    class="bg-slate-800 flex-shrink rounded-md px-4 h-7 py-1 text-sm font-bold"
-                    :style="`color: rgb${themecolor}`">
-                    {{ creator }}
-                  </p>
-                </div>
-              </div>
+              <table class="w-full border-collapse">
+                <tbody class="flex md:block flex-col items-center justify-center">
+
+                  <tr class="block md:table-row md:border-b md:border-slate-700/50">
+                    <th
+                      class="block md:table-cell md:py-4 md:pr-6  md:text-left text-sm uppercase tracking-wider text-slate-300">
+                      Publisher
+                    </th>
+                    <td class="py-4 block md:table-cell">
+                      <span class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
+                        {{ series.publisher.title }}
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr class="block md:table-row md:border-b md:border-slate-700/50">
+                    <th
+                      class="block md:table-cell md:py-4 md:pr-6 md:text-left text-sm uppercase tracking-wider text-slate-300">
+                      Genre
+                    </th>
+                    <td class="py-4">
+                      <div class="flex flex-wrap gap-2">
+                        <span v-for="genre in series.genre" :key="genre"
+                          class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
+                          {{ genre }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr class="block md:table-row md:border-b border-slate-700/50">
+                    <th
+                      class="block md:table-cell md:py-4 md:pr-6 md:text-left text-sm uppercase tracking-wider text-slate-300">
+                      Characters
+                    </th>
+                    <td class="py-4 block md:table-cell">
+                      <div class="flex md:justify-start justify-center flex-wrap gap-2 max-h-36 overflow-y-auto">
+                        <span v-for="character in series.character" :key="character"
+                          class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
+                          {{ character.title }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr class="block md:table-row md:border-b md:border-slate-700/50">
+                    <th
+                      class="block md:table-cell md:py-4 md:pr-6 md:text-left text-sm uppercase tracking-wider text-slate-300">
+                      Creators
+                    </th>
+                    <td class="py-4 block md:table-cell">
+                      <div class="flex md:justify-start justify-center flex-wrap gap-2 max-h-36 overflow-y-auto">
+                        <span v-for="creator in series.creator" :key="creator"
+                          class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
+                          {{ creator.title }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+
 
             <RouterLink :to="{
               name: 'EditSeries',
@@ -111,21 +159,21 @@
           </div>
           <div class="flex flex-col relative shrink-0">
             <div class="mx-8 my-5">
-              <p class="text-xl text-center font-bold" :style="`color: rgb${themecolor}`">
+              <p class="text-xl text-center font-bold text-slate-300">
                 Description
               </p>
-              <p class="mt-4 text-white text-justify">
+              <p class="mt-4 text-justify" :style="`color: rgb${themecolor}`">
                 {{ series.description }}
               </p>
             </div>
 
           </div>
-          <div class="flex absolute w-full pl-2 bottom-4 flex-row justify-between mt-6">
+          <div class="hidden md:flex absolute w-full pl-2 bottom-4 flex-row justify-between mt-6">
             <!-- Previous Button -->
             <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
-              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition"
-              :style="`color: rgb${themecolor}`">
-              ← Previous Series
+              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 gap-2 items-center flex">
+              <i class="pi pi-chevron-left"></i>
+              <span>Previous Series</span>
             </RouterLink>
 
             <!-- Spacer when no previous -->
@@ -133,21 +181,21 @@
 
             <!-- Next Button -->
             <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
-              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition"
-              :style="`color: rgb${themecolor}`">
-              Next Series →
+              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center">
+              <span>Next Series </span>
+              <i class="pi pi-chevron-right"></i>
             </RouterLink>
 
           </div>
         </div>
         <div
           class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700">
-          <h1 class="flex justify-center py-2 px-4 font-bold text-3xl" :style="`color: rgb${themecolor}`">
+          <h1 class="flex justify-center py-2 px-4 font-bold text-3xl text-slate-300">
             Issues
           </h1>
-          <div class="overflow-scroll h-full flex flex-row justify-center mx-auto items-start w-full">
-            <div class="flex flex-wrap flex-start gap-10 w-[82%] my-4 ">
-              <IssueCarditem :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1
+          <div class="overflow-scroll h-full w-full">
+            <div class="grid gap-y-8 md:px-20 place-items-center my-4 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]">
+              <IssueCard :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1
                 " :preferred_currency="preferred_currency" :bought_price="issue.bought_price" :image="image"
                 :bought_date="issue.bought_date" :read_date="issue.read_date" :themecolor="themecolor"
                 :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
@@ -185,7 +233,7 @@ import { useUserStore } from "../store/user";
 import type { Series } from "@/types/series.types";
 import type { Issue } from "@/types/issue.types";
 
-import IssueCarditem from "../components/cards/IssueCarditem.vue";
+import IssueCard from "../components/cards/IssueCard.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import EditIcon from "@/assets/EditIcon.vue";
@@ -389,12 +437,18 @@ onMounted(() => {
 });
 
 watch(image, (newImage) => {
-  if (newImage) {
-    const app = document.querySelector('#app');
-    if (app) {
-      app.style.background = `url(${newImage}) center/cover no-repeat fixed`;
-    }
-  }
+  if (!newImage) return;
+
+  const app = document.querySelector('#app');
+  if (!app) return;
+
+  app.style.background = `
+    linear-gradient(
+      rgba(18, 25, 43, 0.92),
+      rgba(18, 25, 43, 0.85)
+    ),
+    url(${newImage}) center / cover no-repeat fixed
+  `;
 });
 
 onUnmounted(() => {
@@ -407,13 +461,3 @@ onUnmounted(() => {
 
 
 </script>
-
-<style scoped>
-/* .hide-scroll-bar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.hide-scroll-bar::-webkit-scrollbar {
-  display: none;
-} */
-</style>

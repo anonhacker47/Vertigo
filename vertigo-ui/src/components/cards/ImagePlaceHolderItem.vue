@@ -46,13 +46,13 @@ function hashString(str: string) {
 }
 
 const colors = [
-  ['#8B5CF6', '#06B6D4'], // violet → cyan
-  ['#F43F5E', '#F59E0B'], // rose → amber
-  ['#3B82F6', '#06B6D4'], // blue → cyan
-  ['#10B981', '#3B82F6'], // emerald → blue
-  ['#EC4899', '#8B5CF6'], // pink → violet
-  ['#F97316', '#EF4444'], // orange → red
-  ['#14B8A6', '#0EA5E9'], // teal → sky
+  ['#8B5CF6', '#06B6D4'], // violet  cyan
+  ['#F43F5E', '#F59E0B'], // rose  amber
+  ['#3B82F6', '#06B6D4'], // blue  cyan
+  ['#10B981', '#3B82F6'], // emerald  blue
+  ['#EC4899', '#8B5CF6'], // pink  violet
+  ['#F97316', '#EF4444'], // orange  red
+  ['#14B8A6', '#0EA5E9'], // teal  sky
 ]
 
 const gradient = computed(() => {

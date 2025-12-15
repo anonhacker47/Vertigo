@@ -4,21 +4,12 @@
 
     <div class="flex flex-col h-full">
 
-      <!-- Top Section -->
-      <div class="relative py-6 px-6 border-b border-slate-700">
+      <div class="relative flex flex-col gap-4 md:flex-row py-6 px-6 border-b border-slate-700">
 
-        <!-- Previous -->
         <RouterLink v-if="neighbours.previous" :to="`/${type}/${neighbours.previous.id}-${neighbours.previous.slug}`"
-          class="absolute left-6 top-1/2 -translate-y-1/2 px-4 py-2 capitalize-first bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition flex items-center gap-2">
+          class="hidden md:flex px-4 py-2 capitalize-first bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-nowrap items-center gap-2">
           <i class="pi pi-chevron-left"></i>
           <span>Previous {{ pascalType }}</span>
-        </RouterLink>
-
-        <!-- Next -->
-        <RouterLink v-if="neighbours.next" :to="`/${type}/${neighbours.next.id}-${neighbours.next.slug}`"
-          class="absolute right-6 top-1/2 -translate-y-1/2 px-4 py-2 capitalize-first bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition flex items-center gap-2">
-          <span>Next {{ pascalType }}</span>
-          <i class="pi pi-chevron-right"></i>
         </RouterLink>
 
         <div class="flex w-full items-center justify-center gap-4 ml-6">
@@ -31,18 +22,36 @@
           </RouterLink>
         </div>
 
+        <RouterLink v-if="neighbours.next" :to="`/${type}/${neighbours.next.id}-${neighbours.next.slug}`"
+          class="hidden md:flex px-4 py-2 capitalize-first bg-slate-800 rounded-md font-bold hover:bg-slate-700 text-nowrap transition items-center gap-2">
+          <span>Next {{ pascalType }}</span>
+          <i class="pi pi-chevron-right"></i>
+        </RouterLink>
+
+        <div class="flex flex-row gap-4 ">
+          <RouterLink v-if="neighbours.previous" :to="`/${type}/${neighbours.previous.id}-${neighbours.previous.slug}`"
+            class="md:hidden flex px-4 py-2 capitalize-first bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-nowrap items-center gap-2">
+            <i class="pi pi-chevron-left"></i>
+            <span>Previous {{ pascalType }}</span>
+          </RouterLink>
+          <RouterLink v-if="neighbours.next" :to="`/${type}/${neighbours.next.id}-${neighbours.next.slug}`"
+            class="md:hidden flex px-4 py-2 capitalize-first bg-slate-800 rounded-md font-bold hover:bg-slate-700 text-nowrap transition items-center gap-2">
+            <span>Next {{ pascalType }}</span>
+            <i class="pi pi-chevron-right"></i>
+          </RouterLink>
+        </div>
+
+
 
       </div>
 
 
-      <!-- Main Content -->
-      <div class="flex flex-col md:flex-row p-8 gap-8 grow">
+      <div class="flex flex-col md:flex-row p-8 gap-8 grow justify-center items-center md:justify-start md:items-start">
 
-        <!-- Left: Thumbnail -->
         <div class="flex flex-col w-fit justify-center border-primary h-80 items-center">
           <div class="flex flex-col border-2 rounded-lg justify-center border-primary h-80 w-60 items-center">
             <img v-if="entity.thumbnail" :src="thumbnail(entity.id)" alt=""
-              class="rounded-lg  object-cover max-h-full w-full  m-4" />
+              class="rounded-lg object-cover max-h-full w-full" />
 
             <div v-else
               class="w-60 h-80 rounded-lg text-wrap truncate bg-slate-900 flex items-center justify-center p-4 text-center">
@@ -57,8 +66,7 @@
           </p>
         </div>
 
-        <!-- Right: Description -->
-        <div class="flex flex-col md:w-2/3">
+        <div class="flex flex-col md:w-2/3 justify-center items-center md:justify-start md:items-start">
           <p class="text-2xl font-bold text-primary text-center md:text-left">
             Description
           </p>

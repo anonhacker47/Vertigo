@@ -3,6 +3,11 @@ from api import ma
 from api.models.series import Series
 from api.schemas.user_schema import UserSchema
 
+class EntityDumpSchema(ma.Schema):
+    id = ma.Int()
+    title = ma.String()
+    slug = ma.String()
+
 class SeriesSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Series
@@ -30,6 +35,10 @@ class SeriesSchema(ma.SQLAlchemySchema):
         
     series_format = ma.auto_field(validate=validate.Length(min=1, max=100), allow_none=True)
 
+    genre = ma.List(ma.Nested(EntityDumpSchema), dump_only=True)
+    creator = ma.List(ma.Nested(EntityDumpSchema), dump_only=True)
+    character = ma.List(ma.Nested(EntityDumpSchema), dump_only=True)
+    publisher = ma.List(ma.Nested(EntityDumpSchema), dump_only=True)
     
     issue_count = ma.auto_field()
     read_count = ma.auto_field()

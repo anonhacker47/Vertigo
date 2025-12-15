@@ -15,7 +15,7 @@ const showNavbar = computed(() => {
 });
 
 const transparentHeader = computed(() => {
-  return route.meta.transparentHeader;
+  return !!route.meta.transparentHeader;
 });
 
 onMounted(() => {
@@ -26,7 +26,7 @@ onMounted(() => {
   <ErrorBoundary fallback="Something went wrong.">
     <ConfirmDeleteModal/>
     <div :class="[showNavbar ? 'pt-[72px]' : '']">
-      <HeaderItem v-cloak v-if="showNavbar" transparentHeader></HeaderItem>
+      <HeaderItem v-cloak v-if="showNavbar"   :transparentHeader="transparentHeader"></HeaderItem>
       <RouterView />
       <NotificationToast position="bottom-center" />
     </div>
