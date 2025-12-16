@@ -16,6 +16,8 @@ class DateTimePaginationSchema(ma.Schema):
     count = ma.Integer(dump_only=True)
     total = ma.Integer(dump_only=True)
 
+    base_total = ma.Integer(dump_only=True)
+
     @validates_schema
     def validate_schema(self, data, **kwargs):
         if data.get('offset') is not None and data.get('after') is not None:

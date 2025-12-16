@@ -34,7 +34,13 @@ def paginated_response(schema, max_limit=100, order_by=None,
                 if order_by_object is not None:
                     order_by = getattr(Issue, order_by_object)
 
-            select_query = f(*args, **kwargs)
+            result  = f(*args, **kwargs)
+
+            extra_meta = {}
+            if isinstance(result, tuple):
+                select_query, extra_meta = result
+            else:
+                select_query = result
 
             if order_by is not None:
                 if "Issue" in str(order_by):
@@ -73,13 +79,22 @@ def paginated_response(schema, max_limit=100, order_by=None,
                 query = select_query.limit(limit).offset(offset)
 
             data = db.session.scalars(query).all()
-            return {'data': data, 'pagination': {
+
+            pagination_payload = {
                 'offset': offset,
                 'limit': limit,
                 'count': len(data),
-                'total': count,
-            }}
-
+                'total': count,  # filtered total
+            }
+            
+            if "base_total" in extra_meta:
+                pagination_payload["base_total"] = extra_meta["base_total"]
+            
+            return {
+                'data': data,
+                'pagination': pagination_payload
+            }
+            
         # wrap with APIFairy's arguments and response decorators
         return arguments(pagination_schema)(response(paginated_collection(
             schema, pagination_schema=pagination_schema))(paginate))

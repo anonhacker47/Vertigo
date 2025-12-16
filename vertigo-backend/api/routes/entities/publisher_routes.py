@@ -3,7 +3,7 @@ from flask import jsonify
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, response, other_responses
-from sqlalchemy import or_
+from sqlalchemy import func, or_, select
 from api import db
 from api.models.series_entities import Publisher
 from api.models.issue import Issue
@@ -69,10 +69,14 @@ def create_publisher():
                     order_direction='asc',
                     pagination_schema=DateTimePaginationSchema)
 def all():
-    """Retrieve all publishers with search enabled"""
+    """Retrieve all publishers of a user with search enabled"""
 
     user = token_auth.current_user()
     query_publishers = user.publisher_select() 
+
+    base_total = db.session.scalar(
+    select(func.count()).select_from(query_publishers)
+    )
 
     search_query = request.args.get("query", "").strip()
     if search_query:
@@ -83,7 +87,7 @@ def all():
             )
         )
 
-    return query_publishers
+    return query_publishers, {"base_total": base_total}
 
 
 @publisher.route('/publisher/<int:id>', methods=['GET'])

@@ -10,7 +10,7 @@
           Series Collection
         </h1>
         <p class="text-sm text-slate-400 mt-1">
-          Total series: {{ pagination.total }}
+          Total series: {{ pagination.base_total }}
         </p>
       </div>
 
@@ -37,7 +37,7 @@
         <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary"> Add Series </RouterLink>
         <div class="md:ml-16 flex flex-col items-center text-center">
           <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
-          <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.total }} </p>
+          <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.base_total }} </p>
         </div>
         <div class="flex flex-col md:flex-row items-center gap-2">
           <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
@@ -53,7 +53,7 @@
         :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
         v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
     </div>
-    <SearchSeriesForm @search="handleSearch" />
+    <SearchSeriesForm @search="handleSearch" :initialFilters="currentFilter" />
   </div>
 
   <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
@@ -110,6 +110,7 @@ import { Series } from "@/types/series.types";
 import Paginator from "primevue/paginator";
 import SearchSeriesForm from "@/components/forms/SearchSeriesForm.vue";
 import { useConfirmAction } from "@/composables/useConfirmAction";
+import { useRoute, useRouter } from "vue-router";
 
 const onPageChange = (event: any) => {
   if (event.rows > 0) {
@@ -121,34 +122,37 @@ const toast = useToast();
 const { confirmAction } = useConfirmAction();
 
 const confirmDelete = (id: number, title: any) => {
-    confirmAction({
-        message: `Series ${title}`,
-        header: "Confirm Deletion",
-        acceptLabel: "Delete",
-        severity: "danger",
-        successMessage: `$Series ${title} deleted`,
-        onAccept: () => {
-            deleteSeries(id);
-            toast.add({
-                severity: "success",
-                summary: "Confirmed",
-                detail: `Series ${title} deleted`,
-                life: 3000,
-            });
-        },
-    });
+  confirmAction({
+    message: `Series ${title}`,
+    header: "Confirm Deletion",
+    acceptLabel: "Delete",
+    severity: "danger",
+    successMessage: `$Series ${title} deleted`,
+    onAccept: () => {
+      deleteSeries(id);
+      toast.add({
+        severity: "success",
+        summary: "Confirmed",
+        detail: `Series ${title} deleted`,
+        life: 3000,
+      });
+    },
+  });
 };
 
 const { width } = useWindowSize();
 const seriesList = ref<Series[]>([]);
 const userstore = useUserStore();
 const userPreferences = useUserPreferences();
-const { id: userId } = userstore.getUser();
 const message = ref();
 const deleteMode = ref(false);
 const selectedGrid = ref<number>(userPreferences.cardsPerLine);
 const orderBy = ref(userPreferences.orderBy);
 const orderDir = ref(userPreferences.orderDir);
+
+
+const route = useRoute();
+const router = useRouter();
 
 const viewMode = computed({
   get: () => userPreferences.viewMode,
@@ -176,16 +180,33 @@ const pagination = ref({
   total: 0,
   limit: 25,
   offset: 0,
+  base_total:0
 });
 
 const currentFilter = ref({});
 
 const handleSearch = (filters) => {
   currentFilter.value = filters;
-  getseriesList(currentFilter.value, 0, pagination.value.limit); // offset=0 on new search
+
+  router.replace({
+    query: {
+      ...Object.fromEntries(
+        Object.entries(filters).filter(([_, v]) => v)
+      ),
+      limit: pagination.value.limit.toString(),
+    },
+  });
+
+  getseriesList(currentFilter.value, 0, pagination.value.limit);
 };
 
 watch(() => pagination.value.limit, (newLimit) => {
+  router.replace({
+    query: {
+      ...route.query,
+      limit: newLimit.toString(),
+    },
+  });
   getseriesList(currentFilter.value, 0, newLimit);
 });
 
@@ -221,7 +242,6 @@ const getseriesList = async (
   loading.value = true;
   try {
     const result: any = await SeriesService.fetchSeries(
-      userId,
       orderBy.value,
       orderDir.value,
       limit,
@@ -270,8 +290,46 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  getseriesList({});
+
+  const query = route.query;
+
+  const filters = {
+    query: query.query || "",
+    genre: query.genre || "",
+    creator: query.creator || "",
+    character: query.character || "",
+    publisher: query.publisher || "",
+    series_format: query.series_format || "",
+  };
+
+  currentFilter.value = filters;
+
+  getseriesList(
+    filters,
+    0,
+    Number(query.limit) || pagination.value.limit
+  );
 });
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    const filters = {
+      query: newQuery.query || "",
+      genre: newQuery.genre || "",
+      creator: newQuery.creator || "",
+      character: newQuery.character || "",
+      publisher: newQuery.publisher || "",
+      series_format: newQuery.series_format || "",
+    };
+
+    currentFilter.value = filters;
+    getseriesList(filters, 0, pagination.value.limit);
+  }
+);
+
+
+
 </script>
 
 <style scoped>

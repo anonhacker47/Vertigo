@@ -3,7 +3,7 @@ from flask import jsonify
 
 from flask import Blueprint, abort, request, send_file
 from apifairy import authenticate, body, response, other_responses
-from sqlalchemy import or_
+from sqlalchemy import func, or_, select
 from api import db
 from api.models.series_entities import Creator
 
@@ -70,21 +70,26 @@ def create_creator():
                     order_direction='asc',
                     pagination_schema=DateTimePaginationSchema)
 def all():
-    """Retrieve all creators with search enabled"""
+    """Retrieve all creators of a user with search enabled"""
 
     user = token_auth.current_user()
-    qs = user.creator_select() 
+    qc = user.creator_select() 
+
+    base_total = db.session.scalar(
+    select(func.count()).select_from(qc)
+    )    
     
     search_query = request.args.get("query", "").strip()
     if search_query:
-        qs = qs.filter(
+        qc = qc.filter(
             or_(
                 Creator.title.ilike(f"%{search_query}%"),
                 Creator.description.ilike(f"%{search_query}%")
             )
         )
 
-    return qs
+    return qc, {"base_total": base_total}
+
 
 @creator.route('/creator/<int:id>', methods=['GET'])
 @authenticate(token_auth)
@@ -93,6 +98,7 @@ def all():
 def get(id):
     """Retrieve a creator by id"""
     return db.session.get(Creator, id) or abort(404)
+
 
 @creator.route('creator/image/<int:id>',methods=['GET'])
 def get_creator_image(id):
@@ -118,6 +124,7 @@ def get_creator_image(id):
     except Exception as e:
         # Handle other potential exceptions (e.g., permission errors)
         return jsonify(f"Error retrieving image: {str(e)}"), 500
+    
 
 @creator.route('/creator/<int:id>/neighbours', methods=['GET'])
 @authenticate(token_auth)

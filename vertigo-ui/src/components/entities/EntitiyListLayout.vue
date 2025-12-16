@@ -9,7 +9,7 @@
                 <div class="flex flex-col items-center">
                     <h1 class="text-3xl font-bold text-white">{{ title }}</h1>
                     <p class="text-sm text-slate-400 mt-1">
-                        Total {{ title.toLowerCase() }}: {{ pagination.total }}
+                        Total {{ title.toLowerCase() }}: {{ pagination.base_total }}
                     </p>
                 </div>
                 <button class="btn flex-1 md:flex-none"
@@ -79,6 +79,7 @@ const pagination = ref({
     total: 0,
     limit: 24,
     offset: 0,
+    base_total: 0
 })
 
 const toggleDelete = (): void => {
@@ -149,7 +150,7 @@ const confirmDelete = (id: number, title: string) => {
 const deleteIssue = async (id: number) => {
     try {
         await props.onDelete(id);
-        await loadData();    
+        await loadData();
         toast.add({ severity: 'success', summary: 'Success', detail: `${pascalType.value} deleted successfully!`, life: 3000 });
     } catch (error) {
         console.error(`Error creating ${pascalType}:`, error);

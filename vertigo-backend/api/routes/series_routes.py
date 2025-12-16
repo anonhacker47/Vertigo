@@ -6,7 +6,7 @@ import sqlite3
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
-from sqlalchemy import or_
+from sqlalchemy import func, or_, select
 from api import db
 from api.models.user import User
 from api.models.series import Series
@@ -113,20 +113,26 @@ def all():
     return Series.select()
 
 
-@series.route('/users/<int:id>/series', methods=['GET'])
+@series.route('/users/series', methods=['GET'])
 @authenticate(token_auth)
 @paginated_response(multi_series_schema, order_by=Series.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
 @other_responses({404: 'User not found'})
-def user_all(id):
+def user_all():
     """Retrieve all series of a user with optional search and filters"""
-    user = db.session.get(User, id) or abort(404)
+    user = token_auth.current_user()
     qs = user.series_select() 
     
+
+    base_total = db.session.scalar(
+        select(func.count()).select_from(qs)
+    )
+
     # Optional search & filters from query parameters
     search_query = request.args.get("query", "").strip()
     genre = request.args.get("genre")
+    character = request.args.get("character")
     creator = request.args.get("creator")
     publisher = request.args.get("publisher")
     series_format = request.args.get("series_format")
@@ -145,10 +151,12 @@ def user_all(id):
         qs = qs.filter(Series.creator.any(title=creator))    
     if publisher:
         qs = qs.filter(Series.publisher.any(title=publisher))
+    if character:
+        qs = qs.filter(Series.character.any(title=character))
     if series_format:
         qs = qs.filter(Series.series_format == series_format)
 
-    return qs
+    return qs, {"base_total": base_total}
 
 
 @series.route('/series/<int:id>', methods=['PUT'])

@@ -39,10 +39,10 @@ class CreatorDetailSchema(CreatorSchema):
 
         stmt = (
             db.session.query(func.count())
-            .select_from(associations.series_publisher)
-            .join(Series, Series.id == associations.series_publisher.c.series_id)
+            .select_from(associations.series_creator)
+            .join(Series, Series.id == associations.series_creator.c.series_id)
             .filter(
-                associations.series_publisher.c.publisher_id == obj.id,
+                associations.series_creator.c.creator_id == obj.id,
                 Series.user_id == user.id
             )
         )

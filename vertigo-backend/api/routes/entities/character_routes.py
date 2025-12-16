@@ -6,7 +6,7 @@ import sqlite3
 
 from flask import Blueprint, abort, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
-from sqlalchemy import or_
+from sqlalchemy import func, or_, select
 from api import db
 from api.models.user import User
 from api.models.series_entities import Character
@@ -78,21 +78,25 @@ def create_character():
                     order_direction='asc',
                     pagination_schema=DateTimePaginationSchema)
 def all():
-    """Retrieve all characters with search enabled"""
+    """Retrieve all characters of a user with search enabled"""
     
     user = token_auth.current_user()
-    qs = user.character_select() 
+    qc = user.character_select() 
     
+    base_total = db.session.scalar(
+    select(func.count()).select_from(qc)
+    )
+
     search_query = request.args.get("query", "").strip()
     if search_query:
-        qs = qs.filter(
+        qc = qc.filter(
             or_(
                 Character.title.ilike(f"%{search_query}%"),
                 Character.description.ilike(f"%{search_query}%")
             )
         )
 
-    return qs
+    return qc, {"base_total": base_total}
 
 
 @character.route('/character/<int:id>', methods=['GET'])
