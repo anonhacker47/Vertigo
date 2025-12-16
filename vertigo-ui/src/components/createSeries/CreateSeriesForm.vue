@@ -1,7 +1,7 @@
 <template>
     <div v-if="!showIssueSection"
-        class="card h-full w-full md:w-2/3 flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
-        <div class="flex pb-8 flex-col w-full md:flex-row gap-8 md:gap-20 justify-around">
+        class="card h-full w-full md:w-2/4 flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
+        <div class="flex pb-4 flex-col w-full md:flex-row gap-6 md:gap-20 justify-around">
             <div class="form-control w-full">
                 <input type="text" placeholder="Series Name" v-model="localSeriesData.title"
                     class="input w-full input-bordered" required />
@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <div class="flex flex-col md:flex-row pb-12 gap-8 md:gap-20 justify-around">
+        <div class="flex flex-col md:flex-row pb-4 gap-6 md:gap-20 justify-around">
             <div class="form-control w-full text-center">
                 <MultiSelectCombobox v-model="localSeriesData.genre" :items="seriesFieldValues.genre || []"
                     field="genre" placeholder="Select Genre(s)" />
@@ -44,9 +44,9 @@
             </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-20 justify-around">
+        <div class="flex flex-col md:flex-row justify-around">
             <div class="form-control w-full relative">
-                <textarea class="textarea textarea-bordered h-32" placeholder="Summary"
+                <textarea class="textarea textarea-bordered h-36 w-full" placeholder="Summary"
                     v-model="localSeriesData.description" @input="validateDescription"></textarea>
                 <p class="text-sm mt-2" :class="{
                     'text-gray-400': descriptionLength <= 1250,
@@ -62,13 +62,13 @@
 
         <div class="flex flex-col md:flex-row gap-16 justify-around">
             <div class="form-control w-full">
-                <button type="button" @click="$router.push('collection')" class="btn btn-danger">
+                <button type="button" @click="$router.push('collection')" class="btn btn-danger w-full">
                     Cancel
                 </button>
             </div>
             <div class="form-control w-full">
                 <button @click.prevent="goToNext" :disabled="!localSeriesData.title || !localSeriesData.series_format"
-                    class="btn btn-primary rounded">
+                    class="btn btn-primary rounded w-full">
                     Next
                 </button>
             </div>

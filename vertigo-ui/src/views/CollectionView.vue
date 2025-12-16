@@ -33,8 +33,8 @@
     leave-active-class="animate__animated animate__fadeOut animate__faster">
     <div v-if="true"
       class="hidden md:flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
-      <div class="flex flex-col md:flex-row justify-between gap- items-center container mx-auto"> <!-- Left button -->
-        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary"> Add Series </RouterLink>
+      <div class="flex flex-col md:flex-row justify-between items-center container mx-auto">
+        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary text-black!"> Add Series </RouterLink>
         <div class="md:ml-16 flex flex-col items-center text-center">
           <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
           <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.base_total }} </p>
@@ -68,7 +68,7 @@
     <template v-if="seriesList.length > 0">
       <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
-          <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
+          <CollectionCard :series="series" :cardHeightMD="cardHeightMD"
             :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
             @confirmDelete="confirmDelete" />
         </div>
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
+import CollectionCard from "@/components/cards/CollectionCard.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
 import { computed, onMounted, ref, watch } from "vue";
 import SeriesService from "../services/SeriesService";

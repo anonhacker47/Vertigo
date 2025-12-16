@@ -1,10 +1,9 @@
 import 'animate.css'
-import './index.css'
 import "./assets/main.css";
+import "./index.css";
 import 'swiper/css';
 import 'swiper/css/effect-cards';
 import 'swiper/css/navigation';
-
 
 import { createApp } from "vue";
 import App from "./App.vue";

@@ -1,5 +1,10 @@
 <template>
-  <form autocomplete="on" class="z-0 flex items-center justify-evenly flex-1 p-4 gap-6 md:gap-4 md:flex-row flex-col">
+
+  <div class="w-full flex flex-col items-center justify-center m-4 mb-2">
+    <h1 class="text-3xl font-bold">Edit Series</h1>
+  </div>
+
+  <form autocomplete="on" class="z-0 flex items-center justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
 
     <div class="w-[24rem] h-[38rem]">
       <ImageUploader v-model="imagesrc" @image-change="onImageChange" />

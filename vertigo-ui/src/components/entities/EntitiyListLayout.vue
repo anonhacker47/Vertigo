@@ -3,7 +3,7 @@
         leave-active-class="animate__animated animate__fadeOut animate__faster">
         <div class="flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700">
             <div class="flex flex-col md:flex-row justify-between gap-4 items-center container mx-auto">
-                <RouterLink :to="{ name: `Add${pascalType}` }" class="btn btn-primary flex-1 md:flex-none">
+                <RouterLink :to="{ name: `Add${pascalType}` }" class="btn btn-primary flex-1 text-black! md:flex-none">
                     Add {{ pascalType }}
                 </RouterLink>
                 <div class="flex flex-col items-center">
@@ -54,7 +54,6 @@ import Paginator from "primevue/paginator"
 import { useToast } from "primevue/usetoast"
 import EntityListCard from './EntityListCard.vue'
 import { usePascalType } from '@/composables/usePascalType'
-import { Entity } from '@/types/entity.types'
 import { useConfirmAction } from '@/composables/useConfirmAction'
 
 const { confirmAction } = useConfirmAction();

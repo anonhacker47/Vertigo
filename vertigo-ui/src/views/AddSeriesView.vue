@@ -3,7 +3,7 @@
     <h1 class="text-3xl font-bold">Create Series</h1>
   </div>
 
-  <form autocomplete="on" class="z-0 flex items-center justify-evenly flex-1 gap-6 md:gap-4 md:flex-row flex-col">
+  <form autocomplete="on" class="z-0 flex items-center justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
 
     <div class="w-[24rem] h-[38rem]">
       <ImageUploader v-model="imagesrc" @image-change="onImageChange" />

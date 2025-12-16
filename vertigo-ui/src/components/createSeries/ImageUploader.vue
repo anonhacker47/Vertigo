@@ -6,7 +6,7 @@
     <div class="flex flex-col p-5">
       <div class="flex flex-col gap-2">
         <div class="form-control w-full">
-          <label class="btn btn-primary" for="file">
+          <label class="btn btn-primary w-full" for="file">
             Upload Image
           </label>
           <input type="file" @change="changeImage($event, 'file')" id="file" accept="image/*" style="display: none" />
@@ -16,7 +16,7 @@
         </div>
         <div class="form-control w-full">
           <input id="image" type="text" v-model="imageLinkInput" @input="changeImage($event, 'url')"
-            placeholder="paste image link here" class="input input-bordered" />
+            placeholder="paste image link here" class="input input-bordered w-full" />
         </div>
       </div>
     </div>

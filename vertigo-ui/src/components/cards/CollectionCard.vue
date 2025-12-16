@@ -1,6 +1,7 @@
- <template>
+<template>
   <RouterLink class="shadow-2xl flex"
-    :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`]" :to="{
+    :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`, { 'animate-wiggle': deleteMode }]"
+    :to="{
       name: 'SeriesDetail',
       params: { Link: series.slug, Id: series.id },
     }">
@@ -19,16 +20,14 @@
             displayedImage == Image ? 'top-1/2' : '',
             `md:max-w-[${cardHeightMD / 2}vw]`,
             `max-w-[${cardWidth / 2}vw]`
-          ]" :style="displayedImage == Image ? `top: 50%;` : ''"
-                    >
-              {{ series.title }}
-            </span>
-            <span
-              class=" absolute text-[12px] md:text-[12x] m-[3px] px-[4px] font-bold text-sm bg-slate-800 text-green-200
+          ]" :style="displayedImage == Image ? `top: 50%;` : ''">
+            {{ series.title }}
+          </span>
+          <span class=" absolute text-[12px] md:text-[12x] m-[3px] px-[4px] font-bold text-sm bg-slate-800 text-green-200
           text rounded top-0 right-0 break-words">
             {{ series.series_format }}
           </span>
-          <div class="h-3 w-full relative bg-red-950 rounded-b-md">
+          <div class="h-3 w-full relative bg-red-900 rounded-b-md">
             <div class="h-full bg-sky-500 rounded-b absolute"
               :style="{ width: fraction(series.owned_count, series.issue_count) }">
             </div>
