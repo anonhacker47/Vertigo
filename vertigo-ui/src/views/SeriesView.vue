@@ -94,9 +94,8 @@
                       Publisher
                     </th>
                     <td class="py-4 block md:table-cell">
-                      <span class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
-                        {{ series.publisher.title }}
-                      </span>
+                      <TagLink :label="series.publisher.title" :to="`/publisher/${series.publisher.id}-${series.publisher.slug}`"
+                        :color="themecolor" />
                     </td>
                   </tr>
 
@@ -108,7 +107,7 @@
                     <td class="py-4">
                       <div class="flex flex-wrap gap-2">
                         <span v-for="genre in series.genre" :key="genre"
-                          class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
+                          class="bg-slate-800 px-3 py-1 select-none rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
                           {{ genre }}
                         </span>
                       </div>
@@ -122,10 +121,9 @@
                     </th>
                     <td class="py-4 block md:table-cell">
                       <div class="flex md:justify-start justify-center flex-wrap gap-2 max-h-36 overflow-y-auto">
-                        <span v-for="character in series.character" :key="character"
-                          class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
-                          {{ character.title }}
-                        </span>
+                        <TagLink v-for="character in series.character" :key="character.id || character.title"
+                          :label="character.title" :to="`/character/${character.id}-${character.slug}`"
+                          :color="themecolor" />
                       </div>
                     </td>
                   </tr>
@@ -137,10 +135,8 @@
                     </th>
                     <td class="py-4 block md:table-cell">
                       <div class="flex md:justify-start justify-center flex-wrap gap-2 max-h-36 overflow-y-auto">
-                        <span v-for="creator in series.creator" :key="creator"
-                          class="bg-slate-800 px-3 py-1 rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
-                          {{ creator.title }}
-                        </span>
+                        <TagLink v-for="creator in series.creator" :key="creator.id || creator.title"
+                          :label="creator.title" :to="`/creator/${creator.id}-${creator.slug}`" :color="themecolor" />
                       </div>
                     </td>
                   </tr>
@@ -240,6 +236,7 @@ import EditIcon from "@/assets/EditIcon.vue";
 import Rating from "primevue/rating";
 import { useToast } from "primevue/usetoast";
 import { useConfirmAction } from "@/composables/useConfirmAction";
+import TagLink from "@/components/common/TagLink.vue";
 
 const { confirmAction } = useConfirmAction();
 const toast = useToast();

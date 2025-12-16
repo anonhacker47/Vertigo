@@ -90,7 +90,7 @@
             </p>
 
           </div>
-          <RouterLink v-if="entity.series_count > 0" :to="`/series?${type}=${entity.id}`"
+          <RouterLink v-if="entity.series_count > 0" :to="`/collection?${type}=${entity.title}`"
             class="px-3 py-2 my-3 bg-primary w-48 text-center text-black font-bold rounded-md hover:bg-emerald-400 transition text-sm">
             View Series List
           </RouterLink>

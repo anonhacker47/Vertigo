@@ -6,7 +6,6 @@ import { SeriesFilterFields } from "@/types/series-filter.types";
 export default {
   
   async fetchSeries(
-    userId: string,
     orderBy: string,
     orderDir: string,
     limit: number,
@@ -23,13 +22,14 @@ export default {
 
     if (filters.query) params.append("query", filters.query);
     if (filters.creator) params.append("creator", filters.creator);
+    if (filters.character) params.append("character", filters.character);
     if (filters.genre) params.append("genre", filters.genre);
     if (filters.publisher) params.append("publisher", filters.publisher);
     if (filters.series_format)
       params.append("series_format", filters.series_format);
 
     const response = await Api().get<ApiResponse<Series[]>>(
-      `users/${userId}/series?${params.toString()}`
+      `users/series?${params.toString()}`
     );
 
     return {
