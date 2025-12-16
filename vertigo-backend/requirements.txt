@@ -78,7 +78,7 @@ marshmallow==4.0.1
     #   webargs
 marshmallow-sqlalchemy==1.4.2
     # via -r requirements.in
-mokkari==3.13.1
+mokkari==3.14.0
     # via -r requirements.in
 numpy==2.3.3
     # via pandas
