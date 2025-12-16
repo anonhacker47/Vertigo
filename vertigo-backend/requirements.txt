@@ -6,7 +6,7 @@
 #
 alchemical==1.0.2
     # via -r requirements.in
-alembic==1.17.0
+alembic==1.17.1
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
