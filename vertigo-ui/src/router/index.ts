@@ -65,17 +65,11 @@ const router = createRouter({
         requiresAuth: false,
         showHeaderItem: false,
       },
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import("../views/LoginView.vue"),
     },
     {
       path: "/register",
       name: "SignUp",
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import("../views/SignupView.vue"),
       meta: {
         requiresAuth: false,
@@ -87,24 +81,19 @@ const router = createRouter({
       name: "SeriesDetail",
       meta: {
         requiresAuth: true,
-        showHeaderItem: false,
+        showHeaderItem: true,
+        transparentHeader: true,
       },
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import("../views/SeriesView.vue"),
     },
     {
-      path: "/add",
-      name: "AddNewSeries",
+      path: "/series/create",
+      name: "AddSeries",
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
       },
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import("../views/AddNewView.vue"),
+      component: () => import("../views/AddSeriesView.vue"),
     },
     {
       path: "/series/edit/:Id-:Link",
@@ -113,17 +102,146 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import("../views/EditSeriesView.vue"),
     },
+    {
+      path: "/publisher",
+      name: "PublisherList",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityListView.vue"),
+      props: { type: "publisher" },
+    },
+    {
+      path: "/publisher/create",
+      name: "AddPublisher",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityCreateView.vue"),
+      props: { type: "publisher" },
+    },
+    {
+      path: "/publisher/edit/:Id-:Link",
+      name: "PublisherEdit",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityEditView.vue"),
+      props: { type: "publisher" },
+    },
+    {
+      path: "/publisher/:Id-:Link",
+      name: "PublisherDetail",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityDetailView.vue"),
+      props: { type: "publisher" },
+    },
+    {
+      path: "/creator",
+      name: "CreatorList",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityListView.vue"),
+      props: { type: "creator" },
+    },
+    {
+      path: "/creator/create",
+      name: "AddCreator",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityCreateView.vue"),
+      props: { type: "creator" },
+    },
+    {
+      path: "/creator/:Id-:Link",
+      name: "CreatorDetail",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityDetailView.vue"),
+      props: { type: "creator" },
+    },
+    {
+      path: "/creator/edit/:Id-:Link",
+      name: "CreatorEdit",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityEditView.vue"),
+      props: { type: "creator" },
+    },
+    {
+      path: "/character",
+      name: "CharacterList",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityListView.vue"),
+      props: { type: "character" },
+    },
+    {
+      path: "/character/create",
+      name: "AddCharacter",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityCreateView.vue"),
+      props: { type: "character" },
+    },
+    {
+      path: "/character/:Id-:Link",
+      name: "CharacterDetail",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityDetailView.vue"),
+      props: { type: "character" },
+    },
+    {
+      path: "/character/edit/:Id-:Link",
+      name: "CharacterEdit",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("../views/EntityEditView.vue"),
+      props: { type: "character" },
+    },
+    // {
+    //   path: "/:type/:Id-:Link",
+    //   name: "PublisherDetail",
+    //   meta: {
+    //     requiresAuth: true,
+    //     showHeaderItem: true,
+    //   },
+    //   component: () =>
+    //     import("../views/entities/detail_views/PublisherView.vue"),
+    // },
   ],
 });
 
 router.beforeEach((to, from, next) => {
   if (to.name === "Login") {
-    localStorage.getItem("isUserLoggedIn") ? next({ name: "Dashboard" }) : next();
+    localStorage.getItem("isUserLoggedIn")
+      ? next({ name: "Dashboard" })
+      : next();
     // next() // login route is always  okay (we could use the requires auth flag below). prevent a redirect loop
   } else if (to.meta && to.meta.requiresAuth === false) {
     next(); // requires auth is explicitly set to false
@@ -133,7 +251,5 @@ router.beforeEach((to, from, next) => {
     next({ name: "Login" }); // always put your redirect as the default case
   }
 });
-
-
 
 export default router;

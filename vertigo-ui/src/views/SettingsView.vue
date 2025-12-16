@@ -106,8 +106,6 @@
                     </button>
                 </div>
             </section>
-
-            <ConfirmDialog />
         </div>
 
     </div>

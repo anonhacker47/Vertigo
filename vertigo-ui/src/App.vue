@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import HeaderItem from "./components/HeaderItem.vue";
+import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
+import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal.vue';
+import HeaderItem from "./components/common/HeaderItem.vue";
 import { useUserStore } from "./store/user";
 import { onMounted, computed, ref, Ref } from "vue";
 import { useRoute } from "vue-router";
@@ -12,18 +14,27 @@ const showNavbar = computed(() => {
   return route.meta.showHeaderItem;
 });
 
-onMounted(() => {   
+const transparentHeader = computed(() => {
+  return !!route.meta.transparentHeader;
+});
+
+onMounted(() => {
 });
 </script>
 
 <template>
-    <HeaderItem v-cloak v-if="showNavbar"></HeaderItem>
-    <RouterView />
-    <NotificationToast position="bottom-center" />
+  <ErrorBoundary fallback="Something went wrong.">
+    <ConfirmDeleteModal/>
+    <div :class="[showNavbar ? 'pt-[72px]' : '']">
+      <HeaderItem v-cloak v-if="showNavbar"   :transparentHeader="transparentHeader"></HeaderItem>
+      <RouterView />
+      <NotificationToast position="bottom-center" />
+    </div>
+  </ErrorBoundary>
 </template>
 
-<style >
+<style scoped>
 [v-cloak] {
-    display: none;
+  display: none;
 }
 </style>

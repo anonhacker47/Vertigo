@@ -30,10 +30,11 @@
                 <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple
                     options</p>
             </div>
-            <div class="form-control w-full">
-                <SingleSelectCombobox :items="seriesFieldValues.main_character || []"
-                    v-model="localSeriesData.main_character" field="main_character"
-                    placeholder="Main Character/ Team" />
+            <div class="form-control w-full text-center">
+                <MultiSelectCombobox :items="seriesFieldValues.character || []" v-model="localSeriesData.character"
+                    field="character" placeholder="Characters" />
+                <p v-if="localSeriesData.genre.length == 0" class="text-sm text-gray-400 mt-1">You can select multiple
+                    options</p>
             </div>
             <div class="form-control w-full text-center">
                 <MultiSelectCombobox v-model="localSeriesData.creator" :items="seriesFieldValues.creator || []"
@@ -82,7 +83,7 @@ import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 import SeriesService from "@/services/SeriesService";
 
-const seriesFields = ['publisher', 'genre', 'main_character', 'creator'];
+const seriesFields = ['publisher', 'genre', 'character', 'creator'];
 const seriesFieldValues = ref({});
 
 const props = defineProps<{
@@ -130,12 +131,10 @@ async function getSeriesFields() {
             const response = await SeriesService.getSeriesFieldValues(field);
             seriesFieldValues.value[field] = response.data;
         }
-
-        console.log(seriesFieldValues.value);
-
     } catch (error) {
         console.log(error);
     }
 }
+
 
 </script>

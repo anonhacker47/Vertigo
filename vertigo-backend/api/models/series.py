@@ -8,7 +8,7 @@ from api.models.issue import Issue
 from flask import current_app, url_for
 
 from api.app import db
-from api.helpers.thumbnail_processing import save_series_thumbnail
+from api.helpers.thumbnail_processing import save_thumbnail
 from api.models.updatable import Updateable
 import api.models.associations as associations
 import api.models.series_entities as entities
@@ -29,7 +29,7 @@ class Series(Updateable, db.Model):
     creator = sqla_orm.relationship('Creator', secondary=associations.series_creator,
                                    back_populates='series', lazy='dynamic')
     
-    main_character = sqla_orm.relationship('MainCharacter', secondary=associations.series_main_character,
+    character = sqla_orm.relationship('Character', secondary=associations.series_character,
                                    back_populates='series', lazy='dynamic')
 
     user_rating = sqla.Column(sqla.Float)

@@ -1,7 +1,7 @@
 <template>
   <div class="card w-full h-full bg-base-100 shadow-xl">
     <figure class="px-5 pt-5">
-      <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl h-full w-full" />
+      <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl h-full w-full max-h-[25rem]" />
     </figure>
     <div class="flex flex-col p-5">
       <div class="flex flex-col gap-2">

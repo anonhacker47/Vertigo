@@ -3,7 +3,7 @@
 		<Column field="title" header="Series" class="max-w-md">
 			<template #body="{ data }">
 				<div class="flex items-center gap-4">
-					<img :src="SeriesService.getImagebyId(data.id)" @error="(e) => e.target.src = placeholder"
+					<img :src="SeriesService.getSeriesImageById(data.id)" @error="(e) => e.target.src = placeholder"
 						class="h-16 w-12 ml-2 object-fill rounded-sm" alt="Series Thumbnail" />
 					<span class="text-large font-extrabold overflow-hidden whitespace-nowrap text-ellipsis">{{
 						data.title }}</span>

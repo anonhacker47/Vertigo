@@ -134,7 +134,7 @@ const fetchImages = async () => {
     if (response.data.length > 0) {
       const seriesIds = response.data;
       const promises = seriesIds.map(async (seriesId: number) => {
-        const imagesResponse = SeriesService.getImagebyId(seriesId);
+        const imagesResponse = SeriesService.getSeriesImageById(seriesId);
         return imagesResponse;
       });
       images.value = await Promise.all(promises);

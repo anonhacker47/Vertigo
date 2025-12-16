@@ -21,7 +21,6 @@ def create_app(config_class=Config):
             template_folder = "./wwwroot")
     app.config.from_object(config_class)
     
-    app.config['cover_path'] = os.path.abspath("./Config/Covers/")
     app.config['user_path'] = os.path.abspath("./Config/User/")
     app.config['sql_path'] = os.path.abspath("./Config/")
 
@@ -31,11 +30,6 @@ def create_app(config_class=Config):
         print("The 'sql_path' directory is created!")    
 
     # Check if 'cover_path' exists and create it if not
-    if not os.path.exists(app.config['cover_path']):
-        os.makedirs(app.config['cover_path'])
-        print("The 'cover_path' directory is created!")    
-
-        # Check if 'cover_path' exists and create it if not
     if not os.path.exists(app.config['user_path']):
         os.makedirs(app.config['user_path'])
         print("The 'User' directory is created!")  
@@ -68,6 +62,12 @@ def create_app(config_class=Config):
     from api.routes.dashboard_routes import dashboard
     app.register_blueprint(dashboard, url_prefix='/api') 
 
+    from api.routes.entities.publisher_routes import publisher
+    app.register_blueprint(publisher, url_prefix='/api')
+    from api.routes.entities.creator_routes import creator
+    app.register_blueprint(creator, url_prefix='/api')
+    from api.routes.entities.character_routes import character
+    app.register_blueprint(character, url_prefix='/api')
     # define the shell context
     @app.shell_context_processor
     def shell_context():  # pragma: no cover
@@ -82,6 +82,13 @@ def create_app(config_class=Config):
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def index(path):
+        if path.startswith("api"):
+            return "Not found", 404
+
+        full_path = os.path.join(app.static_folder, path)
+        if os.path.exists(full_path) and not os.path.isdir(full_path):
+            return send_from_directory(app.static_folder, path)
+
         return render_template('index.html')
     
     @app.route('/favicon.ico')

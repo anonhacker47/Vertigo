@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { useRoute,useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
 
@@ -34,14 +34,25 @@ const showIssueSection = ref(false);
 async function getSeries() {
   try {
     const response = await SeriesService.getSeriesbyId(seriesId)
-    seriesData.value = { ...response };
-    console.log(seriesData);    
-    imagesrc.value = `${SeriesService.getImagebyId(seriesId)}?t=${Date.now()}`
-    } catch (error) {
-    console.log(error);
+
+    seriesData.value = {
+      ...response,
+      character: Array.isArray(response.character)
+        ? response.character.map((c: any) => c.title)
+        : [],
+      creator: Array.isArray(response.creator)
+        ? response.creator.map((c: any) => c.title)
+        : [],
+      publisher: response.publisher
+        ? response.publisher.title
+        : null,
+    }
+
+    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}?t=${Date.now()}`
+  } catch (error) {
+    console.log(error)
   }
 }
-
 async function updateSeries() {
   try {
     const formData = new FormData();
@@ -55,8 +66,8 @@ async function updateSeries() {
     formData.append("issue_count", String(data.issue_count || 0));
     formData.append("read_count", String(data.read_count || 0));
     formData.append("owned_count", String(data.owned_count || 0));
-    formData.append("main_character", data.main_character || "");
     // Convert arrays to JSON strings
+    formData.append("character", JSON.stringify(data.character || []));
     formData.append("genre", JSON.stringify(data.genre || []));
     formData.append("creator", JSON.stringify(data.creator || []));
     formData.append("publisher", (data.publisher && typeof data.publisher === "string")
@@ -86,7 +97,7 @@ const seriesData = ref<Partial<Series>>({
   creator: [],
   description: '',
   genre: [],
-  main_character: '',
+  character: [],
   series_format: '',
   issue_count: 1,
   thumbnail: '',
@@ -96,7 +107,7 @@ const seriesData = ref<Partial<Series>>({
 })
 
 onMounted(() => {
-  getSeries();  
+  getSeries();
 });
 
 watch(imagesrc, (val) => {
