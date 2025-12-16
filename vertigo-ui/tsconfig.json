@@ -1,19 +1,25 @@
 {
-    "compilerOptions": {
-      "target": "esnext",
-      "module": "esnext",
-      "moduleResolution": "node",
-      "importHelpers": true,
-      "isolatedModules": true,
-      "noEmit": true,
-      "allowSyntheticDefaultImports": true,
-      "allowJs": true,
-      "paths": {
-        "@/*": [
-          "./src/*" // set path `@/*` as alias of `src/*`
-        ]
-      },
-      "types": ["vite/client"]
-    }
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "lib": ["ESNext", "DOM"],
+    "jsx": "preserve",
+
+    "isolatedModules": true,
+    "noEmit": true,
+
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+
+    "types": ["vite/client", "node"],
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    "skipLibCheck": true
+  }
 }
-  

@@ -1,18 +1,17 @@
-import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { resolve } from 'path';
-import tailwindcss from "tailwindcss";
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'node:path'
 
 export default defineConfig({
   plugins: [vue()],
   define: {
-    '__APP_VERSION__': JSON.stringify(process.env.npm_package_version),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
-      'src': fileURLToPath(new URL('./src', import.meta.url)),
+      src: fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   build: {
@@ -22,9 +21,4 @@ export default defineConfig({
   server: {
     host: true,
   },
-  css: {
-    postcss: {
-      plugins: [tailwindcss()],
-    },
-  },
-});
+})
