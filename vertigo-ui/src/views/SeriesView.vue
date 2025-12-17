@@ -38,7 +38,6 @@
           <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
         </div>
         <div class="md:hidden flex w-full flex-row justify-between ">
-          <!-- Previous Button -->
           <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
             class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center"
             :style="`color: rgb${themecolor}`">
@@ -46,10 +45,8 @@
             <span>Previous Series </span>
           </RouterLink>
 
-          <!-- Spacer when no previous -->
           <div v-else></div>
 
-          <!-- Next Button -->
           <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
             class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center"
             :style="`color: rgb${themecolor}`">
@@ -68,20 +65,21 @@
                 class="rounded-lg border-2 border-primary max-h-96 object-cover w-full h-full"
                 :style="themecolor ? { borderColor: `rgb${themecolor}` } : {}" />
 
-              <!-- Fallback title block -->
               <div v-else
                 class="w-full border-2 rounded-lg h-full flex bg-slate-900 items-center justify-center p-4 text-center">
                 <span class="text-4xl text-primary font-semibold opacity-70">
                   {{ series.title }}
                 </span>
               </div>
-              <div
-                class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm text-slate-300 bg-slate-800"
-                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
+              <RouterLink :to="{
+                path: '/collection',
+                query: { series_format: series.series_format }
+              }" class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm
+         text-slate-300 bg-slate-800" :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
                 <p class="text-sm font-bold">
                   {{ series.series_format }}
                 </p>
-              </div>
+              </RouterLink>
             </div>
             <div class="basis-2/3 shrink-0 overflow-y-auto mty-4">
 
@@ -94,8 +92,8 @@
                       Publisher
                     </th>
                     <td class="py-4 block md:table-cell">
-                      <TagLink :label="series.publisher.title" :to="`/publisher/${series.publisher.id}-${series.publisher.slug}`"
-                        :color="themecolor" />
+                      <TagLink v-if="series.publisher" :label="series.publisher.title"
+                        :to="`/publisher/${series.publisher.id}-${series.publisher.slug}`" :color="themecolor" />
                     </td>
                   </tr>
 
@@ -107,7 +105,8 @@
                     <td class="py-4">
                       <div class="flex flex-wrap gap-2">
                         <span v-for="genre in series.genre" :key="genre"
-                          class="bg-slate-800 px-3 py-1 select-none rounded text-sm font-bold" :style="`color: rgb${themecolor}`">
+                          class="bg-slate-800 px-3 py-1 select-none rounded text-sm font-bold"
+                          :style="`color: rgb${themecolor}`">
                           {{ genre }}
                         </span>
                       </div>
@@ -165,17 +164,14 @@
 
           </div>
           <div class="hidden md:flex absolute w-full pl-2 bottom-4 flex-row justify-between mt-6">
-            <!-- Previous Button -->
             <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
               class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 gap-2 items-center flex">
               <i class="pi pi-chevron-left"></i>
               <span>Previous Series</span>
             </RouterLink>
 
-            <!-- Spacer when no previous -->
             <div v-else></div>
 
-            <!-- Next Button -->
             <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
               class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center">
               <span>Next Series </span>

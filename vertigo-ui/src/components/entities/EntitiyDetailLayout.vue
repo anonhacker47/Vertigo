@@ -40,16 +40,13 @@
             <i class="pi pi-chevron-right"></i>
           </RouterLink>
         </div>
-
-
-
       </div>
 
 
       <div class="flex flex-col md:flex-row p-8 gap-8 grow justify-center items-center md:justify-start md:items-start">
 
         <div class="flex flex-col w-fit justify-center border-primary h-80 items-center">
-          <div class="flex flex-col border-2 rounded-lg justify-center border-primary h-80 w-60 items-center">
+          <div class="flex flex-col rounded-lg justify-center h-80 w-60 items-center">
             <img v-if="entity.thumbnail" :src="thumbnail(entity.id)" alt=""
               class="rounded-lg object-cover max-h-full w-full" />
 

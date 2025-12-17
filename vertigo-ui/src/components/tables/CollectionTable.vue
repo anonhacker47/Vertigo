@@ -13,7 +13,7 @@
 		<Column field="publisher" header="Publisher" class="hidden md:table-cell">
 			<template #body="{ data }">
 				<div class="flex justify-center">
-					{{ data.publisher }}
+					{{ data.publisher?.title }}
 				</div>
 			</template>
 		</Column>
