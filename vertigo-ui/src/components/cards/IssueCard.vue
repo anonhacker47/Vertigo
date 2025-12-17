@@ -94,11 +94,6 @@ const props = defineProps({
 })
 
 const editMode = computed(() => props.edit_mode)
-
-watch(editMode, (newVal, oldVal) => {
-  console.log('editMode changed:', oldVal, '', newVal)
-})
-
 const symbol = getSymbolFromCurrency(props.preferred_currency)
 
 function formatDate(dateStr: Date | string): string {

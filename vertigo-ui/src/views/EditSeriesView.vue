@@ -81,8 +81,6 @@ async function updateSeries() {
 
     // Handle thumbnail file (only append if it's a File)
     if (seriesData.value.thumbnail) {
-      console.log(seriesData.value.thumbnail);
-
       formData.append("thumbnail", seriesData.value.thumbnail);
     } else {
 
@@ -115,11 +113,6 @@ onMounted(() => {
   getSeries();
 });
 
-watch(imagesrc, (val) => {
-  console.log("SeriesData changed:", val);
-});
-
-
 function onImageChange(file: File | string) {
   seriesData.value.thumbnail = file;
   if (file instanceof File) {
@@ -127,7 +120,6 @@ function onImageChange(file: File | string) {
   } else if (typeof file === 'string') {
     imagesrc.value = file;
   }
-  console.log("Image Changed:", seriesData.value.thumbnail);
 }
 </script>
 

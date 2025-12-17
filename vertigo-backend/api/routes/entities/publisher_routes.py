@@ -14,7 +14,7 @@ from api.utils.files import get_user_path
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import download_thumbnail, save_thumbnail,delete_thumbnail
+from api.helpers.thumbnail_processing import download_thumbnail, normalize_thumbnail, save_thumbnail,delete_thumbnail
 
 
 publisher = Blueprint('publisher', __name__)
@@ -187,7 +187,7 @@ def update_publisher(id):
 
     if incoming_thumb or 'thumbnail' in request.files:
 
-        if incoming_thumb == old_thumb:
+        if incoming_thumb and incoming_thumb.__contains__("/api/"):
             new_filename = None
 
         else:

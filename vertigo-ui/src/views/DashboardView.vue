@@ -169,7 +169,6 @@ async function getIssueInfo() {
     issueInfo.value.totalIssueCount = response.data.totalIssueCount;
     issueInfo.value.collectedIssueCount = response.data.collectedIssueCount;
     issueInfo.value.readIssueCount = response.data.readIssueCount;
-    console.log(issueInfo.value.totalIssueCount);
   } catch (error) {
     console.log(error);
   }
@@ -183,7 +182,6 @@ async function getUserFieldCountAsync(userId: Series["user"]["id"], field: strin
   try {
     const response = await DashboardService.getUserFieldCount(field, type, count);
     chartData.value = response.data;
-    // console.log(chartData.value);
   } catch (error) {
     console.log(error);
   }

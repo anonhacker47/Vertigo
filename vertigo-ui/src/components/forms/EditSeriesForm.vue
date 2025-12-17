@@ -189,6 +189,5 @@ async function deleteSeries(id: number) {
     } catch (error) {
         message.value = error;
     }
-    console.log(message);
 }
 </script>

@@ -196,7 +196,7 @@ def update_character(id):
 
     if incoming_thumb or 'thumbnail' in request.files:
 
-        if incoming_thumb == old_thumb:
+        if incoming_thumb and incoming_thumb.__contains__("/api/"):
             new_filename = None
 
         else:

@@ -110,7 +110,6 @@ const selectedValuesPlaceholder = computed(() => {
 
 const removeItem = (item: any) => {
   model.value = model.value.filter(p => p !== item);
-  console.log("model: ", model.value);
 }
 
 const addCustomItem = (value: any) => {

@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import requests
 import shutil
 import re
@@ -40,7 +41,6 @@ def download_thumbnail(url, title, user_id, folder):
 
         filename = f"{uuid.uuid4()}{slugify(title)}{extension}"
         if request.status_code == 200:
-            print("user_id")
             request.raw.decode_content = True
             save_dir = get_user_path(user_id, folder)
             save_path = os.path.join(save_dir, filename)
@@ -173,3 +173,17 @@ def delete_user_images(user_id):
                     os.remove(os.path.join(root, f))
                 except Exception as e:
                     print(f"Error deleting file {f}: {e}")
+
+
+def normalize_thumbnail(value):
+    if not value:
+        return None
+
+    parsed = urlparse(value)
+
+    path = parsed.path
+
+    if path.startswith("/api/publisher/image/"):
+        return path.replace("/api/publisher/image/", "", 1)
+
+    return value

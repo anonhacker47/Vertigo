@@ -187,7 +187,6 @@ function onImageChange(file: File | string) {
   } else if (typeof file === 'string') {
     imagesrc.value = file;
   }
-  console.log("Image Changed:", seriesData.value.thumbnail);
 }
 
 </script>

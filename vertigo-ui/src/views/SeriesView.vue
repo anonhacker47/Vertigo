@@ -291,7 +291,6 @@ const confirmDelete = (issue: Issue) => {
 
 const toggleEditMode = (): void => {
   editMode.value = !editMode.value;
-  console.log("ediotMode", editMode.value);
 };
 
 const userstore = useUserStore();
@@ -356,7 +355,6 @@ async function getIssueCount() {
   try {
     const response = await IssueService.getIssueCount(Number(route.params.Id));
     issueCount.value = response.data;
-    console.log(issueCount);
   } catch (error) {
     console.log(error);
   }
@@ -383,7 +381,6 @@ async function updateStatus(
     }
 
     const response = await IssueService.updateIssue(issue.id, updateData);
-    console.log(response.data);
     getIssueCount();
   } catch (error) {
     console.log(error);
@@ -397,7 +394,6 @@ async function updateRating(newRating: number) {
 
     await SeriesService.updateSeries(Number(route.params.Id), formData); // or use a PATCH method if available
     await getSeries(Number(route.params.Id)); // re-fetch the full series data to reflect the change
-    console.log("Rating updated and series reloaded.");
   } catch (error) {
     console.error("Failed to update rating:", error);
   }
@@ -406,7 +402,6 @@ async function updateRating(newRating: number) {
 async function getNeighbours(id: number) {
   const res = await SeriesService.getSeriesNeighbours(id);
   neighbours.value = res.data;
-  console.log(res)
 }
 
 watch(

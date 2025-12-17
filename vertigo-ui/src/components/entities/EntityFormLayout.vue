@@ -69,6 +69,7 @@ import { useConfirmAction } from "@/composables/useConfirmAction";
 
 const toast = useToast();
 const { confirmAction } = useConfirmAction();
+const thumbnailChanged = ref(false);
 
 const props = defineProps<{
   type: string;
@@ -97,14 +98,14 @@ function countCharacters() {
 const pascalType = usePascalType(props.type);
 
 function onImageChange(file: File | string) {
+  thumbnailChanged.value = true;
   entityData.value.thumbnail = file;
 
   if (file instanceof File) {
     imageSrc.value = URL.createObjectURL(file);
-  } else if (typeof file === "string") {
+  } else {
     imageSrc.value = file;
   }
-  console.log("Image Changed:", entityData.value.thumbnail);
 }
 
 watch(
@@ -127,17 +128,9 @@ async function onSubmit() {
   formData.append("title", entityData.value.title);
   formData.append("description", entityData.value.description || "");
 
-  if (entityData.value.thumbnail) {
-    formData.append("thumbnail", entityData.value.thumbnail);
-  }
-
-  for (const [key, value] of formData.entries()) {
-    console.log(key, value);
-  }
-
-  console.log(entityData.value.thumbnail);
-  console.log('isProxy:', entityData.value.thumbnail instanceof Object);
-  console.log('constructor:', entityData.value.thumbnail?.constructor?.name);
+if (thumbnailChanged.value) {
+  formData.append("thumbnail", entityData.value.thumbnail as any);
+}
 
   try {
     const response = await props.onSubmit(formData);
