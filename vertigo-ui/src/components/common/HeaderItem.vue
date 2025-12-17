@@ -169,10 +169,16 @@ watch(
 )
 
 onMounted(async () => {
-  const user = userStore.getUser()
-  if (user?.profile_picture) {
-    imagesrc.value = await AuthenticationService.getUserPicture()
-  } else {
+  try {
+    const user = userStore.getUser()
+
+    if (user?.profile_picture) {
+      imagesrc.value = await AuthenticationService.getUserPicture()
+    } else {
+      imagesrc.value = dummy
+    }
+  } catch (error) {
+    console.error("Failed to load user profile picture:", error)
     imagesrc.value = dummy
   }
 })
