@@ -10,7 +10,7 @@ alembic==1.17.1
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
-apifairy==1.5.0
+apifairy==1.5.1
     # via -r requirements.in
 apispec==6.8.4
     # via apifairy
