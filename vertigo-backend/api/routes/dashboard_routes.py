@@ -108,10 +108,10 @@ def user_field_count(field, type):
             'table': associations.series_creator,
             'column': 'creator_id'
         },
-        'main_character': {
-            'model': series_entities.MainCharacter,
-            'table': associations.series_main_character,
-            'column': 'main_character_id'
+        'character': {
+            'model': series_entities.Character,
+            'table': associations.series_character,
+            'column': 'character_id'
         }
     }
 

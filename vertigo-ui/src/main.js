@@ -1,18 +1,15 @@
 import 'animate.css'
-import './index.css'
 import "./assets/main.css";
+import "./index.css";
 import 'swiper/css';
 import 'swiper/css/effect-cards';
 import 'swiper/css/navigation';
-
 
 import { createApp } from "vue";
 import App from "./App.vue";
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import { plugin, defaultConfig } from '@formkit/vue';
 import PrimeVue from 'primevue/config';
-import '@formkit/themes/genesis';
 import ConfirmDialog from 'primevue/confirmdialog'
 import Lara from '@primevue/themes/lara';
 import { definePreset } from '@primevue/themes';
@@ -66,7 +63,6 @@ const MyPreset = definePreset(Lara, {
 
 app.use(router);
 app.use(pinia)
-app.use(plugin, defaultConfig);
 app.use(PrimeVue, {
     // unstyled: true,
     theme: {

@@ -1,34 +1,74 @@
 <template>
   <Transition enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div v-if="true" class="flex justify-around items-center py-2 border-b bg-base-100 border-slate-700">
-      <RouterLink :to="{ name: 'AddNewSeries' }" class="btn btn-primary justify-center">
-        Add Series
-      </RouterLink>
+
+    <div v-if="true"
+      class="flex md:hidden flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 px-4 md:px-12 gap-4">
+
+      <div class="flex flex-col items-center text-center w-full md:w-auto">
+        <h1 class="text-2xl md:text-3xl font-bold text-white">
+          Series Collection
+        </h1>
+        <p class="text-sm text-slate-400 mt-1">
+          Total series: {{ pagination.base_total }}
+        </p>
+      </div>
 
       <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
         :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
         v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
-      <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
-        Delete Mode
-      </button>
+      <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
+        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary flex-1 md:flex-none">
+          Add Series
+        </RouterLink>
+        <button class="btn flex-1 md:flex-none" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
+          @click="toggleDelete">
+          Delete Mode
+        </button>
+      </div>
     </div>
   </Transition>
 
-  <SearchSeriesForm @search="handleSearch" />
+  <Transition enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut animate__faster">
+    <div v-if="true"
+      class="hidden md:flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
+      <div class="flex flex-col md:flex-row justify-between items-center container mx-auto">
+        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary text-black!"> Add Series </RouterLink>
+        <div class="md:ml-16 flex flex-col items-center text-center">
+          <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
+          <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.base_total }} </p>
+        </div>
+        <div class="flex flex-col md:flex-row items-center gap-2">
+          <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
+            Delete Mode </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <div class="flex md:flex-row flex-col items-center justify-between py-4 w-full max-w-7xl mx-auto">
+    <div class="hidden md:flex">
+      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
+        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
+        v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
+    </div>
+    <SearchSeriesForm @search="handleSearch" :initialFilters="currentFilter" />
+  </div>
+
   <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
     <div class="flex justify-center items-center">
-      <span  class="loading-ring  text-success h-44 w-44 loading"></span >
+      <span class="loading-ring  text-success h-44 w-44 loading"></span>
     </div>
   </div>
 
   <!-- Card View -->
   <div v-else-if="viewMode == 'card'"
-    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-screen-3xl grid-cols-${selectedGrid}`">
+    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto mx-2 max-w-screen-3xl grid-cols-${selectedGrid}`">
     <template v-if="seriesList.length > 0">
       <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
-          <CollectionCardItem :class="{ 'animate-wiggle': deleteMode }" :series="series" :cardHeightMD="cardHeightMD"
+          <CollectionCard :series="series" :cardHeightMD="cardHeightMD"
             :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
             @confirmDelete="confirmDelete" />
         </div>
@@ -53,20 +93,12 @@
   <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
     :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
 
-  <ConfirmDialog>
-    <template #message="slotProps">
-      <p class="font-bold">
-        Do you really want to delete the series
-        <span class="text-red-500">{{ slotProps.message.message }}</span> ?
-      </p>
-    </template>
-  </ConfirmDialog>
 </template>
 
 <script setup lang="ts">
-import CollectionCardItem from "@/components/cards/CollectionCardItem.vue";
+import CollectionCard from "@/components/cards/CollectionCard.vue";
 import CollectionTable from "../components/tables/CollectionTable.vue";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import SeriesService from "../services/SeriesService";
 import { useUserStore } from "../store/user";
 import { useUserPreferences } from "@/store/userPreferences";
@@ -77,6 +109,8 @@ import { useToast } from "primevue/usetoast";
 import { Series } from "@/types/series.types";
 import Paginator from "primevue/paginator";
 import SearchSeriesForm from "@/components/forms/SearchSeriesForm.vue";
+import { useConfirmAction } from "@/composables/useConfirmAction";
+import { useRoute, useRouter } from "vue-router";
 
 const onPageChange = (event: any) => {
   if (event.rows > 0) {
@@ -84,35 +118,24 @@ const onPageChange = (event: any) => {
   }
 };
 
-const confirm = useConfirm();
 const toast = useToast();
+const { confirmAction } = useConfirmAction();
 
 const confirmDelete = (id: number, title: any) => {
-  confirm.require({
-    message: title,
+  confirmAction({
+    message: `Series ${title}`,
     header: "Confirm Deletion",
-    icon: "pi pi-info-circle",
-    rejectLabel: "Cancel",
-    rejectProps: {
-      label: "Cancel",
-      severity: "secondary",
-      outlined: true,
-    },
-    acceptProps: {
-      label: "Delete",
-      severity: "danger",
-    },
-    accept: () => {
+    acceptLabel: "Delete",
+    severity: "danger",
+    successMessage: `$Series ${title} deleted`,
+    onAccept: () => {
       deleteSeries(id);
       toast.add({
         severity: "success",
         summary: "Confirmed",
-        detail: `${title} deleted`,
+        detail: `Series ${title} deleted`,
         life: 3000,
       });
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
     },
   });
 };
@@ -121,14 +144,20 @@ const { width } = useWindowSize();
 const seriesList = ref<Series[]>([]);
 const userstore = useUserStore();
 const userPreferences = useUserPreferences();
-const { id: userId } = userstore.getUser();
 const message = ref();
 const deleteMode = ref(false);
 const selectedGrid = ref<number>(userPreferences.cardsPerLine);
 const orderBy = ref(userPreferences.orderBy);
 const orderDir = ref(userPreferences.orderDir);
 
-const viewMode = ref(userPreferences.viewMode); // Default to user preference
+
+const route = useRoute();
+const router = useRouter();
+
+const viewMode = computed({
+  get: () => userPreferences.viewMode,
+  set: (val) => userPreferences.setViewMode(val)
+});
 
 const sortKey = ref(true);
 const loading = ref(false);
@@ -151,16 +180,33 @@ const pagination = ref({
   total: 0,
   limit: 25,
   offset: 0,
+  base_total:0
 });
 
 const currentFilter = ref({});
 
 const handleSearch = (filters) => {
   currentFilter.value = filters;
-  getseriesList(currentFilter.value, 0, pagination.value.limit); // offset=0 on new search
+
+  router.replace({
+    query: {
+      ...Object.fromEntries(
+        Object.entries(filters).filter(([_, v]) => v)
+      ),
+      limit: pagination.value.limit.toString(),
+    },
+  });
+
+  getseriesList(currentFilter.value, 0, pagination.value.limit);
 };
 
 watch(() => pagination.value.limit, (newLimit) => {
+  router.replace({
+    query: {
+      ...route.query,
+      limit: newLimit.toString(),
+    },
+  });
   getseriesList(currentFilter.value, 0, newLimit);
 });
 
@@ -173,15 +219,8 @@ watch(selectedGrid, (newVal) => {
 });
 
 async function deleteSeries(id: number) {
-  const idToRemove = id;
-  seriesList.value.splice(
-    seriesList.value.findIndex((a) => a.id === idToRemove),
-    1,
-  );
-
   try {
-    const response = await SeriesService.removeSeries(id);
-    // setPrimaryKey();
+    await SeriesService.removeSeries(id);
     getseriesList();
   } catch (error) {
     message.value = error;
@@ -203,7 +242,6 @@ const getseriesList = async (
   loading.value = true;
   try {
     const result: any = await SeriesService.fetchSeries(
-      userId,
       orderBy.value,
       orderDir.value,
       limit,
@@ -252,9 +290,46 @@ function getScreenWidth() {
 
 onMounted(() => {
   userPreferences.loadPreferences();
-  // getseriesList(pagination.value.offset, pagination.value.limit);
-  getseriesList({});
+
+  const query = route.query;
+
+  const filters = {
+    query: query.query || "",
+    genre: query.genre || "",
+    creator: query.creator || "",
+    character: query.character || "",
+    publisher: query.publisher || "",
+    series_format: query.series_format || "",
+  };
+
+  currentFilter.value = filters;
+
+  getseriesList(
+    filters,
+    0,
+    Number(query.limit) || pagination.value.limit
+  );
 });
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    const filters = {
+      query: newQuery.query || "",
+      genre: newQuery.genre || "",
+      creator: newQuery.creator || "",
+      character: newQuery.character || "",
+      publisher: newQuery.publisher || "",
+      series_format: newQuery.series_format || "",
+    };
+
+    currentFilter.value = filters;
+    getseriesList(filters, 0, pagination.value.limit);
+  }
+);
+
+
+
 </script>
 
 <style scoped>

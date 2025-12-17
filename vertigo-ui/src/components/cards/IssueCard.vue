@@ -94,11 +94,6 @@ const props = defineProps({
 })
 
 const editMode = computed(() => props.edit_mode)
-
-watch(editMode, (newVal, oldVal) => {
-  console.log('editMode changed:', oldVal, '→', newVal)
-})
-
 const symbol = getSymbolFromCurrency(props.preferred_currency)
 
 function formatDate(dateStr: Date | string): string {
@@ -130,7 +125,7 @@ function handleStatusClick(status: 'is_owned' | 'is_read') {
   } else if (status === 'is_read' && !props.is_read) {
     showReadDatePicker.value = true;
   } else {
-    // If already enabled and clicked again → disable with null date
+    // If already enabled and clicked again  disable with null date
     emit('updateStatus', { status, value: false });
   }
 }
@@ -144,5 +139,3 @@ function handleDateChange(status: 'is_owned' | 'is_read', event: Event) {
 }
 
 </script>
-
-<style scoped></style>

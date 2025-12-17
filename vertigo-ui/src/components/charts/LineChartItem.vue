@@ -88,9 +88,4 @@ watch(
   },
   { deep: true }
 );
-
-// onMounted(() => {
-//   console.log("xData:", props.xData);
-//   console.log("yData:", props.yData);
-// });
 </script>

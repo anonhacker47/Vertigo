@@ -1,3 +1,5 @@
+@import "primeicons/primeicons.css";
+
 #app {
   margin: 0;
   padding: 0;
@@ -11,26 +13,9 @@
     #0f172a
   );
   min-height: 100vh;
-  /* max-width: 1280px; */
   font-family: "Nunito", sans-serif;
 }
 
-.formkit-outer {
-  color: white;
-  outline: none m !important;
-}
-
-.formkit-inner {
-  background-color: #404a59;
-  color: white;
-  outline: none m !important;
-  box-shadow: 0 0 0 1px #1f2937;
-}
-
-[data-type="button"] .formkit-input,
-[data-type="submit"] .formkit-input {
-  width: 100%;
-}
 .error {
   color: red;
 }

@@ -16,8 +16,11 @@ class Issue(Updateable, db.Model):
     number = sqla.Column(sqla.Integer)
     summary = sqla.Column(sqla.String(570))
 
-    slug = sqla.Column(sqla.String(280))
+    cover_date = sqla.Column(sqla.DateTime)
 
+    slug = sqla.Column(sqla.String(280))
+    thumbnail = sqla.Column(sqla.String(280))
+    
     is_read = sqla.Column(sqla.Integer)
     is_owned = sqla.Column(sqla.Integer)
 

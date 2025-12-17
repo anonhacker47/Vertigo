@@ -19,6 +19,7 @@ class IssueSchema(ma.SQLAlchemySchema):
         min=1, max=280))
     
     number = ma.auto_field() 
+    cover_date = ma.auto_field()
     
     is_read = ma.Boolean()
     is_owned = ma.Boolean() 

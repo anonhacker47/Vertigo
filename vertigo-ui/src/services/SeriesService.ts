@@ -1,22 +1,16 @@
 import Api from "@/services/Api";
 import { Series } from "@/types/series.types";
 import { ApiResponse } from "@/types/api-response.types";
-
-interface SeriesFilters {
-  query?: string;
-  genre?: string;
-  publisher?: string;
-  series_format?: string;
-}
+import { SeriesFilterFields } from "@/types/series-filter.types";
 
 export default {
+  
   async fetchSeries(
-    userId: string,
     orderBy: string,
     orderDir: string,
     limit: number,
     offset = 0,
-    filters: SeriesFilters = {}
+    filters: SeriesFilterFields = {}
   ): Promise<{ seriesList: Series[]; pagination: any }> {
     // Build query params
     const params = new URLSearchParams({
@@ -27,13 +21,15 @@ export default {
     });
 
     if (filters.query) params.append("query", filters.query);
+    if (filters.creator) params.append("creator", filters.creator);
+    if (filters.character) params.append("character", filters.character);
     if (filters.genre) params.append("genre", filters.genre);
     if (filters.publisher) params.append("publisher", filters.publisher);
     if (filters.series_format)
       params.append("series_format", filters.series_format);
 
     const response = await Api().get<ApiResponse<Series[]>>(
-      `users/${userId}/series?${params.toString()}`
+      `users/series?${params.toString()}`
     );
 
     return {
@@ -68,7 +64,7 @@ export default {
     return response.data;
   },
 
-  getImagebyId(id: Series["id"]) {
+  getSeriesImageById(id: Series["id"]) {
     return Api().defaults.baseURL + `/series/image/${id}`;
   },
 
@@ -82,5 +78,9 @@ export default {
 
   getSeriesThumbBg() {
     return Api().get(`/series/thumbnail/bg`);
+  },
+
+  getSeriesNeighbours(id: number) {
+    return Api().get(`/series/${id}/neighbors`);
   },
 };

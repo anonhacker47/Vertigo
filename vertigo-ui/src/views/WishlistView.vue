@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import HeaderItem from '../components/HeaderItem.vue';
+import HeaderItem from '../components/common/HeaderItem.vue';
 
 </script>
 

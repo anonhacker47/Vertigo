@@ -6,11 +6,11 @@
 #
 alchemical==1.0.2
     # via -r requirements.in
-alembic==1.17.0
+alembic==1.17.1
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
-apifairy==1.4.0
+apifairy==1.5.0
     # via -r requirements.in
 apispec==6.8.4
     # via apifairy
@@ -26,11 +26,9 @@ charset-normalizer==3.4.3
     # via requests
 click==8.3.0
     # via flask
-colorama==0.4.6
-    # via click
 et-xmlfile==2.0.0
     # via openpyxl
-faker==37.11.0
+faker==37.12.0
     # via -r requirements.in
 flask==3.1.2
     # via
@@ -80,7 +78,7 @@ marshmallow==4.0.1
     #   webargs
 marshmallow-sqlalchemy==1.4.2
     # via -r requirements.in
-mokkari==3.13.1
+mokkari==3.14.0
     # via -r requirements.in
 numpy==2.3.3
     # via pandas
@@ -105,7 +103,7 @@ pyrate-limiter==3.9.0
     # via mokkari
 python-dateutil==2.9.0.post0
     # via pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via -r requirements.in
 python-slugify==8.0.4
     # via -r requirements.in

@@ -1,12 +1,12 @@
 <template>
   <div class="card w-full h-full bg-base-100 shadow-xl">
     <figure class="px-5 pt-5">
-      <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl h-full w-full" />
+      <img :src="imagesrc" @error="changeThumb" alt="Invalid Link" class="rounded-xl h-full w-full max-h-[25rem]" />
     </figure>
     <div class="flex flex-col p-5">
       <div class="flex flex-col gap-2">
-        <div class="form-control w-full">
-          <label class="btn btn-primary" for="file">
+        <div class=" w-full">
+          <label class="btn btn-primary w-full" for="file">
             Upload Image
           </label>
           <input type="file" @change="changeImage($event, 'file')" id="file" accept="image/*" style="display: none" />
@@ -14,9 +14,9 @@
         <div class="flex justify-center">
           <p class="text-center font-bold">OR</p>
         </div>
-        <div class="form-control w-full">
+        <div class=" w-full">
           <input id="image" type="text" v-model="imageLinkInput" @input="changeImage($event, 'url')"
-            placeholder="paste image link here" class="input input-bordered" />
+            placeholder="paste image link here" class="input input-bordered w-full" />
         </div>
       </div>
     </div>

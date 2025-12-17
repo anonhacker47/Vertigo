@@ -28,7 +28,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
-import AnimatedNumber from '@/components/AnimatedNumber.vue'
+import AnimatedNumber from '@/components/common/AnimatedNumber.vue'
 import collectionIcon from '@/assets/collection.svg'
 import readIcon from '@/assets/read.svg'
 import readIssueIcon from '@/assets/readIssue.svg'

@@ -48,7 +48,7 @@
           </ComboboxOption>
         </ComboboxOptions>
       </TransitionRoot>
-      <div v-if="model.length" class="flex flex-wrap justify-center mt-2 gap-2 h-12 overflow-auto">
+      <div v-if="model.length" class="flex flex-wrap justify-center mt-2 gap-2 h-18 overflow-auto">
         <div v-for="(item, i) in model" :key="i" class="badge badge-info p-0 bg-base-600 rounded-md">
           <span class="text-white text-xs px-2 py-1">{{ item }}</span>
           <button type="button" class="ml-1 focus:outline-none self-center" @click="removeItem(item)">
@@ -110,7 +110,6 @@ const selectedValuesPlaceholder = computed(() => {
 
 const removeItem = (item: any) => {
   model.value = model.value.filter(p => p !== item);
-  console.log("model: ", model.value);
 }
 
 const addCustomItem = (value: any) => {

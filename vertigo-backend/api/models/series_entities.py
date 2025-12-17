@@ -1,6 +1,6 @@
 import sqlalchemy as sqla
 from sqlalchemy import orm as sqla_orm
-from datetime  import datetime
+from datetime  import datetime, timezone
 from slugify import slugify
 
 import api.models.associations as associations 
@@ -15,18 +15,22 @@ class Publisher(Updateable, db.Model):
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(1250))
-
-    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
-                            nullable=False)
+    thumbnail = sqla.Column(sqla.String(280))
+    
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_publisher, back_populates='publisher',
                                    lazy='noload')
+    
+    slug = sqla.Column(sqla.String(280))
+    
+    user_id = sqla.Column(sqla.Integer, sqla.ForeignKey("users.id"), index=True)
+
+    user = sqla_orm.relationship('User', back_populates='publisher')
 
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
@@ -36,24 +40,28 @@ class Publisher(Updateable, db.Model):
     def url(self):
         return url_for('publisher.get', id=self.id)
 
-class MainCharacter(Updateable, db.Model):
-    __tablename__ = 'main_character'
+class Character(Updateable, db.Model):
+    __tablename__ = 'character'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(1250))
+    thumbnail = sqla.Column(sqla.String(280))
 
-    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
-                            nullable=False)
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
-    series = sqla_orm.relationship('Series', secondary=associations.series_main_character, back_populates='main_character',
+    series = sqla_orm.relationship('Series', secondary=associations.series_character, back_populates='character',
                                    lazy='noload')
+    
+    slug = sqla.Column(sqla.String(280))
+    
+    user_id = sqla.Column(sqla.Integer, sqla.ForeignKey("users.id"), index=True)
+
+    user = sqla_orm.relationship('User', back_populates='character')
 
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
@@ -61,7 +69,7 @@ class MainCharacter(Updateable, db.Model):
 
     @property
     def url(self):
-        return url_for('main_character.get', id=self.id)
+        return url_for('character.get', id=self.id)
 
 class Creator(Updateable, db.Model):
     __tablename__ = 'creator'
@@ -69,18 +77,22 @@ class Creator(Updateable, db.Model):
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(1250))
+    thumbnail = sqla.Column(sqla.String(280))
 
-    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
-                            nullable=False)
-    
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
+
     series = sqla_orm.relationship('Series', secondary=associations.series_creator, back_populates='creator',
                                    lazy='noload')
+    
+    slug = sqla.Column(sqla.String(280))
+    
+    user_id = sqla.Column(sqla.Integer, sqla.ForeignKey("users.id"), index=True)
 
+    user = sqla_orm.relationship('User', back_populates='creator')
+    
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
@@ -97,17 +109,20 @@ class Genre(Updateable, db.Model):
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(1250))
 
-    timestamp = sqla.Column(sqla.DateTime, index=True, default=datetime.utcnow,
-                            nullable=False)
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_genre, back_populates='genre',
                                    lazy='noload')
 
+    slug = sqla.Column(sqla.String(280))
+
+    user_id = sqla.Column(sqla.Integer, sqla.ForeignKey("users.id"), index=True)
+
+    user = sqla_orm.relationship('User', back_populates='genre')
+
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
-
-    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
