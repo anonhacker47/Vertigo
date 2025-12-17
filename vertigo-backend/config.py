@@ -31,6 +31,11 @@ class Config:
     USE_CORS = as_bool(os.environ.get('USE_CORS') or 'yes')
     CORS_SUPPORTS_CREDENTIALS = True
 
+    raw_origins = os.environ.get('CORS_ORIGINS', '')
+    CORS_ORIGINS = [origin.strip() for origin in raw_origins.split(',') if origin.strip()]  
+
+    PACKAGE_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
+
     # API documentation
     APIFAIRY_TITLE = 'Vertigo API'
     APIFAIRY_VERSION = '0.0.2'

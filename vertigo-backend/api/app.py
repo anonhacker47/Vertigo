@@ -20,7 +20,7 @@ def create_app(config_class=Config):
             static_folder = "./wwwroot/static",
             template_folder = "./wwwroot")
     app.config.from_object(config_class)
-    
+   
     app.config['user_path'] = os.path.abspath("./Config/User/")
     app.config['sql_path'] = os.path.abspath("./Config/")
 
@@ -40,7 +40,9 @@ def create_app(config_class=Config):
     db.init_app(app)
     ma.init_app(app)
     if app.config['USE_CORS']:  # pragma: no branch
-        cors.init_app(app)
+        cors.init_app(app,resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}},
+        supports_credentials=app.config.get('CORS_SUPPORTS_CREDENTIALS', False)
+    )
     mail.init_app(app)
     apifairy.init_app(app)
 
