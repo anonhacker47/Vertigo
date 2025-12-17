@@ -5,7 +5,7 @@
     </figure>
     <div class="flex flex-col p-5">
       <div class="flex flex-col gap-2">
-        <div class="form-control w-full">
+        <div class=" w-full">
           <label class="btn btn-primary w-full" for="file">
             Upload Image
           </label>
@@ -14,7 +14,7 @@
         <div class="flex justify-center">
           <p class="text-center font-bold">OR</p>
         </div>
-        <div class="form-control w-full">
+        <div class=" w-full">
           <input id="image" type="text" v-model="imageLinkInput" @input="changeImage($event, 'url')"
             placeholder="paste image link here" class="input input-bordered w-full" />
         </div>

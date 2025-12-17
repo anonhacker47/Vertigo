@@ -3,14 +3,14 @@
     <div v-if="showIssueSection"
         class="card h-full w-full md:w-2/3 flex flex-col gap-6 shadow-2xl bg-base-100 p-8">
         <!-- Issue Count Input -->
-        <div class="form-control">
+        <div class="">
             <label class="label" for="issue-count">Number of Issues</label>
             <input id="issue-count" type="number" v-model.number="seriesData.issue_count" min="1" class="input input-bordered" />
         </div>
 
         <!-- Select All Toggles -->
         <div class="flex flex-col md:flex-row gap-4 md:gap-16 justify-around">
-            <div class="form-control w-full">
+            <div class=" w-full">
                 <label class="label cursor-pointer flex items-center gap-2"
                     :class="haveAll ? 'text-primary' : 'text-white'">
                     <span>Have All?</span>
@@ -18,7 +18,7 @@
                         :class="haveAll ? 'checkbox-primary' : ''" />
                 </label>
             </div>
-            <div class="form-control w-full">
+            <div class=" w-full">
                 <label class="label cursor-pointer flex items-center gap-2"
                     :class="readAll ? 'text-accent' : 'text-white'">
                     <span>Read Already?</span>
@@ -30,7 +30,7 @@
 
         <!-- Issue Cards -->
         <div class="grid place-items-center w-full md:gap-6 md:max-h-[28rem] overflow-y-auto overflow-x-hidden"
-            style="grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem;">
+            style="grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1rem;">
             <div v-for="n in seriesData.issue_count" :key="n"
                 class="relative card border w-full md:w-fit shadow-md rounded-md flex flex-col items-center"
                 :class="{ 'border-primary': issues[n - 1].have, 'border-accent': issues[n - 1].read }">

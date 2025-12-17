@@ -10,34 +10,38 @@
 
 
     <form @submit.prevent="onSubmit" class="card bg-base-100 shadow-2xl p-8 w-full max-w-xl flex flex-col gap-6">
-      <!-- Title -->
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">{{ pascalType }} Name</span>
+      <div class="">
+        <label class="label" for="entity-title">
+          <span class="label-text font-medium">
+            {{ pascalType }} Name
+          </span>
         </label>
-        <input type="text" v-model="entityData.title" placeholder="Enter Name" class="input input-bordered w-full"
-          required />
+        <input type="text" id="entity-title" v-model="entityData.title" placeholder="Enter Name"
+          class="input input-bordered w-full" required />
       </div>
 
-      <!-- Description -->
-      <div class="form-control relative">
-        <label class="label">
-          <span class="label-text">Description (optional)</span>
+      <div class="flex flex-col w-full">
+        <label class="label" for="entity-description">
+          <span class="label-text font-medium">
+            Description
+          </span>
+          <span class="label-text-alt opacity-60">
+            (Optional)
+          </span>
         </label>
 
-        <textarea v-model="entityData.description" placeholder="Add an optional description"
-          class="textarea textarea-bordered h-32" @input="countCharacters"></textarea>
+        <textarea v-model="entityData.description" id="entity-description" placeholder="Add an optional description"
+          class="textarea textarea-bordered h-32 w-full" @input="countCharacters"></textarea>
 
         <p class="text-sm mt-1" :class="{ 'text-error': charCount > 1250, 'opacity-70': charCount <= 1250 }">
           {{ charCount }}/1250
         </p>
       </div>
 
-      <!-- Buttons -->
       <div class="flex flex-col gap-2 w-full p-2">
 
         <div class="flex w-full gap-2">
-          <button class="btn btn-neutral btn-neutral  flex-1" @click.prevent="router.back()">Cancel</button>
+          <button class="btn btn-neutral flex-1" @click.prevent="router.back()">Cancel</button>
           <button class="btn btn-primary flex-1" type="submit" :disabled="charCount > 1250 || !entityData.title">
             {{ props.mode === 'edit' ? "Update" : "Create" }} {{ pascalType }}
           </button>

@@ -4,7 +4,7 @@
     class="card bg-base-100 shadow-2xl p-8 w-full max-w-xl flex flex-col gap-6"
   >
     <!-- Title -->
-    <div class="form-control">
+    <div class="">
       <label class="label">
         <span class="label-text">{{pascalType}} Name</span>
       </label>
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Description -->
-    <div class="form-control relative">
+    <div class=" relative">
       <label class="label">
         <span class="label-text">Description (optional)</span>
       </label>

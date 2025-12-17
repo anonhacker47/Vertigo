@@ -91,7 +91,7 @@
           </div>
         </div>
       </div>
-      <div class="form-control gap-4 py-2 px-6">
+      <div class=" gap-4 py-2 px-6">
         <div class="flex items-center justify-between gap-3 cursor-pointer">
           <label for="order-title" class="text-slate-200 cursor-pointer font-bold">Title</label>
           <RadioButton v-model="orderBy" inputId="order-title" name="orderBy" value="title"
