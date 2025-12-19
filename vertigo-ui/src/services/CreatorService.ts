@@ -37,7 +37,7 @@ export default {
   },
 
   getCreatorImageById(id: Entity["id"]) {
-    return Api().defaults.baseURL + `/creator/image/${id}?t=${Date.now()}`;
+    return Api().defaults.baseURL + `/creator/image/${id}`;
   },
 
   async deleteCreator(id: number) {

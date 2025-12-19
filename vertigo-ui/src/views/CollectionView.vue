@@ -1,12 +1,11 @@
 <template>
-  <Transition enter-active-class="animate__animated animate__fadeIn"
+  <Transition class="flex md:hidden" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
-
     <div v-if="true"
-      class="flex md:hidden flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 px-4 md:px-12 gap-4">
+      class="flex-col md:flex-row justify-between items-center py-4 border-b max-w-7xl px-8 bg-base-100 border-slate-700 md:px-12 gap-4">
 
       <div class="flex flex-col items-center text-center w-full md:w-auto">
-        <h1 class="text-2xl md:text-3xl font-bold text-white">
+        <h1 class="text-3xl md:text-3xl font-bold text-white">
           Series Collection
         </h1>
         <p class="text-sm text-slate-400 mt-1">
@@ -18,21 +17,23 @@
         :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
         v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
       <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
-        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary flex-1 md:flex-none">
-          Add Series
+        <RouterLink :to="{ name: 'AddSeries' }" custom v-slot="{ navigate }">
+          <Button class="flex-1 " @click="navigate">
+            Add Series
+          </Button>
         </RouterLink>
-        <button class="btn flex-1 md:flex-none" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
+        <Button severity="secondary" class="flex-1" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
           @click="toggleDelete">
           Delete Mode
-        </button>
+        </Button>
       </div>
     </div>
   </Transition>
 
-  <Transition enter-active-class="animate__animated animate__fadeIn"
+  <Transition class="hidden md:flex" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
     <div v-if="true"
-      class="hidden md:flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
+      class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
       <div class="flex flex-col md:flex-row justify-between items-center container mx-auto">
         <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary text-black!"> Add Series </RouterLink>
         <div class="md:ml-16 flex flex-col items-center text-center">
@@ -68,9 +69,8 @@
     <template v-if="seriesList.length > 0">
       <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
-          <CollectionCard :series="series" :cardHeightMD="cardHeightMD"
-            :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
-            @confirmDelete="confirmDelete" />
+          <CollectionCard :series="series" :image-url="series.thumbnail" :cardHeightMD="cardHeightMD" :cardWidthMD="cardWidthMD"
+            :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode" @confirmDelete="confirmDelete" />
         </div>
       </TransitionGroup>
     </template>
@@ -180,7 +180,7 @@ const pagination = ref({
   total: 0,
   limit: 25,
   offset: 0,
-  base_total:0
+  base_total: 0
 });
 
 const currentFilter = ref({});
@@ -248,7 +248,10 @@ const getseriesList = async (
       offset,
       filter
     );
-    seriesList.value = result.seriesList;
+    seriesList.value = result.seriesList.map(series => ({
+      ...series,
+      thumbnail: SeriesService.getSeriesImageById(series.id)
+    }));
     pagination.value = result.pagination;
   } catch (error) {
     console.error("Error loading series:", error);

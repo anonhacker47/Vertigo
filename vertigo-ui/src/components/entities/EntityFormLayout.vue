@@ -3,7 +3,7 @@
     <h1 class="text-3xl font-bold text-white"> {{ props.mode === 'edit' ? "Update" : "Add" }} {{ pascalType }}
     </h1>
   </div>
-  <div class="flex flex-col md:flex-row items-start justify-center p-6 gap-10 w-full">
+  <div class="flex flex-col md:flex-row items-center md:items-start justify-center p-6 gap-10 w-full">
     <div class="w-[20rem] max-h-[36rem]">
       <ImageUploader v-model="imageSrc" @image-change="onImageChange" />
     </div>

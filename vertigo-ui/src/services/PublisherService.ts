@@ -37,7 +37,7 @@ export default {
   },
 
   getPublisherImageById(id: Entity["id"]) {
-    return Api().defaults.baseURL + `/publisher/image/${id}?t=${Date.now()}`;
+    return Api().defaults.baseURL + `/publisher/image/${id}`;
   },
 
   async deletePublisher(id: number) {

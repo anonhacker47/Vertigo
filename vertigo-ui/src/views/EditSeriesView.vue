@@ -53,7 +53,7 @@ async function getSeries() {
         : null,
     }
 
-    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}?t=${Date.now()}`
+    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}}`
   } catch (error) {
     console.log(error)
   }
@@ -88,7 +88,10 @@ async function updateSeries() {
     }
 
     const response = await SeriesService.updateSeries(seriesId, formData);
-    router.push({ name: 'SeriesDetail', params: { Id: String(response.data.id), Link: response.data.link } });
+    router.push({
+      name: 'SeriesDetail', params: { Id: String(response.data.id), Link: response.data.link },
+      query: { refresh: Date.now() }
+    });
 
   } catch (error) {
     console.error("Update error:", error);

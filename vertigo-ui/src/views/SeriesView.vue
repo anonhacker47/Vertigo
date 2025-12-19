@@ -1,12 +1,15 @@
 <template>
-  <div v-if="series" :key="series.id" class="bg-no-repeat bg-center bg-cover">
-    <div class="flex flex-col min-w-screen">
+  <div v-if="series" :key="series.id" class="bg-no-repeat select-none bg-center bg-cover">
+    <div class="flex flex-col md:h-[calc(100vh-72px)] w-full">
       <div
         class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
-        <div class="flex flex-1 justify-center md:justify-start items-center px-5 md:w-1/3 break-words">
-          <p :style="themecolor ? { color: `rgb${themecolor}` } : {}" class="font-bold text-3xl truncate text-primary">
-            {{ series.title }}
-          </p>
+        <div class="flex flex-1 justify-center md:justify-start items-center px-5 wrap-break-word">
+          <div class="tooltip tooltip-success tooltip-bottom" :data-tip="series.title">
+            <span :v-tooltip.bottom="series.title" :style="themecolor ? { color: `rgb${themecolor}` } : {}"
+              class="font-bold xl:max-w-xl lg:max-w-md max-w-2xs block text-wrap md:text-nowrap text-center text-2xl md:truncate text-primary">
+              {{ series.title }}
+            </span>
+          </div>
         </div>
         <div class="flex flex-1 justify-center items-center md:w-1/4 gap-5">
           <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
@@ -57,12 +60,12 @@
         </div>
       </div>
 
-      <div class="flex flex-col md:flex-row grow md:h-[calc(100vh-140px)]">
-        <div class="flex flex-col relative mr-2 md:basis-1/2 md:w-1/2 w-full overflow-hidden">
-          <div class="flex flex-col md:flex-row pt-8 basis-1/2 shrink-0 relative gap-4">
-            <div class="flex flex-col basis-1/3 px-28 md:px-4">
+      <div class="flex flex-col md:flex-row overflow-hidden">
+        <div class="flex flex-col relative pr-2 md:basis-1/2 justify-between md:w-1/2 w-full md:overflow-y-auto">
+          <div class="flex flex-col md:flex-row pt-8 basis-1/2  relative gap-4">
+            <div class="flex flex-col basis-1/3 px-28 h-fit md:px-4">
               <img v-if="image && image !== 'noimage'" :src="image" alt=""
-                class="rounded-lg border-2 border-primary max-h-96 object-cover w-full h-full"
+                class="rounded-lg border-2 border-primary max-h-80 object-cover w-full h-full"
                 :style="themecolor ? { borderColor: `rgb${themecolor}` } : {}" />
 
               <div v-else
@@ -74,15 +77,15 @@
               <RouterLink :to="{
                 path: '/collection',
                 query: { series_format: series.series_format }
-              }" class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-sm
-         text-slate-300 bg-slate-800" :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
+              }"
+                class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-smtext-slate-300 bg-slate-800"
+                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
                 <p class="text-sm font-bold">
                   {{ series.series_format }}
                 </p>
               </RouterLink>
             </div>
-            <div class="basis-2/3 shrink-0 overflow-y-auto mty-4">
-
+            <div class="basis-2/3 shrink h-fit overflow-y-auto my-4">
               <table class="w-full border-collapse">
                 <tbody class="flex md:block flex-col items-center justify-center">
 
@@ -163,7 +166,7 @@
             </div>
 
           </div>
-          <div class="hidden md:flex absolute w-full pl-2 bottom-4 flex-row justify-between mt-6">
+          <div class="hidden md:flex w-full pl-2 flex-row justify-between mb-12">
             <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
               class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 gap-2 items-center flex">
               <i class="pi pi-chevron-left"></i>
@@ -181,11 +184,11 @@
           </div>
         </div>
         <div
-          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink-0 border-l border-slate-700">
+          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink border-l border-slate-700">
           <h1 class="flex justify-center py-2 px-4 font-bold text-3xl text-slate-300">
             Issues
           </h1>
-          <div class="overflow-scroll h-full w-full">
+          <div class="md:overflow-scroll pb-12 h-full w-full">
             <div class="grid gap-y-8 md:px-20 place-items-center my-4 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]">
               <IssueCard :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1
                 " :preferred_currency="preferred_currency" :bought_price="issue.bought_price" :image="image"
@@ -324,7 +327,7 @@ async function getSeries(id: number) {
     }
 
     if (response.thumbnail) {
-      image.value = `${SeriesService.getSeriesImageById(series.value.id)}?t=${Date.now()}`;
+      image.value = `${SeriesService.getSeriesImageById(series.value.id)}}`;
       console.log("getSeries", image.value);
     }
   } catch (error) {

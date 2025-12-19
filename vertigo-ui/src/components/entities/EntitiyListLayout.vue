@@ -1,10 +1,12 @@
 <template>
-    <Transition enter-active-class="animate__animated animate__fadeIn"
+    <Transition class="md:flex hidden" enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut animate__faster">
         <div class="flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700">
-            <div class="flex flex-col md:flex-row justify-between gap-4 items-center container mx-auto">
-                <RouterLink :to="{ name: `Add${pascalType}` }" class="btn btn-primary flex-1 text-black! md:flex-none">
-                    Add {{ pascalType }}
+            <div class="flex md:flex-row justify-between gap-4 items-center container mx-auto max-w-7xl px-8">
+                <RouterLink :to="{ name: `Add${pascalType}` }" custom v-slot="{ navigate }">
+                    <Button class="md:flex-none" @click="navigate">
+                        Add {{ pascalType }}
+                    </Button>
                 </RouterLink>
                 <div class="flex flex-col items-center">
                     <h1 class="text-3xl font-bold text-white">{{ title }}</h1>
@@ -12,10 +14,37 @@
                         Total {{ title.toLowerCase() }}: {{ pagination.base_total }}
                     </p>
                 </div>
-                <button class="btn flex-1 md:flex-none"
-                    :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
-                    Delete Mode
-                </button>
+                <Button label="Delete Mode" severity="secondary" class="md:flex-none"
+                    :class="{ 'p-button-danger animate-wiggle': deleteMode }" @click="toggleDelete" />
+            </div>
+        </div>
+    </Transition> 
+
+    <Transition class="flex md:hidden" enter-active-class="animate__animated animate__fadeIn"
+        leave-active-class="animate__animated animate__fadeOut animate__faster">
+
+        <div v-if="true"
+            class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 px-4 md:px-12 gap-4">
+
+            <div class="flex flex-col items-center">
+                <h1 class="text-3xl font-bold text-white">{{ title }}</h1>
+                <p class="text-sm text-slate-400 mt-1">
+                    Total {{ title.toLowerCase() }}: {{ pagination.base_total }}
+                </p>
+            </div>
+
+            <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid"
+                :changeGrid="changeGrid" :orderDirection="orderDirection" :orderByProperties="orderByProperties"
+                v-model:viewMode="viewMode" v-model:orderBy="orderBy" v-model:orderDir="orderDir"
+                v-model:itemsPerPage="pagination.limit" />
+            <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
+                <RouterLink :to="{ name: `Add${pascalType}` }" custom v-slot="{ navigate }">
+                    <Button class="md:flex-none" @click="navigate">
+                        Add {{ pascalType }}
+                    </Button>
+                </RouterLink>
+                <Button label="Delete Mode" severity="secondary" class="md:flex-none"
+                    :class="{ 'p-button-danger animate-wiggle': deleteMode }" @click="toggleDelete" />
             </div>
         </div>
     </Transition>

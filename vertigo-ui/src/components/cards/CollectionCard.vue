@@ -9,7 +9,7 @@
       <div class="flex h-full w-full items-end">
         <div id="image_container"
           class="h-full relative rounded flex-col md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center">
-          <img v-if="displayedImage !== Image" :src="displayedImage" @error="handleImageError" alt=""
+          <img v-if="displayedImage !== Image" loading="lazy" decoding="async" :src="displayedImage" @error="handleImageError" alt=""
             class="slideritem h-full w-full rounded-t-md md:rounded-t-md" />
 
           <div class="absolute flex h-full w-full rounded-t-md md:rounded-t-md bg-[#131929] opacity-0"
@@ -50,10 +50,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import SeriesService from '@/services/SeriesService';
 
 const props = defineProps({
   series: Object,
+  imageUrl: String,
   cardHeightMD: Number,
   cardWidthMD: Number,
   cardHeight: Number,
@@ -63,7 +63,7 @@ const props = defineProps({
 
 const emit = defineEmits(['confirmDelete']);
 
-const displayedImage = ref(SeriesService.getSeriesImageById(props.series.id));
+const displayedImage = ref(props.imageUrl);
 const Image = "noimage";
 
 const active = ref(false);

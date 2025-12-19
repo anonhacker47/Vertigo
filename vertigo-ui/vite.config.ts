@@ -22,7 +22,7 @@ export default defineConfig({
   server: {
     host: true,
     cors: {
-      origin: ["http://localhost:5000"],
+      origin: ["http://localhost:5000","http://192.168.1.25:5000"],
       credentials: true,
     },
   },

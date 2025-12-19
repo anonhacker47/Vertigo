@@ -1,25 +1,25 @@
 <!-- components/createSeries/IssueSection.vue -->
 <template>
     <div v-if="showIssueSection"
-        class="card h-full w-full md:w-2/3 flex flex-col gap-6 shadow-2xl bg-base-100 p-8">
+        class="card h-full w-[90%] md:w-2/3 flex flex-col gap-6 shadow-2xl bg-base-100 p-8">
         <!-- Issue Count Input -->
-        <div class="">
+        <div class="flex gap-4">
             <label class="label" for="issue-count">Number of Issues</label>
             <input id="issue-count" type="number" v-model.number="seriesData.issue_count" min="1" class="input input-bordered" />
         </div>
 
         <!-- Select All Toggles -->
         <div class="flex flex-col md:flex-row gap-4 md:gap-16 justify-around">
-            <div class=" w-full">
-                <label class="label cursor-pointer flex items-center gap-2"
+            <div class="flex gap-4 w-full">
+                <label class="label cursor-pointer flex items-center gap-4"
                     :class="haveAll ? 'text-primary' : 'text-white'">
                     <span>Have All?</span>
                     <input type="checkbox" v-model="haveAll" @change="toggleAll('have')" class="checkbox"
                         :class="haveAll ? 'checkbox-primary' : ''" />
                 </label>
             </div>
-            <div class=" w-full">
-                <label class="label cursor-pointer flex items-center gap-2"
+            <div class="w-full">
+                <label class="label cursor-pointer flex items-center gap-4"
                     :class="readAll ? 'text-accent' : 'text-white'">
                     <span>Read Already?</span>
                     <input type="checkbox" v-model="readAll" @change="toggleAll('read')" class="checkbox"

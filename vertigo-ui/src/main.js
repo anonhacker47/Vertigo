@@ -17,6 +17,9 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 import Toast from "primevue/toast";
 import router from "./router";
+import Drawer from 'primevue/drawer'
+import PanelMenu from 'primevue/panelmenu'
+import Button from 'primevue/button'
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -75,4 +78,7 @@ app.use(ToastService);
 app.component('ConfirmDialog',ConfirmDialog)
 app.component('NotificationToast',Toast)
 app.mount("#app");
+app.component('Drawer', Drawer)
+app.component('PanelMenu', PanelMenu)
+app.component('Button', Button)
 

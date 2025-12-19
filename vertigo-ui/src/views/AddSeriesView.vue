@@ -1,11 +1,11 @@
 <template>
-  <div class="w-full flex flex-col items-center justify-center m-4 mb-2">
+  <div class="w-full flex flex-col items-center justify-center my-4 mb-2">
     <h1 class="text-3xl font-bold">Create Series</h1>
   </div>
 
   <form autocomplete="on" class="z-0 flex items-center justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
 
-    <div class="w-[24rem] h-[38rem]">
+    <div class="w-94 h-152">
       <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
     </div>
 

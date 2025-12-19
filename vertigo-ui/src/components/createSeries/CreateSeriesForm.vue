@@ -1,6 +1,6 @@
 <template>
     <div v-if="!showIssueSection"
-        class="card h-full w-full md:w-2/4 flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
+        class="card h-full w-[90%] md:w-2/4 flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
         <div class="flex pb-4 flex-col w-full md:flex-row gap-6 md:gap-20 justify-around">
             <div class=" w-full">
                 <input type="text" placeholder="Series Name" v-model="localSeriesData.title"

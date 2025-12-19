@@ -37,7 +37,7 @@ export default {
   },
 
   getCharacterImageById(id: Entity["id"]) {
-    return Api().defaults.baseURL + `/character/image/${id}?t=${Date.now()}`;
+    return Api().defaults.baseURL + `/character/image/${id}`;
   },
 
   async deleteCharacter(id: number) {

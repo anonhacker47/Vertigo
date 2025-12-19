@@ -4,7 +4,7 @@
 
         <!-- IMAGE WRAPPER -->
         <div class="w-full flex items-center rounded-t-xl justify-center bg-base-300 h-80 overflow-hidden">
-            <img v-if="image && !imgError" :src="image" @error="imgError = true"
+            <img v-if="image && !imgError" loading="lazy" decoding="async" :src="image" @error="imgError = true"
                 class="object-cover max-h-full w-full" />
             <div v-else class="w-full flex items-center justify-center h-full">
                 <ImagePlaceHolderItem :title="title" size="lg" />

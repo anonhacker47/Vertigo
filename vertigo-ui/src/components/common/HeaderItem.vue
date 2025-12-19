@@ -15,13 +15,13 @@
       <RouterLink to="/collection"
         class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
         Collection</RouterLink>
-      <li class="dropdown dropdown-hover list-none">
+      <div class="dropdown dropdown-hover list-none">
         <button tabindex="0"
           class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent">
           Browse
           <i class="pi pi-chevron-down"></i>
         </button>
-        <ul class=" z-50 dropdown-content menu p-2 shadow bg-base-200 text-white text-lg rounded-box w-52" tabindex="0">
+        <ul class="z-50 dropdown-content menu p-2 shadow bg-base-200 text-white text-lg rounded-box w-52" tabindex="0">
           <li>
             <RouterLink :to="{ name: 'PublisherList' }" class="hover:text-blue-400">
               Publishers
@@ -39,45 +39,37 @@
               Characters
             </RouterLink>
           </li>
-          <!-- <li>
-              <RouterLink to="/genre" class="hover:text-blue-400">Genre</RouterLink>
-            </li> -->
         </ul>
-      </li>
+      </div>
 
     </div>
 
 
 
     <div class="flex md:hidden">
-      <div class="dropdown dropdown-bottom dropdown-center">
-        <button tabindex="0" class="btn btn-ghost btn-circle">
-          <img :src="menuIcon" class="h-5 w-5" alt="menu icon" />
-        </button>
-        <ul tabindex="0" class="dropdown-content mt-3 shadow bg-base-100 text-center rounded-box z-50">
-          <li>
-            <RouterLink to="/dashboard" class="block text-white p-2 px-4 text-xl hover:bg-slate-800 rounded-box">
-              Dashboard
-            </RouterLink>
-          </li>
-          <li>
-            <RouterLink to="/collection" class="block text-white rounded-box p-2 px-4 text-xl hover:bg-slate-800">
-              Collection
-            </RouterLink>
-          </li>
-          <div class="text-white text-xl my-2 border-t-2 border-slate-700">
-            <div class="text-sm text-center mt-1 text-slate-400">Browse</div>
-            <div class="mt-2 flex flex-col gap-2">
-              <RouterLink :to="{ name: 'PublisherList' }" class="px-4 hover:bg-slate-800 rounded-box">Publishers</RouterLink>
-              <RouterLink :to="{ name: 'CreatorList' }" class="px-4 hover:bg-slate-800 rounded-box">Creators</RouterLink>
-              <RouterLink :to="{ name: 'CharacterList' }" class=" px-4 hover:bg-slate-800 rounded-box">Characters</RouterLink>
-            </div>
-          </div>
-        </ul>
-      </div>
+      <Button icon="pi pi-bars" class="p-button-text p-button-rounded p-button-lg text-white"
+        @click="mobileOpen = true" />
     </div>
 
-    <div class="flex items-center">
+    <Drawer v-model:visible="mobileOpen" position="right" class="w-72 flex justify-between bg-[#12192b]">
+      <div class="flex items-center w-full justify-center gap-3 mb-6">
+        <img class="inline-block h-30 w-30 rounded-md" @error="changeThumb()" :src="imagesrc" alt="" />
+      </div>
+
+      <PanelMenu :model="menuItems" class="border-none" />
+
+      <div class="mt-8">
+        <button class="w-full text-left text-white py-2 hover:text-sky-300" @click="router.push('/settings')">
+          <i class="pi pi-cog mr-2"></i> Settings
+        </button>
+
+        <button class="w-full text-left text-white py-2 hover:text-red-400" @click="logout">
+          <i class="pi pi-sign-out mr-2"></i> Log out
+        </button>
+      </div>
+    </Drawer>
+
+    <div class="hidden md:flex items-center">
       <div class="flex flex-col lg:flex-row list-none">
         <div class="dropdown dropdown-hover">
           <button tabindex="0">
@@ -85,7 +77,7 @@
               :src="imagesrc" alt="" />
           </button>
           <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52"
-            tabindex="0">
+            tabindex="-1">
             <li>
               <RouterLink to="/settings" class="hover:text-blue-400 "> Settings</RouterLink>
             </li>
@@ -128,38 +120,46 @@ function logout() {
   router.push('/')
 }
 
-/* Unified menu structure */
 const menuItems = [
   {
     label: 'Dashboard',
-    command: () => router.push('/dashboard')
+    icon: 'pi pi-home',
+    command: () => {
+      mobileOpen.value = false
+      router.push('/dashboard')
+    }
   },
   {
     label: 'Collection',
-    command: () => router.push('/collection')
+    icon: 'pi pi-book',
+    command: () => {
+      mobileOpen.value = false
+      router.push('/collection')
+    }
   },
   {
     label: 'Browse',
+    icon: '',
     items: [
-      { label: 'Publishers', command: () => router.push({ name: 'PublisherList' }) },
-      { label: 'Creators', command: () => router.push({ name: 'CreatorList' }) },
-      { label: 'Characters', command: () => router.push({ name: 'CharacterList' }) }
+      {
+        label: 'Publishers',
+        icon: 'pi pi-print',
+        command: () => router.push({ name: 'PublisherList' })
+      },
+      {
+        label: 'Creators',
+        icon: 'pi pi-user',
+        command: () => router.push({ name: 'CreatorList' })
+      },
+      {
+        label: 'Characters',
+        icon: 'pi pi-users',
+        command: () => router.push({ name: 'CharacterList' })
+      }
     ]
   }
 ]
 
-const profileItems = [
-  {
-    label: 'Settings',
-    icon: 'pi pi-cog',
-    command: () => router.push('/settings')
-  },
-  {
-    label: 'Log out',
-    icon: 'pi pi-sign-out',
-    command: logout
-  }
-]
 
 watch(
   () => userStore.user?.profile_picture,
@@ -193,11 +193,24 @@ nav {
   transition-duration: 200ms;
 }
 
-img:hover {
-  transform: scale(1.1);
+.router-link-active {
+  color: #38bdf8;
 }
 
-.router-link-active {
+:deep(.p-panelmenu-header-content) {
+  background: transparent;
+  color: white;
+}
+
+:deep(.p-panelmenu-content) {
+  background: transparent;
+}
+
+:deep(.p-menuitem-link) {
+  color: white;
+}
+
+:deep(.p-menuitem-link:hover) {
   color: #38bdf8;
 }
 </style>
