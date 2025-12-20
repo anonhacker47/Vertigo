@@ -53,7 +53,7 @@ async function getSeries() {
         : null,
     }
 
-    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}}`
+    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}`
   } catch (error) {
     console.log(error)
   }

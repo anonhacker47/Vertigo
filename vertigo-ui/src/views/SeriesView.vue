@@ -60,12 +60,12 @@
         </div>
       </div>
 
-      <div class="flex flex-col md:flex-row overflow-hidden">
+      <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
         <div class="flex flex-col relative pr-2 md:basis-1/2 justify-between md:w-1/2 w-full md:overflow-y-auto">
           <div class="flex flex-col md:flex-row pt-8 basis-1/2  relative gap-4">
             <div class="flex flex-col basis-1/3 px-28 h-fit md:px-4">
               <img v-if="image && image !== 'noimage'" :src="image" alt=""
-                class="rounded-lg border-2 border-primary max-h-80 object-cover w-full h-full"
+                class="rounded-lg border-2 border-primary max-h-100 object-cover w-full h-full"
                 :style="themecolor ? { borderColor: `rgb${themecolor}` } : {}" />
 
               <div v-else
@@ -327,7 +327,7 @@ async function getSeries(id: number) {
     }
 
     if (response.thumbnail) {
-      image.value = `${SeriesService.getSeriesImageById(series.value.id)}}`;
+      image.value = `${SeriesService.getSeriesImageById(series.value.id)}`;
       console.log("getSeries", image.value);
     }
   } catch (error) {

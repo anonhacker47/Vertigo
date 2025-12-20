@@ -20,17 +20,8 @@
 
   <p align='center'>
     <h3 align="center">Dashboard</h3>
-<img alt="Vertigo Dashboard Screenshot" src="./.github/images/dashboard.png" style="width: 90%" />
+<img alt="Vertigo Dashboard Screenshot" src="./.github/gifs/vertigo.gif" style="width: 90%" />
 </p>
-
-  <p align='center'>
-    <h3 align="center">Collection View</h3>
-<img alt="Vertigo Collection Screenshot" src="./.github/images/collection.png" style="width: 90%" />
-</p>
-
-  <p align='center'>
-    <h3 align="center">Series View</h3>
-<img alt="Vertigo Series Page Screenshot" src="./.github/images/series.png" style="width: 90%" />
 </p>
  <br />
 </div>

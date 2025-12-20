@@ -1,6 +1,6 @@
+import LoginView from "@/views/LoginView.vue";
+import SignupView from "@/views/SignupView.vue";
 import { createRouter, createWebHistory } from "vue-router";
-import DashboardView from "../views/DashboardView.vue";
-import SettingsView from "@/views/SettingsView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,7 +16,7 @@ const router = createRouter({
     {
       path: "/dashboard",
       name: "Dashboard",
-      component: DashboardView,
+      component: () => import("@/views/DashboardView.vue"),
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
@@ -25,7 +25,7 @@ const router = createRouter({
     {
       path: "/settings",
       name: "Settings",
-      component: SettingsView,
+      component: () => import("@/views/SettingsView.vue"),
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
@@ -34,7 +34,7 @@ const router = createRouter({
     {
       path: "/collection",
       name: "Collection",
-      component: () => import("../views/CollectionView.vue"),
+      component: () => import("@/views/CollectionView.vue"),
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
@@ -43,7 +43,7 @@ const router = createRouter({
     {
       path: "/wishlist",
       name: "Wishlist",
-      component: () => import("../views/WishlistView.vue"),
+      component: () => import("@/views/WishlistView.vue"),
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
@@ -56,7 +56,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/SeriesView.vue"),
+      component: () => import("@/views/SeriesView.vue"),
     },
     {
       path: "/login",
@@ -65,12 +65,12 @@ const router = createRouter({
         requiresAuth: false,
         showHeaderItem: false,
       },
-      component: () => import("../views/LoginView.vue"),
+      component: LoginView,
     },
     {
       path: "/register",
       name: "SignUp",
-      component: () => import("../views/SignupView.vue"),
+      component: SignupView,
       meta: {
         requiresAuth: false,
         showHeaderItem: false,
@@ -84,7 +84,7 @@ const router = createRouter({
         showHeaderItem: true,
         transparentHeader: true,
       },
-      component: () => import("../views/SeriesView.vue"),
+      component: () => import("@/views/SeriesView.vue"),
     },
     {
       path: "/series/create",
@@ -93,7 +93,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/AddSeriesView.vue"),
+      component: () => import("@/views/AddSeriesView.vue"),
     },
     {
       path: "/series/edit/:Id-:Link",
@@ -102,7 +102,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EditSeriesView.vue"),
+      component: () => import("@/views/EditSeriesView.vue"),
     },
     {
       path: "/publisher",
@@ -111,7 +111,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityListView.vue"),
+      component: () => import("@/views/EntityListView.vue"),
       props: { type: "publisher" },
     },
     {
@@ -121,7 +121,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityCreateView.vue"),
+      component: () => import("@/views/EntityCreateView.vue"),
       props: { type: "publisher" },
     },
     {
@@ -131,7 +131,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityEditView.vue"),
+      component: () => import("@/views/EntityEditView.vue"),
       props: { type: "publisher" },
     },
     {
@@ -141,7 +141,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityDetailView.vue"),
+      component: () => import("@/views/EntityDetailView.vue"),
       props: { type: "publisher" },
     },
     {
@@ -151,7 +151,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityListView.vue"),
+      component: () => import("@/views/EntityListView.vue"),
       props: { type: "creator" },
     },
     {
@@ -161,7 +161,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityCreateView.vue"),
+      component: () => import("@/views/EntityCreateView.vue"),
       props: { type: "creator" },
     },
     {
@@ -171,7 +171,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityDetailView.vue"),
+      component: () => import("@/views/EntityDetailView.vue"),
       props: { type: "creator" },
     },
     {
@@ -181,7 +181,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityEditView.vue"),
+      component: () => import("@/views/EntityEditView.vue"),
       props: { type: "creator" },
     },
     {
@@ -191,7 +191,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityListView.vue"),
+      component: () => import("@/views/EntityListView.vue"),
       props: { type: "character" },
     },
     {
@@ -201,7 +201,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityCreateView.vue"),
+      component: () => import("@/views/EntityCreateView.vue"),
       props: { type: "character" },
     },
     {
@@ -211,7 +211,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityDetailView.vue"),
+      component: () => import("@/views/EntityDetailView.vue"),
       props: { type: "character" },
     },
     {
@@ -221,7 +221,7 @@ const router = createRouter({
         requiresAuth: true,
         showHeaderItem: true,
       },
-      component: () => import("../views/EntityEditView.vue"),
+      component: () => import("@/views/EntityEditView.vue"),
       props: { type: "character" },
     },
     // {
@@ -232,7 +232,7 @@ const router = createRouter({
     //     showHeaderItem: true,
     //   },
     //   component: () =>
-    //     import("../views/entities/detail_views/PublisherView.vue"),
+    //     import("@/views/entities/detail_views/PublisherView.vue"),
     // },
   ],
 });

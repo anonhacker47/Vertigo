@@ -65,7 +65,7 @@
 
   <!-- Card View -->
   <div v-else-if="viewMode == 'card'"
-    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto mx-2 max-w-screen-3xl grid-cols-${selectedGrid}`">
+    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-420 px-8 grid-cols-${selectedGrid}`">
     <template v-if="seriesList.length > 0">
       <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
         <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
