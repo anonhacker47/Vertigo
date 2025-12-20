@@ -6,7 +6,18 @@
   <p align="center">
     Vertigo is a self-hosted web app designed to help you catalogue and track your comic book collection with ease. Created using <a href="https://vuejs.org/">Vue.js</a> and <a href="https://flask.palletsprojects.com/en/3.0.x/">Flask</a>
   </p>
- 
+
+
+  <strong>Live Demo:</strong> https://demo.vertigolabs.dev  
+  <strong>Username:</strong> <code>demo</code> 
+  Password: <code>demo@2025</code>
+
+</div>
+
+
+## Screenshots
+
+
   <p align='center'>
     <h3 align="center">Dashboard</h3>
 <img alt="Vertigo Dashboard Screenshot" src="./.github/images/dashboard.png" style="width: 90%" />
