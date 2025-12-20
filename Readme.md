@@ -15,16 +15,15 @@
 </div>
 
 
-## Screenshots
+<h3 align="center">Screenshot</h3>
 
-
-  <p align='center'>
-    <h3 align="center">Dashboard</h3>
-<img alt="Vertigo Dashboard Screenshot" src="./.github/gifs/vertigo.gif" style="width: 90%" />
+<p align="center">
+  <img
+    alt="Vertigo Dashboard"
+    src="./.github/gifs/vertigo.gif"
+    width="90%"
+  />
 </p>
-</p>
- <br />
-</div>
 
 > **⚠ Disclaimer ⚠**: Vertigo is WIP and under active development. Expect occasional bugs, incomplete features, and potential breaking changes as I add new features and improve functionality.
 
