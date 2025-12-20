@@ -52,15 +52,7 @@ Feel free to reach out if you have anything else you'd like to see!
 
 Vertigo has now entered its **Alpha release** stage! You can try it out by downloading the latest ZIP from the [releases section](https://github.com/anonhacker47/vertigo/releases).
 
-After extracting the ZIP, follow these steps:
-
-1. **Create a `.env` file** in the root directory of the app and set your secret key:
-
-```env
-SECRET_KEY=your-very-secret-key
-```
-
-This key is used for authentication tokens and other security-related features. You can also configure other settings by refering config.py or .flaskenv.
+After extracting the ZIP, run the app using the appropriate script for your os:
 
 2. Run the app using the appropriate script for your operating system:
 
