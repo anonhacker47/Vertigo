@@ -36,6 +36,11 @@ class Config:
 
     PACKAGE_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
 
+    #Metron Integraion
+    METRON_USERNAME =  os.environ.get('METRON_USERNAME', 'set_username')
+    METRON_PASSWORD =  os.environ.get('METRON_PASSWORD', 'set_password')
+    METRON_CACHE_DB = "Config/metron_cache.db"
+
     # API documentation
     APIFAIRY_TITLE = 'Vertigo API'
     APIFAIRY_VERSION = '0.0.2'

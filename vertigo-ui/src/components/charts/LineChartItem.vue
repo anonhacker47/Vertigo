@@ -1,7 +1,9 @@
 <template>
-  <div class="flex items-center justify-center min-h-96 md:h-full w-full relative">
+  <div class="flex flex-col items-center justify-center h-96 md:h-full w-full relative">
+    <div class="card-title text-xl text-center justify-center mt-[1.3rem] font-extrabold text-[#F9FAFB]">
+      Purchase per Month</div>
     <template v-if="hasData">
-      <v-chart class="flex shrink-0 justify-center w-full h-full" :option="option" :autoresize="true" />
+      <v-chart class="flex  w-full h-fit" :option="option" :autoresize="true" />
     </template>
     <template v-else>
       <div class="text-gray-400 text-lg text-center">No purchase data available to display</div>
@@ -37,18 +39,6 @@ provide(THEME_KEY, 'dark');
 const option: any = ref({
   backgroundColor: 'transparent',
   darkMode: 'true',
-  title: {
-    text: "Purchase per Month",
-    left: 'center',
-    padding: [25, 0, 0, 0],
-    textStyle: {
-      fontSize: '1.25rem',
-      color: '#F9FAFB',
-      fontFamily: 'Nunito',
-      fontWeight: 'bold',
-
-    }
-  },
   tooltip: {
     trigger: 'item',
   },

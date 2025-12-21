@@ -13,19 +13,17 @@
 
       <AddSeriesCardItem />
     </div>
-    <div class="w-full flex flex-col md:flex-row mt-8 flex-grow justify-around gap-8 pl-8 pr-8 mb-8 md:min-h-[66vh]">
-      <div class="card relative basis-1/2 sm:w-[35%] items-center bg-base-100 shadow-xl">
+    <div class="w-full flex flex-col md:flex-row mt-8 grow justify-around gap-8 pl-8 pr-8 mb-8 md:min-h-[66vh]">
+      <div class="card basis-1/2 sm:w-[35%] bg-base-100 shadow-xl">
         <PieChartItem :title="chartTitle" :data="chartData" />
-
-        <div class="dropdown dropdown-end absolute top-3 right-3">
+        <div class="dropdown md:dropdown-end absolute top-3 left-3 md:left-auto md:right-3">
           <button @click="handleInfoClick" class="btn btn-circle btn-ghost btn-xs text-info">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </button>
-          <div
-            class="card compact dropdown-content z-[1] shadow bg-base-100 border-green-400 border-2 rounded-box w-64">
+          <div class="card compact dropdown-content z-1 shadow bg-base-100 border-green-400 border-2 rounded-box w-64">
             <div class="card-body">
               <h2 class="card-title">Explore insights from your collection!</h2>
               <p>Use the dropdowns below to filter and compare stats across different aspects of your collection.</p>
@@ -55,8 +53,7 @@
       </div>
 
       <div class="card w-full sm:w-[30%] card-compact relative bg-base-100 shadow-xl">
-        <div
-          class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
+        <div class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
           Recent Purchases</div>
         <div class="mt-4 h-full w-full flex items-center justify-center">
           <SwiperCardItem v-if="recentPurchasedIssues && recentPurchasedIssues.length > 0"
@@ -69,8 +66,7 @@
 
       <div class="card relative basis-1/2 sm:w-[35%] flex items-center bg-base-100 shadow-xl">
         <LineChartItem :x-data="purchaseData" :y-data="dates" />
-        <div class="mb-4 w-1/8 flex no-wrap items-center justify-center">
-          <!-- <label for="year" class="mr-2 text-sm">Select Year:</label> -->
+        <div class="mb-4 w-1/3 md:w-1/5 flex no-wrap items-center justify-center">
           <select v-model="selectedYear" id="year" class="select select-primary select-bordered w-full">
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
           </select>

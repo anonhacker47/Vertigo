@@ -70,6 +70,10 @@ def create_app(config_class=Config):
     app.register_blueprint(creator, url_prefix='/api')
     from api.routes.entities.character_routes import character
     app.register_blueprint(character, url_prefix='/api')
+
+    from api.integrations.mokkari.mokkari_routes import search_metron
+    app.register_blueprint(search_metron, url_prefix='/api')
+
     # define the shell context
     @app.shell_context_processor
     def shell_context():  # pragma: no cover
