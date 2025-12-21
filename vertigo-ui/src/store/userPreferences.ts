@@ -17,6 +17,7 @@ export const useUserPreferences = defineStore("userPreferences", {
 
     actions: {
         setViewMode(viewMode: 'card' | 'list') {
+            if (this.viewMode === viewMode) return;
             this.viewMode = viewMode;
             localStorage.setItem('viewMode', viewMode);
         },

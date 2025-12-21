@@ -32,8 +32,7 @@
 
   <Transition class="hidden md:flex" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div v-if="true"
-      class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
+    <div class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
       <div class="flex flex-col md:flex-row justify-between items-center container mx-auto">
         <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary text-black!"> Add Series </RouterLink>
         <div class="md:ml-16 flex flex-col items-center text-center">
@@ -64,29 +63,25 @@
   </div>
 
   <!-- Card View -->
-  <div v-else-if="viewMode == 'card'"
-    :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-420 px-8 grid-cols-${selectedGrid}`">
-    <template v-if="seriesList.length > 0">
-      <TransitionGroup :key="sortKey" enter-active-class="animate__animated animate__zoomInDown">
-        <div class="flex flex-row relative justify-center items-start" v-for="series in seriesList" :key="series.id">
-          <CollectionCard :series="series" :image-url="series.thumbnail" :cardHeightMD="cardHeightMD" :cardWidthMD="cardWidthMD"
-            :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode" @confirmDelete="confirmDelete" />
-        </div>
-      </TransitionGroup>
-    </template>
-    <template v-else>
-      <div class="text-center col-span-full py-10 text-slate-400">
-        No series found. Start by adding a new one!
+  <Transition enter-active-class="animate__animated animate__fadeIn"
+    leave-active-class="animate__animated animate__fadeOut" mode="out-in">
+    <div :key="viewMode">
+      <!-- CARD VIEW -->
+      <div v-if="viewMode === 'card'"
+        :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-420 px-8 grid-cols-${selectedGrid}`">
+        <TransitionGroup :key="'card-' + sortKey" enter-active-class="animate__animated animate__zoomInDown">
+          <div v-for="series in seriesList" :key="series.id" class="flex flex-row relative justify-center items-start">
+            <CollectionCard :series="series" :image-url="series.thumbnail" :cardHeightMD="cardHeightMD"
+              :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
+              @confirmDelete="confirmDelete" />
+          </div>
+        </TransitionGroup>
       </div>
-    </template>
-  </div>
 
-
-  <Transition name="list" enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut">
-    <div class="mx-5" v-if="viewMode === 'list'" key="listView">
-      <CollectionTable v-if="seriesList && seriesList.length" :seriesList="seriesList" :deleteMode="deleteMode"
-        :confirmDelete="confirmDelete" />
+      <!-- LIST VIEW -->
+      <div v-else class="mx-5">
+        <CollectionTable :seriesList="seriesList" :deleteMode="deleteMode" :confirmDelete="confirmDelete" />
+      </div>
     </div>
   </Transition>
 

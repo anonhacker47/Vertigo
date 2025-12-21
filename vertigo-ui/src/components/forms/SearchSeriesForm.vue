@@ -7,7 +7,7 @@
             placeholder="Publisher" class="w-full md:w-52" scrollHeight="200px" showClear />
 
         <Select v-model="selectedCreator" :options="items.creator" @change="applySearch" optionLabel="value"
-            placeholder="Creator" class="w-full md:w-44" scrollHeight="200px" showClear />
+            placeholder="Creator" class="w-full md:w-44 bg-base-100" scrollHeight="200px" showClear />
 
 
         <Select v-model="selectedCharacter" :options="items.character" @change="applySearch" optionLabel="value"
@@ -17,7 +17,7 @@
         <Select v-model="selectedGenre" :options="items.genre" @change="applySearch" optionLabel="value"
             placeholder="Genre" class="w-full md:w-40" scrollHeight="200px" showClear />
 
-        <Select v-model="selectedFormat" :options="items.series_format" @change="applySearch" placeholder="Format"
+        <Select v-model="selectedFormat" :options="items.series_format"  @change="applySearch" placeholder="Format"
             class="w-full md:w-32" scrollHeight="200px" showClear />
 
         <Button label="Search" icon="pi pi-search" class="p-button-info w-full md:w-32" @click="applySearch" />
@@ -143,4 +143,6 @@ onMounted(() => {
 
 </script>
 
-<style scoped></style>
+<style scoped>
+    
+</style>

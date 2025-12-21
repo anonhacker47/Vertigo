@@ -1,6 +1,8 @@
 <template>
-  <div class="flex justify-center min-h-96 md:h-full w-full relative">
-    <v-chart v-if="props.data.length" class="w-full h-full" :option="option" :autoresize="true" />
+  <div class="flex flex-col justify-center h-96 items-center md:h-full w-full relative">
+    <div class="card-title text-xl text-center justify-center pt-[1.3rem] font-extrabold text-[#F9FAFB]">
+      {{props.title}}</div>
+    <v-chart v-if="props.data.length" class="w-full h-fit" :option="option" :autoresize="true" />
     <div v-else class="flex items-center justify-center w-full h-full text-gray-400 text-lg">
       No data available to display
     </div>
@@ -45,7 +47,6 @@ const option: any = ref({
   backgroundColor: 'transparent',
   darkMode: 'true',
   title: {
-    text: props.title,
     left: 'center',
     padding: [25, 0, 0, 0],
     textStyle: {
@@ -71,7 +72,7 @@ const option: any = ref({
       type: 'pie',
       radius: '45%',
       // padAngle: 5,
-      center: ['50%', '46	%'],
+      center: ['50%', '46%'],
       minShowLabelAngle: 2,
       // itemStyle: {
       //   borderRadius: 10,
@@ -99,10 +100,6 @@ const option: any = ref({
 
     },
   ],
-});
-
-watch(() => props.title, (newValue) => {
-  option.value.title.text = newValue;
 });
 
 watch(() => props.data, (newValue) => {
