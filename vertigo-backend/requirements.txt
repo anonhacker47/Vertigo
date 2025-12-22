@@ -113,7 +113,7 @@ requests==2.32.5
     # via mokkari
 six==1.17.0
     # via python-dateutil
-sqlalchemy==2.0.44
+sqlalchemy==2.0.45
     # via
     #   -r requirements.in
     #   alchemical
