@@ -33,14 +33,18 @@
   <Transition class="hidden md:flex" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
     <div class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
-      <div class="flex flex-col md:flex-row justify-between items-center container mx-auto">
-        <RouterLink :to="{ name: 'AddSeries' }" class="btn btn-primary text-black!"> Add Series </RouterLink>
+      <div class="flex flex-col max-w-7xl md:flex-row justify-between items-center container mx-auto">
+        <RouterLink :to="{ name: `AddSeries` }" custom v-slot="{ navigate }">
+          <Button class="md:flex-none" @click="navigate">
+            Add Series
+          </Button>
+        </RouterLink>
         <div class="md:ml-16 flex flex-col items-center text-center">
           <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
           <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.base_total }} </p>
         </div>
         <div class="flex flex-col md:flex-row items-center gap-2">
-          <button class="btn" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
+          <Button label="Delete Mode" severity="secondary"  :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
             Delete Mode </button>
         </div>
       </div>
