@@ -71,8 +71,8 @@ def create_app(config_class=Config):
     from api.routes.entities.character_routes import character
     app.register_blueprint(character, url_prefix='/api')
 
-    from api.integrations.mokkari.mokkari_routes import search_metron
-    app.register_blueprint(search_metron, url_prefix='/api')
+    from api.integrations.mokkari.mokkari_routes import mokkari
+    app.register_blueprint(mokkari, url_prefix='/api')
 
     # define the shell context
     @app.shell_context_processor

@@ -3,17 +3,20 @@
     <h1 class="text-3xl font-bold">Create Series</h1>
   </div>
 
-  <form autocomplete="on" class="z-0 flex items-center justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
+  <form autocomplete="on" class="z-0 flex items-start justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
 
     <div class="w-94 h-152">
       <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
     </div>
 
-    <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
+    <div class="w-[90%] md:w-2/4 flex flex-col items-start justify-start">
 
-    <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" :showIssueSection="showIssueSection"
-      :seriesData="seriesData" :issues="issues" :imagesrc="imagesrc" @cancel="showIssueSection = false"
-      @submit="createSeries" />
+      <SearchMetron @select="" />
+      <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
+      <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" :showIssueSection="showIssueSection"
+        :seriesData="seriesData" :issues="issues" :imagesrc="imagesrc" @cancel="showIssueSection = false"
+        @submit="createSeries" />
+    </div>
 
   </form>
 </template>
@@ -31,6 +34,7 @@ import ImageUploader from "@/components/createSeries/ImageUploader.vue";
 import SeriesForm from "@/components/createSeries/CreateSeriesForm.vue";
 import IssuesForm from "@/components/createSeries/IssuesForm.vue";
 import { useToast } from "primevue";
+import SearchMetron from "@/components/createSeries/SearchMetron.vue";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
 

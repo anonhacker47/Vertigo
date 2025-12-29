@@ -1,7 +1,7 @@
 <!-- components/createSeries/IssueSection.vue -->
 <template>
     <div v-if="showIssueSection"
-        class="card h-full w-[90%] md:w-2/3 flex flex-col gap-6 shadow-2xl bg-base-100 p-8">
+        class="card h-full w-full flex flex-col gap-6 shadow-2xl bg-base-100 p-8">
         <!-- Issue Count Input -->
         <div class="flex gap-4">
             <label class="label" for="issue-count">Number of Issues</label>
