@@ -18,6 +18,46 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 }
 
+THUMB_CACHE = {}
+
+def handle_series_thumbnail(series, thumbnail, files, title, user_id, folder):
+    thumbnail_filename = None
+    dominant_color = None
+
+    if thumbnail and thumbnail.startswith("http"):
+        thumbnail_filename, dominant_color = download_thumbnail(
+            thumbnail, title, user_id, folder
+        )
+
+    elif files and "thumbnail" in files:
+        file = files["thumbnail"]
+        thumbnail_filename, dominant_color = save_thumbnail(
+            file, title, user_id, folder
+        )
+
+    if thumbnail_filename:
+        series.thumbnail = thumbnail_filename
+        series.dominant_color = dominant_color
+
+def get_or_download_thumbnail(url: str, title: str, user_id: int, folder: str):
+    """Return cached (path, dominant_color) for thumbnail, downloading if needed."""
+    if not url:
+        return None, None
+
+    if url in THUMB_CACHE:
+        return THUMB_CACHE[url]
+
+    result = download_thumbnail(url, title, user_id, folder)
+
+    # Normalize: result may be just path or (path, color)
+    if isinstance(result, tuple):
+        path, dominant_color = result
+    else:
+        path, dominant_color = result, None
+
+    THUMB_CACHE[url] = (path, dominant_color)
+    return path, dominant_color
+
 def download_thumbnail(url, title, user_id, folder):
     if url != "noimage":
 
@@ -173,7 +213,6 @@ def delete_user_images(user_id):
                     os.remove(os.path.join(root, f))
                 except Exception as e:
                     print(f"Error deleting file {f}: {e}")
-
 
 def normalize_thumbnail(value):
     if not value:

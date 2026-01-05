@@ -6,12 +6,12 @@
   <form autocomplete="on" class="z-0 flex items-start justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
 
     <div class="w-94 h-152">
-      <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
+      <ImageUploader v-model="imagesrc" v-model:imageLink="imageLinkInput" @image-change="onImageChange" />
     </div>
 
     <div class="w-[90%] md:w-2/4 flex flex-col items-start justify-start">
 
-      <SearchMetron @select="" />
+      <SearchMetron @select="onMetronSelect" />
       <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
       <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" :showIssueSection="showIssueSection"
         :seriesData="seriesData" :issues="issues" :imagesrc="imagesrc" @cancel="showIssueSection = false"
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
@@ -57,21 +57,38 @@ const seriesData = ref<Partial<Series>>({
   series_format: '',
   issue_count: 1,
   thumbnail: '',
-  publisher: '',
+  publisher: {
+    id: null,
+    name: null
+  },
   read_count: 0,
-  owned_count: 0
+  owned_count: 0,
+  metron_id: null,
+  metron_url: null,
 })
 
-function toggleAll(type: string) {
-  issues.value.forEach((issue) => {
-    issue[type] = type === "read" ? readAll.value : haveAll.value;
-  });
+function onMetronSelect(seriesDetail, seriesEntities) {
+  console.log('Selected series detail:', seriesDetail)
+  console.log('Selected series entities:', seriesEntities)
+
+  seriesData.value.title = seriesDetail.name
+  imageLinkInput.value = seriesDetail.image_first_issue || ''
+  seriesData.value.publisher = seriesDetail.publisher || ''
+  seriesData.value.description = seriesDetail.desc || ''
+  seriesData.value.genre = seriesDetail.genres || []
+  seriesData.value.issue_count = seriesDetail.issue_count || 1
+  seriesData.value.metron_id = seriesDetail.metron_id || null
+  seriesData.value.metron_url = seriesDetail.metron_url || null
+
+  if (seriesEntities) {
+    seriesData.value.creator = seriesEntities.creators || []
+    seriesData.value.character = seriesEntities.characters || []
+  }
 }
 
 watch(
   () => seriesData.value.issue_count,
   (newCount) => {
-    // Adjust the array length to match the new issue count
     haveAll.value = false;
     readAll.value = false;
 
@@ -103,6 +120,8 @@ watch(
   { deep: true }
 );
 
+const isMetronHydrated = computed(() => !!seriesData.value.metron_id);
+
 async function createSeries() {
   if (!seriesData.value.title.trim()) {
     toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Title is required.', life: 3000 });
@@ -116,7 +135,7 @@ async function createSeries() {
 
     const payload = {
       title: seriesData.value.title,
-      publisher: seriesData.value.publisher || "",
+      publisher: seriesData.value.publisher || [],
       creator: seriesData.value.creator || [],
       description: seriesData.value.description || "",
       genre: seriesData.value.genre || [],
@@ -125,14 +144,27 @@ async function createSeries() {
       issue_count: seriesData.value.issue_count || 0,
       read_count: read_count,
       owned_count: owned_count,
+      metron_id: seriesData.value.metron_id || null,
+      metron_url: seriesData.value.metron_url || null,
     };
 
     const formData = new FormData();
     for (const key in payload) {
-      if (Array.isArray(payload[key])) {
-        formData.append(key, JSON.stringify(payload[key]));
-      } else {
-        formData.append(key, payload[key]?.toString() || "");
+      const value = payload[key];
+
+      if (value === null || value === undefined) {
+        formData.append(key, "");
+      }
+      else if (typeof value === "object") {
+        if (!Array.isArray(value)) {
+          // wrap single object into array
+          formData.append(key, JSON.stringify([value]));
+        } else {
+          formData.append(key, JSON.stringify(value));
+        }
+      }
+      else {
+        formData.append(key, value.toString());
       }
     }
 
@@ -145,8 +177,27 @@ async function createSeries() {
 
     if (seriesId) {
       await addIssues(seriesId);
-      toast.add({ severity: 'success', summary: 'Success', detail: 'Series created successfully!', life: 3000 });
-      router.push({ name: "SeriesDetail", params: { Link: response.slug, Id: seriesId } });
+      toast.add({
+        severity: 'success',
+        summary: 'Series Created',
+        detail: 'Series created successfully.',
+        life: 3000
+      });
+
+      if (seriesData.value.metron_id) {
+        toast.add({
+          severity: 'info',
+          summary: 'Metron Sync Started',
+          detail: 'New creators, characters, and publisher metadata will be synced in the background.',
+          life: 5000
+        });
+      }
+
+      router.push({
+        name: "SeriesDetail",
+        params: { Link: response.slug, Id: seriesId }
+      });
+
     } else {
       toast.add({ severity: 'error', summary: 'Failure', detail: 'Series creation failed.', life: 3000 });
     }

@@ -28,7 +28,9 @@ import { ref, watch } from "vue";
 
 const props = defineProps<{
   modelValue: string;
+  imageLink: string;
 }>();
+
 const emit = defineEmits<{
   (e: "update:modelValue", value: string): void;
   (e: "image-change", file: File | string): void;
@@ -36,7 +38,12 @@ const emit = defineEmits<{
 
 const dummy = new URL("../../assets/dummy.webp", import.meta.url).href;
 const imagesrc = ref<string>(props.modelValue || dummy);
-const imageLinkInput = ref<string>("");
+const imageLinkInput = ref(props.imageLink || "");
+
+watch(() => props.imageLink, (val) => {
+  imageLinkInput.value = val || "";
+  emit("image-change", val);  
+});
 
 function changeImage(event: any, inputType: string) {
   let previewUrl = "";

@@ -33,8 +33,8 @@
         <textarea v-model="entityData.description" id="entity-description" placeholder="Add an optional description"
           class="textarea textarea-bordered h-32 w-full" @input="countCharacters"></textarea>
 
-        <p class="text-sm mt-1" :class="{ 'text-error': charCount > 1250, 'opacity-70': charCount <= 1250 }">
-          {{ charCount }}/1250
+        <p class="text-sm mt-1" :class="{ 'text-error': charCount > 3000, 'opacity-70': charCount <= 3000 }">
+          {{ charCount }}/3000
         </p>
       </div>
 
@@ -42,7 +42,7 @@
 
         <div class="flex w-full gap-2">
           <button class="btn btn-neutral flex-1" @click.prevent="router.back()">Cancel</button>
-          <button class="btn btn-primary flex-1" type="submit" :disabled="charCount > 1250 || !entityData.title">
+          <button class="btn btn-primary flex-1" type="submit" :disabled="charCount > 3000 || !entityData.title">
             {{ props.mode === 'edit' ? "Update" : "Create" }} {{ pascalType }}
           </button>
         </div>

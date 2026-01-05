@@ -11,8 +11,8 @@ from api.app import db
 from api.helpers.thumbnail_processing import save_thumbnail
 from api.models.updatable import Updateable
 import api.models.associations as associations
-import api.models.series_entities as entities
-class Series(Updateable, db.Model):
+from api.models.metron_identifiable import MetronIdentifiable
+class Series(Updateable,MetronIdentifiable, db.Model):
     __tablename__ = 'series'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -34,7 +34,7 @@ class Series(Updateable, db.Model):
 
     user_rating = sqla.Column(sqla.Float)
     
-    description = sqla.Column(sqla.String(1250))
+    description = sqla.Column(sqla.String(3000))
 
     issue = sqla_orm.relationship('Issue', back_populates='series',
                                   lazy='noload', cascade='all, delete-orphan')

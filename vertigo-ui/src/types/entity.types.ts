@@ -5,5 +5,6 @@ export interface Entity {
   description: string | null;
   thumbnail: string | File;
   slug: string | null;
-  timestamp: string; // ISO datetime string
+  timestamp: string;
+  metron_id?:string
 }

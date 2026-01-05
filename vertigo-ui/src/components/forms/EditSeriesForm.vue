@@ -49,10 +49,10 @@
                 <textarea class="textarea w-full textarea-bordered h-32" placeholder="Summary"
                     v-model="localSeriesData.description" @input="validateDescription"></textarea>
                 <p class="text-sm mt-2" :class="{
-                    'text-gray-400': descriptionLength <= 1250,
-                    'text-red-500': descriptionLength > 1250
+                    'text-gray-400': descriptionLength <= 3000,
+                    'text-red-500': descriptionLength > 3000
                 }">
-                    {{ descriptionLength }}/1250 characters
+                    {{ descriptionLength }}/3000 characters
                 </p>
                 <p v-if="descriptionError" class="text-red-500 text-sm absolute bottom-[-1.5rem]">
                     {{ descriptionError }}
@@ -113,6 +113,8 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'updateSeries'])
 
 const localSeriesData = reactive({ ...props.modelValue })
+const descriptionLength = ref(0);
+const descriptionError = ref("");
 
 watch(localSeriesData, (val) => {
     const { thumbnail, ...rest } = val;
@@ -130,18 +132,24 @@ watch(
     { deep: true }
 );
 
+watch(
+  () => localSeriesData.description,
+  (val) => {
+    descriptionLength.value = val?.length || 0;
+    descriptionError.value = descriptionLength.value > 3000 ? "Description cannot exceed 3000 characters." : "";
+  },
+  { immediate: true }
+);
+
 const updateSeries = () => {
     emit('updateSeries')
 }
 
-const descriptionLength = ref(0);
-const descriptionError = ref("");
-
 function validateDescription() {
     descriptionLength.value = localSeriesData.description?.length || 0;
 
-    if (descriptionLength.value > 1250) {
-        descriptionError.value = "Description cannot exceed 1250 characters.";
+    if (descriptionLength.value > 3000) {
+        descriptionError.value = "Description cannot exceed 3000 characters.";
     } else {
         descriptionError.value = "";
     }
@@ -190,4 +198,5 @@ async function deleteSeries(id: number) {
         message.value = error;
     }
 }
+
 </script>

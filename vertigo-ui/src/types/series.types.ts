@@ -30,4 +30,6 @@ export interface Series {
     };
     user_rating: number;
     creator: string[];
+    metron_id?: number;
+    metron_url?: string;
 }

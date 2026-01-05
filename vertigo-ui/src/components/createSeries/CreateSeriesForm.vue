@@ -1,6 +1,5 @@
 <template>
-    <div v-if="!showIssueSection"
-        class="card h-full w-full flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
+    <div v-if="!showIssueSection" class="card h-full w-full flex gap-8 y-8 shadow-2xl bg-base-100 justify-between p-8">
         <div class="flex pb-4 flex-col w-full md:flex-row gap-6 md:gap-20 justify-around">
             <div class=" w-full">
                 <input type="text" placeholder="Series Name" v-model="localSeriesData.title"
@@ -49,10 +48,10 @@
                 <textarea class="textarea textarea-bordered h-36 w-full" placeholder="Summary"
                     v-model="localSeriesData.description" @input="validateDescription"></textarea>
                 <p class="text-sm mt-2" :class="{
-                    'text-gray-400': descriptionLength <= 1250,
-                    'text-red-500': descriptionLength > 1250
+                    'text-gray-400': descriptionLength <= 3000,
+                    'text-red-500': descriptionLength > 3000
                 }">
-                    {{ descriptionLength }}/1250 characters
+                    {{ descriptionLength }}/3000 characters
                 </p>
                 <p v-if="descriptionError" class="text-red-500 text-sm absolute bottom-[-1.5rem]">
                     {{ descriptionError }}
@@ -85,6 +84,8 @@ import SeriesService from "@/services/SeriesService";
 
 const seriesFields = ['publisher', 'genre', 'character', 'creator'];
 const seriesFieldValues = ref({});
+const descriptionLength = ref(0);
+const descriptionError = ref("");
 
 const props = defineProps<{
     modelValue: Partial<Series>,
@@ -95,26 +96,41 @@ const emit = defineEmits(['update:modelValue', 'next'])
 
 const localSeriesData = reactive({ ...props.modelValue })
 
+watch(
+    () => props.modelValue,
+    (newVal) => {
+        Object.assign(localSeriesData, newVal)
+    },
+    { deep: true }
+)
+
 watch(localSeriesData, (val) => {
     const { thumbnail, ...rest } = val;
     emit('update:modelValue', {
         ...rest,
         thumbnail: props.modelValue.thumbnail, // preserve the original thumbnail
-    });
+    });    
 }, { deep: true });
+
+watch(
+  () => localSeriesData.description,
+  (val) => {
+    descriptionLength.value = val?.length || 0;
+    descriptionError.value = descriptionLength.value > 3000 ? "Description cannot exceed 3000 characters." : "";
+  },
+  { immediate: true }
+);
 
 const goToNext = () => {
     emit('next')
 }
 
-const descriptionLength = ref(0);
-const descriptionError = ref("");
 
 function validateDescription() {
     descriptionLength.value = localSeriesData.description?.length || 0;
 
-    if (descriptionLength.value > 1250) {
-        descriptionError.value = "Description cannot exceed 1250 characters.";
+    if (descriptionLength.value > 3000) {
+        descriptionError.value = "Description cannot exceed 3000 characters.";
     } else {
         descriptionError.value = "";
     }

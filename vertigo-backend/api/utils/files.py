@@ -1,7 +1,6 @@
 import os
 from flask import current_app
 
-
 def init_user_folders(user_id):
     base = os.path.join(current_app.config['user_path'], str(user_id))
 

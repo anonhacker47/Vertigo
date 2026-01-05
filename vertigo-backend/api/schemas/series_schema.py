@@ -25,7 +25,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
       
     character = ma.List(ma.String(validate=validate.Length(min=0, max=280), allow_none=True))
         
-    description = ma.auto_field(validate=validate.Length(min=0, max=1250))
+    description = ma.auto_field(validate=validate.Length(min=0, max=3000))
 
     user_rating = ma.auto_field()
 
@@ -52,6 +52,9 @@ class SeriesSchema(ma.SQLAlchemySchema):
     thumbnail = ma.String()
     timestamp = ma.auto_field(dump_only=True)
     user = ma.Nested(UserSchema, dump_only=True)
+
+    metron_id = ma.String(allow_none=True)
+    metron_url = ma.String(allow_none=True)
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):

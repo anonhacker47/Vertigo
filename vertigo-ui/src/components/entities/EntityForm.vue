@@ -32,16 +32,16 @@
 
       <p
         class="text-sm mt-1"
-        :class="{ 'text-error': charCount > 1250, 'opacity-70': charCount <= 1250 }"
+        :class="{ 'text-error': charCount > 3000, 'opacity-70': charCount <= 3000 }"
       >
-        {{ charCount }}/1250
+        {{ charCount }}/3000
       </p>
     </div>
 
     <!-- Buttons -->
     <div class="flex justify-between mt-6">
       <button class="btn btn-error" @click.prevent="$emit('cancel')">Cancel</button>
-      <button class="btn btn-primary" type="submit" :disabled="charCount > 1250 || !local.title">
+      <button class="btn btn-primary" type="submit" :disabled="charCount > 3000 || !local.title">
         Create {{ pascalType }}
       </button>
     </div>

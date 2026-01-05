@@ -1,8 +1,8 @@
 <template>
-  <Combobox v-model="selected" nullable>
+  <Combobox v-model="selected" nullable by="value">
     <div class="relative w-full">
       <div class="relative w-full cursor-default rounded-lg bg-base-10">
-        <ComboboxInput class="w-full input input-bordered" autoComplete="off" @change="query = $event.target.value"
+        <ComboboxInput class="w-full input input-bordered" autoComplete="off" :displayValue="(item) => item?.value || ''" @change="query = $event.target.value"
           :placeholder="placeholder" />
         <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
           <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -13,7 +13,7 @@
         <ComboboxOptions
           class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
           style="z-index: 1;">
-          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item.value"
+          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item"
             v-slot="{ active }">
             <ul class="">
               <li class="relative cursor-pointer  select-none py-3 pl-10 pr-4" :class="{
@@ -30,7 +30,7 @@
               </li>
             </ul>
           </ComboboxOption>
-          <ComboboxOption v-slot="{ active }" v-if="queryPerson" :value="queryPerson" class="relative cursor-default">
+          <ComboboxOption v-slot="{ active }" v-if="queryPerson" :value="{ id: queryPerson, value: queryPerson }" class="relative cursor-default">
             <ul class="">
             <li class="relative cursor-pointer  select-none py-3 pl-10 pr-4" :class="{
               'bg-base-300 text-white': active,
@@ -70,7 +70,7 @@ const props = defineProps({
   items: Array,
 })
 
-let selected = ref([])
+let selected = ref(null)
 
 let query = ref('')
 
@@ -81,7 +81,7 @@ const queryPerson = computed(() => {
 let filteredItems = computed(() =>
   query.value === ''
     ? props.items
-    : props.items.filter((item:string) =>
+    : props.items.filter((item: { value: string }) =>
       item.value
         .toLowerCase()
         .replace(/\s+/g, '')

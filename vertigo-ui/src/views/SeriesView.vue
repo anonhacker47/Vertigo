@@ -74,16 +74,30 @@
                   {{ series.title }}
                 </span>
               </div>
-              <RouterLink :to="{
-                path: '/collection',
-                query: { series_format: series.series_format }
-              }"
-                class="flex flex-row items-center justify-center gap-2 mt-2 px-2 py-1 rounded-smtext-slate-300 bg-slate-800"
-                :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
-                <p class="text-sm font-bold">
-                  {{ series.series_format }}
+              <div class="flex flex-col gap-2 mt-2">
+                <RouterLink :to="{
+                  path: '/collection',
+                  query: { series_format: series.series_format }
+                }"
+                  class="flex flex-row items-center justify-center gap-2 px-2 py-1 rounded-sm text-slate-300 bg-slate-800"
+                  :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
+                  <p class="text-sm font-bold">
+                    {{ series.series_format }}
+                  </p>
+                </RouterLink>
+
+                <a v-if="series.metron_url" :href="series.metron_url" target="_blank" rel="noopener noreferrer"
+                  class="flex flex-row items-center justify-center border border-slate-600 gap-2 px-2 py-1  rounded-sm text-slate-300 bg-slate-900 hover:bg-slate-700 transition"
+                  :style="`color: rgb${themecolor}`">
+                  <p class="text-sm font-semibold flex items-center gap-2">
+                    View on Metron
+                    <i class="pi pi-external-link text-sm"></i>
+                  </p>
+                </a>
+                <p v-if="series.metron_id" class="mt-1 text-sm text-slate-400 text-center select-all">
+                  Metron ID: {{ series.metron_id }}
                 </p>
-              </RouterLink>
+              </div>
             </div>
             <div class="basis-2/3 shrink h-fit overflow-y-auto my-4">
               <table class="w-full border-collapse">

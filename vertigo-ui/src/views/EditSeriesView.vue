@@ -42,15 +42,16 @@ async function getSeries() {
 
     seriesData.value = {
       ...response,
-      character: Array.isArray(response.character)
-        ? response.character.map((c: any) => c.title)
-        : [],
-      creator: Array.isArray(response.creator)
-        ? response.creator.map((c: any) => c.title)
-        : [],
-      publisher: response.publisher
-        ? response.publisher.title
-        : null,
+
+      character: normalizeEntityArray(response.character),
+      creator: normalizeEntityArray(response.creator),
+
+      genre: normalizeEntityArray(
+        response.genre.map(g => ({ id: g, title: g })),
+        "title"
+      ),
+
+      publisher: normalizeSingleEntity(response.publisher),
     }
 
     imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}`
@@ -122,6 +123,22 @@ function onImageChange(file: File | string) {
     imagesrc.value = URL.createObjectURL(file);
   } else if (typeof file === 'string') {
     imagesrc.value = file;
+  }
+}
+
+function normalizeEntityArray(arr: any[], labelKey = "title") {
+  if (!Array.isArray(arr)) return []
+  return arr.map(item => ({
+    id: item.id ?? item,
+    value: typeof item === "string" ? item : item[labelKey],
+  }))
+}
+
+function normalizeSingleEntity(item: any, labelKey = "title") {
+  if (!item) return null
+  return {
+    id: item.id,
+    value: item[labelKey],
   }
 }
 </script>

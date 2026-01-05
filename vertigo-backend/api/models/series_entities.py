@@ -8,13 +8,14 @@ from flask import current_app, url_for
 
 from api.app import db
 from api.models.updatable import Updateable
+from api.models.metron_identifiable import MetronIdentifiable
 
-class Publisher(Updateable, db.Model):
+class Publisher(Updateable, MetronIdentifiable, db.Model):
     __tablename__ = 'publisher'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
-    description = sqla.Column(sqla.String(1250))
+    description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
     
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -40,12 +41,12 @@ class Publisher(Updateable, db.Model):
     def url(self):
         return url_for('publisher.get', id=self.id)
 
-class Character(Updateable, db.Model):
+class Character(Updateable, MetronIdentifiable, db.Model):
     __tablename__ = 'character'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
-    description = sqla.Column(sqla.String(1250))
+    description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
 
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -71,12 +72,12 @@ class Character(Updateable, db.Model):
     def url(self):
         return url_for('character.get', id=self.id)
 
-class Creator(Updateable, db.Model):
+class Creator(Updateable, MetronIdentifiable, db.Model):
     __tablename__ = 'creator'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
-    description = sqla.Column(sqla.String(1250))
+    description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
 
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -107,7 +108,7 @@ class Genre(Updateable, db.Model):
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
-    description = sqla.Column(sqla.String(1250))
+    description = sqla.Column(sqla.String(3000))
 
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     

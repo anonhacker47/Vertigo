@@ -17,13 +17,15 @@ class PublisherSchema(ma.SQLAlchemySchema):
         min=1, max=280))
     
     description = ma.auto_field(validate=validate.Length(
-        min=0, max=1250))
+        min=0, max=3000))
     
     thumbnail = ma.String()
     slug = ma.String()
 
     timestamp = ma.auto_field(dump_only=True)
-
+    metron_id = ma.Integer(allow_none=True)
+    metron_url = ma.String(allow_none=True)
+    
     @post_dump
     def fix_datetimes(self, data, **kwargs):
         if 'timestamp' in data:

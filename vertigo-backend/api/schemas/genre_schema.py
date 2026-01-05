@@ -15,7 +15,7 @@ class GenreSchema(ma.SQLAlchemySchema):
         min=1, max=280))
     
     description = ma.auto_field(validate=validate.Length(
-        min=0, max=1250))
+        min=0, max=3000))
     
     slug = ma.String()
     timestamp = ma.auto_field(dump_only=True)

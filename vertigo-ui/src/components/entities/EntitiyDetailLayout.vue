@@ -43,10 +43,9 @@
       </div>
 
 
-      <div class="flex flex-col md:flex-row p-8 gap-8 grow justify-center items-center md:justify-start md:items-start">
-
-        <div class="flex flex-col w-fit justify-center border-primary h-80 items-center">
-          <div class="flex flex-col rounded-lg justify-center h-80 w-60 items-center">
+      <div class="flex flex-col md:flex-row p-8 gap-8 justify-center items-center md:justify-start md:items-start">
+        <div class="flex flex-col w-fit justify-center border-primary items-center">
+          <div class="flex my-2 md:my-0 flex-col rounded-lg justify-center h-full w-60 items-center">
             <img v-if="entity.thumbnail" :src="thumbnail(entity.id)" alt=""
               class="rounded-lg object-cover max-h-full w-full" />
 
@@ -61,6 +60,17 @@
           <p class="mt-4 text-sm text-center text-slate-400">
             Added on: {{ formatDate(entity.timestamp) }}
           </p>
+          <p v-if="entity.metron_id" class="mt-1 text-sm text-slate-400 text-center select-all">
+            Metron ID: {{ entity.metron_id }}
+          </p>
+          <a v-if="entity.metron_id" :href="`https://metron.cloud/${type}/${entity.slug}/`" target="_blank"
+            rel="noopener noreferrer"
+            class="flex flex-row items-center justify-center mt-2 px-4 py-2 rounded-sm text-slate-300 bg-slate-900 hover:bg-slate-700 transition">
+            <p class="text-sm font-semibold flex items-center gap-2">
+              View on Metron
+              <i class="pi pi-external-link text-sm"></i>
+            </p>
+          </a>
         </div>
 
         <div class="flex flex-col md:w-2/3 justify-center items-center md:justify-start md:items-start">

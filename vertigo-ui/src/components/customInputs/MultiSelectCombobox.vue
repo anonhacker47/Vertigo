@@ -1,8 +1,9 @@
 <template>
-  <Combobox v-model="model" multiple>
+  <Combobox v-model="model" multiple by="value">
     <div class="relative w-full">
       <div class="relative w-full cursor-default rounded-lg bg-base-10">
-        <ComboboxInput class="w-full input input-bordered"    :displayValue="() => query" @keydown.enter.prevent="handleEnter" autoComplete="off" @change="query = $event.target.value"
+        <ComboboxInput class="w-full input input-bordered" :displayValue="() => query"
+          @keydown.enter.prevent="handleEnter" autoComplete="off" @change="query = $event.target.value"
           :placeholder="selectedValuesPlaceholder" />
         <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
           <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -13,7 +14,7 @@
         <ComboboxOptions
           class="absolute mt-1 max-h-60 w-full dropdown-content overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-2 ring-gray-400/5 focus:outline-none sm:text-sm"
           style="z-index: 1;">
-          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item.value"
+          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item"
             v-slot="{ active, selected }">
             <ul class="">
               <li class="relative cursor-pointer select-none py-3 pl-10 pr-4" :class="{
@@ -30,7 +31,8 @@
               </li>
             </ul>
           </ComboboxOption>
-          <ComboboxOption v-slot="{ active, selected }" v-if="queryItem" :value="queryItem" class="relative cursor-pointer">
+          <ComboboxOption v-slot="{ active, selected }" v-if="queryItem" :value="{ id: queryItem, value: queryItem }"
+            class="relative cursor-pointer">
             <ul>
               <li class="relative cursor-default select-none py-3 pl-10 pr-4" :class="{
                 'bg-base-300 text-white': active,
@@ -50,7 +52,7 @@
       </TransitionRoot>
       <div v-if="model.length" class="flex flex-wrap justify-center mt-2 gap-2 h-18 overflow-auto">
         <div v-for="(item, i) in model" :key="i" class="badge badge-info p-0 bg-base-600 rounded-md">
-          <span class="text-white text-xs px-2 py-1">{{ item }}</span>
+          <span class="text-white text-xs px-2 py-1">{{ item.value }}</span>
           <button type="button" class="ml-1 focus:outline-none self-center" @click="removeItem(item)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               class="inline-block h-4 w-4 stroke-current">
@@ -63,8 +65,8 @@
   </Combobox>
 </template>
 
-<script setup lang="ts"> 
-import { ref, computed, onMounted, watch } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
 import {
   Combobox,
   ComboboxInput,
@@ -73,8 +75,7 @@ import {
   ComboboxOption,
   TransitionRoot,
 } from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon,TrashIcon } from '@heroicons/vue/20/solid'
-import SeriesService from '@/services/SeriesService';
+import { CheckIcon, ChevronUpDownIcon, } from '@heroicons/vue/20/solid'
 
 const props = defineProps({
   field: String,
@@ -105,30 +106,53 @@ let filteredItems = computed(() =>
 )
 
 const selectedValuesPlaceholder = computed(() => {
-  return model.value.length > 0 ? model.value.join(', ') : props.placeholder;
+  return model.value.length > 0
+    ? model.value.map(i => i.value).join(', ')
+    : props.placeholder
 })
 
 const removeItem = (item: any) => {
-  model.value = model.value.filter(p => p !== item);
+  const key = normalize(item.value)
+  model.value = model.value.filter(i => normalize(i.value) !== key)
 }
 
-const addCustomItem = (value: any) => {
-  if (!props.items.find((item: { value: any; }) => item.value === value)) {
-    props.items.push({ id: value, value: value });
+const normalize = (s?: string) => (s ? s.trim().toLowerCase() : "");
+
+const addCustomItem = (value: string) => {
+  const key = normalize(value)
+
+  const existing = props.items.find(
+    i => normalize(i.value) === key
+  )
+
+  const item = existing ?? {
+    id: `custom:${key}`,
+    value
   }
-  if (!model.value.includes(value)) {
-    model.value.push(value);
+
+  if (!existing) {
+    props.items.push(item)
   }
-  query.value = '';
+
+  if (!model.value.find(i => normalize(i.value) === key)) {
+    model.value.push(item)
+  }
+
+  query.value = ''
 }
 
-watch(model, (newVal, oldVal) => {
-  const last = newVal[newVal.length - 1];
-  if (last && !props.items.find((item: { value: string }) => item.value === last)) {
-    addCustomItem(last);
+watch(model, newVal => {
+  const last = newVal[newVal.length - 1]
+  if (!last) return
+
+  const key = normalize(last.value)
+
+  if (!props.items.find(i => normalize(i.value) === key)) {
+    props.items.push(last)
   }
-  query.value = '';
-});
+
+  query.value = ''
+})
 
 const handleEnter = () => {
   if (queryItem.value) {

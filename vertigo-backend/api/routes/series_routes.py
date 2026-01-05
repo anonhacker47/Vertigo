@@ -1,29 +1,24 @@
 import os
-from pstats import SortKey
 import random
-from flask import current_app, json, jsonify
-import sqlite3
+from flask import json, jsonify
 
-from flask import Blueprint, abort, request, send_file, send_from_directory
-from apifairy import authenticate, body, response, other_responses
+from flask import Blueprint, abort, request, send_file
+from apifairy import authenticate, response, other_responses
 from sqlalchemy import func, or_, select
 from api import db
-from api.models.user import User
 from api.models.series import Series
 import api.models.series_entities as series_entities
 from api.models.issue import Issue
 
 from api.schemas.series_schema import SeriesSchema
-from api.schemas.empty_schema import EmptySchema
 
 from api.utils.files import get_user_path
 
 from api.utils.auth import token_auth
-from api.utils.series_field import create_or_get_entities
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import download_thumbnail, save_thumbnail,delete_thumbnail
-
+from api.helpers.thumbnail_processing import download_thumbnail, handle_series_thumbnail, save_thumbnail,delete_thumbnail
+from api.utils.entity_manager import create_or_get_entity, safe_json_list, ENTITY_MODEL_MAP
 
 series = Blueprint('series', __name__)
 series_schema = SeriesSchema()
@@ -44,20 +39,9 @@ def new():
     issue_count = int(request.form.get('issue_count', 0))
     read_count = int(request.form.get('read_count', 0))
     owned_count = int(request.form.get('owned_count', 0))
-    character = request.form.get('character', '[]')
     thumbnail = request.form.get('thumbnail', '').strip()
-
-    # Parse JSON fields within FormData
-    genre = request.form.get('genre', '[]')
-    creator = request.form.get('creator', '[]')
-    publisher = request.form.get('publisher', '[]')
-
-    entities = {
-        'genre': json.loads(genre),
-        'creator': json.loads(creator),
-        'publisher': [publisher],
-        'character': json.loads(character)
-    }
+    metron_id = request.form.get('metron_id', None)
+    metron_url = request.form.get('metron_url', None)
 
     series = Series(
         user=user,
@@ -67,28 +51,44 @@ def new():
         issue_count=issue_count,
         read_count=read_count,
         owned_count=owned_count,
+        metron_id=metron_id,
+        metron_url=metron_url,
     )
     db.session.add(series)
 
-    # Handle entities
-    for entity_type, titles in entities.items():
-        entity_items = create_or_get_entities(entity_type, titles, user)
-        for item in entity_items:
-            getattr(series, entity_type).append(item)
+    entities = {
+        "genre": safe_json_list(request.form.get("genre")),
+        "creator": safe_json_list(request.form.get("creator")),
+        "character": safe_json_list(request.form.get("character")),
+        "publisher": safe_json_list(request.form.get("publisher")),
+    }
 
+    for entity_type, items in entities.items():
+        model = ENTITY_MODEL_MAP[entity_type]
+        rel = getattr(series, entity_type)
+        
+        for item in items:
 
-    if thumbnail.startswith('http'):
+            name = item["value"] if isinstance(item, dict) else item
+            metron_id = item.get("metron_id") if isinstance(item, dict) else None
+            entity = create_or_get_entity(
+                model, name, user, entity_type, metron_id
+            )
 
-        thumbnail_filename, dominant_color = download_thumbnail(thumbnail, title,user.id,series_thumbnail_folder)
-        if thumbnail_filename:
-            series.thumbnail = thumbnail_filename
-            series.dominant_color = dominant_color
+            if not entity:
+                continue
 
-    elif 'thumbnail' in request.files:
-        file = request.files['thumbnail']
-        thumbnail_filename, dominant_color = save_thumbnail(file, title,user.id,series_thumbnail_folder)
-        series.thumbnail = thumbnail_filename
-        series.dominant_color = dominant_color
+            if not rel.filter(model.id == entity.id).first():
+                rel.append(entity)
+
+    handle_series_thumbnail(
+        series=series,
+        thumbnail=thumbnail,
+        files=request.files,
+        title=title,
+        user_id=user.id,
+        folder=series_thumbnail_folder,
+    )
 
     db.session.commit()
     return series_schema.dump(series), 201
@@ -196,32 +196,40 @@ def update_series(id):
         else:
             series.user_rating = float(rating)
 
-    entities = {}
-    if 'genre' in form:
-        entities['genre'] = json.loads(form.get('genre', '[]'))
+    entities = {
+        "genre": safe_json_list(request.form.get("genre")),
+        "creator": safe_json_list(request.form.get("creator")),
+        "character": safe_json_list(request.form.get("character")),
+        "publisher": safe_json_list(request.form.get("publisher")),
+    }
 
-    if 'creator' in form:
-        entities['creator'] = json.loads(form.get('creator', '[]'))
+    for entity_type, items in entities.items():
+        model = ENTITY_MODEL_MAP[entity_type]
+        rel = getattr(series, entity_type)
+        
+        for item in items:
 
-    if 'publisher' in form:
-        entities['publisher'] = [form.get('publisher')] if form.get('publisher') else []
+            name = item["value"] if isinstance(item, dict) else item
+            metron_id = item.get("metron_id") if isinstance(item, dict) else None
+            entity = create_or_get_entity(
+                model, name, user, entity_type, metron_id
+            )
 
-    if 'character' in form and form.get('character'):
-        entities['character'] = json.loads(form.get('character', '[]'))
+            if not entity:
+                continue
 
-    for entity_type, titles in entities.items():
-        entity_items = create_or_get_entities(entity_type, titles,user)
-        setattr(series, entity_type, entity_items)
+            if not rel.filter(model.id == entity.id).first():
+                rel.append(entity)
 
     thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
-    if thumbnail or 'thumbnail' in request.files:
+    if thumbnail and thumbnail != "noimage" or 'thumbnail' in request.files:
 
         old_filename = series.thumbnail  
         new_filename = None
         new_color = None
         error_occurred = False
 
-        if thumbnail == old_filename:
+        if thumbnail == old_filename or thumbnail != "noimage":
             error_occurred = False
 
         else:
@@ -342,6 +350,8 @@ def key():
 def get_series_by_table(table):
     """Retrieve values from a specific table across all series objects."""
 
+    user = token_auth.current_user()
+
     table_class = {
         'character': series_entities.Character,
         'genre': series_entities.Genre,
@@ -349,15 +359,16 @@ def get_series_by_table(table):
         'publisher': series_entities.Publisher,
         'series_format': Series.series_format
     }.get(table.lower())
+
     if table_class is None:
         return jsonify({'error': 'Invalid table name'}), 400
         
     if table == 'series_format':
-        values = db.session.query(Series.series_format).distinct().filter(Series.series_format.isnot(None)).all()
+        values = db.session.query(Series.series_format).distinct().filter(Series.user_id == user.id,Series.series_format.isnot(None)).all()
         values = {value[0] for value in values if value[0]}
-        return jsonify(sorted(values))
+        return jsonify(sorted(values))    
     
-    values = db.session.query(table_class.title).distinct().all()
+    values = db.session.query(table_class.title).distinct().filter(table_class.user_id == user.id).all()
     values = {value.title for value in values}
 
     # Sort and format the final list
