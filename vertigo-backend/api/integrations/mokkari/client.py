@@ -3,15 +3,15 @@ from mokkari.session import Session
 from mokkari.sqlite_cache import SqliteCache
 from mokkari.exceptions import CacheError
 
-_mokkari_cache: SqliteCache | None = None
-
 def get_mokkari_cache():
-    """Return a cache instance."""
     cache_path = current_app.config.get("METRON_CACHE_DB")
     if not cache_path:
         return None
-    # Each call creates a new SqliteCache instance (thread-safe)
-    return SqliteCache(cache_path)
+
+    try:
+        return SqliteCache(cache_path)
+    except CacheError:
+        return None
 
 
 def get_mokkari_session():
