@@ -13,7 +13,7 @@ import shutil
 import re
 import uuid
 from PIL import Image
-
+from api.helpers.cover_bg_generator import submit_background_regeneration
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 }
@@ -38,6 +38,7 @@ def handle_series_thumbnail(series, thumbnail, files, title, user_id, folder):
     if thumbnail_filename:
         series.thumbnail = thumbnail_filename
         series.dominant_color = dominant_color
+    submit_background_regeneration(get_user_path(user_id, folder))
 
 def get_or_download_thumbnail(url: str, title: str, user_id: int, folder: str):
     """Return cached (path, dominant_color) for thumbnail, downloading if needed."""
@@ -176,9 +177,9 @@ def calculate_dominant_color(filename,folder_path):
 def delete_thumbnail(filename, user_id, folder):
     base = get_user_path(user_id, folder)
     file_path = os.path.join(base, filename)
-
     if os.path.exists(file_path):
         os.remove(file_path)
+    submit_background_regeneration(base)
 
 def delete_user_images(user_id):
     """

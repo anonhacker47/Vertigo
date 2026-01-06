@@ -77,7 +77,7 @@ export default {
   },
 
   getSeriesThumbBg() {
-    return Api().get(`/series/thumbnail/bg`);
+    return Api().defaults.baseURL +`/series/thumbnail/bg`;
   },
 
   getSeriesNeighbours(id: number) {

@@ -1,6 +1,6 @@
 import os
 import random
-from flask import json, jsonify
+from flask import current_app, json, jsonify
 
 from flask import Blueprint, abort, request, send_file
 from apifairy import authenticate, response, other_responses
@@ -19,6 +19,7 @@ from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
 from api.helpers.thumbnail_processing import download_thumbnail, handle_series_thumbnail, save_thumbnail,delete_thumbnail
 from api.utils.entity_manager import create_or_get_entity, safe_json_list, ENTITY_MODEL_MAP
+from api.helpers.cover_bg_generator import BACKGROUND_FILE
 
 series = Blueprint('series', __name__)
 series_schema = SeriesSchema()
@@ -281,19 +282,16 @@ def delete(id):
         abort(403)
 
     issues = db.session.query(Issue).filter(Issue.series_id==id).all()
+
     for issue in issues:
         db.session.delete(issue)    
     db.session.delete(series)
 
     if series.thumbnail:    
-
         cover_dir = get_user_path(series.user.id, series_thumbnail_folder)
         file_path = os.path.join(cover_dir, series.thumbnail)
     
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        else:
-            print("The file does not exist") 
+        delete_thumbnail(file_path, series.user.id, series_thumbnail_folder)
 
     db.session.commit()
     return '', 204
@@ -378,19 +376,15 @@ def get_series_by_table(table):
 
 @series.route('/series/thumbnail/bg', methods=['GET'])
 def get_series_with_thumbnail():
-    """Retrieve IDs of series with non-null thumbnails"""
-    series_with_thumbnail = db.session.query(Series.id).filter(Series.thumbnail.isnot(None)).all()
-    series_ids = [series[0] for series in series_with_thumbnail]
-    
-    if series_ids:
-        while len(series_ids) < 80:
-            series_ids.extend(series_ids)
-        random.shuffle(series_ids)
-        series_ids = series_ids[:80]
-    else:
-        series_ids = []
-    
-    return jsonify(series_ids)
+    """Retrieve The Login Page Background"""
+    cover_bg = os.path.join(current_app.config['sql_path'],BACKGROUND_FILE)
+
+    try:
+        return send_file(cover_bg)
+    except FileNotFoundError:
+        return jsonify("Image file not found"), 404
+    except Exception as e:
+        return jsonify(f"Error retrieving image: {str(e)}"), 500
 
 @series.route('/series/<int:id>/neighbors', methods=['GET'])
 @authenticate(token_auth)

@@ -1,16 +1,14 @@
 <template>
-  <div class="background-container bg-cover bg-no-repeat"
-    :style="{ backgroundImage: showDefaultWall ? 'url(' + img + ')' : '' }">
-    <div class="background-images" :class="!showDefaultWall ? 'bg-base-100' : 'bg-none'">
-      <div class="transform-class -skew-y-6 -translate-y-20 backdrop-blur-lg backdrop-brightness-50">
-        <TransitionGroup enter-active-class="animate__animated animate__flipInX"
-          leave-active-class="animate__animated animate__fadeOut">
-          <div v-for="(image, index) in images" :key="index">
-            <img :src="image" class="background-image" alt="comicbooks tile backdrop" />
-          </div>
-        </TransitionGroup>
-      </div>
-    </div>
+  <div class="background-container">
+    <!-- Skewed image layer -->
+    <div class="background-image-layer bg-cover bg-no-repeat -skew-y-6" :style="{
+      backgroundImage: showDefaultWall
+        ? `url(${img})`
+        : `url(${bgUrl})`
+    }"></div>
+
+    <!-- Flat overlay -->
+    <div class="overlay-layer"></div>
 
     <div class="form-wrapper absolute bg-base-100 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.2)] p-6">
       <div class="card-body mx-4 md:mx-8 ga">
@@ -51,14 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useUserStore } from "../store/user";
+  import { ref, onMounted } from "vue";
+  import { useUserStore } from "@/store/user";
 import { useRouter } from "vue-router";
 import AuthenticationService from "../services/AuthenticationService";
 import SeriesService from "../services/SeriesService";
 import img from "../assets/logo.svg";
 
-// PrimeVue Components
 import InputText from "primevue/inputtext";
 import Password from "primevue/password";
 import FloatLabel from "primevue/floatlabel";
@@ -70,7 +67,7 @@ const router = useRouter();
 const message = ref("");
 const username = ref("");
 const password = ref("");
-const images = ref([]);
+const bgUrl = ref("");
 const showDefaultWall = ref(false);
 
 async function login() {
@@ -98,73 +95,44 @@ async function login() {
   }
 }
 
-const fetchImages = async () => {
+const fetchBackground = async () => {
   try {
-    const response = await SeriesService.getSeriesThumbBg();
-    if (response.data.length > 0) {
-      const seriesIds = response.data;
-      const promises = seriesIds.map(async (id: number) =>
-        SeriesService.getSeriesImageById(id)
-      );
-      images.value = await Promise.all(promises);
-      showDefaultWall.value = false;
-    } else {
-      showDefaultWall.value = true;
-    }
-  } catch (error) {
-    console.error("Error fetching images:", error);
+    const url = SeriesService.getSeriesThumbBg();
+    // cache bust to force reload after regeneration
+    bgUrl.value = `${url}?t=${Date.now()}`;
+    showDefaultWall.value = false;
+  } catch (e) {
+    console.log(e);
   }
 };
 
-onMounted(() => {
-  fetchImages();
-});
+onMounted(fetchBackground);
 </script>
 
-<style scoped>
-.error {
-  color: red;
-}
 
+<style scoped>
 .background-container {
   width: 100vw;
   height: 100vh;
+  position: relative;
   overflow: hidden;
-  position: relative;
 }
 
-.background-images {
-  position: relative;
-  height: 100%;
-  width: 100%;
-}
-
-.transform-class {
-  height: 130%;
-  width: 100%;
-  display: grid;
-  grid-auto-flow: dense;
-  grid-template-columns: repeat(8, 2fr);
-  grid-auto-rows: 20rem;
-  margin-top: -4rem;
-}
-
-.transform-class::after {
-  content: "";
+/* This is the ONLY skewed element */
+.background-image-layer {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(1px);
-  background-color: rgba(27, 17, 46, 0.459);
-  transform: scale(1);
+  inset: -8%;
+  z-index: 0;
+  transform-origin: center;
 }
 
-.background-image {
-  height: 20rem;
-  width: 13.5rem;
-  padding: 0.2rem;
+/* Overlay stays flat */
+.overlay-layer {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(1px) brightness(0.7);
+  background-color: rgba(27, 17, 46, 0.45);
+  z-index: 10;
 }
 
 .form-wrapper {
@@ -172,8 +140,10 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* perfectly centers it */
-  z-index: 50;
-  /* above overlay */
+  z-index: 20;
+}
+
+.error {
+  color: red;
 }
 </style>
