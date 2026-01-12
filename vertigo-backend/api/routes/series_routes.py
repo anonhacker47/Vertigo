@@ -43,6 +43,7 @@ def new():
     thumbnail = request.form.get('thumbnail', '').strip()
     metron_id = request.form.get('metron_id', None)
     metron_url = request.form.get('metron_url', None)
+    manga = request.form.get('manga', 'false').lower() == 'true'
 
     series = Series(
         user=user,
@@ -54,6 +55,7 @@ def new():
         owned_count=owned_count,
         metron_id=metron_id,
         metron_url=metron_url,
+        manga=manga,
     )
     db.session.add(series)
 
@@ -73,7 +75,7 @@ def new():
             name = item["value"] if isinstance(item, dict) else item
             metron_id = item.get("metron_id") if isinstance(item, dict) else None
             entity = create_or_get_entity(
-                model, name, user, entity_type, metron_id
+                model, name, user, entity_type, metron_id, series_is_manga=manga
             )
 
             if not entity:

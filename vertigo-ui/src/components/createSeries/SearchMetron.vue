@@ -1,9 +1,9 @@
   <template>
-    <div class="mb-2 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
+    <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
       <div class="mb-2 flex items-center gap-2">
         <i class="pi pi-search text-lg"></i>
         <h3 class="text-sm font-semibold text-base-content">
-          Search Metron (optional)
+          Search Comics (MetronDB)
         </h3>
       </div>
 
@@ -54,7 +54,7 @@
 
             <div class="flex flex-row gap-4">
 
-              <Button as="a" :href="seriesDetail.resource_url" target="_blank" rel="noopener noreferrer"
+              <Button as="a" :href="seriesDetail.metron_url" target="_blank" rel="noopener noreferrer"
                 label="View on Metron" icon="pi pi-external-link" severity="info" class="w-fit" />
               <Button label="Load Creators & Characters" icon="pi pi-users" class="w-fit" severity="secondary"
                 :loading="entitiesLoading" @click="fetchSeriesEntities(seriesDetail.metron_id)" />
@@ -105,7 +105,7 @@ import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import MokkariService from '@/services/MokkariService'
+import MokkariService from '@/services/MetronService'
 import ProgressSpinner from 'primevue/progressspinner'
 
 const emit = defineEmits(['select'])
@@ -128,7 +128,7 @@ async function search() {
   seriesDetail.value = null
 
   try {
-    const res = await MokkariService.getSeriesbyQuery(query.value)
+    const res = await MokkariService.getSeriesByQuery(query.value)
     results.value = res.data.items || []
     if (results.value.length) showModal.value = true
   } catch {

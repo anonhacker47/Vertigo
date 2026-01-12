@@ -7,7 +7,7 @@ export interface Series {
     issue_count: number;
     main_char_id: string | null;
     main_char_type: string | null;
-    manga: number;
+    manga: boolean;
     owned_count: number;
     publisher: any;
     read_count: number;

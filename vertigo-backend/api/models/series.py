@@ -39,7 +39,7 @@ class Series(Updateable,MetronIdentifiable, db.Model):
     issue = sqla_orm.relationship('Issue', back_populates='series',
                                   lazy='noload', cascade='all, delete-orphan')
     
-    manga = sqla.Column(sqla.Integer)
+    manga = sqla.Column(sqla.Boolean, default=False)
     release_date = sqla.Column(sqla.DateTime)
     
     purchase_cost = sqla.Column(sqla.Float)

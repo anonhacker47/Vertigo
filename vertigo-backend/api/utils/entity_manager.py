@@ -1,11 +1,10 @@
 from api.app import db
-from flask import current_app, json
-from flask import current_app
-from api.background import executor
+from flask import json
 from api.models.series_entities import Publisher, Creator, Character, Genre
 from api import db
 from api.integrations.mokkari.utils import fetch_metron_entity_info
 from api.helpers.thumbnail_processing import get_or_download_thumbnail
+from api.integrations.mokkari.task_queue import submit_mokkari_task
 
 ENTITY_MODEL_MAP = {
     "publisher": Publisher,
@@ -27,47 +26,42 @@ def safe_json_list(val):
     except Exception:
         return []
     
-def enrich_entity(app,entity_id, model_name, metron_type, metron_id, name, user_id):
+def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
     model = ENTITY_MODEL_MAP.get(model_name)
     folder = FOLDER_MAP.get(metron_type)
 
     if not model or not folder:
         return
 
-    with app.app_context():
-        try:
-            entity = db.session.get(model, entity_id)
-            if not entity:
-                return
-
-            info = fetch_metron_entity_info(metron_type, metron_id)
-            if not info:
-                return
-
-            if hasattr(entity, "description"):
-                entity.description = getattr(info, "desc", None)
-
-            if getattr(info, "image", None):
-                thumb, _ = get_or_download_thumbnail(
-                    str(info.image),
-                    name,
-                    user_id,
-                    folder
-                )
-                if thumb:
-                    entity.thumbnail = thumb
-
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
-        finally:
-            db.session.remove()
+    try:
+        entity = db.session.get(model, entity_id)
+        if not entity:
+            return
+        info = fetch_metron_entity_info(metron_type, metron_id)
+        if not info:
+            return
+        if hasattr(entity, "description"):
+            entity.description = getattr(info, "desc", None)
+        if getattr(info, "image", None):
+            thumb, _ = get_or_download_thumbnail(
+                str(info.image),
+                name,
+                user_id,
+                folder
+            )
+            if thumb:
+                entity.thumbnail = thumb
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+    finally:
+            db.session.close()
 
 def make_entity_cache_key(model, user, title):
     return f"{model.__tablename__}:{user.id}:{title.lower()}"
 
-def create_or_get_entity(model, name, user, metron_type=None, metron_id=None):
+def create_or_get_entity(model, name, user, metron_type=None, metron_id=None, series_is_manga=False):
     if not name:
         return None
 
@@ -86,17 +80,21 @@ def create_or_get_entity(model, name, user, metron_type=None, metron_id=None):
         "user": user,
     }
 
-    if hasattr(model, "metron_id"):
+    if not series_is_manga and hasattr(model, "metron_id"):
         kwargs["metron_id"] = metron_id
 
     entity = model(**kwargs)
     db.session.add(entity)
     db.session.commit()
 
-    if metron_type and hasattr(model, "metron_id"):
-        executor.submit(
+    if (
+        not series_is_manga
+        and metron_type
+        and hasattr(model, "metron_id")
+        and entity.metron_id
+    ):
+        submit_mokkari_task(
             enrich_entity,
-            current_app._get_current_object(),
             entity.id,
             model.__name__.lower(),
             metron_type,

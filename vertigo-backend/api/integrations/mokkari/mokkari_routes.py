@@ -12,7 +12,7 @@ mokkari = Blueprint('mokkari', __name__, url_prefix="/api")
 class SearchQuerySchema(Schema):
     query = fields.Str(required=True)
 
-@mokkari.route("/metron_search", methods=["GET"])
+@mokkari.route("/metron/series/search", methods=["GET"])
 @arguments(SearchQuerySchema, location="query")
 @authenticate(token_auth)
 def search_series(args):
@@ -44,14 +44,10 @@ def search_series(args):
     except ApiError as e:
         return {"error": "metron_error", "message": str(e)}, 502
 
-class SeriesIdSchema(Schema):
-    series_id = fields.Int(required=True)
 
-@mokkari.route("/series_detail", methods=["GET"])
-@arguments(SeriesIdSchema, location="query")
+@mokkari.route("/metron/series/<int:series_id>", methods=["GET"])
 @authenticate(token_auth)
-def get_series_detail(args):
-    series_id = args["series_id"]
+def get_series_detail(series_id):
     session = get_mokkari_session()
     if not session:
         return {"error": "no_session"}, 500
@@ -91,14 +87,10 @@ def get_series_detail(args):
     except ApiError as e:
         return {"error": "metron_error", "message": str(e)}, 502
     
-class SeriesCreatorsSchema(Schema):
-    series_id = fields.Int(required=True)
 
-@mokkari.route("/series_entities", methods=["GET"])
-@arguments(SeriesCreatorsSchema, location="query")
+@mokkari.route("/metron/series/<int:series_id>/entities", methods=["GET"])
 @authenticate(token_auth)
-def get_series_entities(args):
-    series_id = args["series_id"]
+def get_series_entities(series_id):
     session = get_mokkari_session()
 
     if not session:

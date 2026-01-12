@@ -13,7 +13,6 @@
                     <option>Hard Cover</option>
                     <option>Omnibus</option>
                     <option>Absolute Edition</option>
-                    <option>Manga</option>
                 </select>
             </div>
             <div class=" w-full">

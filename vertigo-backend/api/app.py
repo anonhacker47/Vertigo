@@ -71,8 +71,12 @@ def create_app(config_class=Config):
     from api.routes.entities.character_routes import character
     app.register_blueprint(character, url_prefix='/api')
 
+    #integrations
     from api.integrations.mokkari.mokkari_routes import mokkari
     app.register_blueprint(mokkari, url_prefix='/api')
+
+    from api.integrations.jikan.jikan_routes import jikan
+    app.register_blueprint(jikan, url_prefix='/api')
 
     # define the shell context
     @app.shell_context_processor
@@ -122,5 +126,8 @@ def create_app(config_class=Config):
         # Werkzeug sometimes does not flush the request body so we do it here
         request.get_data()
         return response
+
+    from api.integrations.mokkari.task_queue import start_mokkari_workers
+    start_mokkari_workers(app, num_workers=1)
 
     return app

@@ -11,7 +11,21 @@
 
     <div class="w-[90%] md:w-2/4 flex flex-col items-start justify-start">
 
-      <SearchMetron @select="onMetronSelect" />
+      <div class="flex gap-8 mb-4">
+        <div class="w-full max-w-xs rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
+          <div class="mb-4 w-full max-w-xs">
+            <label class="mb-1 block text-sm font-medium text-base-content">
+              Series Type
+            </label>
+            <Select v-model="importSource" :options="seriesTypeOptions" optionLabel="label" optionValue="value"
+              placeholder="Select series type" class="w-full" />
+          </div>
+        </div>
+
+        <SearchMetron v-if="importSource === 'comic'" @select="onMetronSelect" />
+
+        <SearchManga v-else @select="onMetronSelect" />
+      </div>
       <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
       <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" :showIssueSection="showIssueSection"
         :seriesData="seriesData" :issues="issues" :imagesrc="imagesrc" @cancel="showIssueSection = false"
@@ -22,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { ref, toRaw, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
@@ -35,8 +49,18 @@ import SeriesForm from "@/components/createSeries/CreateSeriesForm.vue";
 import IssuesForm from "@/components/createSeries/IssuesForm.vue";
 import { useToast } from "primevue";
 import SearchMetron from "@/components/createSeries/SearchMetron.vue";
+import SearchManga from "@/components/createSeries/SearchManga.vue";
+import Select from "primevue/dropdown";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
+
+
+const importSource = ref<'comic' | 'manga'>('comic')
+
+const seriesTypeOptions = [
+  { label: 'Comics', value: 'comic' },
+  { label: 'Manga', value: 'manga' },
+];
 
 const imageLinkInput = ref("");
 
@@ -62,23 +86,42 @@ const seriesData = ref<Partial<Series>>({
     name: null
   },
   read_count: 0,
+  manga: false,
   owned_count: 0,
   metron_id: null,
   metron_url: null,
 })
 
 function onMetronSelect(seriesDetail, seriesEntities) {
-  console.log('Selected series detail:', seriesDetail)
-  console.log('Selected series entities:', seriesEntities)
+
+  seriesData.value = {
+    title: '',
+    creator: [],
+    description: '',
+    genre: [],
+    character: [],
+    series_format: '',
+    issue_count: 1,
+    thumbnail: '',
+    publisher: { id: null, name: '' },
+    read_count: 0,
+    manga: importSource.value === 'manga',
+    owned_count: 0,
+    metron_id: null,
+    metron_url: null,
+  };
+  imageLinkInput.value = '';
+
 
   seriesData.value.title = seriesDetail.name
-  imageLinkInput.value = seriesDetail.image_first_issue || ''
+  imageLinkInput.value = seriesDetail.image_first_issue || seriesDetail.image_url || ''
   seriesData.value.publisher = seriesDetail.publisher || ''
   seriesData.value.description = seriesDetail.desc || ''
   seriesData.value.genre = seriesDetail.genres || []
   seriesData.value.issue_count = seriesDetail.issue_count || 1
   seriesData.value.metron_id = seriesDetail.metron_id || null
   seriesData.value.metron_url = seriesDetail.metron_url || null
+  seriesData.value.manga = importSource.value === 'manga'
 
   if (seriesEntities) {
     seriesData.value.creator = seriesEntities.creators || []
@@ -103,6 +146,10 @@ watch(
   { immediate: true }
 );
 
+watch(importSource, (source) => {
+  seriesData.value.manga = source === 'manga';
+});
+
 watch(
   issues,
   (newIssues) => {
@@ -119,8 +166,6 @@ watch(
   },
   { deep: true }
 );
-
-const isMetronHydrated = computed(() => !!seriesData.value.metron_id);
 
 async function createSeries() {
   if (!seriesData.value.title.trim()) {
@@ -139,13 +184,14 @@ async function createSeries() {
       creator: seriesData.value.creator || [],
       description: seriesData.value.description || "",
       genre: seriesData.value.genre || [],
-      character: seriesData.value.character || "",
+      character: seriesData.value.character || [],
       series_format: seriesData.value.series_format || "",
       issue_count: seriesData.value.issue_count || 0,
       read_count: read_count,
       owned_count: owned_count,
       metron_id: seriesData.value.metron_id || null,
       metron_url: seriesData.value.metron_url || null,
+      manga: seriesData.value.manga || false,
     };
 
     const formData = new FormData();
@@ -170,6 +216,14 @@ async function createSeries() {
 
     if (seriesData.value.thumbnail) {
       formData.append("thumbnail", seriesData.value.thumbnail);
+    }
+    
+    const rawPublisher = toRaw(seriesData.value.publisher);
+
+    if (!rawPublisher || !rawPublisher.value) {
+      formData.delete("publisher");
+    } else {
+      formData.set("publisher", JSON.stringify([rawPublisher]));
     }
 
     const response = await SeriesService.addSeries(formData);

@@ -2,7 +2,7 @@ import os
 import random
 from PIL import Image, ImageOps
 from flask import current_app
-from api.background import executor
+from api.integrations.mokkari.task_queue import submit_mokkari_task
 
 TILE_W = 216
 TILE_H = 320
@@ -87,4 +87,4 @@ def regenerate_background(input_folder: str):
     generate_background_image(image_paths, output_path)
 
 def submit_background_regeneration(input_folder: str):
-    executor.submit(regenerate_background, input_folder)
+    submit_mokkari_task(regenerate_background, input_folder)
