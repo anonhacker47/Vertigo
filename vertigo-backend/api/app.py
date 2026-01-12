@@ -57,6 +57,8 @@ def create_app(config_class=Config):
     app.register_blueprint(tokens, url_prefix='/api')
     from api.routes.users_routes import users
     app.register_blueprint(users, url_prefix='/api')
+    from api.routes.server_routes import server
+    app.register_blueprint(server, url_prefix='/api')
     from api.routes.series_routes import series
     app.register_blueprint(series, url_prefix='/api') 
     from api.routes.issue_routes import issues

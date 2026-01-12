@@ -45,3 +45,4 @@ class Config:
     APIFAIRY_TITLE = 'Vertigo API'
     APIFAIRY_VERSION = '0.0.2'
     APIFAIRY_UI = os.environ.get('DOCS_UI', 'elements')
+    SERVER_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
