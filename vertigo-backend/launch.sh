@@ -24,6 +24,13 @@ xdg-open http://localhost:6166 >/dev/null 2>&1 &
 
 # Activate the environment and run the Python app
 source "$VENV_DIR/bin/activate"
+echo "[INFO] Running database migrations..."
+alembic upgrade head
+if [ $? -ne 0 ]; then
+    echo "[ERROR] Database migrations failed."
+    exit 1
+fi
+
 python -m vertigo.py
 if [ $? -ne 0 ]; then
     echo "[ERROR] Failed to launch app."

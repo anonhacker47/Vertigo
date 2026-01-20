@@ -1,8 +1,12 @@
 from api import create_app
 from waitress import serve
 import logging
+import sys
 logger = logging.getLogger('waitress')
 logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 def upgrade_database():
     try:

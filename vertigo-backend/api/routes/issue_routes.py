@@ -233,9 +233,6 @@ def delete(id):
     else:
         return jsonify({"error": "Cannot delete issues that are not the last in the series"}), 403
 
-
-
-
 # @series.route('/feed', methods=['GET'])
 # @authenticate(token_auth)
 # @paginated_response(multi_series_schema, order_by=Series.title,

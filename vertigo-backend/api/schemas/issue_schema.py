@@ -33,8 +33,10 @@ class IssueSchema(ma.SQLAlchemySchema):
     timestamp = ma.auto_field(dump_only=True)
 
     series = ma.Nested(SeriesSchema, dump_only=True)
+    series_id = ma.auto_field(dump_only=True)
     
     user = ma.Nested(UserSchema, dump_only=True)
+    user_id = ma.auto_field(dump_only=True)
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):
