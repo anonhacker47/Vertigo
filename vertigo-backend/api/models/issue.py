@@ -6,11 +6,10 @@ from slugify import slugify
 from flask import url_for
 
 from api.app import db
-from api.models.updatable import Updateable
-from api.models.metron_identifiable import MetronIdentifiable
+from api.models.syncable import Syncable
 
 
-class Issue(Updateable, MetronIdentifiable, db.Model):
+class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
     __tablename__ = 'issue'
 
     id = sqla.Column(sqla.Integer, primary_key=True)

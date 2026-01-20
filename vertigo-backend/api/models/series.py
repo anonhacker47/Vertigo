@@ -9,10 +9,8 @@ from flask import current_app, url_for
 
 from api.app import db
 from api.helpers.thumbnail_processing import save_thumbnail
-from api.models.updatable import Updateable
-import api.models.associations as associations
-from api.models.metron_identifiable import MetronIdentifiable
-class Series(Updateable,MetronIdentifiable, db.Model):
+from api.models.syncable import Syncable
+class Series(Updateable, MetronIdentifiable, Syncable, db.Model):
     __tablename__ = 'series'
 
     id = sqla.Column(sqla.Integer, primary_key=True)

@@ -232,6 +232,8 @@ def delete(id):
         return '', 204
     else:
         return jsonify({"error": "Cannot delete issues that are not the last in the series"}), 403
+    else:
+        return jsonify({"error": "Cannot delete issues that are not the last in the series"}), 403
 
 
 
