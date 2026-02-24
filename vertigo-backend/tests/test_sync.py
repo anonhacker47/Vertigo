@@ -40,6 +40,10 @@ class TestSync(BaseTestCase):
         data = rv.get_json()
         self.assertEqual(len(data['series']), 2)
         
+        # Test user data
+        self.assertIn('user', data)
+        self.assertEqual(data['user']['username'], 'test')
+        
         # Test since
         t1 = s1.last_updated
         time.sleep(0.1)

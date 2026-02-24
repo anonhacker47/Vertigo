@@ -9,11 +9,13 @@ from api.models.issue import Issue
 from api.models.deleted_record import DeletedRecord
 from api.schemas.series_schema import SeriesSchema
 from api.schemas.issue_schema import IssueSchema
+from api.schemas.user_schema import UserSchema
 from api.utils.auth import token_auth
 
 sync = Blueprint('sync', __name__)
 series_schema = SeriesSchema(many=True)
 issues_schema = IssueSchema(many=True)
+user_schema = UserSchema()
 
 @sync.route('/sync', methods=['GET'])
 @authenticate(token_auth)
@@ -59,5 +61,6 @@ def get_sync():
         "deleted": {
             "series": deleted_series_ids,
             "issues": deleted_issues_ids
-        }
+        },
+        "user": user_schema.dump(user)
     })
