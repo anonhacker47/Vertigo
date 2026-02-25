@@ -33,7 +33,7 @@
   <Transition class="hidden md:flex" enter-active-class="animate__animated animate__fadeIn"
     leave-active-class="animate__animated animate__fadeOut animate__faster">
     <div class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
-      <div class="flex flex-col max-w-7xl md:flex-row justify-between items-center container mx-auto">
+      <div class="flex flex-col max-w-7xl md:flex-row justify-between items-center container mx-auto px-8">
         <RouterLink :to="{ name: `AddSeries` }" custom v-slot="{ navigate }">
           <Button class="md:flex-none" @click="navigate">
             Add Series
