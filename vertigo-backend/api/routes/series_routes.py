@@ -73,9 +73,12 @@ def new():
         for item in items:
 
             name = item["value"] if isinstance(item, dict) else item
-            metron_id = item.get("metron_id") if isinstance(item, dict) else None
+            external_id = None
+            if isinstance(item, dict):
+                external_id = item.get("mal_id") if manga else item.get("metron_id")
+                
             entity = create_or_get_entity(
-                model, name, user, entity_type, metron_id, series_is_manga=manga
+                model, name, user, entity_type, external_id, series_is_manga=manga
             )
 
             if not entity:
@@ -213,9 +216,12 @@ def update_series(id):
         for item in items:
 
             name = item["value"] if isinstance(item, dict) else item
-            metron_id = item.get("metron_id") if isinstance(item, dict) else None
+            external_id = None
+            if isinstance(item, dict):
+                external_id = item.get("mal_id") if series.manga else item.get("metron_id")
+                
             entity = create_or_get_entity(
-                model, name, user, entity_type, metron_id
+                model, name, user, entity_type, external_id, series_is_manga=series.manga
             )
 
             if not entity:

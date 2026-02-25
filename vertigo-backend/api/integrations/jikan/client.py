@@ -19,7 +19,6 @@ class JikanSession:
         resp.raise_for_status()
         return resp.json().get("data")
 
-    # ---- Manga APIs ----
     def search_manga(self, query):
         return self._get("/manga", {"q": query})
 
@@ -28,6 +27,15 @@ class JikanSession:
 
     def manga_characters(self, mal_id):
         return self._get(f"/manga/{mal_id}/characters")
+
+    def character(self, mal_id):
+        return self._get(f"/characters/{mal_id}")
+
+    def person(self, mal_id):
+        return self._get(f"/people/{mal_id}")
+
+    def magazine(self, mal_id):
+        return self._get(f"/magazines/{mal_id}")
 
 
 def get_jikan_session():

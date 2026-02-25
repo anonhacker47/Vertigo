@@ -9,8 +9,9 @@ from flask import current_app, url_for
 from api.app import db
 from api.models.updatable import Updateable
 from api.models.metron_identifiable import MetronIdentifiable
+from api.models.mal_identifiable import MalIdentifiable
 
-class Publisher(Updateable, MetronIdentifiable, db.Model):
+class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     __tablename__ = 'publisher'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -41,7 +42,7 @@ class Publisher(Updateable, MetronIdentifiable, db.Model):
     def url(self):
         return url_for('publisher.get', id=self.id)
 
-class Character(Updateable, MetronIdentifiable, db.Model):
+class Character(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     __tablename__ = 'character'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -72,7 +73,7 @@ class Character(Updateable, MetronIdentifiable, db.Model):
     def url(self):
         return url_for('character.get', id=self.id)
 
-class Creator(Updateable, MetronIdentifiable, db.Model):
+class Creator(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     __tablename__ = 'creator'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -103,7 +104,7 @@ class Creator(Updateable, MetronIdentifiable, db.Model):
     def url(self):
         return url_for('creator.get', id=self.id)
 
-class Genre(Updateable, db.Model):
+class Genre(Updateable, MalIdentifiable, db.Model):
     __tablename__ = 'genre'
 
     id = sqla.Column(sqla.Integer, primary_key=True)

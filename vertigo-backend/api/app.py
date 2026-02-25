@@ -108,30 +108,31 @@ def create_app(config_class=Config):
     @app.route('/favicon.ico')
     def favicon():
         try:
-            # Absolute path to the favicon
             favicon_path = os.path.join(app.root_path, 'wwwroot', 'favicon.ico')
     
             if not os.path.exists(favicon_path):
-                print(f"⚠️ favicon.ico not found at {favicon_path}")
-                return '', 204  # No Content if missing
+                print(f"favicon.ico not found at {favicon_path}")
+                return '', 204  
     
             return send_file(favicon_path, mimetype='image/vnd.microsoft.icon')
     
         except Exception as e:
-            print(f"⚠️ Error serving favicon.ico: {e}")
-            return '', 204  # Prevent 500 JSON
+            print(f"Error serving favicon.ico: {e}")
+            return '', 204  
     
     @app.route('/api/docs')
-    def docs():  # pragma: no cover
+    def docs(): 
         return redirect(url_for('apifairy.docs'))
 
     @app.after_request
     def after_request(response):
-        # Werkzeug sometimes does not flush the request body so we do it here
         request.get_data()
         return response
 
     from api.integrations.mokkari.task_queue import start_mokkari_workers
     start_mokkari_workers(app, num_workers=1)
+
+    from api.integrations.jikan.task_queue import start_jikan_workers
+    start_jikan_workers(app, num_workers=1)
 
     return app
