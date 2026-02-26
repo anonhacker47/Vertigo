@@ -36,7 +36,11 @@ export default {
     return response.data;
   },
 
-  getCharacterImageById(id: Entity["id"]) {
+  getCharacterImageById(id: Entity["id"], lastUpdated?: string | Date) {
+    if (lastUpdated) {
+      const timestamp = new Date(lastUpdated).getTime();
+      return Api().defaults.baseURL + `/character/image/${id}?t=${timestamp}`;
+    }
     return Api().defaults.baseURL + `/character/image/${id}`;
   },
 

@@ -27,6 +27,7 @@ class CharacterSchema(ma.SQLAlchemySchema):
     
     slug = ma.String()
     timestamp = ma.auto_field(dump_only=True)
+    last_updated = ma.auto_field(dump_only=True)
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):

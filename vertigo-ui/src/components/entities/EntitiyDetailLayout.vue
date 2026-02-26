@@ -46,7 +46,7 @@
       <div class="flex flex-col md:flex-row p-8 gap-8 justify-center items-center md:justify-start md:items-start">
         <div class="flex flex-col w-fit justify-center border-primary items-center">
           <div class="flex my-2 md:my-0 flex-col rounded-lg justify-center h-full w-60 items-center">
-            <img v-if="entity.thumbnail" :src="thumbnail(entity.id)" alt=""
+            <img v-if="entity.thumbnail" :src="thumbnail(entity.id, entity.last_updated)" alt=""
               class="rounded-lg object-cover max-h-full w-full" />
 
             <div v-else

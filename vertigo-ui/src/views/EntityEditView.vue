@@ -45,7 +45,7 @@ async function load() {
   try {
     const response = await config[props.type].fetch(Number(route.params.Id));
     entity.value = response;
-    entity.value.thumbnail = `${config[props.type].thumbnail(Number(route.params.Id))}`
+    entity.value.thumbnail = `${config[props.type].thumbnail(Number(route.params.Id), entity.value.timestamp)}`
     // Fetch neighbors
   } catch (err) {
     console.error(err);

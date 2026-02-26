@@ -36,7 +36,11 @@ export default {
     return response.data;
   },
 
-  getPublisherImageById(id: Entity["id"]) {
+  getPublisherImageById(id: Entity["id"], lastUpdated?: string | Date) {
+    if (lastUpdated) {
+      const timestamp = new Date(lastUpdated).getTime();
+      return Api().defaults.baseURL + `/publisher/image/${id}?t=${timestamp}`;
+    }
     return Api().defaults.baseURL + `/publisher/image/${id}`;
   },
 

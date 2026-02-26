@@ -23,6 +23,7 @@ class PublisherSchema(ma.SQLAlchemySchema):
     slug = ma.String()
 
     timestamp = ma.auto_field(dump_only=True)
+    last_updated = ma.auto_field(dump_only=True)
     metron_id = ma.Integer(allow_none=True)
     metron_url = ma.String(allow_none=True)
     

@@ -8,10 +8,11 @@ from flask import current_app, url_for
 
 from api.app import db
 from api.models.updatable import Updateable
+from api.models.syncable import Syncable
 from api.models.metron_identifiable import MetronIdentifiable
 from api.models.mal_identifiable import MalIdentifiable
 
-class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
+class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Model):
     __tablename__ = 'publisher'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -19,7 +20,8 @@ class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
     
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_publisher, back_populates='publisher',
                                    lazy='noload')
@@ -42,7 +44,7 @@ class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     def url(self):
         return url_for('publisher.get', id=self.id)
 
-class Character(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
+class Character(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Model):
     __tablename__ = 'character'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -50,7 +52,7 @@ class Character(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
 
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_character, back_populates='character',
                                    lazy='noload')
@@ -73,7 +75,7 @@ class Character(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     def url(self):
         return url_for('character.get', id=self.id)
 
-class Creator(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
+class Creator(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Model):
     __tablename__ = 'creator'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -81,7 +83,7 @@ class Creator(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
 
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
 
     series = sqla_orm.relationship('Series', secondary=associations.series_creator, back_populates='creator',
                                    lazy='noload')
@@ -104,14 +106,14 @@ class Creator(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     def url(self):
         return url_for('creator.get', id=self.id)
 
-class Genre(Updateable, MalIdentifiable, db.Model):
+class Genre(Updateable, MalIdentifiable, Syncable, db.Model):
     __tablename__ = 'genre'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(3000))
 
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_genre, back_populates='genre',
                                    lazy='noload')

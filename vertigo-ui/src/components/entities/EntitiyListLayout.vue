@@ -60,7 +60,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 py-2 gap-4 px-8 max-w-7xl mx-auto">
         <EntityListCard :delete-mode="deleteMode" @onDelete="confirmDelete(item.id, item.title)"
             v-for="item in filteredData" :key="item.id" :to="path + `/` + item.id + `-` + item.slug" :title="item.title"
-            :image="thumbnail(item.id)" />
+            :image="thumbnail(item.id, item.last_updated)" />
     </div>
 
     <div v-if="!filteredData.length && !isSearched" class="text-center text-slate-400 py-10">

@@ -36,7 +36,11 @@ export default {
     return response.data;
   },
 
-  getCreatorImageById(id: Entity["id"]) {
+  getCreatorImageById(id: Entity["id"], lastUpdated?: string | Date) {
+    if (lastUpdated) {
+      const timestamp = new Date(lastUpdated).getTime();
+      return Api().defaults.baseURL + `/creator/image/${id}?t=${timestamp}`;
+    }
     return Api().defaults.baseURL + `/creator/image/${id}`;
   },
 
