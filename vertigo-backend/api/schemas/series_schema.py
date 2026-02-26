@@ -51,6 +51,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
     slug = ma.String()
     thumbnail = ma.String()
     timestamp = ma.auto_field(dump_only=True)
+    last_updated = ma.auto_field(dump_only=True)
     user = ma.Nested(UserSchema, dump_only=True)
     user_id = ma.auto_field(dump_only=True)
 

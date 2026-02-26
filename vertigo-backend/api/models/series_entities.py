@@ -19,7 +19,7 @@ class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
     
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_publisher, back_populates='publisher',
                                    lazy='noload')
@@ -50,7 +50,7 @@ class Character(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
 
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_character, back_populates='character',
                                    lazy='noload')
@@ -81,7 +81,7 @@ class Creator(Updateable, MetronIdentifiable, MalIdentifiable, db.Model):
     description = sqla.Column(sqla.String(3000))
     thumbnail = sqla.Column(sqla.String(280))
 
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     series = sqla_orm.relationship('Series', secondary=associations.series_creator, back_populates='creator',
                                    lazy='noload')
@@ -111,7 +111,7 @@ class Genre(Updateable, MalIdentifiable, db.Model):
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(3000))
 
-    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     series = sqla_orm.relationship('Series', secondary=associations.series_genre, back_populates='genre',
                                    lazy='noload')

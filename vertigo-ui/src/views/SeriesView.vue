@@ -341,7 +341,7 @@ async function getSeries(id: number) {
     }
 
     if (response.thumbnail) {
-      image.value = `${SeriesService.getSeriesImageById(series.value.id)}`;
+      image.value = `${SeriesService.getSeriesImageById(series.value.id, series.value.last_updated)}`;
       console.log("getSeries", image.value);
     }
   } catch (error) {

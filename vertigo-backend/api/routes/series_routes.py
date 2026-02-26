@@ -231,16 +231,20 @@ def update_series(id):
                 rel.append(entity)
 
     thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
-    if thumbnail and thumbnail != "noimage" or 'thumbnail' in request.files:
+    if thumbnail or 'thumbnail' in request.files:
 
         old_filename = series.thumbnail  
         new_filename = None
         new_color = None
         error_occurred = False
 
-        if thumbnail == old_filename or thumbnail != "noimage":
+        if thumbnail == old_filename and 'thumbnail' not in request.files:
             error_occurred = False
-
+        elif thumbnail == "noimage":
+            if old_filename:
+                delete_thumbnail(old_filename, user.id, series_thumbnail_folder)
+            series.thumbnail = None
+            series.dominant_color = None
         else:
             try:
                 if thumbnail.startswith('http'):

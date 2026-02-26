@@ -4,7 +4,7 @@ import { ApiResponse } from "@/types/api-response.types";
 import { SeriesFilterFields } from "@/types/series-filter.types";
 
 export default {
-  
+
   async fetchSeries(
     orderBy: string,
     orderDir: string,
@@ -64,7 +64,11 @@ export default {
     return response.data;
   },
 
-  getSeriesImageById(id: Series["id"]) {
+  getSeriesImageById(id: Series["id"], lastUpdated?: string | Date) {
+    if (lastUpdated) {
+      const timestamp = new Date(lastUpdated).getTime();
+      return Api().defaults.baseURL + `/series/image/${id}?t=${timestamp}`;
+    }
     return Api().defaults.baseURL + `/series/image/${id}`;
   },
 
@@ -77,7 +81,7 @@ export default {
   },
 
   getSeriesThumbBg() {
-    return Api().defaults.baseURL +`/series/thumbnail/bg`;
+    return Api().defaults.baseURL + `/series/thumbnail/bg`;
   },
 
   getSeriesNeighbours(id: number) {

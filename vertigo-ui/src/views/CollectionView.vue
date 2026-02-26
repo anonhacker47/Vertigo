@@ -248,7 +248,7 @@ const getseriesList = async (
     );
     seriesList.value = result.seriesList.map(series => ({
       ...series,
-      thumbnail: SeriesService.getSeriesImageById(series.id)
+      thumbnail: SeriesService.getSeriesImageById(series.id, series.last_updated)
     }));
     pagination.value = result.pagination;
   } catch (error) {
