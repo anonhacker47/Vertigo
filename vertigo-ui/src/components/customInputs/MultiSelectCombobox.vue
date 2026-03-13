@@ -1,162 +1,132 @@
 <template>
-  <Combobox v-model="model" multiple by="value">
-    <div class="relative w-full">
-      <div class="relative w-full cursor-default rounded-lg bg-base-10">
-        <ComboboxInput class="w-full input input-bordered" :displayValue="() => query"
-          @keydown.enter.prevent="handleEnter" autoComplete="off" @change="query = $event.target.value"
-          :placeholder="selectedValuesPlaceholder" />
-        <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-        </ComboboxButton>
-      </div>
-      <TransitionRoot leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0"
-        @after-leave="query = ''">
-        <ComboboxOptions
-          class="absolute mt-1 max-h-60 w-full dropdown-content overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-2 ring-gray-400/5 focus:outline-none sm:text-sm"
-          style="z-index: 1;">
-          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item"
-            v-slot="{ active, selected }">
-            <ul class="">
-              <li class="relative cursor-pointer select-none py-3 pl-10 pr-4" :class="{
-                'bg-base-300 text-teal-400': active,
-                'text-white': !active,
-              }">
-                <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
-                  {{ item.value }}
-                </span>
-                <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
-                  :class="{ 'text-teal-400': active, 'text-white': !active }">
-                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                </span>
-              </li>
-            </ul>
-          </ComboboxOption>
-          <ComboboxOption v-slot="{ active, selected }" v-if="queryItem" :value="{ id: queryItem, value: queryItem }"
-            class="relative cursor-pointer">
-            <ul>
-              <li class="relative cursor-default select-none py-3 pl-10 pr-4" :class="{
-                'bg-base-300 text-white': active,
-                'text-white': !active,
-              }">
-                <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
-                  Create "{{ query }}""
-                </span>
-                <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
-                  :class="{ 'text-white': active, 'text-teal-600': !active }">
-                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                </span>
-              </li>
-            </ul>
-          </ComboboxOption>
-        </ComboboxOptions>
-      </TransitionRoot>
-      <div v-if="model.length" class="flex flex-wrap justify-center mt-2 gap-2 h-18 overflow-auto">
-        <div v-for="(item, i) in model" :key="i" class="badge badge-info p-0 bg-base-600 rounded-md">
-          <span class="text-white text-xs px-2 py-1">{{ item.value }}</span>
-          <button type="button" class="ml-1 focus:outline-none self-center" @click="removeItem(item)">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              class="inline-block h-4 w-4 stroke-current">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
+  <div class="relative w-full">
+    <div class="flex items-center gap-2">
+      <input
+        v-model="query"
+        class="input input-bordered w-full"
+        :placeholder="selectedValuesPlaceholder"
+        @keydown.enter.prevent="handleEnter"
+        @focus="open = true"
+        @blur="onBlur"
+        autocomplete="off"
+      />
+    </div>
+
+    <ul
+      v-if="open && filteredItems.length"
+      class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg z-10"
+    >
+      <li
+        v-for="item in filteredItems"
+        :key="item.id"
+        @mousedown.prevent="toggleItem(item)"
+        class="cursor-pointer px-4 py-2 hover:bg-base-300 flex items-center gap-2"
+      >
+        <CheckIcon v-if="isSelected(item)" class="h-4 w-4 text-teal-400" />
+        <span :class="isSelected(item) ? 'text-teal-400' : ''">{{ item.value }}</span>
+      </li>
+      <li
+        v-if="query.trim() && !exactMatch"
+        @mousedown.prevent="addCustom"
+        class="cursor-pointer px-4 py-2 hover:bg-base-300 text-sm italic"
+      >
+        Create "{{ query.trim() }}"
+      </li>
+    </ul>
+
+    <div v-if="localSelected.length" class="flex flex-wrap mt-2 gap-2">
+      <div
+        v-for="item in localSelected"
+        :key="item.id"
+        class="badge badge-info rounded-md flex items-center gap-1 px-2 py-1"
+      >
+        <span class="text-xs">{{ item.value }}</span>
+        <button type="button" @click="removeItem(item)">
+          <svg class="h-3 w-3 stroke-current" viewBox="0 0 24 24" fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
-  </Combobox>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxButton,
-  ComboboxOptions,
-  ComboboxOption,
-  TransitionRoot,
-} from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon, } from '@heroicons/vue/20/solid'
+import { CheckIcon } from '@heroicons/vue/20/solid'
 
-const props = defineProps({
-  field: String,
-  placeholder: String,
-  items: Array
-})
+type Item = { id: any; value: string }
 
-const model = defineModel({
-  type: Array,
-  default: [],
-})
+const props = defineProps<{
+  field?: string
+  placeholder?: string
+  items: Item[]
+  modelValue: Item[]
+}>()
 
-let query = ref('')
+const emit = defineEmits<{ (e: 'update:modelValue', val: Item[]): void }>()
 
-const queryItem = computed(() => {
-  return query.value === '' ? null : query.value.trim()
-})
+const query = ref('')
+const open = ref(false)
+const localSelected = ref<Item[]>([...props.modelValue])
+const localItems = ref<Item[]>([...props.items])
 
-let filteredItems = computed(() =>
+// Only sync in when parent value actually changes (e.g. form reset)
+watch(() => props.modelValue, (val) => { localSelected.value = [...val] })
+watch(() => props.items, (val) => { localItems.value = [...val] })
+
+const normalize = (s: string) => s.trim().toLowerCase()
+
+const filteredItems = computed(() =>
   query.value === ''
-    ? props.items
-    : props.items.filter((item: { value: string; }) =>
-      item.value
-        .toLowerCase()
-        .replace(/\s+/g, '')
-        .includes(query.value.toLowerCase().replace(/\s+/g, ''))
-    )
+    ? localItems.value
+    : localItems.value.filter(i =>
+        normalize(i.value).includes(normalize(query.value))
+      )
 )
 
-const selectedValuesPlaceholder = computed(() => {
-  return model.value.length > 0
-    ? model.value.map(i => i.value).join(', ')
-    : props.placeholder
-})
+const exactMatch = computed(() =>
+  localItems.value.some(i => normalize(i.value) === normalize(query.value))
+)
 
-const removeItem = (item: any) => {
-  const key = normalize(item.value)
-  model.value = model.value.filter(i => normalize(i.value) !== key)
-}
+const selectedValuesPlaceholder = computed(() =>
+  localSelected.value.length ? localSelected.value.map(i => i.value).join(', ') : props.placeholder
+)
 
-const normalize = (s?: string) => (s ? s.trim().toLowerCase() : "");
+const isSelected = (item: Item) =>
+  localSelected.value.some(i => normalize(i.value) === normalize(item.value))
 
-const addCustomItem = (value: string) => {
-  const key = normalize(value)
-
-  const existing = props.items.find(
-    i => normalize(i.value) === key
-  )
-
-  const item = existing ?? {
-    id: `custom:${key}`,
-    value
+const toggleItem = (item: Item) => {
+  if (isSelected(item)) {
+    removeItem(item)
+  } else {
+    const next = [...localSelected.value, item]
+    localSelected.value = next
+    emit('update:modelValue', next)
   }
-
-  if (!existing) {
-    props.items.push(item)
-  }
-
-  if (!model.value.find(i => normalize(i.value) === key)) {
-    model.value.push(item)
-  }
-
   query.value = ''
 }
 
-watch(model, newVal => {
-  const last = newVal[newVal.length - 1]
-  if (!last) return
+const removeItem = (item: Item) => {
+  const next = localSelected.value.filter(i => normalize(i.value) !== normalize(item.value))
+  localSelected.value = next
+  emit('update:modelValue', next)
+}
 
-  const key = normalize(last.value)
-
-  if (!props.items.find(i => normalize(i.value) === key)) {
-    props.items.push(last)
-  }
-
-  query.value = ''
-})
+const addCustom = () => {
+  const val = query.value.trim()
+  if (!val) return
+  const key = normalize(val)
+  const item = localItems.value.find(i => normalize(i.value) === key) ?? { id: `custom:${key}`, value: val }
+  if (!localItems.value.find(i => normalize(i.value) === key)) localItems.value.push(item)
+  if (!isSelected(item)) toggleItem(item)
+  else query.value = ''
+}
 
 const handleEnter = () => {
-  if (queryItem.value) {
-    addCustomItem(queryItem.value)
-  }
+  if (filteredItems.value.length === 1) toggleItem(filteredItems.value[0])
+  else if (query.value.trim()) addCustom()
 }
+
+const onBlur = () => setTimeout(() => { open.value = false; query.value = '' }, 150)
 </script>

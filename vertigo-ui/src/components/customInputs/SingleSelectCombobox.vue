@@ -1,93 +1,88 @@
 <template>
-  <Combobox v-model="selected" nullable by="value">
-    <div class="relative w-full">
-      <div class="relative w-full cursor-default rounded-lg bg-base-10">
-        <ComboboxInput class="w-full input input-bordered" autoComplete="off" :displayValue="(item) => item?.value || ''" @change="query = $event.target.value"
-          :placeholder="placeholder" />
-        <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-        </ComboboxButton>
-      </div>  
-      <TransitionRoot leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0"
-        @after-leave="query = ''">
-        <ComboboxOptions
-          class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
-          style="z-index: 1;">
-          <ComboboxOption v-for="item in filteredItems" as="template" :key="item.id" :value="item"
-            v-slot="{ active }">
-            <ul class="">
-              <li class="relative cursor-pointer  select-none py-3 pl-10 pr-4" :class="{
-                'bg-base-300 text-white': active,
-                'text-white': !active,
-              }">
-                <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
-                  {{ item.value }}
-                </span>
-                <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
-                  :class="{ 'text-teal-400': active, 'text-white': !active }">
-                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                </span>
-              </li>
-            </ul>
-          </ComboboxOption>
-          <ComboboxOption v-slot="{ active }" v-if="queryPerson" :value="{ id: queryPerson, value: queryPerson }" class="relative cursor-default">
-            <ul class="">
-            <li class="relative cursor-pointer  select-none py-3 pl-10 pr-4" :class="{
-              'bg-base-300 text-white': active,
-              'text-white': !active,
-            }">
-              <span class="block truncate" :class="{ 'font-medium': active, 'font-normal': !active }">
-                Create "{{ query }}"
-              </span>
-              <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-3"
-                  :class="{ 'text-white': active, 'text-teal-600': !active }">
-                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                </span>
-            </li>
-            </ul>
-          </ComboboxOption>
-        </ComboboxOptions>
-      </TransitionRoot>
-    </div>
-  </Combobox>
+  <div class="relative w-full">
+    <input
+      v-model="query"
+      class="input input-bordered w-full"
+      :placeholder="localSelected?.value || placeholder"
+      @focus="open = true"
+      @blur="onBlur"
+      autocomplete="off"
+    />
+
+    <ul
+      v-if="open && filteredItems.length"
+      class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg z-10"
+    >
+      <li
+        v-for="item in filteredItems"
+        :key="item.id"
+        @mousedown.prevent="selectItem(item)"
+        class="cursor-pointer px-4 py-2 hover:bg-base-300 flex items-center gap-2"
+      >
+        <CheckIcon v-if="localSelected?.value === item.value" class="h-4 w-4 text-teal-400" />
+        {{ item.value }}
+      </li>
+      <li
+        v-if="query.trim() && !exactMatch"
+        @mousedown.prevent="addCustom"
+        class="cursor-pointer px-4 py-2 hover:bg-base-300 text-sm italic"
+      >
+        Create "{{ query.trim() }}"
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxOptions,
-  ComboboxButton,
-  ComboboxOption,
-  TransitionRoot,
-} from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
+import { ref, computed, watch } from 'vue'
+import { CheckIcon } from '@heroicons/vue/20/solid'
 
-const props = defineProps({
-  field: String,
-  placeholder: String,
-  items: Array,
-})
+type Item = { id: any; value: string }
 
-let selected = ref(null)
+const props = defineProps<{
+  field?: string
+  placeholder?: string
+  items: Item[]
+  modelValue: Item | null
+}>()
 
-let query = ref('')
+const emit = defineEmits<{ (e: 'update:modelValue', val: Item | null): void }>()
 
-const queryPerson = computed(() => {
-  return query.value === '' ? null : query.value.trim()
-})
+const query = ref('')
+const open = ref(false)
+const localSelected = ref<Item | null>(props.modelValue)
+const localItems = ref<Item[]>([...props.items])
 
-let filteredItems = computed(() =>
+watch(() => props.modelValue, (val) => { localSelected.value = val })
+watch(() => props.items, (val) => { localItems.value = [...val] })
+
+const normalize = (s: string) => s.trim().toLowerCase()
+
+const filteredItems = computed(() =>
   query.value === ''
-    ? props.items
-    : props.items.filter((item: { value: string }) =>
-      item.value
-        .toLowerCase()
-        .replace(/\s+/g, '')
-        .includes(query.value.toLowerCase().replace(/\s+/g, ''))
-    )
+    ? localItems.value
+    : localItems.value.filter(i => normalize(i.value).includes(normalize(query.value)))
 )
 
+const exactMatch = computed(() =>
+  localItems.value.some(i => normalize(i.value) === normalize(query.value))
+)
 
+const selectItem = (item: Item) => {
+  localSelected.value = item
+  emit('update:modelValue', item)
+  query.value = ''
+  open.value = false
+}
+
+const addCustom = () => {
+  const val = query.value.trim()
+  if (!val) return
+  const key = normalize(val)
+  const item = { id: `custom:${key}`, value: val }
+  if (!localItems.value.find(i => normalize(i.value) === key)) localItems.value.push(item)
+  selectItem(item)
+}
+
+const onBlur = () => setTimeout(() => { open.value = false; query.value = '' }, 150)
 </script>

@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import type { Series } from "@/types/series.types";
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 import SeriesService from "@/services/SeriesService";
@@ -93,55 +93,55 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:modelValue', 'next'])
 
-const localSeriesData = reactive({ ...props.modelValue })
+const localSeriesData = ref({ ...props.modelValue })
 
 watch(
     () => props.modelValue,
     (newVal) => {
-        Object.assign(localSeriesData, newVal)
+        if (JSON.stringify(newVal) !== JSON.stringify(localSeriesData.value)) {
+            localSeriesData.value = { ...newVal }
+        }
     },
     { deep: true }
 )
 
-watch(localSeriesData, (val) => {
-    const { thumbnail, ...rest } = val;
-    emit('update:modelValue', {
-        ...rest,
-        thumbnail: props.modelValue.thumbnail, // preserve the original thumbnail
-    });    
-}, { deep: true });
+watch(
+    localSeriesData,
+    (val) => {
+        const { thumbnail, ...rest } = val
+        const outgoing = { ...rest, thumbnail: props.modelValue.thumbnail }
+
+        if (JSON.stringify(outgoing) === JSON.stringify(props.modelValue)) return
+
+        emit('update:modelValue', outgoing)
+    },
+    { deep: true }
+)
 
 watch(
-  () => localSeriesData.description,
-  (val) => {
-    descriptionLength.value = val?.length || 0;
-    descriptionError.value = descriptionLength.value > 3000 ? "Description cannot exceed 3000 characters." : "";
-  },
-  { immediate: true }
-);
+    () => localSeriesData.value.description,
+    (val) => {
+        descriptionLength.value = val?.length || 0;
+        descriptionError.value = descriptionLength.value > 3000
+            ? "Description cannot exceed 3000 characters."
+            : "";
+    },
+    { immediate: true }
+)
 
-const goToNext = () => {
-    emit('next')
-}
-
+const goToNext = () => emit('next')
 
 function validateDescription() {
-    descriptionLength.value = localSeriesData.description?.length || 0;
-
-    if (descriptionLength.value > 3000) {
-        descriptionError.value = "Description cannot exceed 3000 characters.";
-    } else {
-        descriptionError.value = "";
-    }
+    descriptionLength.value = localSeriesData.value.description?.length || 0;
+    descriptionError.value = descriptionLength.value > 3000
+        ? "Description cannot exceed 3000 characters."
+        : "";
 }
 
-onMounted(() => {
-    getSeriesFields();
-});
+onMounted(() => getSeriesFields())
 
 async function getSeriesFields() {
     try {
-
         for (const field of seriesFields) {
             const response = await SeriesService.getSeriesFieldValues(field);
             seriesFieldValues.value[field] = response.data;
@@ -150,6 +150,4 @@ async function getSeriesFields() {
         console.log(error);
     }
 }
-
-
 </script>
