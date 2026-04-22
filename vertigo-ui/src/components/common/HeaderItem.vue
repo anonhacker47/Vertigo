@@ -12,9 +12,12 @@
       <RouterLink to="/dashboard"
         class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
         Dashboard</RouterLink>
-      <RouterLink to="/collection"
+        <RouterLink to="/collection"
         class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
         Collection</RouterLink>
+        <RouterLink to="/insights"
+          class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
+          Insights</RouterLink>
       <div class="dropdown dropdown-hover list-none">
         <button tabindex="0"
           class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent">
@@ -126,6 +129,14 @@ const menuItems = [
     command: () => {
       mobileOpen.value = false
       router.push('/dashboard')
+    }
+  },
+  {
+    label: 'Insights',
+    icon: 'pi pi-chart-bar',
+    command: () => {
+      mobileOpen.value = false
+      router.push('/insights')
     }
   },
   {

@@ -23,6 +23,24 @@ const router = createRouter({
       },
     },
     {
+      path: "/insights",
+      name: "Insights",
+      component: () => import("@/views/InsightsView.vue"),
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+    },
+    {
+      path: "/tier-list",
+      name: "TierList",
+      component: () => import("@/views/TierListView.vue"),
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+    },
+    {
       path: "/settings",
       name: "Settings",
       component: () => import("@/views/SettingsView.vue"),
