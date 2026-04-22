@@ -1,3 +1,4 @@
+from html import entities
 import os
 import random
 from flask import current_app, json, jsonify
@@ -211,25 +212,24 @@ def update_series(id):
 
     for entity_type, items in entities.items():
         model = ENTITY_MODEL_MAP[entity_type]
-        rel = getattr(series, entity_type)
-        
-        for item in items:
+        new_entities = []
 
+        for item in items:
             name = item["value"] if isinstance(item, dict) else item
+            if not name:
+                continue
             external_id = None
             if isinstance(item, dict):
                 external_id = item.get("mal_id") if series.manga else item.get("metron_id")
-                
+
             entity = create_or_get_entity(
                 model, name, user, entity_type, external_id, series_is_manga=series.manga
             )
+            if entity:
+                new_entities.append(entity)
 
-            if not entity:
-                continue
-
-            if not rel.filter(model.id == entity.id).first():
-                rel.append(entity)
-
+        setattr(series, entity_type, new_entities)
+        
     thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
     if thumbnail or 'thumbnail' in request.files:
 

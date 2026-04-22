@@ -34,7 +34,7 @@
       </li>
     </ul>
 
-    <div v-if="localSelected.length" class="flex flex-wrap mt-2 gap-2">
+    <div v-if="localSelected.length" class="flex flex-wrap mt-2 gap-2 max-h-20 overflow-auto">
       <div
         v-for="item in localSelected"
         :key="item.id"

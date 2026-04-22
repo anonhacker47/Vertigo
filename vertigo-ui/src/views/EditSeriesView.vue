@@ -76,9 +76,11 @@ async function updateSeries() {
     formData.append("character", JSON.stringify(data.character || []));
     formData.append("genre", JSON.stringify(data.genre || []));
     formData.append("creator", JSON.stringify(data.creator || []));
-    formData.append("publisher", (data.publisher && typeof data.publisher === "string")
-      ? data.publisher
-      : (Array.isArray(data.publisher) ? data.publisher[0] : ""));
+    const pub = data.publisher;
+    formData.append(
+      "publisher",
+      JSON.stringify(pub && typeof pub === "object" && pub.value ? [pub] : [])
+    );
 
     // Handle thumbnail file (only append if it's a File)
     if (seriesData.value.thumbnail) {
