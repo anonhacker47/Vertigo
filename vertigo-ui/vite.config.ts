@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [vue(),tailwindcss()],
+  plugins: [vue(), tailwindcss()],
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
@@ -22,7 +22,7 @@ export default defineConfig({
   server: {
     host: true,
     cors: {
-      origin: ["http://localhost:5000","http://192.168.1.25:5000"],
+      origin: ["http://localhost:5000","http://192.168.1.2:5000"],
       credentials: true,
     },
   },

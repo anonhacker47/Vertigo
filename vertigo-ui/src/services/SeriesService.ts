@@ -1,5 +1,5 @@
 import Api from "@/services/Api";
-import { Series } from "@/types/series.types";
+import type { Series } from "@/types/series.types";
 import { ApiResponse } from "@/types/api-response.types";
 import { SeriesFilterFields } from "@/types/series-filter.types";
 
