@@ -5,12 +5,14 @@
       class="input input-bordered w-full"
       :placeholder="localSelected?.value || placeholder"
       @focus="open = true"
+      @input="open = true" 
+      @keydown.enter.prevent="handleEnter"
       @blur="onBlur"
       autocomplete="off"
     />
 
     <ul
-      v-if="open && filteredItems.length"
+      v-if="open && (filteredItems.length || (query.trim() && !exactMatch))"
       class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg z-10"
     >
       <li
@@ -82,6 +84,19 @@ const addCustom = () => {
   const item = { id: `custom:${key}`, value: val }
   if (!localItems.value.find(i => normalize(i.value) === key)) localItems.value.push(item)
   selectItem(item)
+}
+
+const handleEnter = () => {
+  if (!open.value) {
+    open.value = true
+    return
+  }
+
+  if (query.value.trim() && !exactMatch.value) {
+    addCustom()
+  } else if (filteredItems.value.length > 0) {
+    selectItem(filteredItems.value[0])
+  }
 }
 
 const onBlur = () => setTimeout(() => { open.value = false; query.value = '' }, 150)
