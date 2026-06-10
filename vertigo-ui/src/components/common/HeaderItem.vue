@@ -1,56 +1,67 @@
 <template>
   <nav :class="[
-    'fixed top-0 left-0 right-0 z-50 border-b border-slate-700 flex flex-wrap items-center justify-between py-3',
+    'fixed top-0 left-0 right-0 z-50 border-b border-slate-700 py-3 px-6 md:px-16 transition-all duration-200 flex items-center',
     props.transparentHeader
       ? 'bg-[rgba(18,25,43,0.9)] md:bg-transparent'
       : 'bg-[rgba(18,25,43,0.9)]'
   ]">
-    <div class="relative flex justify-start">
-      <RouterLink to="/"><img class="" src="@/assets/logo.svg" alt="" width="40" height="40" /></RouterLink>
-    </div>
-    <div class="hidden justify-between items-center gap-8 w-full md:flex md:w-auto navMenu" id="navbar-sticky">
+    
+    <div class="hidden md:flex flex-1 items-center justify-between">
+      <RouterLink to="/">
+        <img src="@/assets/logo.svg" alt="Logo" width="40" height="40" />
+      </RouterLink>
+      
       <RouterLink to="/dashboard"
-        class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
-        Dashboard</RouterLink>
-        <RouterLink to="/collection"
-        class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
-        Collection</RouterLink>
+        class="text-white text-lg hover:text-sky-300 transition-colors">
+        Dashboard
+      </RouterLink>
+    </div>
+
+    <div class="hidden md:flex flex-none items-center justify-center mx-8">
+      <RouterLink to="/collection"
+        class="text-white text-lg hover:text-sky-300 transition-colors">
+        Collection
+      </RouterLink>
+    </div>
+
+    <div class="hidden md:flex flex-1 items-center justify-between">
+      
+      <div class="flex items-center gap-8 navMenu">
         <RouterLink to="/insights"
-          class="block text-white rounded hover:bg-gray-100 text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent dark:border-gray-700">
-          Insights</RouterLink>
-      <div class="dropdown dropdown-hover list-none">
-        <button tabindex="0"
-          class="block text-white rounded  text-xl md:hover:bg-transparent md:hover:text-sky-300 md:p-0 hover:text-blue bg-transparent">
-          Browse
-          <i class="pi pi-chevron-down"></i>
-        </button>
-        <ul class="z-50 dropdown-content menu p-2 shadow bg-base-200 text-white text-lg rounded-box w-52" tabindex="0">
-          <li>
-            <RouterLink :to="{ name: 'PublisherList' }" class="hover:text-blue-400">
-              Publishers
-            </RouterLink>
-          </li>
+          class="text-white text-lg hover:text-sky-300 transition-colors">
+          Insights
+        </RouterLink>
 
-          <li>
-            <RouterLink :to="{ name: 'CreatorList' }" class="hover:text-blue-400">
-              Creators
-            </RouterLink>
-          </li>
-
-          <li>
-            <RouterLink :to="{ name: 'CharacterList' }" class="hover:text-blue-400">
-              Characters
-            </RouterLink>
-          </li>
-        </ul>
+        <div class="dropdown dropdown-hover list-none">
+          <button tabindex="0" class="text-white text-lg hover:text-sky-300 transition-colors flex items-center gap-1">
+            Browse
+            <i class="pi pi-chevron-down text-sm"></i>
+          </button>
+          <ul class="z-50 dropdown-content menu p-2 shadow bg-base-200 text-white text-md rounded-box w-52 mt-2" tabindex="0">
+            <li><RouterLink :to="{ name: 'PublisherList' }" class="hover:text-blue-400">Publishers</RouterLink></li>
+            <li><RouterLink :to="{ name: 'CreatorList' }" class="hover:text-blue-400">Creators</RouterLink></li>
+            <li><RouterLink :to="{ name: 'CharacterList' }" class="hover:text-blue-400">Characters</RouterLink></li>
+          </ul>
+        </div>
       </div>
 
+      <div class="dropdown dropdown-hover">
+        <button tabindex="0" class="flex items-center">
+          <img class="inline-block h-9 w-9 rounded-md hover:opacity-75 cursor-pointer object-cover" @error="changeThumb()" :src="imagesrc" alt="Profile" />
+        </button>
+        <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52 mt-2" tabindex="-1">
+          <li><RouterLink to="/settings" class="hover:text-blue-400">Settings</RouterLink></li>
+          <li><a @click="logout" class="hover:text-blue-400">Log-out</a></li>
+        </ul>
+      </div>
     </div>
 
 
-    <div class="flex md:hidden">
-      <Button icon="pi pi-bars" class="p-button-text p-button-rounded p-button-lg text-white"
-        @click="mobileOpen = true" />
+    <div class="flex md:hidden justify-between items-center w-full">
+      <RouterLink to="/">
+        <img src="@/assets/logo.svg" alt="Logo" width="40" height="40" />
+      </RouterLink>
+      <Button icon="pi pi-bars" class="p-button-text p-button-rounded p-button-lg text-white" @click="mobileOpen = true" />
     </div>
 
     <Drawer v-model:visible="mobileOpen" position="right" class="w-72 flex justify-between bg-[#12192b]">
@@ -64,32 +75,12 @@
         <button class="w-full text-left text-white py-2 hover:text-sky-300" @click="router.push('/settings')">
           <i class="pi pi-cog mr-2"></i> Settings
         </button>
-
         <button class="w-full text-left text-white py-2 hover:text-red-400" @click="logout">
           <i class="pi pi-sign-out mr-2"></i> Log out
         </button>
       </div>
     </Drawer>
 
-    <div class="hidden md:flex items-center">
-      <div class="flex flex-col lg:flex-row list-none">
-        <div class="dropdown dropdown-hover">
-          <button tabindex="0">
-            <img class="inline-block h-9 w-9 rounded-md hover:opacity-75 cursor-pointer" @error="changeThumb()"
-              :src="imagesrc" alt="" />
-          </button>
-          <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52"
-            tabindex="-1">
-            <li>
-              <RouterLink to="/settings" class="hover:text-blue-400 "> Settings</RouterLink>
-            </li>
-            <li>
-              <a @click="logout" class="hover:text-blue-400 "> Log-out </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
   </nav>
 </template>
 
