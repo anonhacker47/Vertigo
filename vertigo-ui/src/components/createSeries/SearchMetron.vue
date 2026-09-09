@@ -43,7 +43,7 @@
             <p class="text-sm opacity-70">{{ seriesDetail.publisher.name }}</p>
             <p class="text-sm opacity-70">Volume: {{ seriesDetail.volume }} • Issues: {{ seriesDetail.issue_count }}</p>
             <p class="text-sm opacity-70">Years: {{ seriesDetail.year_began }} – {{ seriesDetail.year_end || 'Present'
-            }}
+              }}
             </p>
             <p class="text-sm opacity-70">Status: {{ seriesDetail.status }}</p>
             <p class="text-sm opacity-70">
@@ -192,8 +192,8 @@ async function selectSeries() {
       entitiesLoading.value = false
     }
   }
-
-  emit('select', seriesDetail.value, seriesEntities.value)
+  const metronIssues = seriesEntities.value?.issues || []
+  emit('select', seriesDetail.value, seriesEntities.value, metronIssues)
   closeModal()
 }
 </script>

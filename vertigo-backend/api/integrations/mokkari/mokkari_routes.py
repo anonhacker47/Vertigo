@@ -102,11 +102,18 @@ def get_series_entities(series_id):
 
         creators = {}    
         characters = {}  
+        issues_list = []
         issue_count = 0
 
         for stub in issue_stubs:
             issue_count += 1
             issue = session.issue(stub.id)
+
+            issues_list.append({
+                "metron_id": getattr(issue, "id", stub.id),
+                "number": getattr(issue, "number", None),
+                "metron_url": str(getattr(issue, "resource_url", "")) if getattr(issue, "resource_url", None) else None
+            })
 
             if issue.credits:
                 for credit in issue.credits:
@@ -124,6 +131,7 @@ def get_series_entities(series_id):
             "total_issues": issue_count,
             "total_creators": len(creators),
             "total_characters": len(characters),
+            "issues": issues_list,
             "creators": [{"metron_id": cid, "value": name} for name, cid in creators.items()],
             "characters": [{"metron_id": cid, "value": name} for name, cid in characters.items()],
         }

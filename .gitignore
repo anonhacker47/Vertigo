@@ -30,3 +30,4 @@ vertigo-backend/api/fake.py
 .vscode/*
 vertigo-ui/.env.development
 vertigo-backend/api/wwwroot/*
+env/

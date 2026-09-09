@@ -204,12 +204,10 @@
           </h1>
           <div class="md:overflow-scroll pb-12 h-full w-full">
             <div class="grid gap-y-8 md:px-20 place-items-center my-4 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]">
-              <IssueCard :edit_mode="editMode" :is_last="index === issuesList.length - 1 && issuesList.length > 1
-                " :preferred_currency="preferred_currency" :bought_price="issue.bought_price" :image="image"
-                :bought_date="issue.bought_date" :read_date="issue.read_date" :themecolor="themecolor"
-                :title="issue.title" :is_owned="issue.is_owned" :is_read="issue.is_read"
-                v-for="(issue, index) in issuesList" @updateStatus="updateStatus(issue, $event)" :key="issue.id"
-                @deleteIssue="confirmDelete(issue)" />
+              <IssueCard v-for="(issue, index) in issuesList" :key="issue.id" :issue="issue" :edit_mode="editMode"
+                :is_last="index === issuesList.length - 1 && issuesList.length > 1"
+                :preferred_currency="preferred_currency" :image="image" :themecolor="themecolor" :series="series"
+                @updateStatus="updateStatus(issue, $event)" @deleteIssue="confirmDelete(issue)" />
 
               <div v-if="editMode" @click="addIssue"
                 class="w-44 h-64 flex relative flex-col items-center bg-cover bg-center justify-center rounded-lg border-green-500 border-2 overflow-hidden shadow-lg cursor-pointer bg-zinc-800 border-dashed hover:bg-zinc-700 transition-all"

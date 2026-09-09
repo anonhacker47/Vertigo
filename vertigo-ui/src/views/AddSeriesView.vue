@@ -3,7 +3,8 @@
     <h1 class="text-3xl font-bold">Create Series</h1>
   </div>
 
-  <form @submit.prevent autocomplete="on" class="z-0 flex items-start justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
+  <form @submit.prevent autocomplete="on"
+    class="z-0 flex items-start justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
 
     <div class="w-94 h-152">
       <ImageUploader v-model="imagesrc" v-model:imageLink="imageLinkInput" @image-change="onImageChange" />
@@ -27,9 +28,9 @@
         <SearchManga v-else @select="onMetronSelect" />
       </div>
       <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
-      <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" :showIssueSection="showIssueSection"
-        :seriesData="seriesData" :issues="issues" :imagesrc="imagesrc" @cancel="showIssueSection = false"
-        @submit="createSeries" />
+      <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" v-model:issues="issues"
+        :showIssueSection="showIssueSection" :seriesData="seriesData" :imagesrc="imagesrc"
+        @cancel="showIssueSection = false" @submit="createSeries" />
     </div>
 
   </form>
@@ -40,6 +41,7 @@ import { ref, toRaw, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
+import type { Issue } from "@/types/issue.types";
 
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
@@ -53,9 +55,7 @@ import SearchManga from "@/components/createSeries/SearchManga.vue";
 import Select from "primevue/dropdown";
 
 const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
-
-
-const importSource = ref<'comic' | 'manga'>('comic')
+const importSource = ref<'comic' | 'manga'>('comic');
 
 const seriesTypeOptions = [
   { label: 'Comics', value: 'comic' },
@@ -63,14 +63,15 @@ const seriesTypeOptions = [
 ];
 
 const imageLinkInput = ref("");
-
 const router = useRouter();
 const toast = useToast();
 
 const showIssueSection = ref(false);
 const readAll = ref(false);
 const haveAll = ref(false);
-const issues = ref([]);
+const issues = ref<Issue[]>([]);
+
+let isImportingMetronData = false;
 
 const seriesData = ref<Partial<Series>>({
   title: '',
@@ -90,69 +91,98 @@ const seriesData = ref<Partial<Series>>({
   owned_count: 0,
   metron_id: null,
   metron_url: null,
-})
-
-function onMetronSelect(seriesDetail, seriesEntities) {
-
-  seriesData.value = {
-    title: '',
-    creator: [],
-    description: '',
-    genre: [],
-    character: [],
-    series_format: '',
-    issue_count: 1,
-    thumbnail: '',
-    publisher: { id: null, name: '' },
-    read_count: 0,
-    manga: importSource.value === 'manga',
-    owned_count: 0,
-    metron_id: null,
-    metron_url: null,
-  };
-  imageLinkInput.value = '';
+});
 
 
-  seriesData.value.title = seriesDetail.name
-  imageLinkInput.value = seriesDetail.image_first_issue || seriesDetail.image_url || ''
-  seriesData.value.publisher = seriesDetail.publisher || ''
-  seriesData.value.description = seriesDetail.desc || ''
-  seriesData.value.genre = seriesDetail.genres || []
-  seriesData.value.issue_count = seriesDetail.issue_count || 1
-  seriesData.value.metron_id = seriesDetail.metron_id || null
-  seriesData.value.metron_url = seriesDetail.metron_url || null
-  seriesData.value.manga = importSource.value === 'manga'
-
-  if (seriesEntities) {
-    seriesData.value.creator = seriesEntities.creators || []
-    seriesData.value.character = seriesEntities.characters || []
+function updateIssuesCount(newCount: number) {
+  const currentLength = issues.value.length;
+  
+  if (newCount > currentLength) {
+    for (let i = currentLength; i < newCount; i++) {
+      issues.value.push({
+        read: false,
+        have: false,
+        purchaseDate: null,
+        readDate: null,
+        price: null,
+        metron_id: null,
+        metron_url: null
+      } as unknown as Issue);
+    }
+  } else if (newCount < currentLength) {
+    issues.value.splice(newCount);
   }
 }
 
-watch(
-  () => seriesData.value.issue_count,
-  (newCount) => {
-    haveAll.value = false;
-    readAll.value = false;
+function onMetronSelect(seriesDetail, seriesEntities, metronIssues = []) {
+  isImportingMetronData = true;
 
-    issues.value = Array.from({ length: newCount }, () => ({
+  imageLinkInput.value = seriesDetail.image_first_issue || seriesDetail.image_url || '';
+  
+  const targetCount = Number(seriesDetail.issue_count) || 1;
+
+  issues.value = Array.from({ length: targetCount }, (_, index) => {
+    const currentNumber = index + 1;
+    const matched = metronIssues.find(
+      mi => Number(mi.number) === currentNumber || String(mi.number) === String(currentNumber)
+    );
+    return {
       read: false,
       have: false,
       purchaseDate: null,
       readDate: null,
-      price: null
-    }));
-  },
-  { immediate: true }
-);
+      price: null,
+      metron_id: matched ? Number(matched.metron_id) : null,
+      metron_url: matched ? matched.metron_url : null
+    } as unknown as Issue;
+  });
+
+  seriesData.value = {
+    title: seriesDetail.name,
+    creator: seriesEntities?.creators || [],
+    description: seriesDetail.desc || '',
+    genre: seriesDetail.genres || [],
+    character: seriesEntities?.characters || [],
+    series_format: '',
+    issue_count: targetCount, 
+    thumbnail: '',
+    publisher: seriesDetail.publisher || { id: null, name: '' },
+    read_count: 0,
+    manga: importSource.value === 'manga',
+    owned_count: 0,
+    metron_id: seriesDetail.metron_id || null,
+    metron_url: seriesDetail.metron_url || null
+  };
+  
+  haveAll.value = false;
+  readAll.value = false;
+
+  queueMicrotask(() => {
+    isImportingMetronData = false;
+  });
+}
 
 watch(importSource, (source) => {
   seriesData.value.manga = source === 'manga';
 });
 
 watch(
+  () => seriesData.value.issue_count,
+ (newCount) => {
+    if (isImportingMetronData) return;
+
+    const sanitizedCount = Number(newCount) || 0;
+    if (sanitizedCount !== issues.value.length) {
+      updateIssuesCount(sanitizedCount);
+    }
+  },
+  { immediate: true }
+);
+
+watch(
   issues,
   (newIssues) => {
+    if (!newIssues) return;
     newIssues.forEach((issue) => {
       const today = new Date().toISOString().split('T')[0];
 
@@ -168,7 +198,7 @@ watch(
 );
 
 async function createSeries() {
-  if (!seriesData.value.title.trim()) {
+  if (!seriesData.value.title?.trim()) {
     toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Title is required.', life: 3000 });
     return;
   }
@@ -203,7 +233,6 @@ async function createSeries() {
       }
       else if (typeof value === "object") {
         if (!Array.isArray(value)) {
-          // wrap single object into array
           formData.append(key, JSON.stringify([value]));
         } else {
           formData.append(key, JSON.stringify(value));
@@ -217,7 +246,7 @@ async function createSeries() {
     if (seriesData.value.thumbnail) {
       formData.append("thumbnail", seriesData.value.thumbnail);
     }
-    
+
     const rawPublisher = toRaw(seriesData.value.publisher);
 
     if (!rawPublisher || !rawPublisher.value) {
@@ -255,33 +284,31 @@ async function createSeries() {
     } else {
       toast.add({ severity: 'error', summary: 'Failure', detail: 'Series creation failed.', life: 3000 });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating series:", error);
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Unexpected error.', life: 3000 });
   }
 }
 
-
-async function addIssues(seriesId) {
+async function addIssues(seriesId: number) {
   try {
     if (!issues.value.length) {
       console.log("No issues to add.");
       return;
     }
 
-    // Construct the payload with all issues at once
-    // Construct the payload as a direct list (not an object with "issues" key)
     const issuePayload = issues.value.map((issue, index) => ({
       number: index + 1,
-      title: String(index + 1), // Title as string
-      is_owned: issue.have, // Ensure this matches the backend
+      title: String(index + 1), 
+      is_owned: issue.have, 
       is_read: issue.read,
       bought_date: issue.purchaseDate ? new Date(issue.purchaseDate).toISOString() : null,
       read_date: issue.readDate ? new Date(issue.readDate).toISOString() : null,
       bought_price: issue.price || null,
+      metron_id: issue.metron_id || null,
+      metron_url: issue.metron_url || null,
     }));
 
-    // Send all issues in a single API call
     await IssueService.addIssues(seriesId, issuePayload);
     console.log("Issues added successfully!");
   } catch (error) {
@@ -297,7 +324,6 @@ function onImageChange(file: File | string) {
     imagesrc.value = file;
   }
 }
-
 </script>
 
 <style scoped>

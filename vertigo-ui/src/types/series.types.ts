@@ -1,12 +1,13 @@
-export interface Series {
+import { MetronIdentifiable } from "./metron_identifiable.types";
+
+export interface Series extends MetronIdentifiable {
   character: string[];
   description: string;
   dominant_color: [number, number, number];
   genre: string[];
   id: number;
   issue_count: number;
-  main_char_id: string | null;
-  main_char_type: string | null;
+  notes: string;
   manga: boolean;
   owned_count: number;
   publisher: any;
@@ -31,6 +32,6 @@ export interface Series {
   };
   user_rating: number;
   creator: string[];
-  metron_id?: number;
-  metron_url?: string;
+  metron_id?: number | null;
+  metron_url?: string | null;
 }

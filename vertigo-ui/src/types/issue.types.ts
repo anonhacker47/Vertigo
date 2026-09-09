@@ -1,8 +1,11 @@
-export interface Issue {
+import { MetronIdentifiable } from "./metron_identifiable.types";
+import { Series } from "./series.types";
+
+export interface Issue extends MetronIdentifiable {
     id: number;
     title: string;
     number: number;
-    summary: string;
+    description: string;
     slug: string;
     is_read: boolean;
     is_owned: boolean;
@@ -10,6 +13,11 @@ export interface Issue {
     bought_date: Date | null;
     read_date: Date | null;
     timestamp: Date;
+    series:Series;
+    user_rating: number;
+    notes: string;
+    thumbnail: string | File;
+
 }
   
 

@@ -4,6 +4,7 @@ from datetime  import datetime, timezone
 from flask import Blueprint, abort, jsonify, request, send_file, send_from_directory
 from apifairy import authenticate, body, response, other_responses
 
+from sqlalchemy.orm import joinedload
 from api import db
 from api.models.user import User
 from api.models.series import Series
@@ -18,12 +19,13 @@ from api.schemas.pagination_schema import DateTimePaginationSchema
 issues = Blueprint('issue', __name__)
 issue_schema = IssueSchema()
 issues_schema = IssueSchema(many=True)
+slim_issue_schema = SlimIssueSchema()
 update_issue_schema = IssueSchema(partial=True)
 
 
 @issues.route('/series/<int:series_id>/issues', methods=['POST'])
 @authenticate(token_auth)
-@body(issues_schema)  # Expecting a list of issues
+@body(issues_schema)
 @response(issues_schema, 201)
 def new(args, series_id):
     """Create multiple new issues for a series"""
@@ -45,7 +47,9 @@ def new(args, series_id):
         is_read=issue_data["is_read"],
         bought_date=issue_data.get("bought_date") or (datetime.now(timezone.utc) if issue_data["is_owned"] else None),
         read_date=issue_data.get("read_date") or (datetime.now(timezone.utc) if issue_data["is_read"] else None),
-        bought_price=issue_data.get("bought_price")
+        bought_price=issue_data.get("bought_price"),
+        metron_id=issue_data.get("metron_id"),
+        metron_url=issue_data.get("metron_url"),
         )
         db.session.add(issue)
         new_issues.append(issue)
@@ -111,18 +115,22 @@ def create_single_issue(series_id):
     return new_issue
 
 
-@issues.route('/series/issues/<int:id>/', methods=['GET'])
+@issues.route('/series/<int:series_id>/issues/<int:number>/', methods=['GET'])
 @authenticate(token_auth)
 @response(issue_schema)
-@other_responses({404: 'Series not found'})
-def get(id):
-    """Retrieve an issue by id"""
-    return db.session.get(Issue, id) or abort(404)
+@other_responses({404: 'Issue not found'})
+def get_issue(series_id, number):
+    """Retrieve an issue by its series ID and issue number"""
+    return db.session.scalar(
+        Issue.select()
+        .where(Issue.series_id == series_id, Issue.number == number)
+        .options(joinedload(Issue.series))
+    ) or abort(404)
 
 
 @issues.route('/series/issues/', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(issues_schema, order_by=Issue.title,
+@paginated_response(slim_issue_schema, order_by=Issue.title,
                     order_direction='asc',
                     pagination_schema=DateTimePaginationSchema)
 def all():
@@ -132,7 +140,7 @@ def all():
 
 @issues.route('/series/<int:id>/issues', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(issues_schema, order_by=Issue.timestamp,
+@paginated_response(slim_issue_schema, order_by=Issue.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
 @other_responses({404: 'User not found'})

@@ -34,6 +34,10 @@ export default {
     return Api().get(`series/${id}/issue_count`);
   },
 
+  getIssue(seriesId: number, number: number) {
+    return Api().get(`series/${seriesId}/issues/${number}/`);
+  },
+
   updateIssue(id: number, data: any) {
     return Api().put(`series/issues/${id}/`, data);
   },

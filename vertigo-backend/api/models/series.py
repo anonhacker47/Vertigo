@@ -41,9 +41,11 @@ class Series(Updateable, MetronIdentifiable, Syncable, db.Model):
                                   lazy='noload', cascade='all, delete-orphan')
     
     manga = sqla.Column(sqla.Boolean, default=False)
+    
     release_date = sqla.Column(sqla.DateTime)
     
     purchase_cost = sqla.Column(sqla.Float)
+    notes = sqla.Column(sqla.String(3000))
 
     series_format = sqla.Column(sqla.String(100))
     issue_count = sqla.Column(sqla.Integer)

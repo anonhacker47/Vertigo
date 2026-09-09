@@ -242,16 +242,16 @@ const router = createRouter({
       component: () => import("@/views/EntityEditView.vue"),
       props: { type: "character" },
     },
-    // {
-    //   path: "/:type/:Id-:Link",
-    //   name: "PublisherDetail",
-    //   meta: {
-    //     requiresAuth: true,
-    //     showHeaderItem: true,
-    //   },
-    //   component: () =>
-    //     import("@/views/entities/detail_views/PublisherView.vue"),
-    // },
+    {
+      path: "/series/:seriesId-:slug/issue/:number",
+      name: "IssueDetail",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+        transparentHeader: true,
+      },
+      component: () => import("@/views/IssueDetailView.vue"),
+    },
   ],
 });
 

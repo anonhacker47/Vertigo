@@ -26,6 +26,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
     character = ma.List(ma.String(validate=validate.Length(min=0, max=280), allow_none=True))
         
     description = ma.auto_field(validate=validate.Length(min=0, max=3000))
+    notes = ma.auto_field(validate=validate.Length(min=0, max=3000))
 
     user_rating = ma.auto_field()
 

@@ -10,7 +10,7 @@ class IssueSchema(ma.SQLAlchemySchema):
         model = Issue
         include_fk = True
         ordered = True
-        exclude = ("series", "user")
+        exclude = (["user"])
 
     id = ma.auto_field(dump_only=True)
     url = ma.String(dump_only=True)
@@ -20,6 +20,11 @@ class IssueSchema(ma.SQLAlchemySchema):
     
     number = ma.auto_field() 
     cover_date = ma.auto_field()
+
+    notes = ma.auto_field(validate=validate.Length(
+        max=3000))
+    
+    user_rating = ma.auto_field()
     
     is_read = ma.Boolean()
     is_owned = ma.Boolean() 
@@ -38,6 +43,8 @@ class IssueSchema(ma.SQLAlchemySchema):
     user = ma.Nested(UserSchema, dump_only=True)
     user_id = ma.auto_field(dump_only=True)
 
+    metron_id = ma.Integer(allow_none=True)
+    metron_url = ma.String(allow_none=True)
     @post_dump
     def fix_datetimes(self, data, **kwargs):
         data['timestamp'] += 'Z'
@@ -47,4 +54,4 @@ class IssueSchema(ma.SQLAlchemySchema):
 class SlimIssueSchema(IssueSchema):
     class Meta:
         model = Issue
-        exclude = ("series", "user")
+        exclude = ("series",)

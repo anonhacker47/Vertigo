@@ -2,6 +2,7 @@ import sqlalchemy as sqla
 from sqlalchemy import orm as sqla_orm
 from datetime  import datetime
 from slugify import slugify
+from sqlalchemy.schema import UniqueConstraint 
 
 from flask import url_for
 
@@ -15,10 +16,12 @@ class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
-    number = sqla.Column(sqla.Integer)
-    summary = sqla.Column(sqla.String(570))
+    number = sqla.Column(sqla.Integer, nullable=False)
+    description = sqla.Column(sqla.String(570))
 
     cover_date = sqla.Column(sqla.DateTime)
+
+    notes = sqla.Column(sqla.String(3000))
 
     slug = sqla.Column(sqla.String(280))
     thumbnail = sqla.Column(sqla.String(280))
@@ -27,6 +30,8 @@ class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
     is_owned = sqla.Column(sqla.Integer)
 
     bought_price = sqla.Column(sqla.Float)
+
+    user_rating = sqla.Column(sqla.Float)
     
     bought_date = sqla.Column(sqla.DateTime)
     read_date = sqla.Column(sqla.DateTime)
@@ -43,6 +48,10 @@ class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
 
     series = sqla_orm.relationship('Series', back_populates='issue')
 
+    __table_args__ = (
+        UniqueConstraint('series_id', 'number', name='uq_series_issue_number'),
+    )
+
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))
@@ -55,4 +64,4 @@ class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
 
     @property
     def url(self):
-        return url_for('issue.get', id=self.id)
+        return url_for('issue.get_issue', series_id=self.series_id, number=self.number)
