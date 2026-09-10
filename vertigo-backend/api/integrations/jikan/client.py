@@ -1,6 +1,6 @@
 # integrations.jikan.client
 
-from flask import g, current_app
+from flask import g
 import requests
 from requests import Session
 

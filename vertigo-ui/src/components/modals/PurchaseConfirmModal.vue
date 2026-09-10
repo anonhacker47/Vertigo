@@ -7,6 +7,15 @@
 
       <div class="flex flex-col gap-4 mb-6">
         <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Bought Date</label>
+          <div class="relative rounded-xl shadow-sm">
+            <input type="date" v-model="localDate"
+              class="block w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 px-4 text-white placeholder-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm [color-scheme:dark]"
+              @keyup.enter="handleConfirm" />
+          </div>
+        </div>
+
+                <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Purchase Price</label>
           <div class="relative rounded-xl shadow-sm">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
@@ -15,15 +24,6 @@
             <input type="number" v-model="localPrice" placeholder="0.00" step="0.01" min="0"
               class="block w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 pl-10 pr-4 text-white placeholder-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
               @keyup.enter="handleConfirm" ref="inputRef" />
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Bought Date</label>
-          <div class="relative rounded-xl shadow-sm">
-            <input type="date" v-model="localDate"
-              class="block w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 px-4 text-white placeholder-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm [color-scheme:dark]"
-              @keyup.enter="handleConfirm" />
           </div>
         </div>
       </div>

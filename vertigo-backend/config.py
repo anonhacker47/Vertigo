@@ -12,9 +12,13 @@ def as_bool(value):
 
 
 class Config:
+    # Root for everything the app writes: sqlite db, metron cache, user images.
+    DATA_DIR = os.path.abspath(
+        os.environ.get('VERTIGO_DATA_DIR') or os.path.join(basedir, 'Config'))
+
     # database options
     ALCHEMICAL_DATABASE_URL = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'Config/vertigo.sqlite')
+        'sqlite:///' + os.path.join(DATA_DIR, 'vertigo.sqlite')
     ALCHEMICAL_ENGINE_OPTIONS = {'echo': as_bool(os.environ.get('SQL_ECHO'))}
 
     # security options
@@ -39,7 +43,7 @@ class Config:
     #Metron Integraion
     METRON_USERNAME =  os.environ.get('METRON_USERNAME', 'set_username')
     METRON_PASSWORD =  os.environ.get('METRON_PASSWORD', 'set_password')
-    METRON_CACHE_DB = "Config/metron_cache.db"
+    METRON_CACHE_DB = os.path.join(DATA_DIR, 'metron_cache.db')
 
     # API documentation
     APIFAIRY_TITLE = 'Vertigo API'

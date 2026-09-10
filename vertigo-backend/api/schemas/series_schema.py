@@ -1,4 +1,4 @@
-from marshmallow import post_load, validate, post_dump, fields, EXCLUDE
+from marshmallow import validate, post_dump, fields, EXCLUDE
 from api import ma
 from api.models.series import Series
 from api.schemas.user_schema import UserSchema

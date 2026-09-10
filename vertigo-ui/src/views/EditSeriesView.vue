@@ -72,6 +72,9 @@ async function updateSeries() {
     formData.append("issue_count", String(data.issue_count || 0));
     formData.append("read_count", String(data.read_count || 0));
     formData.append("owned_count", String(data.owned_count || 0));
+    // Empty means "no Metron link"; the backend treats "" as null.
+    formData.append("metron_id", data.metron_id ? String(data.metron_id) : "");
+    formData.append("metron_url", data.metron_url?.trim() || "");
     // Convert arrays to JSON strings
     formData.append("character", JSON.stringify(data.character || []));
     formData.append("genre", JSON.stringify(data.genre || []));

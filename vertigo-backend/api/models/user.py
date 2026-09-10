@@ -3,7 +3,7 @@ import jwt
 from time import time
 from sqlalchemy import orm as sqla_orm
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from hashlib import md5
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -77,15 +77,9 @@ class User(Updateable, db.Model):
     def creator_select(self):
         return series_entities.Creator.select().where(sqla_orm.with_parent(self, User.creator))
 
-    def genre_select(self):
-        return series_entities.Genre.select().where(sqla_orm.with_parent(self, User.genre))
-
     def character_select(self):
         return series_entities.Character.select().where(sqla_orm.with_parent(self, User.character))
 
-    def covers_select(id):
-        return Series.select().where(Series.id == id)
-    
     def following_select(self):
         return User.select().where(sqla_orm.with_parent(self, User.following))
 

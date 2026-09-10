@@ -1,5 +1,4 @@
 import os
-from pydoc import render_doc
 from flask import Flask, redirect, send_file, send_from_directory, url_for, request, render_template
 from alchemical.flask import Alchemical
 from flask_marshmallow import Marshmallow
@@ -20,19 +19,11 @@ def create_app(config_class=Config):
             static_folder = "./wwwroot/static",
             template_folder = "./wwwroot")
     app.config.from_object(config_class)
-   
-    app.config['user_path'] = os.path.abspath("./Config/User/")
-    app.config['sql_path'] = os.path.abspath("./Config/")
 
-    # Check if 'sql_path' exists and create it if not
-    if not os.path.exists(app.config['sql_path']):
-        os.makedirs(app.config['sql_path'])
-        print("The 'sql_path' directory is created!")    
-
-    # Check if 'cover_path' exists and create it if not
-    if not os.path.exists(app.config['user_path']):
-        os.makedirs(app.config['user_path'])
-        print("The 'User' directory is created!")  
+    # DATA_DIR holds the sqlite db, the metron cache and every user image
+    # (see api/media for the layout). Configurable via VERTIGO_DATA_DIR.
+    from api import media
+    os.makedirs(os.path.join(app.config['DATA_DIR'], media.USERS_DIR), exist_ok=True)
 
     # extensions
     from api import models  
@@ -134,5 +125,7 @@ def create_app(config_class=Config):
 
     from api.integrations.jikan.task_queue import start_jikan_workers
     start_jikan_workers(app, num_workers=1)
+
+    media.start_media_worker(app)
 
     return app

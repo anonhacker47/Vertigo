@@ -1,11 +1,12 @@
-import os
 from datetime  import datetime, timezone
 
-from flask import Blueprint, abort, jsonify, request, send_file, send_from_directory
+from flask import Blueprint, abort, current_app, jsonify, request
 from apifairy import authenticate, body, response, other_responses
 
+import sqlalchemy as sqla
 from sqlalchemy.orm import joinedload
 from api import db
+from api import media
 from api.models.user import User
 from api.models.series import Series
 from api.models.issue import Issue
@@ -128,6 +129,41 @@ def get_issue(series_id, number):
     ) or abort(404)
 
 
+@issues.route('/series/<int:series_id>/issues/<int:number>/neighbors', methods=['GET'])
+@authenticate(token_auth)
+@other_responses({403: 'Not allowed to view this series',
+                  404: 'Issue not found'})
+def issue_neighbors(series_id, number):
+    """Previous and next issue of a series by number, plus this issue's position in the run."""
+    series = db.session.get(Series, series_id) or abort(404)
+    if series.user_id != token_auth.current_user().id:
+        abort(403)
+
+    base = series.issue_select()
+    current = db.session.scalar(base.where(Issue.number == number)) or abort(404)
+
+    previous_issue = db.session.scalar(
+        base.where(Issue.number < current.number).order_by(Issue.number.desc()).limit(1))
+    next_issue = db.session.scalar(
+        base.where(Issue.number > current.number).order_by(Issue.number.asc()).limit(1))
+
+    position = db.session.scalar(sqla.select(sqla.func.count()).select_from(
+        base.where(Issue.number <= current.number).subquery()))
+    total = db.session.scalar(sqla.select(sqla.func.count()).select_from(base.subquery()))
+
+    def format_item(item):
+        if item is None:
+            return None
+        return {'id': item.id, 'number': item.number, 'title': item.title}
+
+    return jsonify({
+        'previous': format_item(previous_issue),
+        'next': format_item(next_issue),
+        'position': position,
+        'total': total,
+    })
+
+
 @issues.route('/series/issues/', methods=['GET'])
 @authenticate(token_auth)
 @paginated_response(slim_issue_schema, order_by=Issue.title,
@@ -227,6 +263,7 @@ def delete(id):
 
     if is_last:
         db.session.delete(issue)
+        media.remove(issue.user_id, issue.thumbnail)
             # Recalculate series counters
         issues = issue.series.issue_select()
         issues_data = db.session.scalars(issues).all()
@@ -241,20 +278,90 @@ def delete(id):
     else:
         return jsonify({"error": "Cannot delete issues that are not the last in the series"}), 403
 
-# @series.route('/feed', methods=['GET'])
-# @authenticate(token_auth)
-# @paginated_response(multi_series_schema, order_by=Series.title,
-#                     order_direction='asc',
-#                     pagination_schema=DateTimePaginationSchema)
-# def feed():
-#     """Retrieve the user's series feed"""
-#     user = token_auth.current_user()
-#     return user.followed_series_select()
+def download_issue_cover(issue_id, url, user_id):
+    """Media-worker task: fetch ``url`` as the issue's cover.
 
-# @series.route('series/images/<int:id>',methods=['GET'])
-# # @authenticate(token_auth)
-# def upload(id):
-#     """Retrieve series image"""
-#     series = db.session.get(Series, id)
-#     print(series.thumbnail)
-#     return send_file(current_app.config['cover_path']+f"\\{series.thumbnail}")
+    Skipped if the issue gained a cover in the meantime, so a file the user picked
+    is never overwritten by a queued download.
+    """
+    try:
+        issue = db.session.get(Issue, issue_id)
+        if issue is None or issue.user_id != user_id or issue.thumbnail:
+            return
+        relpath, _ = media.store(
+            user_id, media.issues_dir(issue.series_id), str(issue.id), url)
+        issue.thumbnail = relpath
+        db.session.commit()
+    except media.MediaError as exc:
+        db.session.rollback()
+        current_app.logger.warning("issue %s cover download failed: %s", issue_id, exc)
+    finally:
+        db.session.close()
+
+
+@issues.route('/series/issues/<int:id>/cover', methods=['PUT'])
+@authenticate(token_auth)
+@other_responses({400: 'Invalid image',
+                  403: 'Not allowed to edit this issue',
+                  404: 'Issue not found'})
+def set_cover(id):
+    """Set, replace or clear an issue's own cover.
+
+    multipart/form-data with a ``thumbnail`` field holding a file, an http(s) URL, or
+    the string ``noimage`` to clear it. With a URL, ``background=true`` queues the
+    download and answers 202 immediately; the cover is only filled in if the issue
+    still has none when the download finishes. The backend never fetches a cover on
+    its own from the issue's Metron id.
+    """
+    issue = db.session.get(Issue, id) or abort(404)
+    user = token_auth.current_user()
+    if issue.user != user:
+        abort(403)
+
+    value = (request.form.get('thumbnail') or '').strip()
+    file = request.files.get('thumbnail')
+    has_file = file is not None and bool(file.filename)
+    background = (request.form.get('background') or '').lower() in ('1', 'true', 'yes')
+
+    if background and not has_file and value.startswith(('http://', 'https://')):
+        media.submit(download_issue_cover, issue.id, value, user.id)
+        return issue_schema.dump(issue), 202
+
+    try:
+        state, relpath, _ = media.apply_thumbnail_field(
+            user.id, request.form, request.files, 'thumbnail',
+            rel_dir=media.issues_dir(issue.series_id), filename=str(issue.id),
+            current=issue.thumbnail,
+        )
+    except media.MediaError as exc:
+        return jsonify({"error": f"Failed to save cover: {exc}"}), 400
+
+    if state == 'set':
+        issue.thumbnail = relpath
+    elif state == 'cleared':
+        issue.thumbnail = None
+    db.session.commit()
+    return issue_schema.dump(issue)
+
+
+@issues.route('/series/issues/<int:id>/cover', methods=['DELETE'])
+@authenticate(token_auth)
+@other_responses({403: 'Not allowed to edit this issue', 404: 'Issue not found'})
+def delete_cover(id):
+    """Remove an issue's own cover so it falls back to the series cover."""
+    issue = db.session.get(Issue, id) or abort(404)
+    if issue.user != token_auth.current_user():
+        abort(403)
+    media.remove(issue.user_id, issue.thumbnail)
+    issue.thumbnail = None
+    db.session.commit()
+    return '', 204
+
+
+@issues.route('/series/issues/<int:id>/image', methods=['GET'])
+def get_issue_image(id):
+    """Retrieve the issue's own cover (JSON "noimage" when it has none)."""
+    issue = db.session.get(Issue, id)
+    if issue is None:
+        return jsonify("Issue not found"), 404
+    return media.send(issue.user_id, issue.thumbnail)

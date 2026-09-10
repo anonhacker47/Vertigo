@@ -41,7 +41,7 @@ import { ref, toRaw, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Series } from "@/types/series.types";
-import type { Issue } from "@/types/issue.types";
+import type { Issue, IssueDraft } from "@/types/issue.types";
 
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
@@ -69,7 +69,7 @@ const toast = useToast();
 const showIssueSection = ref(false);
 const readAll = ref(false);
 const haveAll = ref(false);
-const issues = ref<Issue[]>([]);
+const issues = ref<IssueDraft[]>([]);
 
 let isImportingMetronData = false;
 
@@ -100,14 +100,16 @@ function updateIssuesCount(newCount: number) {
   if (newCount > currentLength) {
     for (let i = currentLength; i < newCount; i++) {
       issues.value.push({
+        title: "",
         read: false,
         have: false,
         purchaseDate: null,
         readDate: null,
         price: null,
         metron_id: null,
-        metron_url: null
-      } as unknown as Issue);
+        metron_url: null,
+        cover: null
+      });
     }
   } else if (newCount < currentLength) {
     issues.value.splice(newCount);
@@ -127,14 +129,17 @@ function onMetronSelect(seriesDetail, seriesEntities, metronIssues = []) {
       mi => Number(mi.number) === currentNumber || String(mi.number) === String(currentNumber)
     );
     return {
+      title: "",
       read: false,
       have: false,
       purchaseDate: null,
       readDate: null,
       price: null,
       metron_id: matched ? Number(matched.metron_id) : null,
-      metron_url: matched ? matched.metron_url : null
-    } as unknown as Issue;
+      metron_url: matched ? matched.metron_url : null,
+      // Metron only prefills the cover; whatever is in the field at submit time is what gets sent.
+      cover: matched?.image || null
+    };
   });
 
   seriesData.value = {
@@ -299,7 +304,7 @@ async function addIssues(seriesId: number) {
 
     const issuePayload = issues.value.map((issue, index) => ({
       number: index + 1,
-      title: String(index + 1), 
+      title: issue.title?.trim() || String(index + 1),
       is_owned: issue.have, 
       is_read: issue.read,
       bought_date: issue.purchaseDate ? new Date(issue.purchaseDate).toISOString() : null,
@@ -309,11 +314,61 @@ async function addIssues(seriesId: number) {
       metron_url: issue.metron_url || null,
     }));
 
-    await IssueService.addIssues(seriesId, issuePayload);
+    const response = await IssueService.addIssues(seriesId, issuePayload);
     console.log("Issues added successfully!");
+
+    await uploadIssueCovers(response.data);
   } catch (error) {
     console.error("Error adding issues:", error.response?.data || error);
   }
+}
+
+/**
+ * Upload the per-issue covers picked in the form, matched to the created issues by number.
+ * File covers are saved inline and awaited; URL covers are queued server-side (background=true)
+ * and do not hold up navigation. One warning toast is shown if any upload fails.
+ */
+function uploadIssueCovers(createdIssues: Pick<Issue, "id" | "number">[]): Promise<void> {
+  const created = Array.isArray(createdIssues) ? createdIssues : [];
+  const inline: Promise<unknown>[] = [];
+  const background: Promise<unknown>[] = [];
+
+  issues.value.forEach((issue, index) => {
+    const cover = issue.cover instanceof File ? issue.cover : (issue.cover?.trim() || null);
+    if (!cover) return;
+
+    const number = index + 1;
+    const match = created.find((c) => Number(c.number) === number);
+    if (!match?.id) {
+      inline.push(Promise.reject(new Error(`Issue #${number} was not returned by the server; cover skipped.`)));
+      return;
+    }
+
+    if (cover instanceof File) {
+      inline.push(IssueService.updateIssueCover(match.id, cover));
+    } else {
+      background.push(IssueService.updateIssueCover(match.id, cover, { background: true }));
+    }
+  });
+
+  const all = [...inline, ...background];
+  if (!all.length) return Promise.resolve();
+
+  // Report once everything has settled; for background uploads this may be after navigation.
+  Promise.allSettled(all).then((results) => {
+    const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (!failed.length) return;
+
+    failed.forEach((r) => console.error("Issue cover upload failed:", r.reason?.response?.data || r.reason));
+    toast.add({
+      severity: "warn",
+      summary: "Some covers not uploaded",
+      detail: `${failed.length} of ${all.length} issue cover(s) could not be uploaded; the series cover will be shown for those.`,
+      life: 6000,
+    });
+  });
+
+  return Promise.allSettled(inline).then(() => undefined);
 }
 
 function onImageChange(file: File | string) {

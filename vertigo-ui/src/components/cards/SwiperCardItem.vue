@@ -4,7 +4,7 @@
             delay: 12500,
             disableOnInteraction: false,
         }" :navigation="true" :modules="modules" class="max-w-full h-full max-h-full px-2 py-4">
-            <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.title"
+            <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.id ?? issue.title"
                 style="display: flex; flex-direction: column;">
                 <div class="rounded-md flex items-stretch justify-center w-full px-4 h-auto md:h-[350px]">
                     <RouterLink :to="{
@@ -20,7 +20,7 @@
                         {{ issue.series }}
                     </div>
                     <div class="text-md sm:text-sm md:text-lg font-semibold capitalize text-white truncate">
-                        Vol {{ issue.title }}
+                        {{ issueDisplayLabel(issue.title, issue.number) }}
                     </div>
                     <div class="text-xs sm:text-[10px] md:text-sm text-gray-400 truncate">
                         {{ issue.bought_date }}
@@ -38,6 +38,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 
 import { EffectCards, Navigation, Autoplay } from "swiper/modules";
+import { issueDisplayLabel } from "@/utils/issueTitle";
 
 const modules = [EffectCards, Navigation, Autoplay];
 

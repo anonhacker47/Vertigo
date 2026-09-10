@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from apifairy import authenticate
-from datetime import datetime, timezone
+from datetime import datetime
 import sqlalchemy as sqla
 
 from api import db

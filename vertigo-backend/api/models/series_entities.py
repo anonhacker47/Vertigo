@@ -4,7 +4,7 @@ from datetime  import datetime, timezone
 from slugify import slugify
 
 import api.models.associations as associations 
-from flask import current_app, url_for
+from flask import url_for
 
 from api.app import db
 from api.models.updatable import Updateable

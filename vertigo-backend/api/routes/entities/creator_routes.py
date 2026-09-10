@@ -1,26 +1,24 @@
-import os
 from flask import jsonify
 
-from flask import Blueprint, abort, request, send_file
-from apifairy import authenticate, body, response, other_responses
+from flask import Blueprint, abort, request
+from apifairy import authenticate, response, other_responses
 from sqlalchemy import func, or_, select
 from api import db
 from api.models.series_entities import Creator
 
 from api.schemas.creator_schema import CreatorSchema, CreatorDetailSchema
 
-from api.utils.files import get_user_path
+from api import media
+from api.routes.entities.thumbnails import apply_entity_thumbnail
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import download_thumbnail, save_thumbnail,delete_thumbnail
 
 
 creator = Blueprint('creator', __name__)
 creator_schema = CreatorSchema()
 multi_creator_schema = CreatorSchema(many=True)
 update_creator_schema = CreatorSchema(partial=True)
-creator_thumbs_folder = "Entities/Creator"
 
 @creator.route('/creator', methods=['POST'])
 @authenticate(token_auth)
@@ -45,21 +43,12 @@ def create_creator():
     )
 
     db.session.add(creator)
+    db.session.flush()  # the thumbnail is stored under the entity's id
 
-    # Thumbnail: URL or file
-    if thumbnail.startswith("http"):
-        # Thumbnail URL provided
-        filename = download_thumbnail(
-            thumbnail, title, user.id, creator_thumbs_folder)
-        if filename:
-            creator.thumbnail = filename
-
-    elif 'thumbnail' in request.files:
-        # Thumbnail uploaded as file
-        file = request.files['thumbnail']
-        filename = save_thumbnail(
-            file, title, user.id, creator_thumbs_folder)
-        creator.thumbnail = filename
+    err = apply_entity_thumbnail(creator, 'creator', user.id)
+    if err:
+        db.session.rollback()
+        return err
 
     db.session.commit()
     return creator_schema.dump(creator), 201
@@ -104,26 +93,9 @@ def get(id):
 def get_creator_image(id):
     """Retrieve the creator thumbnail"""
     creator = db.session.get(Creator, id)
-
-    user = creator.user
-    user_id = user.id
-
     if creator is None:
         return jsonify("Creator not found"), 404
-
-    if creator.thumbnail is None:
-        return jsonify("noimage")
-
-    try:
-        base_path = get_user_path(user_id, creator_thumbs_folder)
-        file_path = os.path.join(base_path, creator.thumbnail)
-        
-        return send_file(file_path)
-    except FileNotFoundError:
-        return jsonify("Image file not found"), 404
-    except Exception as e:
-        # Handle other potential exceptions (e.g., permission errors)
-        return jsonify(f"Error retrieving image: {str(e)}"), 500
+    return media.send(creator.user_id, creator.thumbnail)
     
 
 @creator.route('/creator/<int:id>/neighbours', methods=['GET'])
@@ -182,54 +154,9 @@ def update_creator(id):
     description = request.form.get('description', '').strip()
     creator.description = description or creator.description
 
-    incoming_thumb = request.form.get('thumbnail', '').strip() if 'thumbnail' in request.form else ''
-    old_thumb = creator.thumbnail
-    new_filename = None
-    error_occurred = False
-
-    if incoming_thumb or 'thumbnail' in request.files:
-
-        if incoming_thumb and incoming_thumb.__contains__("/api/"):
-            new_filename = None
-
-        else:
-            try:
-                if incoming_thumb.startswith('http'):
-                    new_filename = download_thumbnail(
-                        incoming_thumb,
-                        creator.title,
-                        user.id,
-                        creator_thumbs_folder
-                    )
-
-                elif 'thumbnail' in request.files:
-                    file = request.files['thumbnail']
-                    new_filename = save_thumbnail(
-                        file,
-                        creator.title,
-                        user.id,
-                        creator_thumbs_folder
-                    )
-
-                elif incoming_thumb == "":
-                    new_filename = None
-
-                if new_filename is False:
-                    error_occurred = True
-
-            except Exception as e:
-                print("Thumbnail update failed:", e)
-                error_occurred = True
-
-            if error_occurred:
-                return jsonify({"error": "Failed to update thumbnail"}), 400
-
-            # If thumbnail is changing, delete old file
-            if new_filename is not None and old_thumb:
-                delete_thumbnail(old_thumb, user.id, creator_thumbs_folder)
-
-            # Apply updated or cleared thumbnail
-            creator.thumbnail = new_filename
+    err = apply_entity_thumbnail(creator, 'creator', user.id)
+    if err:
+        return err
 
     db.session.commit()
     return creator
@@ -245,14 +172,7 @@ def delete(id):
 
     db.session.delete(creator)
 
-    if creator.thumbnail:
-        cover_dir = get_user_path(creator.user.id, creator_thumbs_folder)
-        file_path = os.path.join(cover_dir, creator.thumbnail)
-
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        else:
-            print("Thumbnail file does not exist:", file_path)
+    media.remove(creator.user_id, creator.thumbnail)
 
     db.session.commit()
     return '', 204

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import secrets
 import jwt
-from flask import current_app, url_for
+from flask import current_app
 
 from api.app import db
 

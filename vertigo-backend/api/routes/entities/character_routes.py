@@ -1,33 +1,25 @@
-import os
-from pstats import SortKey
-import random
-from flask import current_app, json, jsonify
-import sqlite3
+from flask import jsonify
 
-from flask import Blueprint, abort, request, send_file, send_from_directory
-from apifairy import authenticate, body, response, other_responses
+from flask import Blueprint, abort, request
+from apifairy import authenticate, response, other_responses
 from sqlalchemy import func, or_, select
 from api import db
-from api.models.user import User
 from api.models.series_entities import Character
 import api.models.series_entities as series_entities
-from api.models.issue import Issue
 
 from api.schemas.character_schema import CharacterSchema, CharacterDetailSchema
-from api.schemas.empty_schema import EmptySchema
 
-from api.utils.files import get_user_path
+from api import media
+from api.routes.entities.thumbnails import apply_entity_thumbnail
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import download_thumbnail, save_thumbnail,delete_thumbnail
 
 
 character = Blueprint('character', __name__)
 character_schema = CharacterSchema()
 multi_character_schema = CharacterSchema(many=True)
 update_character_schema = CharacterSchema(partial=True)
-character_thumbs_folder = "Entities/Character"
 
 @character.route('/character', methods=['POST'])
 @authenticate(token_auth)
@@ -52,21 +44,12 @@ def create_character():
     )
 
     db.session.add(character)
+    db.session.flush()  # the thumbnail is stored under the entity's id
 
-    # Thumbnail: URL or file
-    if thumbnail.startswith("http"):
-        # Thumbnail URL provided
-        filename = download_thumbnail(
-            thumbnail, title, user.id, character_thumbs_folder)
-        if filename:
-            character.thumbnail = filename
-
-    elif 'thumbnail' in request.files:
-        # Thumbnail uploaded as file
-        file = request.files['thumbnail']
-        filename = save_thumbnail(
-            file, title, user.id, character_thumbs_folder)
-        character.thumbnail = filename
+    err = apply_entity_thumbnail(character, 'character', user.id)
+    if err:
+        db.session.rollback()
+        return err
 
     db.session.commit()
     return character_schema.dump(character), 201
@@ -112,26 +95,9 @@ def get(id):
 def get_character_image(id):
     """Retrieve the character thumbnail"""
     character = db.session.get(Character, id)
-
-    user = character.user
-    user_id = user.id
-
     if character is None:
         return jsonify("Character not found"), 404
-
-    if character.thumbnail is None:
-        return jsonify("noimage")
-
-    try:
-        base_path = get_user_path(user_id, character_thumbs_folder)
-        file_path = os.path.join(base_path, character.thumbnail)
-        
-        return send_file(file_path)
-    except FileNotFoundError:
-        return jsonify("Image file not found"), 404
-    except Exception as e:
-        # Handle other potential exceptions (e.g., permission errors)
-        return jsonify(f"Error retrieving image: {str(e)}"), 500
+    return media.send(character.user_id, character.thumbnail)
     
 
 @character.route('/character/<int:id>/neighbours', methods=['GET'])
@@ -189,52 +155,9 @@ def update_character(id):
     description = request.form.get('description', '').strip()
     character.description = description or character.description
 
-    incoming_thumb = request.form.get('thumbnail', '').strip() if 'thumbnail' in request.form else ''
-    old_thumb = character.thumbnail
-    new_filename = None
-    error_occurred = False
-
-    if incoming_thumb or 'thumbnail' in request.files:
-
-        if incoming_thumb and incoming_thumb.__contains__("/api/"):
-            new_filename = None
-
-        else:
-            try:
-                if incoming_thumb.startswith('http'):
-                    new_filename = download_thumbnail(
-                        incoming_thumb,
-                        character.title,
-                        user.id,
-                        character_thumbs_folder
-                    )
-
-                elif 'thumbnail' in request.files:
-                    file = request.files['thumbnail']
-                    new_filename = save_thumbnail(
-                        file,
-                        character.title,
-                        user.id,
-                        character_thumbs_folder
-                    )
-
-                elif incoming_thumb == "":
-                    new_filename = None
-
-                if new_filename is False:
-                    error_occurred = True
-
-            except Exception as e:
-                print("Thumbnail update failed:", e)
-                error_occurred = True
-
-            if error_occurred:
-                return jsonify({"error": "Failed to update thumbnail"}), 400
-
-            if new_filename is not None and old_thumb:
-                delete_thumbnail(old_thumb, user.id, character_thumbs_folder)
-
-            character.thumbnail = new_filename
+    err = apply_entity_thumbnail(character, 'character', user.id)
+    if err:
+        return err
 
     db.session.commit()
     return character
@@ -250,14 +173,7 @@ def delete(id):
 
     db.session.delete(character)
 
-    if character.thumbnail:
-        cover_dir = get_user_path(character.user.id, character_thumbs_folder)
-        file_path = os.path.join(cover_dir, character.thumbnail)
-
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        else:
-            print("Thumbnail file does not exist:", file_path)
+    media.remove(character.user_id, character.thumbnail)
 
     db.session.commit()
     return '', 204

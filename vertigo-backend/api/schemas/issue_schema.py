@@ -18,8 +18,10 @@ class IssueSchema(ma.SQLAlchemySchema):
     title = ma.auto_field(validate=validate.Length(
         min=1, max=280))
     
-    number = ma.auto_field() 
+    number = ma.auto_field()
     cover_date = ma.auto_field()
+
+    description = ma.auto_field(validate=validate.Length(max=570))
 
     notes = ma.auto_field(validate=validate.Length(
         max=3000))
@@ -35,7 +37,12 @@ class IssueSchema(ma.SQLAlchemySchema):
 
     slug = ma.String()
 
+    # Relative path of the issue's own cover (see api/media); set only through
+    # PUT /series/issues/<id>/cover. Null means "fall back to the series cover".
+    thumbnail = ma.String(dump_only=True)
+
     timestamp = ma.auto_field(dump_only=True)
+    last_updated = ma.auto_field(dump_only=True)
 
     series = ma.Nested(SeriesSchema, dump_only=True)
     series_id = ma.auto_field(dump_only=True)

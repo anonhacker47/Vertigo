@@ -1,5 +1,5 @@
-from flask import Blueprint, current_app
-from apifairy import authenticate, other_responses, arguments
+from flask import Blueprint
+from apifairy import authenticate, arguments
 from marshmallow import Schema, fields
 from mokkari.exceptions import RateLimitError, ApiError
 
@@ -112,7 +112,8 @@ def get_series_entities(series_id):
             issues_list.append({
                 "metron_id": getattr(issue, "id", stub.id),
                 "number": getattr(issue, "number", None),
-                "metron_url": str(getattr(issue, "resource_url", "")) if getattr(issue, "resource_url", None) else None
+                "metron_url": str(getattr(issue, "resource_url", "")) if getattr(issue, "resource_url", None) else None,
+                "image": str(issue.image) if getattr(issue, "image", None) else None,
             })
 
             if issue.credits:

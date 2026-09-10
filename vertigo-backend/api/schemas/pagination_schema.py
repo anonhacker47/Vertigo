@@ -1,6 +1,4 @@
-from email.policy import default
-from marshmallow import validate, validates, validates_schema, \
-    ValidationError, post_dump
+from marshmallow import validates_schema, ValidationError
 from api import ma
 
 paginated_schema_cache = {}

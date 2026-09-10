@@ -1,13 +1,12 @@
-import os
 from apifairy.decorators import other_responses
-from flask import Blueprint, abort, current_app, jsonify,request, send_file
+from flask import Blueprint, abort, jsonify, request, send_file
 from apifairy import authenticate, body, response
 
 import sqlalchemy as sqla
 from api import db
 from api.models.user import User
 from api.models.series import Series
-from api.utils.files import get_user_path, init_user_folders
+from api import media
 import pandas as pd
 from io import BytesIO
 from flask import send_file
@@ -15,7 +14,6 @@ from api.schemas.user_schema import UserSchema, UpdateUserSchema
 from sqlalchemy.orm import selectinload
 
 from api.utils.auth import token_auth
-from api.helpers.thumbnail_processing import delete_user_images, download_thumbnail, save_thumbnail
 
 from api.helpers.excel_processing import create_stats_sheet, format_series_sheet, format_issues_sheet
 from babel.numbers import get_currency_symbol
@@ -35,7 +33,7 @@ def new(args):
     user = User(**args)
     db.session.add(user)
     db.session.commit()
-    init_user_folders(user.id)
+    media.init_user_dirs(user.id)
     return user
 
 
@@ -100,17 +98,19 @@ def put():
             abort(400, description="Old password missing or incorrect")
         user.password = form.get('password')
 
-    # Handle profile picture
-    profile_picture = form.get('profile_picture', '').strip() if 'profile_picture' in form else ''
-    if profile_picture.startswith('http'):
-        picture_filename = download_thumbnail(profile_picture, user.username,user.id,'Avatar')
-        if picture_filename:
-            user.profile_picture = picture_filename
-    elif 'profile_picture' in request.files:
-        file = request.files['profile_picture']
-        picture_filename = save_thumbnail(file, user.username,user.id,'Avatar')
-        if picture_filename:
-            user.profile_picture = picture_filename
+    # Profile picture: file, URL or "noimage"; the previous file is replaced.
+    try:
+        state, relpath, _ = media.apply_thumbnail_field(
+            user.id, form, request.files, 'profile_picture',
+            rel_dir=media.AVATAR_DIR, filename='avatar',
+            current=user.profile_picture,
+        )
+    except media.MediaError as e:
+        abort(400, description=f"Failed to save profile picture: {e}")
+    if state == 'set':
+        user.profile_picture = relpath
+    elif state == 'cleared':
+        user.profile_picture = None
 
     db.session.commit()
     return user
@@ -125,20 +125,7 @@ def get_profile_picture():
         return jsonify("User not found"), 404
 
 
-    if not user.profile_picture:
-        return jsonify("noimage"), 200
-
-    # Build the correct user avatar folder path
-    avatar_dir = get_user_path(user.id, "Avatar")
-    file_path = os.path.join(avatar_dir, user.profile_picture)
-
-    try:
-        return send_file(file_path)
-    except FileNotFoundError:
-        return jsonify("Image file not found"), 404
-    except Exception as e:
-        # Handle other potential exceptions (e.g., permission errors)
-        return jsonify(f"Error retrieving image: {str(e)}"), 500
+    return media.send(user.id, user.profile_picture)
    
 
 
@@ -152,7 +139,8 @@ def export_data():
     series_stmt = user.series_select().options(selectinload(Series.issue))
     series_list = db.session.execute(series_stmt).scalars().all()   
     
-    cover_path = current_app.config['cover_path']
+    def resolve_cover(value):
+        return media.resolve(user.id, value)
 
     # Prepare data for DataFrame
     series_data = []
@@ -203,7 +191,7 @@ def export_data():
 
         # Apply formatting only if data exists
         if not df_series.empty:
-            format_series_sheet(writer.book['Series'], df_series, cover_path)
+            format_series_sheet(writer.book['Series'], df_series, resolve_cover)
         if not df_issues.empty:
             format_issues_sheet(writer.book['Issues'], df_issues)
             
@@ -244,7 +232,7 @@ def delete_all_user_data():
             db.session.delete(item)
 
         deleted_counts[model.__tablename__] = len(items)
-    delete_user_images(user.id)
+    media.delete_user_media(user.id, keep_avatar=True)
     db.session.commit()
 
     return jsonify({

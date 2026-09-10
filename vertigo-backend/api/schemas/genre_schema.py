@@ -1,6 +1,5 @@
 from marshmallow import validate, post_dump
-from api import ma, db
-from api.utils.auth import token_auth
+from api import ma
 from api.models.series_entities import Genre
 
 class GenreSchema(ma.SQLAlchemySchema):

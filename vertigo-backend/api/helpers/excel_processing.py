@@ -4,7 +4,6 @@ from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as OpenpyxlImage
 from openpyxl.styles import Font
 from openpyxl.chart import BarChart, Reference, PieChart
-from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font
 
 # Global Fills
@@ -30,13 +29,14 @@ def apply_fill_conditionally(sheet, df, columns):
             if fill:
                 cell.fill = fill
 
-def add_thumbnails(sheet, df, cover_path):
+def add_thumbnails(sheet, df, resolve_path):
+    """``resolve_path(thumbnail_column_value)`` returns an absolute file path or None."""
     thumb_idx = df.columns.get_loc("Thumbnail") + 1
     thumb_letter = get_column_letter(thumb_idx)
     for row_idx, thumbnail in enumerate(df["Thumbnail"], start=2):
         cell_location = f"{thumb_letter}{row_idx}"
         sheet[cell_location].value = None
-        image_path = os.path.join(cover_path, thumbnail) if thumbnail else None
+        image_path = resolve_path(thumbnail) if thumbnail else None
         if image_path and os.path.exists(image_path):
             img = OpenpyxlImage(image_path)
             img.width = 100
@@ -98,9 +98,9 @@ def format_date_columns(sheet, df, columns):
 
 # === Main Functions ===
 
-def format_series_sheet(sheet, df, cover_path):
+def format_series_sheet(sheet, df, resolve_path):
     apply_fill_conditionally(sheet, df, ["Read Count", "Owned Count"])
-    add_thumbnails(sheet, df, cover_path)
+    add_thumbnails(sheet, df, resolve_path)
     set_sheet_dimensions(sheet, df)
     set_header_font_size(sheet)
 

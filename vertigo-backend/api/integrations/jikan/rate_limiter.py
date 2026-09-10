@@ -1,6 +1,5 @@
 import time
 import threading
-from flask import current_app
 
 _lock = threading.Lock()
 _next_allowed_ts = 0.0 

@@ -1,6 +1,6 @@
 from flask import jsonify, request, url_for
 from sqlalchemy import desc,func
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 
 from flask import Blueprint, abort
@@ -162,10 +162,14 @@ def get_recent_purchases():
 
     recent_purchases = (
         db.session.query(
+            Issue.id,
             Issue.title,
             Issue.number,
+            Issue.thumbnail,
+            Issue.last_updated,
             Issue.bought_date,
             Series.id.label('series_id'),
+            Series.last_updated.label('series_last_updated'),
             Series.slug.label('slug'),
             Series.title.label('series_title')
         )
@@ -179,13 +183,22 @@ def get_recent_purchases():
     
     result = []
     for issue in recent_purchases:
+        # Issue's own cover when it has one, otherwise the series cover. `t` cache-busts
+        # the URL the same way the UI does with last_updated elsewhere.
+        image = (url_for('issue.get_issue_image', id=issue.id, _external=True,
+                         t=int(issue.last_updated.timestamp() * 1000) if issue.last_updated else None)
+                 if issue.thumbnail else
+                 url_for('series.get_series_image', id=issue.series_id, _external=True,
+                         t=int(issue.series_last_updated.timestamp() * 1000) if issue.series_last_updated else None))
         result.append({
+            'id': issue.id,
             'title': issue.title,
+            'number': issue.number,
             'bought_date': issue.bought_date.strftime('%d %b %Y') if issue.bought_date else None,
             'series': issue.series_title,
             'series_id': issue.series_id,
             'slug': issue.slug,
-            'image': url_for('series.get_series_image', id=issue.series_id, _external=True) 
+            'image': image,
         })
     
     return jsonify(result)

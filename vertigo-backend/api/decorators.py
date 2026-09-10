@@ -1,7 +1,6 @@
 from functools import wraps
 from flask import abort,request
 from apifairy import arguments, response
-from api.models.user import User
 from api.models.series import Series
 from api.models.issue import Issue
 import sqlalchemy as sqla

@@ -3,7 +3,7 @@ from flask import json
 from api.models.series_entities import Publisher, Creator, Character, Genre
 from api import db
 from api.integrations.mokkari.utils import fetch_metron_entity_info
-from api.helpers.thumbnail_processing import get_or_download_thumbnail
+from api import media
 from api.integrations.mokkari.task_queue import submit_mokkari_task
 from api.integrations.jikan.utils import fetch_jikan_entity_info
 from api.integrations.jikan.task_queue import submit_jikan_task
@@ -15,11 +15,16 @@ ENTITY_MODEL_MAP = {
     "character": Character,
 }
 
-FOLDER_MAP = {
-    "character": "Entities/Character",
-    "creator": "Entities/Creator",
-    "publisher": "Entities/Publisher",
-}
+def _store_entity_thumbnail(entity, kind, url, user_id):
+    """Download ``url`` as the entity's thumbnail; returns the new relpath or None."""
+    try:
+        relpath, _ = media.store(
+            user_id, media.entity_dir(kind), str(entity.id), url,
+            replace=entity.thumbnail,
+        )
+        return relpath
+    except media.MediaError:
+        return None
 
 def safe_json_list(val):
     try:
@@ -30,9 +35,8 @@ def safe_json_list(val):
     
 def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
     model = ENTITY_MODEL_MAP.get(model_name)
-    folder = FOLDER_MAP.get(metron_type)
 
-    if not model or not folder:
+    if not model or metron_type not in media.ENTITY_KINDS:
         return
 
     try:
@@ -45,12 +49,7 @@ def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
         if hasattr(entity, "description"):
             entity.description = getattr(info, "desc", None)
         if getattr(info, "image", None):
-            thumb, _ = get_or_download_thumbnail(
-                str(info.image),
-                name,
-                user_id,
-                folder
-            )
+            thumb = _store_entity_thumbnail(entity, metron_type, str(info.image), user_id)
             if thumb:
                 entity.thumbnail = thumb
         db.session.commit()
@@ -62,9 +61,8 @@ def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
 
 def enrich_jikan_entity(entity_id, model_name, jikan_type, mal_id, name, user_id):
     model = ENTITY_MODEL_MAP.get(model_name)
-    folder = FOLDER_MAP.get(jikan_type)
 
-    if not model or not folder:
+    if not model or jikan_type not in media.ENTITY_KINDS:
         return
 
     try:
@@ -76,15 +74,10 @@ def enrich_jikan_entity(entity_id, model_name, jikan_type, mal_id, name, user_id
             return
         if hasattr(entity, "description") and info.get("about"):
             entity.description = info.get("about")
-            
+
         image_url = info.get("images", {}).get("jpg", {}).get("image_url")
         if image_url:
-            thumb, _ = get_or_download_thumbnail(
-                image_url,
-                name,
-                user_id,
-                folder
-            )
+            thumb = _store_entity_thumbnail(entity, jikan_type, image_url, user_id)
             if thumb:
                 entity.thumbnail = thumb
         db.session.commit()
@@ -94,9 +87,6 @@ def enrich_jikan_entity(entity_id, model_name, jikan_type, mal_id, name, user_id
     finally:
             db.session.close()
 
-
-def make_entity_cache_key(model, user, title):
-    return f"{model.__tablename__}:{user.id}:{title.lower()}"
 
 def create_or_get_entity(model, name, user, entity_type=None, external_id=None, series_is_manga=False):
     if not name:

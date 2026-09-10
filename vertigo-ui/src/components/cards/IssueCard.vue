@@ -10,11 +10,15 @@
 
     <RouterLink :to="{ name: 'IssueDetail', params: { seriesId: series.id, slug: series.slug, number: issue.number } }"
       class="h-[70%] w-full bg-cover bg-center relative rounded-t-lg overflow-hidden block group cursor-pointer"
-      :style="`background-image: url(${image})`">
+      :style="`background-image: url(${coverImage})`">
       <div
-        class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3 group-hover:bg-black/40 transition-colors duration-200">
-        <p class="text-white text-2xl font-semibold text-center leading-snug tracking-wide">
-          Vol. {{ issue.title }}
+        class="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center gap-0.5 px-3 group-hover:bg-black/40 transition-colors duration-200">
+        <p v-if="hasCustomTitle" class="text-slate-300 text-xs font-semibold tracking-widest">
+          {{ issueNumberLabel(issue.number) }}
+        </p>
+        <p class="text-white font-semibold text-center leading-snug tracking-wide"
+          :class="hasCustomTitle ? 'text-lg line-clamp-3' : 'text-2xl'">
+          {{ hasCustomTitle ? issue.title : issueNumberLabel(issue.number) }}
         </p>
       </div>
     </RouterLink>
@@ -65,6 +69,8 @@
 import { ref, computed } from 'vue';
 import getSymbolFromCurrency from 'currency-symbol-map';
 import { Issue } from '@/types/issue.types';
+import IssueService from '@/services/IssueService';
+import { hasCustomIssueTitle, issueNumberLabel } from '@/utils/issueTitle';
 
 const props = defineProps({
   issue: { type: Object as () => Issue, required: true },
@@ -79,6 +85,15 @@ const props = defineProps({
 const emit = defineEmits(['updateStatus', 'deleteIssue']);
 
 const editMode = computed(() => props.edit_mode);
+
+const hasCustomTitle = computed(() => hasCustomIssueTitle(props.issue.title, props.issue.number));
+
+// The issue's own cover (cache-busted by last_updated) wins; otherwise the series cover passed as `image`.
+const coverImage = computed(() =>
+  props.issue.thumbnail
+    ? IssueService.getIssueImageById(props.issue.id, props.issue.last_updated)
+    : props.image
+);
 const symbol = getSymbolFromCurrency(props.preferred_currency);
 
 function formatDate(dateStr: Date | string): string {

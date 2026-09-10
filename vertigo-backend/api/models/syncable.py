@@ -1,7 +1,6 @@
 import sqlalchemy as sqla
 from sqlalchemy import event
 from datetime import datetime, timezone
-from api.app import db
 
 class Syncable:
     last_updated = sqla.Column(sqla.DateTime, index=True, 

@@ -60,6 +60,23 @@
             </div>
         </div>
 
+        <div class="flex flex-col md:flex-row gap-8 md:gap-20 justify-around">
+            <div class="w-full md:w-1/3">
+                <label class="flex flex-col gap-1">
+                    <span class="text-sm text-slate-300">Metron ID</span>
+                    <input type="number" v-model.number="localSeriesData.metron_id" min="0" step="1"
+                        placeholder="Metron series ID" class="input input-bordered w-full" />
+                </label>
+            </div>
+            <div class="w-full">
+                <label class="flex flex-col gap-1">
+                    <span class="text-sm text-slate-300">Metron URL</span>
+                    <input type="url" v-model.trim="localSeriesData.metron_url"
+                        placeholder="https://metron.cloud/series/..." class="input input-bordered w-full" />
+                </label>
+            </div>
+        </div>
+
         <div class="flex flex-col gap-4 justify-around">
             <div class="flex flex-col md:flex-row gap-8 justify-around ">
                 <div class=" w-full">

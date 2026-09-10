@@ -1,7 +1,5 @@
 
-from time import time
 
-import jwt
 import sqlalchemy as sqla
 
 from api.app import db

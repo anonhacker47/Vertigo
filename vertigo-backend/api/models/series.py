@@ -5,10 +5,9 @@ from slugify import slugify
 
 from api.models.issue import Issue
 
-from flask import current_app, url_for
+from flask import url_for
 
 from api.app import db
-from api.helpers.thumbnail_processing import save_thumbnail
 from api.models.syncable import Syncable
 from api.models.updatable import Updateable
 from api.models.metron_identifiable import MetronIdentifiable

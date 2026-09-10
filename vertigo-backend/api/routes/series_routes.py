@@ -1,7 +1,5 @@
 from html import entities
-import os
-import random
-from flask import current_app, json, jsonify
+from flask import jsonify
 
 from flask import Blueprint, abort, request, send_file
 from apifairy import authenticate, response, other_responses
@@ -13,20 +11,18 @@ from api.models.issue import Issue
 
 from api.schemas.series_schema import SeriesSchema
 
-from api.utils.files import get_user_path
+from api import media
 
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
-from api.helpers.thumbnail_processing import download_thumbnail, handle_series_thumbnail, save_thumbnail,delete_thumbnail
 from api.utils.entity_manager import create_or_get_entity, safe_json_list, ENTITY_MODEL_MAP
-from api.helpers.cover_bg_generator import BACKGROUND_FILE
+from api.helpers.cover_bg_generator import background_path, submit_background_regeneration
 
 series = Blueprint('series', __name__)
 series_schema = SeriesSchema()
 multi_series_schema = SeriesSchema(many=True)
 update_series_schema = SeriesSchema(partial=True)
-series_thumbnail_folder = "Covers"
 
 @series.route('/series', methods=['POST'])
 @authenticate(token_auth)
@@ -88,14 +84,20 @@ def new():
             if not rel.filter(model.id == entity.id).first():
                 rel.append(entity)
 
-    handle_series_thumbnail(
-        series=series,
-        thumbnail=thumbnail,
-        files=request.files,
-        title=title,
-        user_id=user.id,
-        folder=series_thumbnail_folder,
-    )
+    db.session.flush()  # the cover is stored under series/<id>/
+    try:
+        state, relpath, color = media.apply_thumbnail_field(
+            user.id, request.form, request.files, 'thumbnail',
+            rel_dir=media.series_dir(series.id), filename='cover',
+            current=None, want_color=True,
+        )
+    except media.MediaError as e:
+        db.session.rollback()
+        return jsonify({"error": f"Failed to save thumbnail: {e}"}), 400
+    if state == 'set':
+        series.thumbnail = relpath
+        series.dominant_color = color
+        submit_background_regeneration(user.id)
 
     db.session.commit()
     return series_schema.dump(series), 201
@@ -203,6 +205,15 @@ def update_series(id):
         else:
             series.user_rating = float(rating)
 
+    # Metron link: an empty value clears it.
+    if 'metron_id' in form:
+        metron_id = (form.get('metron_id') or '').strip()
+        series.metron_id = metron_id if metron_id not in ('', 'null') else None
+
+    if 'metron_url' in form:
+        metron_url = (form.get('metron_url') or '').strip()
+        series.metron_url = metron_url if metron_url not in ('', 'null') else None
+
     entities = {
         "genre": safe_json_list(request.form.get("genre")),
         "creator": safe_json_list(request.form.get("creator")),
@@ -230,55 +241,23 @@ def update_series(id):
 
         setattr(series, entity_type, new_entities)
         
-    thumbnail = form.get('thumbnail', '').strip() if 'thumbnail' in form else ''
-    if thumbnail or 'thumbnail' in request.files:
+    try:
+        state, relpath, color = media.apply_thumbnail_field(
+            user.id, form, request.files, 'thumbnail',
+            rel_dir=media.series_dir(series.id), filename='cover',
+            current=series.thumbnail, want_color=True,
+        )
+    except media.MediaError as e:
+        return jsonify({"error": f"Failed to update thumbnail: {e}"}), 400
 
-        old_filename = series.thumbnail  
-        new_filename = None
-        new_color = None
-        error_occurred = False
-
-        if thumbnail == old_filename and 'thumbnail' not in request.files:
-            error_occurred = False
-        elif thumbnail == "noimage":
-            if old_filename:
-                delete_thumbnail(old_filename, user.id, series_thumbnail_folder)
-            series.thumbnail = None
-            series.dominant_color = None
-        else:
-            try:
-                if thumbnail.startswith('http'):
-                    new_filename, new_color = download_thumbnail(
-                        thumbnail,
-                        series.title,
-                        user.id,
-                        series_thumbnail_folder
-                    )
-    
-                elif 'thumbnail' in request.files:
-                    file = request.files['thumbnail']
-                    new_filename, new_color = save_thumbnail(
-                        file,
-                        series.title,
-                        user.id,
-                        series_thumbnail_folder
-                    )
-    
-                if not new_filename:
-                    error_occurred = True
-    
-            except Exception as e:
-                error_occurred = True
-                print("Thumbnail update failed:", e)
-    
-            if error_occurred:
-                return jsonify({"error": "Failed to update thumbnail"}), 400
-    
-            if old_filename:
-                delete_thumbnail(old_filename, user.id, series_thumbnail_folder)
-    
-            series.thumbnail = new_filename
-            series.dominant_color = new_color
+    if state == 'set':
+        series.thumbnail = relpath
+        series.dominant_color = color
+        submit_background_regeneration(user.id)
+    elif state == 'cleared':
+        series.thumbnail = None
+        series.dominant_color = None
+        submit_background_regeneration(user.id)
   
     db.session.commit()
     return series_schema.dump(series)
@@ -299,11 +278,9 @@ def delete(id):
         db.session.delete(issue)    
     db.session.delete(series)
 
-    if series.thumbnail:    
-        cover_dir = get_user_path(series.user.id, series_thumbnail_folder)
-        file_path = os.path.join(cover_dir, series.thumbnail)
-    
-        delete_thumbnail(file_path, series.user.id, series_thumbnail_folder)
+    user_id = series.user_id
+    media.remove_dir(user_id, media.series_dir(series.id))   # cover plus issue covers
+    submit_background_regeneration(user_id)
 
     db.session.commit()
     return '', 204
@@ -324,27 +301,10 @@ def feed():
 def get_series_image(id):
     """Retrieve the series thumbnail"""
     series = db.session.get(Series, id)
-
-    user = series.user
-    user_id = user.id
-
-
     if series is None:
         return jsonify("Series not found"), 404
+    return media.send(series.user_id, series.thumbnail)
 
-    if series.thumbnail is None:
-        return jsonify("noimage")
-    
-    base = get_user_path(user_id, series_thumbnail_folder)
-    file_path = os.path.join(base, series.thumbnail)
-
-    try:
-        return send_file(file_path)
-    except FileNotFoundError:
-        return jsonify("Image file not found"), 404
-    except Exception as e:
-        return jsonify(f"Error retrieving image: {str(e)}"), 500
-    
 @series.route('/series/key', methods=['GET'])
 @authenticate(token_auth)
 def key():
@@ -389,7 +349,7 @@ def get_series_by_table(table):
 @series.route('/series/thumbnail/bg', methods=['GET'])
 def get_series_with_thumbnail():
     """Retrieve The Login Page Background"""
-    cover_bg = os.path.join(current_app.config['sql_path'],BACKGROUND_FILE)
+    cover_bg = background_path()
 
     try:
         return send_file(cover_bg)

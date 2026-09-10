@@ -252,6 +252,15 @@ const router = createRouter({
       },
       component: () => import("@/views/IssueDetailView.vue"),
     },
+    {
+      path: "/series/:seriesId-:slug/issue/:number/edit",
+      name: "EditIssue",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("@/views/EditIssueView.vue"),
+    },
   ],
 });
 

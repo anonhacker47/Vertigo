@@ -1,6 +1,5 @@
 from marshmallow import validate
-from api import ma, db
-from api.utils.auth import token_auth
+from api import ma
 
 class PasswordResetRequestSchema(ma.Schema):
     class Meta:
