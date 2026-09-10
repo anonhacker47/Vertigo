@@ -34,7 +34,7 @@
         </div>
 
         <div v-if="mangaDetail" class="flex flex-col gap-4">
-            <Button label="Back" icon="pi pi-arrow-left" class="w-fit" outlined
+            <Button label="Back" icon="pi pi-arrow-left" class="w-fit" outlined :disabled="entitiesLoading || selecting"
                 @click="mangaDetail = null; mangaEntities = null" />
 
             <div class="flex flex-col gap-4 md:flex-row">
@@ -52,48 +52,24 @@
                     </p>
                     <p class="mt-2 text-sm">{{ mangaDetail.desc }}</p>
 
-                    <div class="flex flex-row gap-4">
+                    <div class="flex flex-row flex-wrap gap-3">
                         <Button as="a" :href="mangaDetail.mal_url" target="_blank" rel="noopener noreferrer"
                             label="View on MyAnimeList" icon="pi pi-external-link" severity="info" class="w-fit" />
-                        <Button label="Load Authors & Characters" icon="pi pi-users" class="w-fit" severity="secondary"
-                            :loading="entitiesLoading" @click="fetchMangaEntities(mangaDetail.mal_id)" />
+                        <Button v-if="!mangaEntities" label="Load authors & characters" icon="pi pi-users" class="w-fit"
+                            severity="secondary" :loading="entitiesLoading" :disabled="selecting"
+                            @click="fetchMangaEntities(mangaDetail.mal_id)" />
                     </div>
 
-                    <div v-if="entitiesLoading" class="flex justify-center py-8">
-                        <ProgressSpinner style="width:60px;height:60px" strokeWidth="4" />
-                    </div>
-
-                    <div v-if="mangaEntities" class="mt-6 grid gap-6 md:grid-cols-2">
-                        <div class="rounded-xl border border-base-300 p-4">
-                            <h4 class="mb-2 text-sm font-semibold">
-                                Authors ({{ mangaEntities.total_creators }})
-                            </h4>
-                            <ul class="space-y-1 text-sm">
-                                <li v-for="creator in mangaEntities.creators" :key="creator.mal_id">
-                                    • {{ creator.value }}
-                                </li>
-                            </ul>
-                        </div>
- */
-
-                        <div class="rounded-xl border border-base-300 p-4">
-                            <h4 class="mb-2 text-sm font-semibold">
-                                Characters ({{ mangaEntities.total_characters }})
-                            </h4>
-                            <ul class="space-y-1 text-sm">
-                                <li v-for="character in mangaEntities.characters" :key="character.mal_id">
-                                    • {{ character.value }}
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                    <EntityPreview v-if="mangaEntities" class="mt-4" :creators="mangaEntities.creators"
+                        :characters="mangaEntities.characters" creators-label="Authors" source="MyAnimeList" />
                 </div>
             </div>
         </div>
 
         <template #footer>
             <Button label="Close" severity="secondary" outlined @click="closeModal" />
-            <Button v-if="mangaDetail" :label="`Select ${mangaDetail.name}`" severity="primary" @click="selectManga" />
+            <Button v-if="mangaDetail" :label="`Select ${mangaDetail.name}`" severity="primary" :loading="selecting"
+                :disabled="entitiesLoading" @click="selectManga" />
         </template>
     </Dialog>
 </template>
@@ -106,6 +82,7 @@ import Dialog from 'primevue/dialog'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useToast } from 'primevue/usetoast'
 import JikanService from '@/services/JikanService'
+import EntityPreview from '@/components/createSeries/EntityPreview.vue'
 
 const emit = defineEmits(['select'])
 const toast = useToast()
@@ -115,6 +92,7 @@ const results = ref<any[]>([])
 const searchLoading = ref(false)
 const detailLoading = ref(false)
 const entitiesLoading = ref(false)
+const selecting = ref(false)
 const showModal = ref(false)
 
 const mangaDetail = ref<any | null>(null)
@@ -165,13 +143,18 @@ async function fetchMangaDetail(mal_id: number) {
     }
 }
 
+async function loadEntities(mal_id: number) {
+    const res = await JikanService.getMangaEntities(mal_id)
+    return res.data
+}
+
+// "Load authors & characters" button: spins that button only.
 async function fetchMangaEntities(mal_id: number) {
     entitiesLoading.value = true
     mangaEntities.value = null
 
     try {
-        const res = await JikanService.getMangaEntities(mal_id)
-        mangaEntities.value = res.data
+        mangaEntities.value = await loadEntities(mal_id)
     } catch (error) {
         mangaEntities.value = null
         notifyJikanError(error, 'Could not load characters and creators')
@@ -198,15 +181,14 @@ async function selectManga() {
     if (!mangaDetail.value) return
 
     if (!mangaEntities.value) {
+        selecting.value = true
         try {
-            entitiesLoading.value = true
-            const res = await JikanService.getMangaEntities(mangaDetail.value.mal_id)
-            mangaEntities.value = res.data
+            mangaEntities.value = await loadEntities(mangaDetail.value.mal_id)
         } catch (error) {
             mangaEntities.value = null
             notifyJikanError(error, 'Could not load characters and creators')
         } finally {
-            entitiesLoading.value = false
+            selecting.value = false
         }
     }
 

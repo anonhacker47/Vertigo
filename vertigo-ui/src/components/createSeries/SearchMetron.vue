@@ -31,7 +31,7 @@
       </div>
 
       <div v-if="seriesDetail" class="flex flex-col gap-4">
-        <Button label="Back" icon="pi pi-arrow-left" class="w-fit" outlined
+        <Button label="Back" icon="pi pi-arrow-left" class="w-fit" outlined :disabled="entitiesLoading || selecting"
           @click="seriesDetail = null; seriesEntities = null" />
 
         <div class="flex flex-col md:flex-row gap-4">
@@ -52,73 +52,78 @@
             </p>
             <p class="text-sm mt-2">{{ seriesDetail.desc }}</p>
 
-            <div class="flex flex-row gap-4">
-
+            <div class="flex flex-row flex-wrap gap-3">
               <Button as="a" :href="seriesDetail.metron_url" target="_blank" rel="noopener noreferrer"
                 label="View on Metron" icon="pi pi-external-link" severity="info" class="w-fit" />
-              <Button label="Load Creators & Characters" icon="pi pi-users" class="w-fit" severity="secondary"
-                :loading="entitiesLoading" @click="fetchSeriesEntities(seriesDetail.metron_id)" />
+              <Button v-if="!seriesEntities" label="Load creators & characters" icon="pi pi-users" class="w-fit"
+                severity="secondary" :loading="entitiesLoading" :disabled="selecting"
+                @click="fetchSeriesEntities(seriesDetail.metron_id)" />
             </div>
 
-            <div v-if="entitiesLoading" class="flex justify-center py-8">
-              <ProgressSpinner style="width:60px;height:60px" strokeWidth="4" />
-            </div>
-
-            <div v-if="seriesEntities" class="mt-6 grid gap-6 md:grid-cols-2">
-              <div class="rounded-xl border border-base-300 p-4">
-                <h4 class="mb-2 text-sm font-semibold">
-                  Creators ({{ seriesEntities.total_creators }})
-                </h4>
-
-                <ul class="space-y-1 text-sm">
-                  <li v-for="creator in seriesEntities.creators" :key="creator">
-                    • {{ creator.value }}
-                  </li>
-                </ul>
-              </div>
-
-              <div class="rounded-xl border border-base-300 p-4">
-                <h4 class="mb-2 text-sm font-semibold">
-                  Characters ({{ seriesEntities.total_characters }})
-                </h4>
-
-                <ul class="space-y-1 text-sm">
-                  <li v-for="character in seriesEntities.characters" :key="char">
-                    • {{ character.value }}
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <EntityPreview v-if="seriesEntities" class="mt-4" :creators="seriesEntities.creators"
+              :characters="seriesEntities.characters" creators-label="Creators" source="Metron"
+              :note="entitiesNote" />
           </div>
         </div>
       </div>
 
       <template #footer>
         <Button label="Close" severity="secondary" outlined @click="closeModal" />
-        <Button v-if="seriesDetail" :label="`Select ${seriesDetail.name}`" severity="primary" @click="selectSeries" />
+        <Button v-if="seriesDetail" :label="`Select ${seriesDetail.name}`" severity="primary" :loading="selecting"
+          :disabled="entitiesLoading" @click="selectSeries" />
       </template>
     </Dialog>
   </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import MokkariService from '@/services/MetronService'
 import ProgressSpinner from 'primevue/progressspinner'
+import MokkariService from '@/services/MetronService'
+import EntityPreview from '@/components/createSeries/EntityPreview.vue'
+import { useToast } from 'primevue/usetoast'
 
 const emit = defineEmits(['select'])
+const toast = useToast()
 
 const query = ref('')
 const results = ref([])
 const searchLoading = ref(false)
 const detailLoading = ref(false)
 const entitiesLoading = ref(false)
+const selecting = ref(false)
 const showModal = ref(false)
 
 const seriesDetail = ref<any>(null)
 const seriesEntities = ref<any | null>(null)
+
+const entitiesNote = computed(() => {
+  const e = seriesEntities.value
+  if (!e) return ''
+  const total = e.total_issues ?? 0
+  const sampled = e.sampled_issues ?? 0
+  if (e.partial) {
+    const wait = e.retry_after ? ` Try again in ${e.retry_after}s to read more.` : ' Try again shortly to read more.'
+    return `Metron's rate limit stopped the scan after ${sampled} of ${total} issues.` + wait
+  }
+  if (total > sampled) return `From the first ${sampled} of ${total} issues.`
+  return ''
+})
+
+function notifyMetronError(error: any, summary: string) {
+  const data = error?.response?.data
+  let detail: string
+  if (data?.error === 'rate_limited') {
+    const wait = data.retry_after ? ` Try again in ${data.retry_after}s.` : ' Try again in a minute.'
+    detail = 'Metron is rate limiting requests.' + wait
+  } else {
+    detail = data?.message || data?.description || 'Could not reach Metron. Please try again.'
+  }
+  console.error(summary, data || error)
+  toast.add({ severity: 'error', summary, detail, life: 5000 })
+}
 
 async function search() {
   if (query.value.trim().length < 3) return
@@ -131,8 +136,9 @@ async function search() {
     const res = await MokkariService.getSeriesByQuery(query.value)
     results.value = res.data.items || []
     if (results.value.length) showModal.value = true
-  } catch {
+  } catch (error) {
     results.value = []
+    notifyMetronError(error, 'Comic search failed')
   } finally {
     searchLoading.value = false
   }
@@ -143,22 +149,29 @@ async function fetchSeriesDetail(metron_id: number) {
   try {
     const res = await MokkariService.getSeriesDetail(metron_id)
     seriesDetail.value = res.data
-  } catch {
+  } catch (error) {
     seriesDetail.value = null
+    notifyMetronError(error, 'Could not load series details')
   } finally {
     detailLoading.value = false
   }
 }
 
+async function loadEntities(metron_id: number) {
+  const res = await MokkariService.getSeriesEntities(metron_id)
+  return res.data
+}
+
+// "Load creators & characters" button: spins that button only.
 async function fetchSeriesEntities(metron_id: number) {
   entitiesLoading.value = true
   seriesEntities.value = null
 
   try {
-    const res = await MokkariService.getSeriesEntities(metron_id)
-    seriesEntities.value = res.data
-  } catch {
+    seriesEntities.value = await loadEntities(metron_id)
+  } catch (error) {
     seriesEntities.value = null
+    notifyMetronError(error, 'Could not load creators and characters')
   } finally {
     entitiesLoading.value = false
   }
@@ -181,15 +194,16 @@ function closeModal() {
 async function selectSeries() {
   if (!seriesDetail.value) return
 
+  // Footer "Select" button: fetch quietly if needed, spinning that button only.
   if (!seriesEntities.value) {
+    selecting.value = true
     try {
-      entitiesLoading.value = true
-      const res = await MokkariService.getSeriesEntities(seriesDetail.value.metron_id)
-      seriesEntities.value = res.data
-    } catch {
+      seriesEntities.value = await loadEntities(seriesDetail.value.metron_id)
+    } catch (error) {
       seriesEntities.value = null
+      notifyMetronError(error, 'Could not load creators and characters')
     } finally {
-      entitiesLoading.value = false
+      selecting.value = false
     }
   }
   const metronIssues = seriesEntities.value?.issues || []

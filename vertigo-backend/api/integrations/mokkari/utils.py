@@ -1,6 +1,6 @@
 from flask import current_app
 from api.integrations.mokkari.client import get_mokkari_session
-from api.integrations.mokkari.mokkari_rate_limiter import wait_for_mokkari_slot
+from api.integrations.mokkari.mokkari_rate_limiter import wait_for_mokkari_slot, retry_after_seconds
 from mokkari.exceptions import RateLimitError
 
 def fetch_metron_entity_info(
@@ -37,7 +37,7 @@ def fetch_metron_entity_info(
                 )
                 return None
 
-            retry_after = max(1, int(getattr(e, "retry_after", 40)))
+            retry_after = retry_after_seconds(e, default=40)
 
             current_app.logger.info(
                 f"Metron rate limited "
