@@ -40,6 +40,10 @@
             class="tier-row flex-1 min-w-0 flex flex-nowrap items-center gap-2 p-2 bg-base-200/50 overflow-x-auto overflow-y-hidden"
             ghost-class="opacity-50"
             @change="saveState"
+            :force-fallback="true"
+            :scroll-sensitivity="160"
+            :scroll-speed="25"
+            :fallback-tolerance="3"
           >
             <template #item="{ element: series }">
               <div
@@ -77,9 +81,13 @@
         v-model="deck"
         item-key="id"
         group="series"
-        class="min-h-[10rem] p-3 flex flex-wrap items-center gap-3 rounded border border-dashed border-slate-600 bg-base-200/50"
+        class="min-h-40 p-3 flex flex-wrap items-center gap-3 rounded border border-dashed border-slate-600 bg-base-200/50"
         ghost-class="opacity-50"
         @change="saveState"
+        :force-fallback="true"
+        :scroll-sensitivity="160"
+        :scroll-speed="25"
+        :fallback-tolerance="3"
       >
         <template #item="{ element: series }">
           <div
