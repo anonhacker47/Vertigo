@@ -32,7 +32,22 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  spent: {
+    type: Array,
+    default: () => [],
+  },
+  currencySymbol: {
+    type: String,
+    default: '',
+  },
 });
+
+function tooltipFormatter(params: any) {
+  const count = Number(params.value) || 0
+  const spent = Number(props.spent[params.dataIndex] ?? 0)
+  const amount = spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return `<b>${params.name}</b><br/>${count} ${count === 1 ? 'issue' : 'issues'}<br/>Spent: ${props.currencySymbol}${amount}`
+}
 
 provide(THEME_KEY, 'dark');
 
@@ -41,6 +56,7 @@ const option: any = ref({
   darkMode: 'true',
   tooltip: {
     trigger: 'item',
+    formatter: tooltipFormatter,
   },
   xAxis: {
     type: 'category',

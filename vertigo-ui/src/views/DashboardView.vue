@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col w-screen">
-    <div class="w-full flex flex-col md:flex-row md:gap-12 gap-8 items-center md:h-40 mt-8 px-8 justify-around">
+  <div class="flex flex-col w-screen gap-5 py-4">
+    <div class="w-full flex flex-col md:flex-row md:gap-12 gap-8 items-center md:h-40 px-8 justify-around">
       <InsightCardItem :border="true" icon="collection" :multipleData="true" titleA="My Series" titleB="My Issues"
         :valueANumerator="seriesInfo.collectedSeriesCount" :value-a-denominator="seriesInfo.totalSeriesCount"
         :valueBNumerator="issueInfo.collectedIssueCount" :valueBDenominator="issueInfo.totalIssueCount" />
@@ -13,7 +13,7 @@
 
       <AddSeriesCardItem />
     </div>
-    <div class="w-full flex flex-col md:flex-row mt-8 grow justify-around gap-8 pl-8 pr-8 mb-8 md:min-h-[66vh]">
+    <div class="w-full flex flex-col md:flex-row grow justify-around gap-8 pl-8 pr-8 md:min-h-[66vh]">
       <div class="card basis-1/2 sm:w-[35%] bg-base-100 shadow-xl">
         <PieChartItem :title="chartTitle" :data="chartData" />
         <div class="dropdown md:dropdown-end absolute top-3 left-3 md:left-auto md:right-3">
@@ -65,7 +65,7 @@
       </div>
 
       <div class="card relative basis-1/2 sm:w-[35%] flex items-center bg-base-100 shadow-xl">
-        <LineChartItem :x-data="purchaseData" :y-data="dates" />
+        <LineChartItem :x-data="purchaseData" :y-data="dates" :spent="spentData" :currency-symbol="symbol" />
         <div class="mb-4 w-1/3 md:w-1/5 flex no-wrap items-center justify-center">
           <select v-model="selectedYear" id="year" class="select select-primary select-bordered w-full">
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
@@ -197,6 +197,7 @@ async function getPurchasesPerMonth(year: number) {
     const response = await DashboardService.getPurchasesPerMonth(year);
     dates.value = response.data.map((item: { month: any }) => item.month)
     purchaseData.value = response.data.map((item: { count: any }) => item.count)
+    spentData.value = response.data.map((item: { spent: any }) => item.spent ?? 0)
   } catch (error) {
     console.log(error);
   }
@@ -216,6 +217,7 @@ onMounted(async () => {
 
 const dates = ref([]);
 const purchaseData = ref([]);
+const spentData = ref([]);
 
 const chartTitle = computed(() => {
   const selectedTypeName = selectedType.value === 'series' ? 'Series' : 'Issues';

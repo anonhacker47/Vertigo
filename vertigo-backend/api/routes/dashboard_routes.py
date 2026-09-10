@@ -219,7 +219,8 @@ def get_purchases_per_month():
 
     purchases_per_month = db.session.query(
         func.strftime('%Y-%m', Issue.bought_date).label('month'),
-        func.count(Issue.id).label('count')
+        func.count(Issue.id).label('count'),
+        func.coalesce(func.sum(Issue.bought_price), 0).label('spent'),
     ).join(Series, Series.id == Issue.series_id) \
      .filter(Issue.bought_date >= start_date, Issue.bought_date < end_date) \
      .filter(Series.user_id == user_id) \
@@ -227,7 +228,10 @@ def get_purchases_per_month():
      .order_by('month') \
      .all()
 
-    result = [{'month': month, 'count': count} for month, count in purchases_per_month]
+    result = [
+        {'month': month, 'count': count, 'spent': round(spent or 0, 2)}
+        for month, count, spent in purchases_per_month
+    ]
     return jsonify(result)
 
 
