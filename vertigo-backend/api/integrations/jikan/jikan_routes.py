@@ -1,7 +1,11 @@
 
-from flask import Blueprint
+from functools import wraps
+
+from flask import Blueprint, current_app
 from apifairy import authenticate, arguments
 from marshmallow import Schema, fields
+import requests
+
 from api.utils.auth import token_auth
 from api.integrations.jikan.client import get_jikan_session
 
@@ -10,9 +14,51 @@ jikan = Blueprint('jikan', __name__, url_prefix="/api")
 class MangaSearchSchema(Schema):
     query = fields.Str(required=True)
 
+
+def handle_jikan_errors(f):
+    """Translate upstream Jikan failures into clean API error responses.
+
+    Mirrors the Metron routes: 429 when Jikan is rate limiting us, 502 when
+    Jikan answered with an error, 504 when it did not answer at all.
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+
+        except requests.exceptions.HTTPError as e:
+            resp = e.response
+            status = resp.status_code if resp is not None else None
+
+            if status == 429:
+                retry_after = (resp.headers or {}).get("Retry-After")
+                current_app.logger.warning("Jikan rate limited: %s", e)
+                return {
+                    "error": "rate_limited",
+                    "retry_after": int(retry_after) if retry_after and retry_after.isdigit() else None,
+                }, 429
+
+            current_app.logger.warning("Jikan request failed: %s", e)
+            return {
+                "error": "jikan_error",
+                "message": f"MyAnimeList (Jikan) returned an error ({status}).",
+                "upstream_status": status,
+            }, 502
+
+        except requests.exceptions.RequestException as e:
+            current_app.logger.warning("Jikan unreachable: %s", e)
+            return {
+                "error": "jikan_unavailable",
+                "message": "MyAnimeList (Jikan) did not respond. Please try again shortly.",
+            }, 504
+
+    return wrapper
+
+
 @jikan.route("/jikan/manga/search", methods=["GET"])
 @arguments(MangaSearchSchema, location="query")
 @authenticate(token_auth)
+@handle_jikan_errors
 def search_manga(args):
     session = get_jikan_session()
     query = args["query"]
@@ -38,10 +84,13 @@ def search_manga(args):
 
 @jikan.route("/jikan/manga/<int:manga_id>", methods=["GET"])
 @authenticate(token_auth)
+@handle_jikan_errors
 def manga_detail(manga_id):
     session = get_jikan_session()
 
     m = session.manga(manga_id)
+    if not m:
+        return {"error": "not_found", "message": f"Manga {manga_id} not found."}, 404
 
     return {
         "mal_id": m.get("mal_id"),
@@ -68,6 +117,7 @@ def manga_detail(manga_id):
 
 @jikan.route("/jikan/manga/<int:manga_id>/entities", methods=["GET"])
 @authenticate(token_auth)
+@handle_jikan_errors
 def manga_entities(manga_id):
     session = get_jikan_session()
 
@@ -83,7 +133,7 @@ def manga_entities(manga_id):
             "value": char.get("name"),
         })
 
-    m = session.manga(manga_id)
+    m = session.manga(manga_id) or {}
     for a in m.get("authors", []):
         creators.append({
             "mal_id": a.get("mal_id"),

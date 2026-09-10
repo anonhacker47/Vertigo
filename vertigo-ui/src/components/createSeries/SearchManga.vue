@@ -74,6 +74,7 @@
                                 </li>
                             </ul>
                         </div>
+ */
 
                         <div class="rounded-xl border border-base-300 p-4">
                             <h4 class="mb-2 text-sm font-semibold">
@@ -103,9 +104,11 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import ProgressSpinner from 'primevue/progressspinner'
+import { useToast } from 'primevue/usetoast'
 import JikanService from '@/services/JikanService'
 
 const emit = defineEmits(['select'])
+const toast = useToast()
 
 const query = ref('')
 const results = ref<any[]>([])
@@ -116,6 +119,19 @@ const showModal = ref(false)
 
 const mangaDetail = ref<any | null>(null)
 const mangaEntities = ref<any | null>(null)
+
+function notifyJikanError(error: any, summary: string) {
+    const data = error?.response?.data
+    let detail: string
+    if (data?.error === 'rate_limited') {
+        const wait = data.retry_after ? ` Try again in ${data.retry_after}s.` : ' Try again in a few seconds.'
+        detail = 'MyAnimeList is rate limiting requests.' + wait
+    } else {
+        detail = data?.message || data?.description || 'Could not reach MyAnimeList. Please try again.'
+    }
+    console.error(summary, data || error)
+    toast.add({ severity: 'error', summary, detail, life: 4000 })
+}
 
 async function search() {
     if (query.value.trim().length < 3) return
@@ -128,8 +144,9 @@ async function search() {
         const res = await JikanService.getMangaByQuery(query.value)
         results.value = res.data.items || []
         if (results.value.length) showModal.value = true
-    } catch {
+    } catch (error) {
         results.value = []
+        notifyJikanError(error, 'Manga search failed')
     } finally {
         searchLoading.value = false
     }
@@ -140,8 +157,9 @@ async function fetchMangaDetail(mal_id: number) {
     try {
         const res = await JikanService.getMangaDetail(mal_id)
         mangaDetail.value = res.data
-    } catch {
+    } catch (error) {
         mangaDetail.value = null
+        notifyJikanError(error, 'Could not load manga details')
     } finally {
         detailLoading.value = false
     }
@@ -154,8 +172,9 @@ async function fetchMangaEntities(mal_id: number) {
     try {
         const res = await JikanService.getMangaEntities(mal_id)
         mangaEntities.value = res.data
-    } catch {
+    } catch (error) {
         mangaEntities.value = null
+        notifyJikanError(error, 'Could not load characters and creators')
     } finally {
         entitiesLoading.value = false
     }
@@ -183,8 +202,9 @@ async function selectManga() {
             entitiesLoading.value = true
             const res = await JikanService.getMangaEntities(mangaDetail.value.mal_id)
             mangaEntities.value = res.data
-        } catch {
+        } catch (error) {
             mangaEntities.value = null
+            notifyJikanError(error, 'Could not load characters and creators')
         } finally {
             entitiesLoading.value = false
         }
