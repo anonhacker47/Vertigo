@@ -6,7 +6,7 @@
 
       <div class="flex flex-col items-center text-center w-full md:w-auto">
         <h1 class="text-3xl md:text-3xl font-bold text-white">
-          Series Collection
+          Collection
         </h1>
         <p class="text-sm text-slate-400 mt-1">
           Total series: {{ pagination.base_total }}

@@ -41,6 +41,8 @@
             <li><RouterLink :to="{ name: 'PublisherList' }" class="hover:text-blue-400">Publishers</RouterLink></li>
             <li><RouterLink :to="{ name: 'CreatorList' }" class="hover:text-blue-400">Creators</RouterLink></li>
             <li><RouterLink :to="{ name: 'CharacterList' }" class="hover:text-blue-400">Characters</RouterLink></li>
+            <li class="my-1 border-t border-slate-600" aria-hidden="true"></li>
+            <li><RouterLink :to="{ name: 'TierList' }" class="hover:text-blue-400">Tier List</RouterLink></li>
           </ul>
         </div>
       </div>
@@ -156,6 +158,12 @@ const menuItems = [
         label: 'Characters',
         icon: 'pi pi-users',
         command: () => router.push({ name: 'CharacterList' })
+      },
+      { separator: true },
+      {
+        label: 'Tier List',
+        icon: 'pi pi-sort-amount-down',
+        command: () => router.push({ name: 'TierList' })
       }
     ]
   }
