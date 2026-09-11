@@ -1,4 +1,3 @@
-from html import entities
 from flask import jsonify
 
 from flask import Blueprint, abort, request, send_file
@@ -215,10 +214,9 @@ def update_series(id):
         series.metron_url = metron_url if metron_url not in ('', 'null') else None
 
     entities = {
-        "genre": safe_json_list(request.form.get("genre")),
-        "creator": safe_json_list(request.form.get("creator")),
-        "character": safe_json_list(request.form.get("character")),
-        "publisher": safe_json_list(request.form.get("publisher")),
+        entity_type: safe_json_list(form.get(entity_type))
+        for entity_type in ("genre", "creator", "character", "publisher")
+        if entity_type in form
     }
 
     for entity_type, items in entities.items():
