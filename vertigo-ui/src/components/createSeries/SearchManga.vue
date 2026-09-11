@@ -81,7 +81,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useToast } from 'primevue/usetoast'
-import JikanService from '@/services/JikanService'
+import TenraiService from '@/services/TenraiService'
 import EntityPreview from '@/components/createSeries/EntityPreview.vue'
 
 const emit = defineEmits(['select'])
@@ -98,7 +98,7 @@ const showModal = ref(false)
 const mangaDetail = ref<any | null>(null)
 const mangaEntities = ref<any | null>(null)
 
-function notifyJikanError(error: any, summary: string) {
+function notifyTenraiError(error: any, summary: string) {
     const data = error?.response?.data
     let detail: string
     if (data?.error === 'rate_limited') {
@@ -119,12 +119,12 @@ async function search() {
     mangaDetail.value = null
 
     try {
-        const res = await JikanService.getMangaByQuery(query.value)
+        const res = await TenraiService.getMangaByQuery(query.value)
         results.value = res.data.items || []
         if (results.value.length) showModal.value = true
     } catch (error) {
         results.value = []
-        notifyJikanError(error, 'Manga search failed')
+        notifyTenraiError(error, 'Manga search failed')
     } finally {
         searchLoading.value = false
     }
@@ -133,18 +133,18 @@ async function search() {
 async function fetchMangaDetail(mal_id: number) {
     detailLoading.value = true
     try {
-        const res = await JikanService.getMangaDetail(mal_id)
+        const res = await TenraiService.getMangaDetail(mal_id)
         mangaDetail.value = res.data
     } catch (error) {
         mangaDetail.value = null
-        notifyJikanError(error, 'Could not load manga details')
+        notifyTenraiError(error, 'Could not load manga details')
     } finally {
         detailLoading.value = false
     }
 }
 
 async function loadEntities(mal_id: number) {
-    const res = await JikanService.getMangaEntities(mal_id)
+    const res = await TenraiService.getMangaEntities(mal_id)
     return res.data
 }
 
@@ -157,7 +157,7 @@ async function fetchMangaEntities(mal_id: number) {
         mangaEntities.value = await loadEntities(mal_id)
     } catch (error) {
         mangaEntities.value = null
-        notifyJikanError(error, 'Could not load characters and creators')
+        notifyTenraiError(error, 'Could not load characters and creators')
     } finally {
         entitiesLoading.value = false
     }
@@ -186,7 +186,7 @@ async function selectManga() {
             mangaEntities.value = await loadEntities(mangaDetail.value.mal_id)
         } catch (error) {
             mangaEntities.value = null
-            notifyJikanError(error, 'Could not load characters and creators')
+            notifyTenraiError(error, 'Could not load characters and creators')
         } finally {
             selecting.value = false
         }

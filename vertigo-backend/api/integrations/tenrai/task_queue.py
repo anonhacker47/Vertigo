@@ -1,16 +1,16 @@
 import queue
 import threading
-from api.integrations.jikan.rate_limiter import wait_for_jikan_slot
+from api.integrations.tenrai.rate_limiter import wait_for_tenrai_slot
 
-_jikan_queue = queue.Queue(maxsize=500)
+_tenrai_queue = queue.Queue(maxsize=500)
 _workers_started = False
 _workers_lock = threading.Lock()
 
 
-def _jikan_worker(app):
+def _tenrai_worker(app):
     with app.app_context():
         while True:
-            task = _jikan_queue.get()
+            task = _tenrai_queue.get()
 
             if task is None:
                 break
@@ -18,15 +18,15 @@ def _jikan_worker(app):
             func, args, kwargs = task
 
             try:
-                wait_for_jikan_slot()
+                wait_for_tenrai_slot()
                 func(*args, **kwargs)
             except Exception:
-                app.logger.exception("Jikan task failed")
+                app.logger.exception("Tenrai task failed")
             finally:
-                _jikan_queue.task_done()
+                _tenrai_queue.task_done()
 
 
-def start_jikan_workers(app, num_workers=1):
+def start_tenrai_workers(app, num_workers=1):
     global _workers_started
 
     with _workers_lock:
@@ -35,9 +35,9 @@ def start_jikan_workers(app, num_workers=1):
 
         for i in range(num_workers):
             t = threading.Thread(
-                target=_jikan_worker,
+                target=_tenrai_worker,
                 args=(app,),
-                name=f"jikan-worker-{i}",
+                name=f"tenrai-worker-{i}",
                 daemon=True,
             )
             t.start()
@@ -45,11 +45,11 @@ def start_jikan_workers(app, num_workers=1):
         _workers_started = True
 
 
-def submit_jikan_task(func, *args, **kwargs):
+def submit_tenrai_task(func, *args, **kwargs):
     try:
-        _jikan_queue.put_nowait((func, args, kwargs))
+        _tenrai_queue.put_nowait((func, args, kwargs))
     except queue.Full:
         from flask import current_app
         current_app.logger.warning(
-            "Jikan queue full – dropping enrichment task"
+            "Tenrai queue full – dropping enrichment task"
         )

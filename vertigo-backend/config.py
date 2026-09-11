@@ -45,6 +45,9 @@ class Config:
     METRON_PASSWORD =  os.environ.get('METRON_PASSWORD', 'set_password')
     METRON_CACHE_DB = os.path.join(DATA_DIR, 'metron_cache.db')
 
+    # Tenrai (MyAnimeList) integration.
+    TENRAI_SERVER_KEY = os.environ.get('TENRAI_SERVER_KEY')
+
     # API documentation
     APIFAIRY_TITLE = 'Vertigo API'
     APIFAIRY_VERSION = '0.0.2'

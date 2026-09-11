@@ -1,18 +1,19 @@
 import time
 
-from flask import g
+from flask import current_app, g
 import requests
 from requests import Session
 
-JIKAN_BASE = "https://api.jikan.moe/v4"
+TENRAI_BASE = "https://api.tenrai.org/v1"
 TIMEOUT = 10
 
 RETRYABLE_STATUSES = {500, 502, 503, 504}
 MAX_RETRIES = 1
 RETRY_BACKOFF_SECONDS = 1.5
 
-class JikanSession:
-    def __init__(self, base_url=JIKAN_BASE, user_agent="Vertigo/Jikan"):
+
+class TenraiSession:
+    def __init__(self, base_url=TENRAI_BASE, user_agent="Vertigo/Tenrai", server_key=None):
         self.base_url = base_url
         self.session = Session()
         self.session.headers.update({"User-Agent": user_agent})
@@ -53,13 +54,12 @@ class JikanSession:
     def person(self, mal_id):
         return self._get(f"/people/{mal_id}")
 
-    def magazine(self, mal_id):
-        return self._get(f"/magazines/{mal_id}")
 
+def get_tenrai_session():
+    if "tenrai_session" in g:
+        return g.tenrai_session
 
-def get_jikan_session():
-    if "jikan_session" in g:
-        return g.jikan_session
-
-    g.jikan_session = JikanSession()
-    return g.jikan_session
+    g.tenrai_session = TenraiSession(
+        server_key=current_app.config.get("TENRAI_SERVER_KEY") or None,
+    )
+    return g.tenrai_session

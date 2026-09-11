@@ -70,8 +70,8 @@ def create_app(config_class=Config):
     from api.integrations.mokkari.mokkari_routes import mokkari
     app.register_blueprint(mokkari, url_prefix='/api')
 
-    from api.integrations.jikan.jikan_routes import jikan
-    app.register_blueprint(jikan, url_prefix='/api')
+    from api.integrations.tenrai.tenrai_routes import tenrai
+    app.register_blueprint(tenrai, url_prefix='/api')
 
     # define the shell context
     @app.shell_context_processor
@@ -123,8 +123,8 @@ def create_app(config_class=Config):
     from api.integrations.mokkari.task_queue import start_mokkari_workers
     start_mokkari_workers(app, num_workers=1)
 
-    from api.integrations.jikan.task_queue import start_jikan_workers
-    start_jikan_workers(app, num_workers=1)
+    from api.integrations.tenrai.task_queue import start_tenrai_workers
+    start_tenrai_workers(app, num_workers=1)
 
     media.start_media_worker(app)
 

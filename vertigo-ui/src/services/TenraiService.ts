@@ -1,18 +1,17 @@
-// services/JikanService.ts
 import Api from "@/services/Api";
 
 export default {
   getMangaByQuery(query: string) {
-    return Api().get(`/jikan/manga/search`, {
+    return Api().get(`/tenrai/manga/search`, {
       params: { query },
     });
   },
 
   getMangaDetail(mal_id: number) {
-    return Api().get(`/jikan/manga/${mal_id}`);
+    return Api().get(`/tenrai/manga/${mal_id}`);
   },
 
   getMangaEntities(mal_id: number) {
-    return Api().get(`/jikan/manga/${mal_id}/entities`);
+    return Api().get(`/tenrai/manga/${mal_id}/entities`);
   },
 };

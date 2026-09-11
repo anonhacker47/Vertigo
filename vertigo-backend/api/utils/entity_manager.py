@@ -5,8 +5,8 @@ from api import db
 from api.integrations.mokkari.utils import fetch_metron_entity_info
 from api import media
 from api.integrations.mokkari.task_queue import submit_mokkari_task
-from api.integrations.jikan.utils import fetch_jikan_entity_info
-from api.integrations.jikan.task_queue import submit_jikan_task
+from api.integrations.tenrai.utils import fetch_tenrai_entity_info
+from api.integrations.tenrai.task_queue import submit_tenrai_task
 
 ENTITY_MODEL_MAP = {
     "publisher": Publisher,
@@ -59,25 +59,25 @@ def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
     finally:
             db.session.close()
 
-def enrich_jikan_entity(entity_id, model_name, jikan_type, mal_id, name, user_id):
+def enrich_tenrai_entity(entity_id, model_name, entity_type, mal_id, name, user_id):
     model = ENTITY_MODEL_MAP.get(model_name)
 
-    if not model or jikan_type not in media.ENTITY_KINDS:
+    if not model or entity_type not in media.ENTITY_KINDS:
         return
 
     try:
         entity = db.session.get(model, entity_id)
         if not entity:
             return
-        info = fetch_jikan_entity_info(jikan_type, mal_id)
+        info = fetch_tenrai_entity_info(entity_type, mal_id)
         if not info:
             return
         if hasattr(entity, "description") and info.get("about"):
             entity.description = info.get("about")
 
-        image_url = info.get("images", {}).get("jpg", {}).get("image_url")
+        image_url = ((info.get("images") or {}).get("jpg") or {}).get("image_url")
         if image_url:
-            thumb = _store_entity_thumbnail(entity, jikan_type, image_url, user_id)
+            thumb = _store_entity_thumbnail(entity, entity_type, image_url, user_id)
             if thumb:
                 entity.thumbnail = thumb
         db.session.commit()
@@ -137,8 +137,8 @@ def create_or_get_entity(model, name, user, entity_type=None, external_id=None, 
         and hasattr(model, "mal_id")
         and entity.mal_id
     ):
-        submit_jikan_task(
-            enrich_jikan_entity,
+        submit_tenrai_task(
+            enrich_tenrai_entity,
             entity.id,
             model.__name__.lower(),
             entity_type,
