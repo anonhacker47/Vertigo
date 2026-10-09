@@ -103,13 +103,6 @@
             </div>
           </div>
 
-          <section>
-            <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Description</h2>
-            <p v-if="series.description" class="max-w-prose whitespace-pre-line text-sm leading-relaxed text-slate-200 md:text-base">
-              {{ series.description }}
-            </p>
-            <p v-else class="text-sm text-slate-400">No description yet.</p>
-          </section>
 
           <dl v-if="hasTags" class="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t border-slate-800/60 pt-5">
             <template v-if="series.genre?.length">
@@ -134,6 +127,14 @@
               </dd>
             </template>
           </dl>
+
+          <section>
+            <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Description</h2>
+            <p v-if="series.description" class="max-w-prose whitespace-pre-line text-sm leading-relaxed text-slate-200 md:text-base">
+              {{ series.description }}
+            </p>
+            <p v-else class="text-sm text-slate-400">No description yet.</p>
+          </section>
 
           <section>
             <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Notes</h2>
