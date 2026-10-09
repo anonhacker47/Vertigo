@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section id="shelf" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-7xl px-4 md:mt-16 md:px-8" aria-labelledby="shelf-title">
+    <section id="shelf" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="shelf-title">
       <SectionHead title="Completed shelf" :subtitle="shelfSubtitle" />
 
       <Skeleton v-if="loading" variant="tiles" :count="4" />
@@ -27,7 +27,7 @@
       </template>
     </section>
 
-    <section v-if="loading || (data && recordTiles.length)" id="records" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-7xl px-4 md:mt-16 md:px-8" aria-labelledby="records-title">
+    <section v-if="loading || (data && recordTiles.length)" id="records" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="records-title">
       <SectionHead title="Records" />
       <Skeleton v-if="loading" variant="figures" :count="5" />
       <div v-else class="grid grid-cols-2 gap-5 md:grid-cols-5">
@@ -86,7 +86,7 @@ const recordTiles = computed(() => {
   align-items: center;
   height: 22px;
   padding: 0 9px;
-  border-radius: 999px;
+  border-radius: 5px;
   border: 1px solid;
   font-size: 12px;
   font-weight: 700;

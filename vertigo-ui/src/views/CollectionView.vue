@@ -1,300 +1,109 @@
 <template>
-  <Transition class="flex md:hidden" enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div v-if="true"
-      class="flex-col md:flex-row justify-between items-center py-4 border-b max-w-7xl px-8 bg-base-100 border-slate-700 md:px-12 gap-4">
-
-      <div class="flex flex-col items-center text-center w-full md:w-auto">
-        <h1 class="text-3xl md:text-3xl font-bold text-white">
-          Collection
-        </h1>
-        <p class="text-sm text-slate-400 mt-1">
-          Total series: {{ pagination.base_total }}
-        </p>
+  <div class="mx-auto w-full max-w-page px-4 pt-6 md:px-8">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-white">Collection</h1>
+        <p class="mt-1 text-sm font-semibold text-slate-400">{{ countLine }}</p>
       </div>
-
-      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
-        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
-        v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
-      <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
+      <div class="flex items-center gap-2">
+        <button type="button" class="iconbtn" :class="{ 'iconbtn--danger': deleteMode }" :aria-pressed="deleteMode"
+          :title="deleteMode ? 'Leave delete mode' : 'Delete mode'" aria-label="Delete mode" @click="toggleDelete">
+          <i class="pi pi-trash"></i>
+        </button>
         <RouterLink :to="{ name: 'AddSeries' }" custom v-slot="{ navigate }">
-          <Button class="flex-1 " @click="navigate">
-            Add Series
-          </Button>
+          <Button label="Add series" icon="pi pi-plus" size="small" @click="navigate" />
         </RouterLink>
-        <Button severity="secondary" class="flex-1" :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }"
-          @click="toggleDelete">
-          Delete Mode
-        </Button>
       </div>
     </div>
-  </Transition>
 
-  <Transition class="hidden md:flex" enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut animate__faster">
-    <div class="flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700 gap-4">
-      <div class="flex flex-col max-w-7xl md:flex-row justify-between items-center container mx-auto px-8">
-        <RouterLink :to="{ name: `AddSeries` }" custom v-slot="{ navigate }">
-          <Button class="md:flex-none" @click="navigate">
-            Add Series
-          </Button>
-        </RouterLink>
-        <div class="md:ml-16 flex flex-col items-center text-center">
-          <h1 class="text-3xl font-bold text-white"> Series Collection </h1>
-          <p class="text-sm text-slate-400 mt-1"> Total series: {{ pagination.base_total }} </p>
-        </div>
-        <div class="flex flex-col md:flex-row items-center gap-2">
-          <Button label="Delete Mode" severity="secondary"  :class="{ 'animate-wiggle': deleteMode, 'bg-red-500': deleteMode }" @click="toggleDelete">
-            Delete Mode </button>
-        </div>
-      </div>
-    </div>
-  </Transition>
-
-  <div class="flex md:flex-row flex-col items-center justify-between py-4 w-full max-w-7xl mx-auto">
-    <div class="hidden md:flex">
-      <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid" :changeGrid="changeGrid"
-        :orderDirection="orderDirection" :orderByProperties="orderByProperties" v-model:viewMode="viewMode"
-        v-model:orderBy="orderBy" v-model:orderDir="orderDir" v-model:itemsPerPage="pagination.limit" />
-    </div>
-    <SearchSeriesForm @search="handleSearch" :initialFilters="currentFilter" />
+    <CollectionToolbar class="mt-5 border-b border-white/[.08] pb-4" :filters="currentFilter" :order-by="orderBy" :order-dir="orderDir"
+      :view-mode="viewMode" :cards-per-line="selectedGrid" :items-per-page="pagination.limit"
+      @update:filters="handleSearch" @update:sort="setSort" @update:view-mode="viewMode = $event"
+      @update:cards-per-line="setCardsPerLine" @update:items-per-page="pagination.limit = $event" @clear="clearFilters" />
   </div>
 
-  <div v-if="loading" class="flex justify-center items-center py-60 col-span-full">
-    <div class="flex justify-center items-center">
-      <span class="loading-ring  text-success h-44 w-44 loading"></span>
+  <div v-if="loading && !seriesList.length" class="mx-auto grid w-full max-w-page gap-3 px-4 pt-5 md:gap-5 md:px-8" :style="gridStyle" aria-hidden="true">
+    <div v-for="n in skeletonCount" :key="n" class="aspect-[2/3] animate-pulse rounded-md bg-white/[.06]"></div>
+  </div>
+
+  <div v-else-if="!loading && !seriesList.length" class="mx-auto max-w-page px-4 py-20 text-center md:px-8">
+    <p class="text-lg font-bold text-white">{{ hasFilters ? 'No series match these filters.' : 'No series yet.' }}</p>
+    <p class="mt-2 text-sm font-semibold text-slate-400">{{ hasFilters ? 'Try fewer filters or a shorter search.' : 'Add a series and mark what you own.' }}</p>
+    <div class="mt-5">
+      <Button v-if="hasFilters" label="Clear filters" icon="pi pi-times" severity="secondary" size="small" @click="clearFilters" />
+      <RouterLink v-else :to="{ name: 'AddSeries' }" custom v-slot="{ navigate }">
+        <Button label="Add series" icon="pi pi-plus" size="small" @click="navigate" />
+      </RouterLink>
     </div>
   </div>
 
-  <Transition enter-active-class="animate__animated animate__fadeIn"
-    leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-    <div :key="viewMode">
+  <Transition enter-active-class="animate__animated animate__fadeIn" leave-active-class="animate__animated animate__fadeOut" mode="out-in">
+    <div v-if="seriesList.length" :key="viewMode" class="pt-5 transition-opacity" :class="{ 'pointer-events-none opacity-50': loading }">
       <!-- CARD VIEW -->
-      <div v-if="viewMode === 'card'"
-        :class="`grid gap-3 md:pb-6 md:gap-5 md:m-auto max-w-420 px-8 grid-cols-${selectedGrid}`">
+      <div v-if="viewMode === 'card'" class="mx-auto grid w-full max-w-page gap-3 px-4 md:gap-5 md:px-8" :style="gridStyle">
         <TransitionGroup :key="'card-' + sortKey" enter-active-class="animate__animated animate__zoomInDown">
-          <div v-for="series in seriesList" :key="series.id" class="flex flex-row relative justify-center items-start">
-            <CollectionCard :series="series" :image-url="series.thumbnail" :cardHeightMD="cardHeightMD"
-              :cardWidthMD="cardWidthMD" :cardHeight="cardHeight" :cardWidth="cardWidth" :deleteMode="deleteMode"
-              @confirmDelete="confirmDelete" />
+          <div v-for="series in seriesList" :key="series.id" class="relative min-w-0">
+            <CollectionCard :series="series" :image-url="series.thumbnail" :deleteMode="deleteMode" @confirmDelete="confirmDelete" />
           </div>
         </TransitionGroup>
       </div>
 
-      <!-- LIST VIEW -->
-      <div v-else class="mx-5">
+      <div v-else class="mx-auto w-full max-w-page px-4 md:px-8">
         <CollectionTable :seriesList="seriesList" :deleteMode="deleteMode" :confirmDelete="confirmDelete" />
       </div>
     </div>
   </Transition>
 
-  <Paginator v-if="pagination.total" :rows="pagination.limit" :totalRecords="pagination.total"
-    :first="pagination.offset" @page="onPageChange" class="mx-auto max-w-fit py-4" />
-
+  <CollectionPager :total="pagination.total" :limit="pagination.limit" :offset="pagination.offset" @page="onPageChange" />
 </template>
 
 <script setup lang="ts">
-import CollectionCard from "@/components/cards/CollectionCard.vue";
-import CollectionTable from "../components/tables/CollectionTable.vue";
 import { computed, onMounted, ref, watch } from "vue";
-import SeriesService from "../services/SeriesService";
-import { useUserStore } from "../store/user";
-import { useUserPreferences } from "@/store/userPreferences";
-import { useWindowSize } from "vue-window-size";
-import CollectionDropDownMenu from "@/components/dropdowns/CollectionDropDownMenu.vue";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
-import { Series } from "@/types/series.types";
-import Paginator from "primevue/paginator";
-import SearchSeriesForm from "@/components/forms/SearchSeriesForm.vue";
-import { useConfirmAction } from "@/composables/useConfirmAction";
 import { useRoute, useRouter } from "vue-router";
+import { useToast } from "primevue/usetoast";
+import { useConfirmAction } from "@/composables/useConfirmAction";
+import { useUserPreferences } from "@/store/userPreferences";
+import SeriesService from "@/services/SeriesService";
+import type { Series } from "@/types/series.types";
+import CollectionCard from "@/components/cards/CollectionCard.vue";
+import CollectionTable from "@/components/tables/CollectionTable.vue";
+import CollectionToolbar, { type SeriesFilters } from "@/components/collection/CollectionToolbar.vue";
+import CollectionPager from "@/components/collection/CollectionPager.vue";
 
-const onPageChange = (event: any) => {
-  if (event.rows > 0) {
-    getseriesList(currentFilter.value, event.first, event.rows);
-  }
-};
+const EMPTY_FILTERS: SeriesFilters = { query: "", genre: "", creator: "", character: "", publisher: "", series_format: "" };
 
 const toast = useToast();
 const { confirmAction } = useConfirmAction();
-
-const confirmDelete = (id: number, title: any) => {
-  confirmAction({
-    message: `Series ${title}`,
-    header: "Confirm Deletion",
-    acceptLabel: "Delete",
-    severity: "danger",
-    successMessage: `$Series ${title} deleted`,
-    onAccept: () => {
-      deleteSeries(id);
-      toast.add({
-        severity: "success",
-        summary: "Confirmed",
-        detail: `Series ${title} deleted`,
-        life: 3000,
-      });
-    },
-  });
-};
-
-const { width } = useWindowSize();
-const seriesList = ref<Series[]>([]);
-const userstore = useUserStore();
+const route = useRoute();
+const router = useRouter();
 const userPreferences = useUserPreferences();
-const message = ref();
+
+const seriesList = ref<Series[]>([]);
 const deleteMode = ref(false);
 const selectedGrid = ref<number>(userPreferences.cardsPerLine);
 const orderBy = ref(userPreferences.orderBy);
 const orderDir = ref(userPreferences.orderDir);
-
-
-const route = useRoute();
-const router = useRouter();
+const sortKey = ref(0);
+const loading = ref(false);
+const pagination = ref({ total: 0, limit: 25, offset: 0, base_total: 0 });
+const currentFilter = ref<SeriesFilters>({ ...EMPTY_FILTERS });
 
 const viewMode = computed({
   get: () => userPreferences.viewMode,
-  set: (val) => userPreferences.setViewMode(val)
+  set: (val) => userPreferences.setViewMode(val),
 });
 
-const sortKey = ref(true);
-const loading = ref(false);
-
-// Custom heights and width for each column vallues
-// cardHeight for mobile devices
-// cardHeightMD for larger devices
-
-let cardHeightMultiplierMD = [34, 34, 30, 27, 21.5, 19, 16.3, 14, 13.5];
-let cardWidthMultiplierMD = [22, 22, 20, 17.5, 14, 12, 10.5, 9.2, 8.2];
-const cardHeightMD = ref(cardHeightMultiplierMD[selectedGrid.value - 2]);
-const cardWidthMD = ref<number>(cardWidthMultiplierMD[selectedGrid.value - 2]);
-
-let cardHeightMultiplier = [19, 14, 9, 7.5];
-let cardWidthMultiplier = [12, 9.2, 6, 5];
-const cardHeight = ref(cardHeightMultiplier[selectedGrid.value - 2]);
-const cardWidth = ref(cardWidthMultiplier[selectedGrid.value - 2]);
-
-const pagination = ref({
-  total: 0,
-  limit: 25,
-  offset: 0,
-  base_total: 0
+const hasFilters = computed(() => Object.values(currentFilter.value).some((v) => v));
+const gridStyle = computed(() => ({ gridTemplateColumns: `repeat(${selectedGrid.value}, minmax(0, 1fr))` }));
+const skeletonCount = computed(() => Math.min(pagination.value.limit || 10, 15));
+const countLine = computed(() => {
+  const total = pagination.value.base_total ?? 0;
+  if (hasFilters.value) return `${pagination.value.total} of ${total} series`;
+  return `${total} ${total === 1 ? "series" : "series"}`;
 });
 
-const currentFilter = ref({});
-
-const handleSearch = (filters) => {
-  currentFilter.value = filters;
-
-  router.replace({
-    query: {
-      ...Object.fromEntries(
-        Object.entries(filters).filter(([_, v]) => v)
-      ),
-      limit: pagination.value.limit.toString(),
-    },
-  });
-
-  getseriesList(currentFilter.value, 0, pagination.value.limit);
-};
-
-watch(() => pagination.value.limit, (newLimit) => {
-  router.replace({
-    query: {
-      ...route.query,
-      limit: newLimit.toString(),
-    },
-  });
-  getseriesList(currentFilter.value, 0, newLimit);
-});
-
-watch(selectedGrid, (newVal) => {
-  cardHeightMD.value = cardHeightMultiplierMD[newVal - 2];
-  cardWidthMD.value = cardWidthMultiplierMD[newVal - 2];
-  cardHeight.value = cardHeightMultiplier[newVal - 2];
-  cardWidth.value = cardWidthMultiplier[newVal - 2];
-
-});
-
-async function deleteSeries(id: number) {
-  try {
-    await SeriesService.removeSeries(id);
-    getseriesList();
-  } catch (error) {
-    message.value = error;
-  }
-
-  console.log(message);
-}
-
-const toggleDelete = (): void => {
-  deleteMode.value = !deleteMode.value;
-};
-
-const getseriesList = async (
-  filter = currentFilter.value,
-  offset = 0,
-  limit = pagination.value.limit
-) => {
-  if (limit === 0) return;
-  loading.value = true;
-  try {
-    const result: any = await SeriesService.fetchSeries(
-      orderBy.value,
-      orderDir.value,
-      limit,
-      offset,
-      filter
-    );
-    seriesList.value = result.seriesList.map(series => ({
-      ...series,
-      thumbnail: SeriesService.getSeriesImageById(series.id, series.last_updated)
-    }));
-    pagination.value = result.pagination;
-  } catch (error) {
-    console.error("Error loading series:", error);
-    toast.add({
-      severity: "error",
-      summary: "Error",
-      detail: "Failed to load series.",
-      life: 3000,
-    });
-  } finally {
-    loading.value = false; // stop loading
-  }
-};
-
-function changeGrid(selected: any) {
-  const newVal = parseInt(selected.target.value);
-  userPreferences.setCardsPerLine(newVal);
-  selectedGrid.value = newVal;
-}
-
-function orderDirection(values: any) {
-  userPreferences.setorderDir(values.target.value);
-  orderDir.value = values.target.value;
-  seriesList.value = [];
-  getseriesList();
-}
-
-function orderByProperties(values: any) {
-  userPreferences.setorderBy(values.target.value);
-  orderBy.value = values.target.value;
-  seriesList.value = [];
-  getseriesList();
-}
-
-function getScreenWidth() {
-  const windowWidth = width.value;
-  return windowWidth;
-}
-
-onMounted(() => {
-  userPreferences.loadPreferences();
-
-  const query = route.query;
-
-  const filters = {
+function filtersFromQuery(query: Record<string, any>): SeriesFilters {
+  return {
     query: query.query || "",
     genre: query.genre || "",
     creator: query.creator || "",
@@ -302,55 +111,117 @@ onMounted(() => {
     publisher: query.publisher || "",
     series_format: query.series_format || "",
   };
+}
 
+const getseriesList = async (filter = currentFilter.value, offset = 0, limit = pagination.value.limit) => {
+  if (limit === 0) return;
+  loading.value = true;
+  try {
+    const result: any = await SeriesService.fetchSeries(orderBy.value, orderDir.value, limit, offset, filter);
+    seriesList.value = result.seriesList.map((series: Series) => ({
+      ...series,
+      thumbnail: SeriesService.getSeriesImageById(series.id, series.last_updated),
+    }));
+    pagination.value = result.pagination;
+  } catch (error) {
+    console.error("Error loading series:", error);
+    toast.add({ severity: "error", summary: "Error", detail: "Failed to load series.", life: 3000 });
+  } finally {
+    loading.value = false;
+  }
+};
+
+// filters mirror into the URL, and the URL watcher refetches, so a link is a saved search
+const handleSearch = (filters: SeriesFilters) => {
   currentFilter.value = filters;
+  router.replace({
+    query: {
+      ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
+      limit: pagination.value.limit.toString(),
+    },
+  });
+};
 
-  getseriesList(
-    filters,
-    0,
-    Number(query.limit) || pagination.value.limit
-  );
+function clearFilters() {
+  handleSearch({ ...EMPTY_FILTERS });
+}
+
+function setSort({ orderBy: by, orderDir: dir }: { orderBy: string; orderDir: string }) {
+  userPreferences.setorderBy(by);
+  userPreferences.setorderDir(dir as "asc" | "desc");
+  orderBy.value = by;
+  orderDir.value = dir;
+  sortKey.value++;
+  getseriesList(currentFilter.value, 0, pagination.value.limit);
+}
+
+function setCardsPerLine(n: number) {
+  userPreferences.setCardsPerLine(n);
+  selectedGrid.value = n;
+}
+
+function onPageChange(event: { first: number; rows: number }) {
+  getseriesList(currentFilter.value, event.first, event.rows);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+watch(() => pagination.value.limit, (newLimit) => {
+  router.replace({ query: { ...route.query, limit: newLimit.toString() } });
+  getseriesList(currentFilter.value, 0, newLimit);
 });
 
-watch(
-  () => route.query,
-  (newQuery) => {
-    const filters = {
-      query: newQuery.query || "",
-      genre: newQuery.genre || "",
-      creator: newQuery.creator || "",
-      character: newQuery.character || "",
-      publisher: newQuery.publisher || "",
-      series_format: newQuery.series_format || "",
-    };
+watch(() => route.query, (newQuery) => {
+  currentFilter.value = filtersFromQuery(newQuery);
+  getseriesList(currentFilter.value, 0, pagination.value.limit);
+});
 
-    currentFilter.value = filters;
-    getseriesList(filters, 0, pagination.value.limit);
+const toggleDelete = () => {
+  deleteMode.value = !deleteMode.value;
+};
+
+async function deleteSeries(id: number) {
+  try {
+    await SeriesService.removeSeries(id);
+    getseriesList();
+  } catch (error) {
+    console.error(error);
   }
-);
+}
 
+const confirmDelete = (id: number, title: string) => {
+  confirmAction({
+    message: `Series ${title}`,
+    header: "Confirm Deletion",
+    acceptLabel: "Delete",
+    severity: "danger",
+    successMessage: `Series ${title} deleted`,
+    onAccept: () => {
+      deleteSeries(id);
+      toast.add({ severity: "success", summary: "Confirmed", detail: `Series ${title} deleted`, life: 3000 });
+    },
+  });
+};
 
-
+onMounted(() => {
+  userPreferences.loadPreferences();
+  currentFilter.value = filtersFromQuery(route.query);
+  getseriesList(currentFilter.value, 0, Number(route.query.limit) || pagination.value.limit);
+});
 </script>
 
 <style scoped>
-.paneldiv {
-  height: calc(100vh - var(--spacing-header));
+.iconbtn {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
 }
-
-.background {
-  background: var(--bg-gradient);
-}
-
-.drp {
-  margin-left: -84px;
-}
-
-.range::-moz-range-thumb {
-  color: #1fb2a6;
-  box-shadow:
-    0 0 0 3px #1fb2a6 inset,
-    var(--focus-shadow, 0 0),
-    calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
-}
+.iconbtn:hover { color: #fff; border-color: rgba(255, 255, 255, 0.22); }
+.iconbtn--danger { color: #fff; background: #dc2626; border-color: #dc2626; }
+.iconbtn:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
 </style>

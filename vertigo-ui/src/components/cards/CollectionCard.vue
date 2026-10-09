@@ -1,33 +1,29 @@
 <template>
-  <RouterLink class="shadow-2xl flex"
-    :class="[`md:h-[${cardHeightMD}rem]`, `md:w-[${cardWidthMD}rem]`, `h-[${cardHeight}rem]`, `w-[${cardWidth}rem]`, { 'animate-wiggle': deleteMode }]"
+  <RouterLink class="block w-full shadow-2xl" :class="{ 'animate-wiggle': deleteMode }"
     :to="{
       name: 'SeriesDetail',
       params: { Link: series.slug, Id: series.id },
     }">
-    <div class="items-end relative flex h-full w-full" @mouseenter="activate" @mouseleave="activate">
-      <div class="flex h-full w-full items-end">
+    <div class="relative w-full" @mouseenter="activate" @mouseleave="activate">
+      <div class="w-full">
         <div id="image_container"
-          class="h-full relative rounded flex-col md:rounded-lg w-full justify-end hvr-bounce-in items-center text-center">
+          class="relative flex aspect-[2/3] w-full flex-col items-center justify-end rounded text-center hvr-bounce-in md:rounded-lg">
           <img v-if="displayedImage !== Image" loading="lazy" decoding="async" :src="displayedImage" @error="handleImageError" alt=""
-            class="slideritem h-full w-full rounded-t-md md:rounded-t-md" />
+            class="slideritem min-h-0 w-full flex-1 rounded-t-md object-cover md:rounded-t-md" />
 
           <div class="absolute flex h-full w-full rounded-t-md md:rounded-t-md bg-[#131929] opacity-0"
             :class="{ 'opacity-60': active }">
           </div>
           <span v-if="active || displayedImage == Image" :class="[
             'absolute md:text-xl name text-sm leading-none font-bold uppercase pb-2 break-words text-ellipsis whitespace-nowrap overflow-hidden w-[80%]',
-            displayedImage == Image ? 'top-1/2' : '',
-            `md:max-w-[${cardHeightMD / 2}vw]`,
-            `max-w-[${cardWidth / 2}vw]`
+            displayedImage == Image ? 'top-1/2' : ''
           ]" :style="displayedImage == Image ? `top: 50%;` : ''">
             {{ series.title }}
           </span>
-          <span class=" absolute text-[12px] md:text-[12x] m-[3px] px-[4px] font-bold text-sm bg-slate-800 text-green-200
-          text rounded top-0 right-0 break-words">
+          <span class="absolute right-2 top-2 max-w-[85%] truncate rounded-full border border-white/15 bg-slate-950/75 px-2 py-0.5 text-[11px] font-bold text-slate-200 backdrop-blur-sm">
             {{ series.series_format }}
           </span>
-          <div class="h-3 w-full relative bg-red-900 rounded-b-md">
+          <div class="relative h-3 w-full shrink-0 rounded-b-md bg-red-900">
             <div class="h-full bg-sky-500 rounded-b absolute"
               :style="{ width: fraction(series.owned_count, series.issue_count) }">
             </div>
@@ -54,10 +50,6 @@ import { ref } from 'vue';
 const props = defineProps({
   series: Object,
   imageUrl: String,
-  cardHeightMD: Number,
-  cardWidthMD: Number,
-  cardHeight: Number,
-  cardWidth: Number,
   deleteMode: Boolean,
 });
 

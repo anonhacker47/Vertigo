@@ -1,8 +1,8 @@
 <template>
-  <section id="pending" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-7xl px-4 md:mt-16 md:px-8" aria-labelledby="pending-title">
+  <section id="pending" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="pending-title">
     <SectionHead title="Reading queue" :subtitle="subtitle" />
 
-    <Skeleton v-if="loading" variant="tiles" :count="7" />
+    <Skeleton v-if="loading" variant="tiles" :count="8" />
 
     <p v-else-if="error" class="py-6 text-slate-400">
       {{ error }} <button class="font-bold text-sky-400 hover:text-sky-300" type="button" @click="reload">Try again</button>
@@ -41,7 +41,7 @@ import RunStrip from "./RunStrip.vue";
 import Skeleton from "./Skeleton.vue";
 import type { ReadingQueueItem } from "@/types/insights.types";
 
-const LIMIT = 7;
+const LIMIT = 8;
 const { data, loading, refreshing, error, reload } = useInsightsSection(() => InsightsService.getReadingQueue());
 const expanded = ref(false);
 

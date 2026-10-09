@@ -1,5 +1,5 @@
 <template>
-  <section v-if="loading || cards.length" id="facts" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-7xl px-4 md:mt-16 md:px-8" aria-labelledby="facts-title">
+  <section v-if="loading || cards.length" id="facts" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="facts-title">
     <SectionHead title="Did you know" subtitle="changes daily" />
 
     <Skeleton v-if="loading" variant="lines" :count="3" />

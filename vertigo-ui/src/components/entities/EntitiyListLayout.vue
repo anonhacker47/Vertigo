@@ -2,7 +2,7 @@
     <Transition class="md:flex hidden" enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut animate__faster">
         <div class="flex flex-col md:flex-row justify-between items-center py-4 border-b bg-base-100 border-slate-700">
-            <div class="flex md:flex-row justify-between gap-4 items-center container mx-auto max-w-7xl px-8">
+            <div class="flex md:flex-row justify-between gap-4 items-center container mx-auto max-w-page px-8">
                 <RouterLink :to="{ name: `Add${pascalType}` }" custom v-slot="{ navigate }">
                     <Button class="md:flex-none" @click="navigate">
                         Add {{ pascalType }}
@@ -57,7 +57,7 @@
             @click="resetSearch" />
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 py-2 gap-4 px-8 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 py-2 gap-4 px-8 max-w-page mx-auto">
         <EntityListCard :delete-mode="deleteMode" @onDelete="confirmDelete(item.id, item.title)"
             v-for="item in filteredData" :key="item.id" :to="path + `/` + item.id + `-` + item.slug" :title="item.title"
             :image="thumbnail(item.id, item.last_updated)" />

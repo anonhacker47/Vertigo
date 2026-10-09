@@ -23,7 +23,7 @@
         <span class="loading loading-ring text-success h-20 w-20"></span>
       </div>
 
-      <div v-else class="flex flex-col gap-2 w-full max-w-7xl mx-auto flex-1 min-h-0">
+      <div v-else class="flex flex-col gap-2 w-full max-w-page mx-auto flex-1 min-h-0">
         <div
           v-for="tier in tiers"
           :key="tier.id"
@@ -64,7 +64,7 @@
     </div>
    </div> 
 
-    <div v-if="!loading" class="mt-4 w-full max-w-7xl mx-auto rounded-md border border-slate-700 bg-base-300 p-4">
+    <div v-if="!loading" class="mt-4 w-full max-w-page mx-auto rounded-md border border-slate-700 bg-base-300 p-4">
       <div class="flex items-center justify-between gap-3 mb-3">
         <h3 class="text-base font-semibold text-white flex items-center gap-2">
           <i class="pi pi-inbox text-gray-400"></i> Deck
@@ -133,7 +133,6 @@ interface Tier {
   id: string;
   name: string;
   color: string;
-  /** Hex of `color` (Tailwind v4 palette), for the canvas export. */
   exportColor: string;
   min: number;
   max: number;
@@ -344,7 +343,6 @@ onMounted(fetchSeries);
   border-radius: 3px;
 }
 
-/* Disable selection while dragging */
 .sortable-ghost {
   opacity: 0.5;
   background: #2a3241;

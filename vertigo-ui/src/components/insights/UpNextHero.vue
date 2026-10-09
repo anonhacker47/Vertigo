@@ -13,7 +13,7 @@
     </Transition>
     <div class="ins-scrim" aria-hidden="true"></div>
 
-    <div class="relative mx-auto w-full max-w-7xl px-4 md:px-8">
+    <div class="relative mx-auto w-full max-w-page px-4 md:px-8">
       <Skeleton v-if="loading" variant="hero" />
 
       <div v-else-if="error" class="py-6 text-slate-400">

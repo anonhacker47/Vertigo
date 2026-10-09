@@ -1,5 +1,5 @@
 <template>
-  <section id="get-next" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-7xl px-4 md:mt-16 md:px-8" aria-labelledby="get-next-title">
+  <section id="get-next" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="get-next-title">
     <SectionHead title="Get next" :subtitle="subtitle">
       <div v-if="items.length > 1" class="seg" role="group" aria-label="Sort">
         <button type="button" :aria-pressed="sort === 'closest'" @click="sort = 'closest'">Closest to done</button>
@@ -7,7 +7,7 @@
       </div>
     </SectionHead>
 
-    <Skeleton v-if="loading" variant="tiles" :count="7" />
+    <Skeleton v-if="loading" variant="tiles" :count="8" />
 
     <p v-else-if="error" class="py-6 text-slate-400">
       {{ error }} <button class="font-bold text-sky-400 hover:text-sky-300" type="button" @click="reload">Try again</button>
@@ -50,14 +50,14 @@ import SeriesTile from "./SeriesTile.vue";
 import RunStrip from "./RunStrip.vue";
 import Skeleton from "./Skeleton.vue";
 
-const LIMIT = 7;
+const LIMIT = 8;
 const { data, loading, refreshing, error, reload } = useInsightsSection(() => InsightsService.getGetNext());
 const expanded = ref(false);
 const sort = ref<"closest" | "recent">("closest");
 
 const items = computed(() => {
   const rows = data.value?.items ?? [];
-  if (sort.value === "closest") return rows; // the server already orders closest-to-done
+  if (sort.value === "closest") return rows;
   return [...rows].sort((a, b) => (b.last_bought ?? "").localeCompare(a.last_bought ?? "") || a.missing_count - b.missing_count);
 });
 const visible = computed(() => (expanded.value ? items.value : items.value.slice(0, LIMIT)));
