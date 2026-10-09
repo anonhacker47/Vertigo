@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, watch, type PropType } from "vue";
 import getSymbolFromCurrency from "currency-symbol-map";
 import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
@@ -129,8 +129,8 @@ import { hasCustomIssueTitle, issueNumberLabel } from "@/utils/issueTitle";
 const props = defineProps({
   issue: { type: Object as () => Issue, required: true },
   /** Series cover, shown dimmed when the issue has none of its own. */
-  image: String,
-  themecolor: String,
+  image: { type: String as PropType<string | null> },
+  themecolor: { type: String as PropType<string | null> },
   preferred_currency: String,
   edit_mode: Boolean,
   series: { type: Object, required: true },

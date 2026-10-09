@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tier-tile relative group cursor-pointer shrink-0 aspect-[2/3] rounded overflow-hidden border border-slate-700 hover:border-sky-400 transition-colors bg-slate-800"
+    class="tier-tile relative group cursor-pointer shrink-0 aspect-2/3 rounded overflow-hidden border border-slate-700 hover:border-sky-400 transition-colors bg-slate-800"
     :title="`${item.label} (${item.rating || 'Unrated'} ⭐)`"
     @click="$emit('open')"
   >

@@ -5,7 +5,7 @@
     </summary>
 
     <ul
-      class="menu dropdown-content cursor-default card shadow bg-base-100 border border-slate-700 rounded-md w-64 md:w-80 z-[100]">
+      class="menu dropdown-content cursor-default card shadow bg-base-100 border border-slate-700 rounded-md w-64 md:w-80 z-100">
       <div class="label px-2 justify-center flex">
         <span class="font-bold text-lg text-sky-200 text-grey-500">Display Options</span>
       </div>

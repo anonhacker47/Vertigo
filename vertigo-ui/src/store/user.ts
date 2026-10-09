@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
+import type { User } from "@/types/user.types";
 
 // Define the state type
 interface UserState {
   isUserLoggedIn: boolean;
-  user: Record<string, any> | null;
+  user: User | null;
 }
 
 // Define the actions type
@@ -17,7 +18,7 @@ export const useUserStore = defineStore("user", {
       localStorage.setItem("token", token);
       localStorage.setItem("isUserLoggedIn", "true");
     },
-    addUser(user: string) {
+    addUser(user: User) {
       this.user = user;
       this.isUserLoggedIn = true; 
       localStorage.setItem("user", JSON.stringify(user));
@@ -39,9 +40,9 @@ export const useUserStore = defineStore("user", {
       const token = localStorage.getItem("token");
       return token;
     },
-    getUser(): object | null {
+    getUser(): User | null {
       const user = localStorage.getItem("user");
-      return JSON.parse(user);
+      return user ? (JSON.parse(user) as User) : null;
     },
     logout() {
       this.isUserLoggedIn = false;

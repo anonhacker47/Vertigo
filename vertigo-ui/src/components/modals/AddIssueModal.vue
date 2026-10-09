@@ -3,7 +3,7 @@
     :visible="visible"
     modal
     header="Add an issue"
-    class="w-[95vw] md:w-[44rem]"
+    class="w-[95vw] md:w-176"
     :draggable="false"
     @update:visible="$emit('update:visible', $event)"
   >
@@ -104,8 +104,8 @@ const blank = () => ({
   title: "",
   is_owned: false,
   is_read: false,
-  bought_date: todayYmd(),
-  read_date: todayYmd(),
+  bought_date: todayYmd() as string | null,
+  read_date: todayYmd() as string | null,
   bought_price: null as number | null,
 });
 

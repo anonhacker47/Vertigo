@@ -16,14 +16,14 @@
       </div>
     </div>
 
-    <CollectionToolbar class="mt-5 border-b border-white/[.08] pb-4" :filters="currentFilter" :order-by="orderBy" :order-dir="orderDir"
+    <CollectionToolbar class="mt-5 border-b border-white/8 pb-4" :filters="currentFilter" :order-by="orderBy" :order-dir="orderDir"
       :view-mode="viewMode" :cards-per-line="selectedGrid" :items-per-page="pagination.limit"
       @update:filters="handleSearch" @update:sort="setSort" @update:view-mode="viewMode = $event"
       @update:cards-per-line="setCardsPerLine" @update:items-per-page="pagination.limit = $event" @clear="clearFilters" />
   </div>
 
   <div v-if="loading && !seriesList.length" class="mx-auto grid w-full max-w-page gap-3 px-4 pt-5 md:gap-5 md:px-8" :style="gridStyle" aria-hidden="true">
-    <div v-for="n in skeletonCount" :key="n" class="aspect-[2/3] animate-pulse rounded-md bg-white/[.06]"></div>
+    <div v-for="n in skeletonCount" :key="n" class="aspect-2/3 animate-pulse rounded-md bg-white/6"></div>
   </div>
 
   <div v-else-if="!loading && !seriesList.length" class="mx-auto max-w-page px-4 py-20 text-center md:px-8">

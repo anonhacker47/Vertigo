@@ -59,7 +59,7 @@ import { useRouter } from "vue-router";
 import { useToast } from "primevue";
 import Button from "primevue/button";
 
-import type { Series } from "@/types/series.types";
+import type { SeriesFormData } from "@/types/series.types";
 import type { Issue, IssueDraft } from "@/types/issue.types";
 
 import IssueService from "../services/IssueService";
@@ -94,7 +94,7 @@ const justImported = ref(false);
 
 let isImportingMetronData = false;
 
-const seriesData = ref<Partial<Series>>({
+const seriesData = ref<SeriesFormData>({
   title: "",
   creator: [],
   description: "",
@@ -369,7 +369,7 @@ function uploadIssueCovers(createdIssues: Pick<Issue, "id" | "number">[]): Promi
   const background: Promise<unknown>[] = [];
 
   issues.value.forEach((issue, index) => {
-    const cover = issue.cover instanceof File ? issue.cover : (issue.cover?.trim() || null);
+    const cover = typeof issue.cover === "string" ? issue.cover.trim() || null : issue.cover;
     if (!cover) return;
 
     const number = index + 1;
@@ -379,10 +379,10 @@ function uploadIssueCovers(createdIssues: Pick<Issue, "id" | "number">[]): Promi
       return;
     }
 
-    if (cover instanceof File) {
-      inline.push(IssueService.updateIssueCover(match.id, cover));
-    } else {
+    if (typeof cover === "string") {
       background.push(IssueService.updateIssueCover(match.id, cover, { background: true }));
+    } else {
+      inline.push(IssueService.updateIssueCover(match.id, cover));
     }
   });
 

@@ -7,7 +7,7 @@
     <div class="relative w-full" @mouseenter="activate" @mouseleave="activate">
       <div class="w-full">
         <div id="image_container"
-          class="relative flex aspect-[2/3] w-full flex-col items-center justify-end rounded text-center hvr-bounce-in md:rounded-lg">
+          class="relative flex aspect-2/3 w-full flex-col items-center justify-end rounded text-center hvr-bounce-in md:rounded-lg">
           <img v-if="displayedImage !== Image" loading="lazy" decoding="async" :src="displayedImage" @error="handleImageError" alt=""
             class="slideritem min-h-0 w-full flex-1 rounded-t-md object-cover md:rounded-t-md" />
 
@@ -15,7 +15,7 @@
             :class="{ 'opacity-60': active }">
           </div>
           <span v-if="active || displayedImage == Image" :class="[
-            'absolute md:text-xl name text-sm leading-none font-bold uppercase pb-2 break-words text-ellipsis whitespace-nowrap overflow-hidden w-[80%]',
+            'absolute md:text-xl name text-sm leading-none font-bold uppercase pb-2 wrap-break-word text-ellipsis whitespace-nowrap overflow-hidden w-[80%]',
             displayedImage == Image ? 'top-1/2' : ''
           ]" :style="displayedImage == Image ? `top: 50%;` : ''">
             {{ series.title }}
@@ -36,8 +36,8 @@
       <Transition enter-active-class="animate__animated animate__bounceIn"
         leave-active-class="animate__animated animate__bounceOut">
         <div v-if="deleteMode" @click.prevent="confirmDelete(series.id, series.title)"
-          class="absolute -top-3 -right-3 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
-          <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
+          class="absolute -top-3 -right-3 rounded hover:scale-105 hover:rotate-180 z-800 transition ease-in-out">
+          <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-6.25 min-h-6.25" />
         </div>
       </Transition>
     </div>
@@ -46,9 +46,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import type { Series } from '@/types/series.types';
 
 const props = defineProps({
-  series: Object,
+  series: { type: Object as () => Series, required: true },
   imageUrl: String,
   deleteMode: Boolean,
 });

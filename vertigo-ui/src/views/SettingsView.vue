@@ -200,6 +200,7 @@ import Button from "primevue/button";
 import { useToast } from "primevue/usetoast";
 import currencyCodes from "currency-codes";
 import { useUserStore } from "@/store/user";
+import type { User } from "@/types/user.types";
 import AuthenticationService from "@/services/AuthenticationService";
 import fallbackAvatar from "@/assets/user.svg";
 
@@ -451,9 +452,10 @@ onMounted(async () => {
 
   try {
     const response = await AuthenticationService.getUser();
-    user = response.data;
-    userStore.addUser(user);
-    if (!profileDirty.value) applyUser(user);
+    const fresh: User = response.data;
+    user = fresh;
+    userStore.addUser(fresh);
+    if (!profileDirty.value) applyUser(fresh);
   } catch (e) {
     console.error("Failed to refresh account details:", e);
   }

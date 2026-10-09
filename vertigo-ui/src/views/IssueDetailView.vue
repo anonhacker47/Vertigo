@@ -205,7 +205,7 @@ const showPriceModal = ref(false);
 const showReadModal = ref(false);
 const showCoverModal = ref(false);
 const coverSaving = ref(false);
-const { preferred_currency } = useUserStore().getUser();
+const preferred_currency = useUserStore().getUser()?.preferred_currency ?? "";
 // The store holds a currency code (e.g. "INR"); show its symbol, falling back to the code.
 const currencySymbol = getSymbolFromCurrency(preferred_currency) || preferred_currency || "";
 

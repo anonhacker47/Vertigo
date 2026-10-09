@@ -17,14 +17,14 @@
       </thead>
       <tbody>
         <tr v-for="b in buckets" :key="b.key" class="text-slate-300">
-          <td class="border-b border-white/[.08] px-2 py-1.5">{{ b.label }}</td>
-          <td class="border-b border-white/[.08] px-2 py-1.5 text-right">{{ b.bought }}</td>
-          <td class="border-b border-white/[.08] px-2 py-1.5 text-right">{{ b.read }}</td>
+          <td class="border-b border-white/8 px-2 py-1.5">{{ b.label }}</td>
+          <td class="border-b border-white/8 px-2 py-1.5 text-right">{{ b.bought }}</td>
+          <td class="border-b border-white/8 px-2 py-1.5 text-right">{{ b.read }}</td>
         </tr>
       </tbody>
     </table>
 
-    <div v-else class="mt-2.5 h-[220px] md:h-[260px]" role="img" :aria-label="summary">
+    <div v-else class="mt-2.5 h-55 md:h-65" role="img" :aria-label="summary">
       <v-chart :option="option" :autoresize="true" class="h-full w-full" />
     </div>
   </div>

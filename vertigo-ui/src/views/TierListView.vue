@@ -28,7 +28,7 @@
            without scrolling the page. Below lg the deck stacks under the tiers. -->
       <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
         <section class="flex flex-col gap-2 flex-1 min-w-0 min-h-0" aria-label="Tiers">
-          <div v-if="loading" class="flex flex-1 items-center justify-center min-h-[24rem]">
+          <div v-if="loading" class="flex flex-1 items-center justify-center min-h-96">
             <span class="loading loading-ring text-success h-20 w-20"></span>
           </div>
 
@@ -36,7 +36,7 @@
             <div
               v-for="tier in tiers"
               :key="tier.id"
-              class="flex rounded-md overflow-hidden border border-slate-700 bg-[#1a2332] min-h-[6rem] lg:flex-1 lg:min-h-0"
+              class="flex rounded-md overflow-hidden border border-slate-700 bg-[#1a2332] min-h-24 lg:flex-1 lg:min-h-0"
             >
               <div :class="['w-12 md:w-16 shrink-0 flex items-center justify-center', tier.color]">
                 <span class="text-2xl md:text-3xl font-black text-black/80">{{ tier.name }}</span>
@@ -63,7 +63,7 @@
         </section>
 
         <aside
-          class="flex flex-col shrink-0 rounded-md border border-slate-700 bg-base-300 lg:w-1/4 lg:min-w-[15rem] lg:max-w-sm lg:min-h-0"
+          class="flex flex-col shrink-0 rounded-md border border-slate-700 bg-base-300 lg:w-1/4 lg:min-w-60 lg:max-w-sm lg:min-h-0"
           aria-label="Deck"
         >
           <div class="flex flex-col gap-2 p-3 border-b border-slate-700 shrink-0">

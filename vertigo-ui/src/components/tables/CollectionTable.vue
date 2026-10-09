@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-x-auto rounded-lg border border-white/[.08]">
+  <div class="overflow-x-auto rounded-lg border border-white/8">
     <table class="w-full text-sm">
       <thead>
         <tr class="text-left text-[12px] font-bold text-slate-400">
@@ -14,12 +14,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="series in seriesList" :key="series.id" class="row border-t border-white/[.06]"
+        <tr v-for="series in seriesList" :key="series.id" class="row border-t border-white/6"
           :class="{ 'cursor-pointer': !deleteMode }" @click="open(series)">
           <td class="max-w-xs px-4 py-2">
             <div class="flex items-center gap-3">
               <img :src="cover(series)" loading="lazy" decoding="async" width="40" height="60" alt=""
-                class="h-[60px] w-10 shrink-0 rounded-sm bg-slate-800 object-cover" @error="onCoverError" />
+                class="h-15 w-10 shrink-0 rounded-sm bg-slate-800 object-cover" @error="onCoverError" />
               <RouterLink :to="route(series)" class="truncate font-bold text-white hover:underline" @click.stop>
                 {{ series.title }}
               </RouterLink>

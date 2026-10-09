@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Series } from "@/types/series.types";
+import type { SeriesFormData } from "@/types/series.types";
 import { computed, onMounted, ref, watch } from "vue";
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
@@ -153,13 +153,13 @@ const MAX_TEXT = 3000;
 const seriesFields = ["publisher", "genre", "character", "creator"] as const;
 
 const props = defineProps<{
-  modelValue: Partial<Series>;
+  modelValue: SeriesFormData;
   errors?: SeriesFormErrors;
   /** Edit page: expose the Metron id and URL as inputs. The create page links to Metron instead. */
   metronEditable?: boolean;
 }>();
 
-const emit = defineEmits<{ (e: "update:modelValue", value: Partial<Series>): void }>();
+const emit = defineEmits<{ (e: "update:modelValue", value: SeriesFormData): void }>();
 
 const fieldValues = ref<Record<string, any[]>>({});
 const localSeriesData = ref<any>({ ...props.modelValue });

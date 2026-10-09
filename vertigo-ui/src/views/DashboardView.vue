@@ -1,7 +1,7 @@
 <template>
   <div class="mx-auto flex w-full max-w-page flex-col gap-7 px-4 pb-8 pt-6 md:min-h-[calc(100vh-var(--spacing-header))] md:px-8">
     <!-- the shelf in numbers -->
-    <div class="grid grid-cols-2 items-center gap-x-6 gap-y-5 border-b border-white/[.08] pb-5 md:grid-cols-[1fr_1fr_1fr_auto]">
+    <div class="grid grid-cols-2 items-center gap-x-6 gap-y-5 border-b border-white/8 pb-5 md:grid-cols-[1fr_1fr_1fr_auto]">
       <ShelfFigure :value="seriesInfo.totalSeriesCount" unit="series"
         :label="`${seriesInfo.collectedSeriesCount} fully collected · ${seriesInfo.readSeriesCount} fully read`"
         :ratio="pct(seriesInfo.collectedSeriesCount, seriesInfo.totalSeriesCount)" />
@@ -63,7 +63,7 @@ import PurchasesChart from '../components/dashboard/PurchasesChart.vue';
 import DashboardService from '../services/DashboardService';
 
 const userstore = useUserStore();
-const { preferred_currency } = userstore.getUser();
+const preferred_currency = userstore.getUser()?.preferred_currency ?? '';
 const symbol = getSymbolFromCurrency(preferred_currency) ?? '';
 
 const seriesInfo = ref({ totalSeriesCount: 0, collectedSeriesCount: 0, readSeriesCount: 0 });

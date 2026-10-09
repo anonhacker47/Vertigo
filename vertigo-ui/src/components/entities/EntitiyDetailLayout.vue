@@ -120,7 +120,7 @@ import EditIcon from "@/assets/EditIcon.vue";
 const props = defineProps<{
   entity: Entity;        // Replace with your Entity type if available
   type: string;
-  thumbnail: (id: number) => Promise<any>;
+  thumbnail: (id: number, lastUpdated?: string | Date) => string;
   neighbours?: {
     previous: any | null;
     next: any | null;

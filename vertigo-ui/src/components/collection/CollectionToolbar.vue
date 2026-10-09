@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ViewMode } from "@/store/userPreferences";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import SeriesService from "@/services/SeriesService";
 import FilterPill, { type PillOption } from "./FilterPill.vue";
@@ -60,14 +61,14 @@ const props = defineProps<{
   filters: SeriesFilters;
   orderBy: string;
   orderDir: string;
-  viewMode: string;
+  viewMode: ViewMode;
   cardsPerLine: number;
   itemsPerPage: number;
 }>();
 const emit = defineEmits<{
   (e: "update:filters", filters: SeriesFilters): void;
   (e: "update:sort", sort: { orderBy: string; orderDir: string }): void;
-  (e: "update:viewMode", mode: string): void;
+  (e: "update:viewMode", mode: ViewMode): void;
   (e: "update:cardsPerLine", n: number): void;
   (e: "update:itemsPerPage", n: number): void;
   (e: "clear"): void;

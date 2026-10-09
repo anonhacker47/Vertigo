@@ -1,22 +1,32 @@
 import { defineStore } from "pinia";
 
+export type ViewMode = "card" | "list";
+
 interface UserPreferencesState {
-    viewMode: string;
+    viewMode: ViewMode;
     orderDir: string;
     orderBy: string;
     cardsPerLine: number;
 }
 
+function storedViewMode(): ViewMode {
+    return localStorage.getItem('viewMode') === 'list' ? 'list' : 'card';
+}
+
+function storedOrderDir(): 'asc' | 'desc' {
+    return localStorage.getItem('orderDir') === 'asc' ? 'asc' : 'desc';
+}
+
 export const useUserPreferences = defineStore("userPreferences", {
     state: (): UserPreferencesState => ({
-        viewMode: localStorage.getItem('viewMode') || 'card',
+        viewMode: storedViewMode(),
         cardsPerLine: Number(localStorage.getItem('cardsPerLine')) || 4,
-        orderDir: localStorage.getItem('orderDir') || 'desc',
+        orderDir: storedOrderDir(),
         orderBy: localStorage.getItem('orderBy') || 'timestamp',
     }),
 
     actions: {
-        setViewMode(viewMode: 'card' | 'list') {
+        setViewMode(viewMode: ViewMode) {
             if (this.viewMode === viewMode) return;
             this.viewMode = viewMode;
             localStorage.setItem('viewMode', viewMode);
@@ -34,11 +44,10 @@ export const useUserPreferences = defineStore("userPreferences", {
             localStorage.setItem('cardsPerLine', cardsPerLine.toString());
         },
         loadPreferences() {
-            this.setViewMode(localStorage.getItem('viewMode') || 'card');
-            this.setorderDir(localStorage.getItem('orderDir') || 'desc');
+            this.setViewMode(storedViewMode());
+            this.setorderDir(storedOrderDir());
             this.setorderBy(localStorage.getItem('orderBy') || 'timestamp');
             this.setCardsPerLine(Number(localStorage.getItem('cardsPerLine')) || 6);
         }
     }
 });
-

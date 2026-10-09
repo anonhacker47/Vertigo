@@ -39,7 +39,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
 
-import type { Series } from "@/types/series.types";
+import type { SeriesFormData } from "@/types/series.types";
 
 import SeriesService from "../services/SeriesService";
 import { useConfirmAction } from "@/composables/useConfirmAction";
@@ -58,7 +58,7 @@ const loaded = ref(false);
 const saving = ref(false);
 const errors = ref<SeriesFormErrors>({});
 
-const seriesData = ref<Partial<Series>>({
+const seriesData = ref<SeriesFormData>({
   title: "",
   creator: [],
   description: "",

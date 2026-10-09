@@ -16,11 +16,11 @@
       <!-- donut and legend sit centred in whatever height the panel has; the summary stays on the baseline -->
       <div class="flex flex-1 flex-col items-center justify-center gap-4 py-2">
       <!-- the donut, with the readout sitting in its hole -->
-      <div class="relative h-[260px] w-full max-w-[300px]" role="img" :aria-label="summary">
+      <div class="relative h-65 w-full max-w-75" role="img" :aria-label="summary">
         <v-chart ref="chart" :option="option" :autoresize="true" class="h-full w-full"
           @mouseover="onSliceEnter" @mouseout="onSliceLeave" @click="onSliceClick" />
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div class="flex w-[136px] flex-col items-center text-center">
+          <div class="flex w-34 flex-col items-center text-center">
           <template v-if="focused">
             <span class="w-full truncate text-sm font-extrabold text-white" :title="focused.name">{{ focused.name }}</span>
             <span class="mt-0.5 text-[26px] font-black leading-none tracking-tight text-white tabular-nums">{{ focused.value }}</span>
@@ -139,7 +139,7 @@ function filterRoute(name: string) {
 const option = computed(() => ({
   backgroundColor: "transparent",
   animationDuration: 500,
-  animationEasing: "cubicOut",
+  animationEasing: "cubicOut" as const,
   series: [
     {
       type: "pie",

@@ -42,7 +42,7 @@ export interface Series extends MetronIdentifiable {
   series_format: string;
   slug: string;
   team: string[];
-  thumbnail: string | File;
+  thumbnail: string;
   timestamp: string;
   last_updated?: string;
   title: string;
@@ -58,6 +58,21 @@ export interface Series extends MetronIdentifiable {
   };
   user_rating: number;
   creator: SeriesEntityRef[];
-  metron_id?: number;
-  metron_url?: string;
 }
+
+/** One option picked in the form's creator/character/genre comboboxes. */
+export interface SeriesFormOption {
+  id: number | string;
+  value: string;
+}
+
+/**
+ * Series fields as held by the add/edit forms: the thumbnail may be a freshly picked File, and the
+ * entity lists are combobox options rather than the API's entity refs.
+ */
+export type SeriesFormData = Partial<Omit<Series, "thumbnail" | "creator" | "character" | "genre">> & {
+  thumbnail?: string | File;
+  creator?: SeriesFormOption[];
+  character?: SeriesFormOption[];
+  genre?: SeriesFormOption[];
+};

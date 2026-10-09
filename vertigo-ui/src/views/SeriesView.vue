@@ -27,9 +27,9 @@
               <img v-if="image && image !== 'noimage'" :src="image" :alt="`${series.title} cover`"
                 class="w-full rounded-lg border-2 border-primary object-cover" :style="accentBorderStyle" />
               <div v-else
-                class="flex aspect-[2/3] w-full items-center justify-center rounded-lg border-2 border-primary bg-slate-900 p-4 text-center"
+                class="flex aspect-2/3 w-full items-center justify-center rounded-lg border-2 border-primary bg-slate-900 p-4 text-center"
                 :style="accentBorderStyle">
-                <span class="break-words text-2xl font-semibold opacity-70" :style="accentStyle">
+                <span class="wrap-break-word text-2xl font-semibold opacity-70" :style="accentStyle">
                   {{ series.title }}
                 </span>
               </div>
@@ -48,7 +48,7 @@
             <div class="flex min-w-0 flex-1 flex-col gap-4">
               <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0">
-                  <h1 class="break-words text-3xl font-extrabold leading-[1.15] tracking-tight text-primary xl:text-4xl"
+                  <h1 class="wrap-break-word text-3xl font-extrabold leading-[1.15] tracking-tight text-primary xl:text-4xl"
                     :style="accentStyle">
                     {{ series.title }}
                   </h1>
@@ -85,11 +85,11 @@
                     :style="{ gridTemplateColumns: `repeat(${issuesList.length}, minmax(0, 1fr))` }">
                     <RouterLink v-for="issue in issuesList" :key="issue.id" :to="issueRoute(issue)"
                       :title="segmentTitle(issue, track)" :aria-label="segmentTitle(issue, track)"
-                      class="block h-3 rounded-[2px] transition-opacity hover:opacity-70"
+                      class="block h-3 rounded-xs transition-opacity hover:opacity-70"
                       :class="issue[track.field] ? '' : 'bg-slate-700/70'"
                       :style="issue[track.field] ? { backgroundColor: fillColor } : {}" />
                   </div>
-                  <div v-else class="h-3 overflow-hidden rounded-[2px] bg-slate-700/70" role="img"
+                  <div v-else class="h-3 overflow-hidden rounded-xs bg-slate-700/70" role="img"
                     :aria-label="`${track.count} of ${totalIssues} ${track.label.toLowerCase()}`">
                     <div class="h-full"
                       :style="{ width: `${Math.round((track.count / totalIssues) * 100)}%`, backgroundColor: fillColor }">
@@ -264,7 +264,7 @@ const toggleEditMode = (): void => {
 
 const userstore = useUserStore();
 
-const { preferred_currency: preferred_currency } = userstore.getUser();
+const preferred_currency = userstore.getUser()?.preferred_currency ?? '';
 
 const route = useRoute();
 const series = ref<Series | null>(null);
@@ -470,7 +470,7 @@ onMounted(() => {
 watch(image, (newImage) => {
   if (!newImage) return;
 
-  const app = document.querySelector('#app');
+  const app = document.querySelector<HTMLElement>('#app');
   if (!app) return;
 
   app.style.background = `
@@ -483,7 +483,7 @@ watch(image, (newImage) => {
 });
 
 onUnmounted(() => {
-  const app = document.querySelector('#app');
+  const app = document.querySelector<HTMLElement>('#app');
   if (app) {
     app.style.background = '';
   }

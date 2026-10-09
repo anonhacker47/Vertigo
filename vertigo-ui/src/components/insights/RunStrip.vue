@@ -1,10 +1,10 @@
 <template>
-  <span class="inline-flex items-end gap-[3px]" role="img" :aria-label="summary">
+  <span class="inline-flex items-end gap-0.75" role="img" :aria-label="summary">
     <i
       v-for="tick in shown"
       :key="tick.number"
       :title="`#${tick.number} · ${NAMES[tick.state]}`"
-      class="block w-2 rounded-[2px]"
+      class="block w-2 rounded-xs"
       :class="CLASSES[tick.state]"
     ></i>
     <span v-if="run.length > max" class="ml-0.5 text-[11px] font-bold text-slate-500">+{{ run.length - max }}</span>
