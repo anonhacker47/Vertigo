@@ -20,7 +20,7 @@
           ]" :style="displayedImage == Image ? `top: 50%;` : ''">
             {{ series.title }}
           </span>
-          <span class="absolute right-2 top-2 max-w-[85%] truncate rounded-full border border-white/15 bg-slate-950/75 px-2 py-0.5 text-[11px] font-bold text-slate-200 backdrop-blur-sm">
+          <span class="absolute right-2 top-2 max-w-[85%] truncate rounded-md border border-white/15 bg-slate-950/75 px-2 py-0.5 text-[11px] font-bold text-slate-200 backdrop-blur-sm">
             {{ series.series_format }}
           </span>
           <div class="relative h-3 w-full shrink-0 rounded-b-md bg-red-900">
