@@ -37,13 +37,15 @@
             Browse
             <i class="pi pi-chevron-down text-sm"></i>
           </button>
-          <ul class="z-50 dropdown-content menu p-2 shadow bg-base-200 text-white text-md rounded-box w-52 mt-2" tabindex="0">
-            <li><RouterLink :to="{ name: 'PublisherList' }" class="hover:text-blue-400">Publishers</RouterLink></li>
-            <li><RouterLink :to="{ name: 'CreatorList' }" class="hover:text-blue-400">Creators</RouterLink></li>
-            <li><RouterLink :to="{ name: 'CharacterList' }" class="hover:text-blue-400">Characters</RouterLink></li>
-            <li class="my-1 border-t border-slate-600" aria-hidden="true"></li>
-            <li><RouterLink :to="{ name: 'TierList' }" class="hover:text-blue-400">Tier List</RouterLink></li>
-          </ul>
+          <div class="dropdown-content z-50 pt-2">
+            <ul class="menu p-2 shadow bg-base-200 text-white text-md rounded-box w-52" tabindex="0">
+              <li><RouterLink :to="{ name: 'PublisherList' }" class="hover:text-blue-400">Publishers</RouterLink></li>
+              <li><RouterLink :to="{ name: 'CreatorList' }" class="hover:text-blue-400">Creators</RouterLink></li>
+              <li><RouterLink :to="{ name: 'CharacterList' }" class="hover:text-blue-400">Characters</RouterLink></li>
+              <li class="my-1 border-t border-slate-600" aria-hidden="true"></li>
+              <li><RouterLink :to="{ name: 'TierList' }" class="hover:text-blue-400">Tier List</RouterLink></li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -51,10 +53,12 @@
         <button tabindex="0" class="flex items-center">
           <img class="inline-block h-9 w-9 rounded-md hover:opacity-75 cursor-pointer object-cover" @error="changeThumb()" :src="imagesrc" alt="Profile" />
         </button>
-        <ul class="dropdown-content right-0 menu z-[500] p-2 shadow bg-base-200 text-white rounded-box w-52 mt-2" tabindex="-1">
-          <li><RouterLink to="/settings" class="hover:text-blue-400">Settings</RouterLink></li>
-          <li><a @click="logout" class="hover:text-blue-400">Log-out</a></li>
-        </ul>
+        <div class="dropdown-content right-0 z-[500] pt-2">
+          <ul class="menu p-2 shadow bg-base-200 text-white rounded-box w-52" tabindex="-1">
+            <li><RouterLink to="/settings" class="hover:text-blue-400">Settings</RouterLink></li>
+            <li><a @click="logout" class="hover:text-blue-400">Log-out</a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
