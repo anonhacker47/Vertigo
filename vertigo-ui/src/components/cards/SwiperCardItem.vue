@@ -1,16 +1,16 @@
 <template>
     <div class="w-full h-fit flex items-center justify-center">
         <swiper :slidesPerView="1" :grabCursor="true" :loop="true" :autoplay="{
-            delay: 12500,
+            delay: 3000,
             disableOnInteraction: false,
-        }" :navigation="true" :modules="modules" class="max-w-full h-full max-h-full px-2 py-4">
+        }"  :modules="modules" class="w-full max-w-full h-full max-h-full px-2 py-4">
             <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.id ?? issue.title"
                 style="display: flex; flex-direction: column;">
-                <div class="flex items-center justify-center w-full px-6 py-2 h-auto md:h-[350px]">
+                <div class="flex items-center justify-center w-full px-6 py-2 h-auto md:h-[330px]">
                     <RouterLink :to="{
                         name: 'SeriesDetail',
                         params: { Link: issue.slug, Id: issue.series_id },
-                    }" class="block w-full max-w-[13.5rem]" :aria-label="issue.series">
+                    }" class="block w-full max-w-[12.5rem]" :aria-label="issue.series">
                         <CoverImage :src="issue.image" :title="issue.series" :alt="issue.series" depth="lg" initials-class="text-4xl" />
                     </RouterLink>
                 </div>

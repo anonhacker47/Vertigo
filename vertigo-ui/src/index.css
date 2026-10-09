@@ -5,6 +5,7 @@
 
 @theme {
   --spacing-header: 72px;
+  --container-page: 90rem;
 
   --animate-wiggle: wiggle 0.3s ease-in-out infinite;
 
