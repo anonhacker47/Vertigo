@@ -4,14 +4,14 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from apifairy import authenticate, body, response, other_responses
 
 import sqlalchemy as sqla
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from api import db
 from api import media
 from api.models.user import User
 from api.models.series import Series
 from api.models.issue import Issue
 
-from api.schemas.issue_schema import IssueSchema, SlimIssueSchema
+from api.schemas.issue_schema import IssueSchema, SlimIssueSchema, LibraryIssueSchema
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
@@ -21,6 +21,7 @@ issues = Blueprint('issue', __name__)
 issue_schema = IssueSchema()
 issues_schema = IssueSchema(many=True)
 slim_issue_schema = SlimIssueSchema()
+library_issue_schema = LibraryIssueSchema()
 update_issue_schema = IssueSchema(partial=True)
 
 
@@ -178,6 +179,16 @@ def issue_neighbors(series_id, number):
 def all():
     """Retrieve all issues"""
     return Issue.select()
+
+
+@issues.route('/users/issues', methods=['GET'])
+@authenticate(token_auth)
+@paginated_response(library_issue_schema, max_limit=500, order_by=Issue.id,
+                    order_direction='asc')
+def user_all():
+    """Every issue of the current user, each with a slim series reference."""
+    user = token_auth.current_user()
+    return user.issue_select().options(selectinload(Issue.series))
 
 
 @issues.route('/series/<int:id>/issues', methods=['GET'])

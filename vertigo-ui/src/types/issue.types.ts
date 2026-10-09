@@ -1,5 +1,5 @@
 import { MetronIdentifiable } from "./metron_identifiable.types";
-import { Series } from "./series.types";
+import { Series, SlimSeries } from "./series.types";
 
 export interface Issue extends MetronIdentifiable {
     id: number;
@@ -71,4 +71,8 @@ export interface IssueDraft {
     metron_id: number | null;
     metron_url: string | null;
     cover: File | string | null;
+}
+
+export interface LibraryIssue extends Omit<Issue, "series"> {
+    series: SlimSeries;
 }

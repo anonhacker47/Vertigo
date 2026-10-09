@@ -99,3 +99,54 @@ class TestListIssues(IssueTestCase):
 
         rv = self.client.get(f'/api/series/{self.series.id}/issues?orderBy=number&orderDir=desc')
         self.assertEqual([i['number'] for i in rv.json['data']], list(range(12, 0, -1)))
+
+
+class TestListUserIssues(IssueTestCase):
+    """GET /users/issues: every issue the user owns, across series, with a series reference."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_series = Series(title='Sandman', user=self.user, issue_count=1, owned_count=0, read_count=0)
+        db.session.add(self.other_series)
+        db.session.flush()
+        db.session.add(Issue(title='Sleep of the Just', number=1, series=self.other_series,
+                             user=self.user, is_owned=0, is_read=0, user_rating=4.5))
+
+        stranger = User(username='stranger', email='stranger@example.com', password='foo')
+        db.session.add(stranger)
+        db.session.flush()
+        their_series = Series(title='Preacher', user=stranger, issue_count=1, owned_count=0, read_count=0)
+        db.session.add(their_series)
+        db.session.flush()
+        db.session.add(Issue(title='1', number=1, series=their_series, user=stranger, is_owned=0, is_read=0))
+        db.session.commit()
+
+    def test_lists_only_the_users_issues_with_a_series_reference(self):
+        rv = self.client.get('/api/users/issues')
+        self.assertEqual(rv.status_code, 200)
+        rows = rv.json['data']
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(rv.json['pagination']['total'], 4)
+        self.assertTrue(all(r['user_id'] == self.user.id for r in rows))
+        self.assertNotIn('Preacher', {r['series']['title'] for r in rows})
+
+        sandman = next(r for r in rows if r['series']['title'] == 'Sandman')
+        self.assertEqual(sandman['number'], 1)
+        self.assertEqual(sandman['title'], 'Sleep of the Just')
+        self.assertEqual(sandman['user_rating'], 4.5)
+        self.assertEqual(sandman['series_id'], self.other_series.id)
+        self.assertEqual(set(sandman['series']), {'id', 'title', 'slug', 'manga', 'thumbnail', 'last_updated'})
+        self.assertEqual(sandman['series']['slug'], 'sandman')
+
+    def test_pages_in_id_order(self):
+        rv = self.client.get('/api/users/issues?limit=3&offset=0')
+        self.assertEqual(rv.status_code, 200)
+        first = [r['id'] for r in rv.json['data']]
+        self.assertEqual(len(first), 3)
+        self.assertEqual(first, sorted(first))
+
+        rv = self.client.get('/api/users/issues?limit=3&offset=3')
+        self.assertEqual(rv.status_code, 200)
+        rest = [r['id'] for r in rv.json['data']]
+        self.assertEqual(len(rest), 1)
+        self.assertGreater(rest[0], first[-1])

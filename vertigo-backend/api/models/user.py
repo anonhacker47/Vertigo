@@ -13,6 +13,7 @@ from api.app import db
 from api.models.updatable import Updateable
 from api.models.token import Token
 from api.models.series import Series
+from api.models.issue import Issue
 from api.models import series_entities
 
 
@@ -70,6 +71,9 @@ class User(Updateable, db.Model):
 
     def series_select(self):
         return Series.select().where(sqla_orm.with_parent(self, User.series))
+
+    def issue_select(self):
+        return Issue.select().where(sqla_orm.with_parent(self, User.issue))
 
     def publisher_select(self):
         return series_entities.Publisher.select().where(sqla_orm.with_parent(self, User.publisher))

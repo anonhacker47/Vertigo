@@ -3,7 +3,7 @@ from api import ma
 from api.models.issue import Issue
 
 from api.schemas.user_schema import UserSchema
-from api.schemas.series_schema import SeriesSchema
+from api.schemas.series_schema import SeriesSchema, SlimSeriesSchema
 
 class IssueSchema(ma.SQLAlchemySchema):
     class Meta:
@@ -62,3 +62,10 @@ class SlimIssueSchema(IssueSchema):
     class Meta:
         model = Issue
         exclude = ("series",)
+
+
+class LibraryIssueSchema(IssueSchema):
+    class Meta(IssueSchema.Meta):
+        pass
+
+    series = ma.Nested(SlimSeriesSchema, dump_only=True)

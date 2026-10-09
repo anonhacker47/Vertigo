@@ -1,6 +1,6 @@
 import Api from "@/services/Api";
-import { ApiResponse } from "@/types/api-response.types";
-import { Issue, IssueNeighbours, NewIssue } from "@/types/issue.types";
+import { ApiResponse, Pagination } from "@/types/api-response.types";
+import { Issue, IssueNeighbours, LibraryIssue, NewIssue } from "@/types/issue.types";
 
 export default {
   async fetchIssues(
@@ -16,6 +16,16 @@ export default {
     return { issuesList, pagination };
   },
 
+  async fetchUserIssues(
+    limit: number,
+    offset = 0
+  ): Promise<{ issuesList: LibraryIssue[]; pagination: Pagination }> {
+    const response = await Api().get<ApiResponse<LibraryIssue[]>>(
+      `users/issues?limit=${limit}&offset=${offset}`
+    );
+    return { issuesList: response.data.data, pagination: response.data.pagination };
+  },
+
   addIssues(seriesId: number, issues: NewIssue[]) {
     return Api().post<Issue[]>(`series/${seriesId}/issues`, issues);
   },
@@ -28,7 +38,6 @@ export default {
     return Api().get(`series/${seriesId}/issues/${number}/`);
   },
 
-  /** Previous/next issue of the series by number, plus this issue's position in the run. */
   getIssueNeighbours(seriesId: number, number: number) {
     return Api().get<IssueNeighbours>(`series/${seriesId}/issues/${number}/neighbors`);
   },

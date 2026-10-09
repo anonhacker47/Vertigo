@@ -66,3 +66,12 @@ class SeriesSchema(ma.SQLAlchemySchema):
         if 'publisher' in data and isinstance(data['publisher'], list):
             data['publisher'] = data['publisher'][0] if data['publisher'] else None
         return data
+
+
+class SlimSeriesSchema(ma.Schema):
+    id = ma.Int()
+    title = ma.String()
+    slug = ma.String()
+    manga = ma.Integer()
+    thumbnail = ma.String()
+    last_updated = ma.DateTime()

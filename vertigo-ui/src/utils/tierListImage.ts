@@ -129,13 +129,12 @@ export function fitsCanvasLimits(layout: TierListLayout, scale: number): boolean
   return w <= MAX_CANVAS_SIDE && h <= MAX_CANVAS_SIDE && w * h <= MAX_CANVAS_AREA
 }
 
-/** The sharp scale, or 1x for a list too long to fit a browser canvas at 2x. */
 function pickScale(layout: TierListLayout): 1 | 2 {
   if (fitsCanvasLimits(layout, EXPORT_SCALE)) return EXPORT_SCALE
   if (fitsCanvasLimits(layout, 1)) return 1
   throw new Error(
     `The image would be ${layout.width} x ${layout.height} px, more than browsers can render. ` +
-      'Rank fewer series and try again.',
+      'Rank fewer items and try again.',
   )
 }
 

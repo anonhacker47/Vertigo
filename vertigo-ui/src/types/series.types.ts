@@ -17,6 +17,15 @@ export interface SeriesNeighbours {
   next: SeriesNeighbour | null;
 }
 
+export interface SlimSeries {
+  id: number;
+  title: string;
+  slug: string;
+  manga: number | null;
+  thumbnail: string | null;
+  last_updated: string | null;
+}
+
 export interface Series extends MetronIdentifiable {
   character: SeriesEntityRef[];
   description: string;
@@ -49,6 +58,6 @@ export interface Series extends MetronIdentifiable {
   };
   user_rating: number;
   creator: SeriesEntityRef[];
-  metron_id?: number | null;
-  metron_url?: string | null;
+  metron_id?: number;
+  metron_url?: string;
 }
