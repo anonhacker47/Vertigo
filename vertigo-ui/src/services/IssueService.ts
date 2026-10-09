@@ -1,6 +1,6 @@
 import Api from "@/services/Api";
 import { ApiResponse } from "@/types/api-response.types";
-import { Issue, IssueNeighbours } from "@/types/issue.types";
+import { Issue, IssueNeighbours, NewIssue } from "@/types/issue.types";
 
 export default {
   async fetchIssues(
@@ -16,17 +16,7 @@ export default {
     return { issuesList, pagination };
   },
 
-  addIssues(
-    seriesId: any,
-    issues: Array<{
-      title: string;
-      is_read: number;
-      is_owned: number;
-      bought_date?: string | null;
-      read_date?: string | null;
-      price?: number | null;
-    }>
-  ) {
+  addIssues(seriesId: number, issues: NewIssue[]) {
     return Api().post<Issue[]>(`series/${seriesId}/issues`, issues);
   },
 
@@ -51,11 +41,10 @@ export default {
     return Api().delete(`series/issues/${id}/`);
   },
 
-  createIssue(seriesId: number) {
-    return Api().post(`series/${seriesId}/single_issue`);
+  createIssue(seriesId: number, data: NewIssue) {
+    return Api().post<Issue>(`series/${seriesId}/single_issue`, data);
   },
 
-  /** URL of the issue's own cover, cache-busted by `lastUpdated` when given. */
   getIssueImageById(id: Issue["id"], lastUpdated?: string | Date) {
     if (lastUpdated) {
       const timestamp = new Date(lastUpdated).getTime();
@@ -64,11 +53,6 @@ export default {
     return Api().defaults.baseURL + `/series/issues/${id}/image`;
   },
 
-  /**
-   * Set an issue's own cover. `source` is a File (saved inline), an http(s) URL, or the
-   * string "noimage" to clear. With `background: true` (URLs only) the server queues the
-   * download and replies 202 right away instead of downloading inline.
-   */
   updateIssueCover(
     id: number,
     source: File | string,

@@ -1,9 +1,9 @@
 <template>
-  <div :class="{ 'animate-wiggle': editMode && is_last }"
+  <div :class="{ 'motion-safe:animate-wiggle': editMode }"
     class="w-44 h-64 flex relative flex-col rounded-lg border-2 shadow-lg bg-zinc-900"
     :style="`border-color: rgb${themecolor};`">
     
-    <div v-if="editMode && is_last" @click.prevent="$emit('deleteIssue')"
+    <div v-if="editMode" @click.prevent="$emit('deleteIssue')" role="button" :aria-label="`Delete issue ${issue.number}`" title="Delete issue"
       class="absolute -top-3 -right-3 rounded hover:scale-105 hover:rotate-180 z-[800] transition ease-in-out">
       <img src="@/assets/remove.svg" alt="" height="30" width="30" class="min-w-[25px] min-h-[25px]" />
     </div>
@@ -77,7 +77,6 @@ const props = defineProps({
   image: String,
   themecolor: String,
   preferred_currency: String,
-  is_last: Boolean,
   edit_mode: Boolean,
   series: { type: Object, required: true }
 });

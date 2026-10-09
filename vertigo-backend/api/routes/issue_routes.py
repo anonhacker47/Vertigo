@@ -24,6 +24,15 @@ slim_issue_schema = SlimIssueSchema()
 update_issue_schema = IssueSchema(partial=True)
 
 
+def _refresh_counts(series):
+    """Recompute the series' cached counters from its issues."""
+    issues_data = db.session.scalars(series.issue_select()).all()
+    series.owned_count = sum(i.is_owned for i in issues_data)
+    series.read_count = sum(i.is_read for i in issues_data)
+    series.issue_count = len(issues_data)
+    series.purchase_cost = sum(i.bought_price or 0 for i in issues_data if i.is_owned)
+
+
 @issues.route('/series/<int:series_id>/issues', methods=['POST'])
 @authenticate(token_auth)
 @body(issues_schema)
@@ -57,63 +66,60 @@ def new(args, series_id):
 
     db.session.commit()
 
-    issues_query = series.issue_select()
-    issues_data = db.session.scalars(issues_query).all()
-    series.owned_count = sum(i.is_owned for i in issues_data)
-    series.read_count = sum(i.is_read for i in issues_data)
-    series.issue_count = len(issues_data)
-    series.purchase_cost = sum(i.bought_price or 0 for i in issues_data if i.is_owned)
+    _refresh_counts(series)
     db.session.commit()
 
     return new_issues
 
 @issues.route('/series/<int:series_id>/single_issue', methods=['POST'])
 @authenticate(token_auth)
-@response(issue_schema)
-@other_responses({404: 'Series not found'})
-def create_single_issue(series_id):
-    """Create a new issue for a series"""
+@body(update_issue_schema)
+@response(issue_schema, 201)
+@other_responses({400: 'Invalid issue number', 403: 'Not allowed to edit the series',
+                  404: 'Series not found', 409: 'Issue number already used'})
+def create_single_issue(args, series_id):
+    """Create one issue in a series at the given number."""
     user = token_auth.current_user()
     series = db.session.get(Series, series_id) or abort(404)
+    if series.user != user:
+        abort(403)
 
-    # Get all issues for this series and sort them by number
-    issues_query = series.issue_select()
-    issues_data = db.session.scalars(issues_query).all()
-    sorted_issues = sorted(issues_data, key=lambda issue: issue.number)
+    number = args.get('number')
+    if number is None:
+        abort(400, 'Issue number is required.')
+    if number < 0:
+        abort(400, 'Issue number must be 0 or more.')
+    taken = {i.number for i in db.session.scalars(series.issue_select())}
+    if number in taken:
+        abort(409, f'Issue #{number} already exists in this series.')
 
-    # Determine the last issue
-    if not sorted_issues:
-        abort(400, "No existing issues in series to base new issue on")
+    is_owned = bool(args.get('is_owned', False))
+    is_read = bool(args.get('is_read', False))
+    now = datetime.now(timezone.utc)
 
-    last_issue = sorted_issues[-1]
-
-    new_issue = Issue(
-        title=last_issue.number + 1,
-        number=last_issue.number + 1,
+    issue = Issue(
         user=user,
         series=series,
-        is_read=False,
-        is_owned=False,
-        bought_price=None,
-        bought_date=None,
-        read_date=None,
-        slug=None,
+        title=(args.get('title') or '').strip() or str(number),
+        number=number,
+        is_owned=is_owned,
+        is_read=is_read,
+        bought_date=args.get('bought_date') or (now if is_owned else None),
+        read_date=args.get('read_date') or (now if is_read else None),
+        bought_price=args.get('bought_price') if is_owned else None,
+        cover_date=args.get('cover_date'),
+        description=args.get('description'),
+        notes=args.get('notes'),
+        metron_id=args.get('metron_id'),
+        metron_url=args.get('metron_url'),
     )
-
-    db.session.add(new_issue)
+    db.session.add(issue)
     db.session.commit()
 
-    # Recalculate counts
-    issues_query = series.issue_select()
-    updated_issues = db.session.scalars(issues_query).all()
-    series.owned_count = sum(i.is_owned for i in updated_issues)
-    series.read_count = sum(i.is_read for i in updated_issues)
-    series.issue_count = len(updated_issues)
-    series.purchase_cost = sum(i.bought_price or 0 for i in updated_issues if i.is_owned)
-
+    _refresh_counts(series)
     db.session.commit()
 
-    return new_issue
+    return issue
 
 
 @issues.route('/series/<int:series_id>/issues/<int:number>/', methods=['GET'])
@@ -255,28 +261,16 @@ def delete(id):
     if issue.user != token_auth.current_user():
         abort(403)
 
-    issues = issue.series.issue_select()
-    issues_data = db.session.scalars(issues).all()
-    sorted_issues = sorted(issues_data, key=lambda issue: issue.number)
+    series = issue.series
+    user_id, thumbnail = issue.user_id, issue.thumbnail
 
-    is_last = sorted_issues and sorted_issues[-1].number == issue.number
+    db.session.delete(issue)
+    db.session.commit()
+    media.remove(user_id, thumbnail)
 
-    if is_last:
-        db.session.delete(issue)
-        media.remove(issue.user_id, issue.thumbnail)
-            # Recalculate series counters
-        issues = issue.series.issue_select()
-        issues_data = db.session.scalars(issues).all()
-        issue.series.owned_count = sum(i.is_owned for i in issues_data)
-        issue.series.read_count = sum(i.is_read for i in issues_data)
-        issue.series.issue_count = len(issues_data)
-        issue.series.purchase_cost = sum(
-            i.bought_price or 0 for i in issues_data if i.is_owned
-        )
-        db.session.commit()
-        return '', 204
-    else:
-        return jsonify({"error": "Cannot delete issues that are not the last in the series"}), 403
+    _refresh_counts(series)
+    db.session.commit()
+    return '', 204
 
 def download_issue_cover(issue_id, url, user_id):
     """Media-worker task: fetch ``url`` as the issue's cover.

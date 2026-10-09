@@ -161,18 +161,17 @@
           <div class="w-full flex-1 pb-12 md:overflow-y-auto">
             <div v-if="issuesList.length || editMode"
               class="my-4 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] justify-items-center gap-y-8 px-6 md:px-10 xl:px-16">
-              <IssueCard v-for="(issue, index) in issuesList" :key="issue.id" :issue="issue" :edit_mode="editMode"
-                :is_last="index === issuesList.length - 1 && issuesList.length > 1"
+              <IssueCard v-for="issue in issuesList" :key="issue.id" :issue="issue" :edit_mode="editMode"
                 :preferred_currency="preferred_currency" :image="image" :themecolor="themecolor" :series="series"
                 @updateStatus="updateStatus(issue, $event)" @deleteIssue="confirmDelete(issue)" />
 
-              <div v-if="editMode" @click="addIssue"
+              <div v-if="editMode" @click="showAddIssue = true"
                 class="relative flex h-64 w-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-green-500 bg-zinc-800 bg-cover bg-center shadow-lg transition-all hover:bg-zinc-700"
                 :style="`background-image: url(${image})`">
                 <div class="absolute inset-0 flex items-center justify-center bg-black/60 px-3 backdrop-blur-sm">
                   <div class="flex flex-col items-center justify-center gap-2 text-white">
                     <img src="@/assets/add.svg" alt="Add" class="h-12 w-12 opacity-80" />
-                    <p class="text-md font-bold text-white">Add Issue</p>
+                    <p class="text-md font-bold text-white">Add issue</p>
                   </div>
                 </div>
               </div>
@@ -180,6 +179,9 @@
             <p v-else class="px-6 py-4 text-center text-sm text-slate-400">
               No issues yet. Use the edit button to add the first one.
             </p>
+
+            <AddIssueModal v-model:visible="showAddIssue" :series-id="series.id" :taken-numbers="takenNumbers"
+              :default-number="nextNumber" @added="onIssueAdded" />
           </div>
         </section>
       </div>
@@ -213,6 +215,7 @@ import type { Series, SeriesNeighbour, SeriesNeighbours } from "@/types/series.t
 import type { Issue } from "@/types/issue.types";
 
 import IssueCard from "../components/cards/IssueCard.vue";
+import AddIssueModal from "@/components/modals/AddIssueModal.vue";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import EditIcon from "@/assets/EditIcon.vue";
@@ -228,26 +231,10 @@ const toast = useToast();
 const message = ref();
 const neighbours = ref<SeriesNeighbours>({ next: null, previous: null });
 
-async function addIssue() {
-  try {
-    const response = await IssueService.createIssue(Number(route.params.Id));
-    getIssues();
-    getIssueCount();
-    toast.add({
-      severity: "success",
-      summary: "Success",
-      detail: `Issue ${response.data.title} added`,
-      life: 3000,
-    });
-  } catch (error) {
-    message.value = error;
-    toast.add({
-      severity: "error",
-      summary: "Error",
-      detail: message.value,
-      life: 3000,
-    });
-  }
+function onIssueAdded(issue: Issue) {
+  getIssues();
+  getIssueCount();
+  toast.add({ severity: "success", summary: "Issue added", detail: `#${issue.number} is on the shelf.`, life: 3000 });
 }
 
 async function deleteIssue(issueToDelete: Issue) {
@@ -267,12 +254,12 @@ async function deleteIssue(issueToDelete: Issue) {
 }
 
 const confirmDelete = (issue: Issue) => {
+  const name = issue.title && issue.title !== String(issue.number) ? ` (${issue.title})` : "";
   confirmAction({
-    message: `Issue ${issue.title}`,
-    header: "Confirm Deletion",
+    message: `Delete issue #${issue.number}${name}? This cannot be undone.`,
+    header: "Delete issue",
     acceptLabel: "Delete",
     severity: "danger",
-    successMessage: `${issue.title} deleted`,
     onAccept: () => deleteIssue(issue),
   });
 };
@@ -291,6 +278,9 @@ const issuesList = ref<Issue[]>([]);
 
 const pagination = ref();
 const editMode = ref(false);
+const showAddIssue = ref(false);
+const takenNumbers = computed(() => issuesList.value.map((issue) => issue.number));
+const nextNumber = computed(() => (takenNumbers.value.length ? Math.max(...takenNumbers.value) + 1 : 1));
 
 const issueCount = ref({
   owned_count: 0,

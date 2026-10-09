@@ -21,7 +21,18 @@ export interface Issue extends MetronIdentifiable {
     thumbnail: string | null;
 }
 
-/** The issue before/after another one in its series, by number. */
+export interface NewIssue {
+    number: number;
+    title?: string;
+    is_owned?: boolean;
+    is_read?: boolean;
+    bought_date?: string | null;
+    read_date?: string | null;
+    bought_price?: number | null;
+    metron_id?: number | null;
+    metron_url?: string | null;
+}
+
 export interface IssueNeighbour {
     id: number;
     number: number;
