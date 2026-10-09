@@ -37,28 +37,28 @@
     </div>
   </div>
 
-  <Transition enter-active-class="animate__animated animate__fadeIn" leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-    <div v-if="seriesList.length" :key="viewMode" class="pt-5 transition-opacity" :class="{ 'pointer-events-none opacity-50': loading }">
-      <!-- CARD VIEW -->
-      <div v-if="viewMode === 'card'" class="mx-auto grid w-full max-w-page gap-3 px-4 md:gap-5 md:px-8" :style="gridStyle">
-        <TransitionGroup :key="'card-' + sortKey" enter-active-class="animate__animated animate__zoomInDown">
+  <div v-if="seriesList.length" class="pt-5" :class="{ 'pointer-events-none': loading }">
+    <Transition name="view" mode="out-in">
+      <div v-if="viewMode === 'card'" key="card" class="mx-auto grid w-full max-w-page gap-3 px-4 md:gap-5 md:px-8"
+        :style="[gridStyle, { '--animate-duration': '0.4s' }]">
+        <TransitionGroup :key="'results-' + resultsKey" :appear="animateResults" enter-active-class="animate__animated animate__zoomInDown">
           <div v-for="series in seriesList" :key="series.id" class="relative min-w-0">
             <CollectionCard :series="series" :image-url="series.thumbnail" :deleteMode="deleteMode" @confirmDelete="confirmDelete" />
           </div>
         </TransitionGroup>
       </div>
 
-      <div v-else class="mx-auto w-full max-w-page px-4 md:px-8">
+      <div v-else key="list" class="mx-auto w-full max-w-page px-4 md:px-8">
         <CollectionTable :seriesList="seriesList" :deleteMode="deleteMode" :confirmDelete="confirmDelete" />
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </div>
 
   <CollectionPager :total="pagination.total" :limit="pagination.limit" :offset="pagination.offset" @page="onPageChange" />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import { useConfirmAction } from "@/composables/useConfirmAction";
@@ -83,7 +83,8 @@ const deleteMode = ref(false);
 const selectedGrid = ref<number>(userPreferences.cardsPerLine);
 const orderBy = ref(userPreferences.orderBy);
 const orderDir = ref(userPreferences.orderDir);
-const sortKey = ref(0);
+const resultsKey = ref(0);       // bumped after every fetch so the card group remounts with the new rows
+const animateResults = ref(false); // true only for the render right after a fetch, so a view switch stays quiet
 const loading = ref(false);
 const pagination = ref({ total: 0, limit: 25, offset: 0, base_total: 0 });
 const currentFilter = ref<SeriesFilters>({ ...EMPTY_FILTERS });
@@ -123,6 +124,10 @@ const getseriesList = async (filter = currentFilter.value, offset = 0, limit = p
       thumbnail: SeriesService.getSeriesImageById(series.id, series.last_updated),
     }));
     pagination.value = result.pagination;
+    resultsKey.value++;
+    animateResults.value = true;
+    await nextTick();
+    animateResults.value = false;
   } catch (error) {
     console.error("Error loading series:", error);
     toast.add({ severity: "error", summary: "Error", detail: "Failed to load series.", life: 3000 });
@@ -151,7 +156,6 @@ function setSort({ orderBy: by, orderDir: dir }: { orderBy: string; orderDir: st
   userPreferences.setorderDir(dir as "asc" | "desc");
   orderBy.value = by;
   orderDir.value = dir;
-  sortKey.value++;
   getseriesList(currentFilter.value, 0, pagination.value.limit);
 }
 
@@ -210,6 +214,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Card/list crossfade: quick out, slightly slower in, so the new view settles rather than pops. */
+.view-enter-active { transition: opacity 0.18s ease-out; }
+.view-leave-active { transition: opacity 0.12s ease-in; }
+.view-enter-from,
+.view-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .view-enter-active,
+  .view-leave-active { transition: none; }
+}
+
 .iconbtn {
   display: inline-flex;
   width: 36px;

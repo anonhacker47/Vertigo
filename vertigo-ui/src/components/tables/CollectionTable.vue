@@ -1,145 +1,123 @@
 <template>
-	<DataTable class="rounded-lg rounded-table" :value="seriesList" @row-click="navigate" rowHover :rows="10">
-		<Column field="title" header="Series" class="max-w-md">
-			<template #body="{ data }">
-				<div class="flex items-center gap-4">
-					<img :src="SeriesService.getSeriesImageById(data.id, data.last_updated)" @error="(e) => e.target.src = placeholder"
-						class="h-16 w-12 ml-2 object-fill rounded-sm" alt="Series Thumbnail" />
-					<span class="text-large font-extrabold overflow-hidden whitespace-nowrap text-ellipsis">{{
-						data.title }}</span>
-				</div>
-			</template>
-		</Column>
-		<Column field="publisher" header="Publisher" class="hidden md:table-cell">
-			<template #body="{ data }">
-				<div class="flex justify-center">
-					{{ data.publisher?.title }}
-				</div>
-			</template>
-		</Column>
-		<Column field="series_format" header="Format" class="hidden md:table-cell">
-			<template #body="{ data }">
-				<div class="flex justify-center">
-					{{ data.series_format }}
-				</div>
-			</template>
-		</Column>
-		<Column field="timestamp" header="Date Added" class="hidden md:table-cell">
-			<template #body="{ data }">
-				<div class="flex justify-center">
-					{{ new Date(data.timestamp).toLocaleDateString('en-US', {
-						day: 'numeric', month: 'long', year:
-							'numeric'
-					}) }}
-				</div>
-			</template>
-		</Column>
-		<Column field="user_rating" header="Rating" class="hidden md:table-cell">
-			<template #body="{ data }">
-				<div class="flex justify-center">
-					<Rating :modelValue="data.user_rating" readonly disabled :stars="5" :cancel="false" />
-				</div>
-			</template>
-		</Column>
-		<Column field="owned_count" header="Owned/Books" :bodyStyle="{ 'text-align': 'center' }">
-			<template #body="{ data }">
-				{{ data.owned_count + '/' + data.issue_count }}
-			</template>
-		</Column>
-		<Column field="read_count" header="Read/Books" :bodyStyle="{ 'text-align': 'center' }">
-			<template #body="{ data }">
-				{{ data.read_count + '/' + data.issue_count }}
-			</template>
-		</Column>
-		<Column headerStyle="width: 5rem" bodyClass="text-center" header="Actions" v-if="deleteMode">
-			<template #body="{ data }">
-				<div class="flex justify-center">
-					<button class="p-button-rounded p-button-danger p-button-text"
-						@click="confirmDelete(data.id, data.title)">
-						<TrashIcon class="h-5 w-5 text-red-500" />
-					</button>
-				</div>
-			</template>
-		</Column>
-	</DataTable>
+  <div class="overflow-x-auto rounded-lg border border-white/[.08]">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-[12px] font-bold text-slate-400">
+          <th class="px-4 py-3">Series</th>
+          <th class="hidden px-4 py-3 md:table-cell">Publisher</th>
+          <th class="hidden px-4 py-3 md:table-cell">Format</th>
+          <th class="hidden px-4 py-3 md:table-cell">Added</th>
+          <th class="hidden px-4 py-3 md:table-cell">Rating</th>
+          <th class="px-4 py-3 text-right">Owned</th>
+          <th class="px-4 py-3 text-right">Read</th>
+          <th v-if="deleteMode" class="w-14 px-2 py-3"><span class="sr-only">Delete</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="series in seriesList" :key="series.id" class="row border-t border-white/[.06]"
+          :class="{ 'cursor-pointer': !deleteMode }" @click="open(series)">
+          <td class="max-w-xs px-4 py-2">
+            <div class="flex items-center gap-3">
+              <img :src="cover(series)" loading="lazy" decoding="async" width="40" height="60" alt=""
+                class="h-[60px] w-10 shrink-0 rounded-sm bg-slate-800 object-cover" @error="onCoverError" />
+              <RouterLink :to="route(series)" class="truncate font-bold text-white hover:underline" @click.stop>
+                {{ series.title }}
+              </RouterLink>
+            </div>
+          </td>
+          <td class="hidden px-4 py-2 text-slate-300 md:table-cell">
+            <span v-if="series.publisher?.title">{{ series.publisher.title }}</span>
+            <span v-else class="text-slate-600">—</span>
+          </td>
+          <td class="hidden px-4 py-2 text-slate-300 md:table-cell">{{ series.series_format }}</td>
+          <td class="hidden whitespace-nowrap px-4 py-2 text-slate-400 md:table-cell">{{ added(series) }}</td>
+          <td class="hidden px-4 py-2 md:table-cell">
+            <span class="inline-flex gap-0.5" role="img" :aria-label="`${series.user_rating || 0} of 5 stars`">
+              <i v-for="n in 5" :key="n" class="pi text-[11px]"
+                :class="n <= (series.user_rating || 0) ? 'pi-star-fill text-sky-400' : 'pi-star text-slate-600'"></i>
+            </span>
+          </td>
+          <td class="whitespace-nowrap px-4 py-2 text-right tabular-nums text-slate-200">
+            {{ series.owned_count }}<span class="text-slate-500"> / {{ series.issue_count }}</span>
+          </td>
+          <td class="whitespace-nowrap px-4 py-2 text-right tabular-nums text-slate-200">
+            {{ series.read_count }}<span class="text-slate-500"> / {{ series.issue_count }}</span>
+          </td>
+          <td v-if="deleteMode" class="px-2 py-2 text-center">
+            <button type="button" class="del" :aria-label="`Delete ${series.title}`"
+              @click.stop="confirmDelete(series.id, series.title)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
-
 <script setup lang="ts">
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import SeriesService from '../../services/SeriesService';
-import Rating from 'primevue/rating'
-import 'primeicons/primeicons.css'
-import { TrashIcon } from '@heroicons/vue/20/solid'
+import { useRouter } from "vue-router";
+import SeriesService from "@/services/SeriesService";
+import type { Series } from "@/types/series.types";
+import fallbackCover from "@/assets/dummy.webp";
 
-const dummy = new URL("@/assets/dummy.webp", import.meta.url).href;
-const placeholder = ref(dummy);
-
-const props = defineProps({
-	seriesList: {
-		type: Array,
-		required: true
-	},
-	deleteMode: {
-		type: Boolean,
-		required: true
-	},
-	confirmDelete: {
-		type: Function,
-		required: true
-	}
-})
+const props = defineProps<{
+  seriesList: Series[];
+  deleteMode: boolean;
+  confirmDelete: (id: number, title: string) => void;
+}>();
 
 const router = useRouter();
 
-const navigate = (event: any) => {
+// One formatter for the whole table; building one per row is measurably slow.
+const dateFormat = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
 
-	if (props.deleteMode) {
-		return;
-	}
+function added(series: Series) {
+  const d = new Date(series.timestamp);
+  return Number.isNaN(d.getTime()) ? "" : dateFormat.format(d);
+}
 
-	const data = event.data;
-	router.push({
-		name: 'SeriesDetail',
-		params: { Link: data.slug, Id: data.id },
-	});
-};
+function cover(series: Series) {
+  return SeriesService.getSeriesImageById(series.id, series.last_updated);
+}
 
+function onCoverError(event: Event) {
+  (event.target as HTMLImageElement).src = fallbackCover;
+}
+
+function route(series: Series) {
+  return { name: "SeriesDetail", params: { Link: series.slug, Id: series.id } };
+}
+
+function open(series: Series) {
+  if (props.deleteMode) return;
+  router.push(route(series));
+}
 </script>
 
-<style>
-.p-datatable-column-header-content {
-	justify-content: center !important;
+<style scoped>
+.row {
+  transition: background-color 0.12s ease;
 }
-
-.p-datatable .p-datatable-tbody>tr:hover {
-	cursor: pointer;
+.row:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
-
-.rounded-table {
-	border-radius: 10px;
-	overflow: hidden;
-	/* Ensure content does not overflow the rounded corners */
+.del {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: #f87171;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
-
-/* Optional: Apply border and box shadow for better visibility */
-.rounded-table .p-datatable {
-	border-radius: 10px;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.del:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fff;
 }
-
-.rounded-table .p-datatable .p-datatable-tbody>tr {
-	border-radius: 10px;
-}
-
-.rounded-table .p-datatable thead th {
-	border-radius: 10px 10px 0 0;
-}
-
-.rounded-table .p-datatable tbody tr:last-child td {
-	border-radius: 0 0 10px 10px;
+.del:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
 }
 </style>

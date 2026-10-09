@@ -94,7 +94,6 @@ function confirmDelete(id: number, title: string) {
 #image_container:hover {
   cursor: pointer;
 }
-
 .hvr-bounce-in:hover,
 .hvr-bounce-in:focus,
 .hvr-bounce-in:active {
