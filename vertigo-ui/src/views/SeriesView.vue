@@ -40,7 +40,7 @@
                 View on Metron
                 <i class="pi pi-external-link text-sm"></i>
               </a>
-              <p v-if="series.metron_id" class="select-all text-center text-sm text-slate-400">
+              <p v-if="series.metron_id" class="select-all text-center text-sm text-slate-400" :style="accentStyle">
                 Metron ID: {{ series.metron_id }}
               </p>
             </div>
@@ -68,8 +68,8 @@
                   </RouterLink>
                 </div>
               </div>
-
-              <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
+ 
+              <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" :style="ratingStyle" />
 
               <div v-if="issuesList.length" class="mt-1 flex flex-col gap-3.5">
                 <div v-for="track in progressTracks" :key="track.field" class="flex flex-col gap-1.5">
@@ -150,35 +150,29 @@
           </section>
         </section>
 
-        <section class="relative flex w-full flex-col items-center border-slate-700 md:w-1/2 md:basis-1/2 md:border-l">
-          <h1 class="px-4 py-2 text-3xl font-bold text-slate-300" :style="accentStyle">Issues</h1>
-          <button type="button" @click="toggleEditMode" :title="editMode ? 'Done editing' : 'Edit issues'"
-            class="absolute right-3 top-1 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-2 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400"
-            :class="editMode ? 'border-green-700' : 'border-transparent'">
-            <EditIcon class="h-7 w-7" :fill-color="editMode ? 'white' : iconColor" />
-          </button>
+        <section class="relative flex w-full flex-col border-slate-700 md:w-1/2 md:basis-1/2 md:border-l">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-6 pb-3 pt-5 md:px-8">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white" :style="accentStyle">Issues</h2>
+              <p class="mt-0.5 text-[13px] font-semibold text-slate-400">{{ issuesSummary }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" class="fm-iconbtn fm-iconbtn--danger" :aria-pressed="editMode"
+                :title="editMode ? 'Leave delete mode' : 'Delete issues'" aria-label="Delete mode" @click="toggleEditMode">
+                <i class="pi pi-trash" style="font-size: 14px"></i>
+              </button>
+              <Button label="Add issue" icon="pi pi-plus" size="small" @click="showAddIssue = true" />                
+            </div>
+          </div>
 
           <div class="w-full flex-1 pb-12 md:overflow-y-auto">
-            <div v-if="issuesList.length || editMode"
-              class="my-4 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] justify-items-center gap-y-8 px-6 md:px-10 xl:px-16">
+            <div v-if="issuesList.length"
+              class="grid grid-cols-1 gap-5 px-6 pt-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:gap-x-4 sm:gap-y-6 md:px-8">
               <IssueCard v-for="issue in issuesList" :key="issue.id" :issue="issue" :edit_mode="editMode"
                 :preferred_currency="preferred_currency" :image="image" :themecolor="themecolor" :series="series"
                 @updateStatus="updateStatus(issue, $event)" @deleteIssue="confirmDelete(issue)" />
-
-              <div v-if="editMode" @click="showAddIssue = true"
-                class="relative flex h-64 w-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-green-500 bg-zinc-800 bg-cover bg-center shadow-lg transition-all hover:bg-zinc-700"
-                :style="`background-image: url(${image})`">
-                <div class="absolute inset-0 flex items-center justify-center bg-black/60 px-3 backdrop-blur-sm">
-                  <div class="flex flex-col items-center justify-center gap-2 text-white">
-                    <img src="@/assets/add.svg" alt="Add" class="h-12 w-12 opacity-80" />
-                    <p class="text-md font-bold text-white">Add issue</p>
-                  </div>
-                </div>
-              </div>
             </div>
-            <p v-else class="px-6 py-4 text-center text-sm text-slate-400">
-              No issues yet. Use the edit button to add the first one.
-            </p>
+            <p v-else class="px-6 py-6 text-sm text-slate-400 md:px-8">No issues yet. Use Add issue to start the run.</p>
 
             <AddIssueModal v-model:visible="showAddIssue" :series-id="series.id" :taken-numbers="takenNumbers"
               :default-number="nextNumber" @added="onIssueAdded" />
@@ -224,6 +218,7 @@ import { useToast } from "primevue/usetoast";
 import { useConfirmAction } from "@/composables/useConfirmAction";
 import TagLink from "@/components/common/TagLink.vue";
 import { issueDisplayLabel } from "@/utils/issueTitle";
+import Button from "primevue/button";
 
 const { confirmAction } = useConfirmAction();
 const toast = useToast();
@@ -281,6 +276,13 @@ const editMode = ref(false);
 const showAddIssue = ref(false);
 const takenNumbers = computed(() => issuesList.value.map((issue) => issue.number));
 const nextNumber = computed(() => (takenNumbers.value.length ? Math.max(...takenNumbers.value) + 1 : 1));
+const issuesSummary = computed(() => {
+  const total = issuesList.value.length;
+  if (!total) return "Nothing added yet";
+  const owned = issuesList.value.filter((issue) => issue.is_owned).length;
+  const read = issuesList.value.filter((issue) => issue.is_read).length;
+  return `${total} ${total === 1 ? "issue" : "issues"}, ${owned} owned, ${read} read`;
+});
 
 const issueCount = ref({
   owned_count: 0,
@@ -291,6 +293,11 @@ const themecolor = ref<string | null>(null);
 const image = ref<string | null>(null);
 
 const accentStyle = computed(() => (themecolor.value ? { color: `rgb${themecolor.value}` } : {}));
+const ratingStyle = computed(() =>
+  themecolor.value
+    ? { "--p-rating-icon-active-color": `rgb${themecolor.value}`, "--p-rating-icon-hover-color": `rgb${themecolor.value}` }
+    : {}
+);
 // Body text in the boxes carries a light tint of the series colour, kept readable by mixing into slate.
 const proseStyle = computed(() => {
   if (!themecolor.value) return {};
@@ -365,7 +372,7 @@ async function getIssues() {
   try {
     const result: any = await IssueService.fetchIssues(
       Number(route.params.Id),
-      "title",
+      "number",
       "asc",
     );
     issuesList.value = result.issuesList;

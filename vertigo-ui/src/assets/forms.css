@@ -367,6 +367,11 @@
   outline: 2px solid #38bdf8;
   outline-offset: 2px;
 }
+.fm-iconbtn--danger[aria-pressed="true"] {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
 .fm-iconbtn--sm {
   width: 28px;
   height: 28px;
@@ -379,7 +384,7 @@
   gap: 6px;
   min-height: 34px;
   padding: 0 13px;
-  border-radius: 999px;
+  border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
   color: #94a3b8;

@@ -85,3 +85,17 @@ class TestDeleteIssue(IssueTestCase):
         self.assertEqual(self.series.issue_count, 2)
         self.assertEqual(self.series.owned_count, 0)
         self.assertEqual(self.series.purchase_cost, 0)
+
+
+class TestListIssues(IssueTestCase):
+    def test_orders_by_number_numerically(self):
+        for n in range(4, 13):
+            db.session.add(Issue(title=str(n), number=n, series=self.series, user=self.user, is_owned=0, is_read=0))
+        db.session.commit()
+
+        rv = self.client.get(f'/api/series/{self.series.id}/issues?orderBy=number&orderDir=asc')
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual([i['number'] for i in rv.json['data']], list(range(1, 13)))
+
+        rv = self.client.get(f'/api/series/{self.series.id}/issues?orderBy=number&orderDir=desc')
+        self.assertEqual([i['number'] for i in rv.json['data']], list(range(12, 0, -1)))

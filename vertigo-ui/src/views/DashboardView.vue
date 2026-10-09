@@ -10,7 +10,7 @@
       <ShelfFigure :value="issueInfo.readIssueCount" unit="read" :label="`of the ${issueInfo.collectedIssueCount} you own`"
         :ratio="pct(issueInfo.readIssueCount, issueInfo.collectedIssueCount)" tone="read" />
       <RouterLink :to="{ name: 'AddSeries' }"
-        class="inline-flex items-center gap-2 self-center justify-self-start rounded-full border border-sky-400/40 px-4 py-2 text-sm font-bold text-sky-300 transition-colors hover:border-sky-400 hover:bg-sky-400/10 hover:text-sky-200 md:justify-self-end">
+        class="inline-flex items-center gap-2 self-center justify-self-start rounded-md border border-sky-400/40 px-4 py-2 text-sm font-bold text-sky-300 transition-colors hover:border-sky-400 hover:bg-sky-400/10 hover:text-sky-200 md:justify-self-end">
         <i class="pi pi-plus text-xs"></i> Add series
       </RouterLink>
     </div>

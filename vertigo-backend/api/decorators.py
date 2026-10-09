@@ -42,10 +42,11 @@ def paginated_response(schema, max_limit=100, order_by=None,
                 select_query = result
 
             if order_by is not None:
-                if "Issue" in str(order_by):
-                    o = sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer()).desc() if order_direction == 'desc' else sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer()).asc()                        # Convert the volume number to an integer for proper sorting
+                if order_by == Issue.title:
+                    key = sqla.func.cast(sqla.func.substr(order_by, 8), sqla.Integer())
                 else:
-                    o = order_by.desc() if order_direction == 'desc' else order_by
+                    key = order_by
+                o = key.desc() if order_direction == 'desc' else key.asc()
                 select_query = select_query.order_by(o)
 
                 count = db.session.scalar(sqla.select(
