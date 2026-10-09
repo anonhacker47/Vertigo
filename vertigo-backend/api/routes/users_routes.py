@@ -81,24 +81,34 @@ def put():
     user = token_auth.current_user()
     form = request.form
 
-    # Text field updates
+
     if 'username' in form:
-        user.username = form.get('username').strip()
+        username = form.get('username', '').strip()
+        if len(username) < 3 or len(username) > 64 or not username[0].isalpha():
+            abort(400, description="Username must be 3 to 64 characters and start with a letter.")
+        if username != user.username and \
+                db.session.scalar(User.select().filter_by(username=username)):
+            abort(400, description=f"The username '{username}' is already taken.")
+        user.username = username
     if 'email' in form:
-        user.email = form.get('email').strip()
+        email = form.get('email', '').strip()
+        if '@' not in email or len(email) > 120:
+            abort(400, description="Enter a valid email address.")
+        if email != user.email and \
+                db.session.scalar(User.select().filter_by(email=email)):
+            abort(400, description=f"The email '{email}' is already in use.")
+        user.email = email
     if 'preferred_currency' in form:
         currency = form.get('preferred_currency').strip().upper()
         if len(currency) != 3 or not currency.isalpha():
             abort(400, description="Invalid currency code")
         user.preferred_currency = currency
 
-    # Handle password change
     if 'password' in form:
         if 'old_password' not in form or not user.verify_password(form.get('old_password')):
             abort(400, description="Old password missing or incorrect")
         user.password = form.get('password')
 
-    # Profile picture: file, URL or "noimage"; the previous file is replaced.
     try:
         state, relpath, _ = media.apply_thumbnail_field(
             user.id, form, request.files, 'profile_picture',

@@ -181,9 +181,14 @@ const menuItems = [
 
 
 watch(
-  () => userStore.user?.profile_picture,
-  async (val) => {
-    if (val) imagesrc.value = await AuthenticationService.getUserPicture()
+  () => userStore.user,
+  async (user) => {
+    try {
+      imagesrc.value = user?.profile_picture ? await AuthenticationService.getUserPicture() : dummy
+    } catch (error) {
+      console.error("Failed to load user profile picture:", error)
+      imagesrc.value = dummy
+    }
   }
 )
 
