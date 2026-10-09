@@ -30,38 +30,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { placeholderGradient } from '@/utils/placeholderGradient'
 
 const props = defineProps({
   title: { type: String, required: true },
   size: { type: String as () => 'sm' | 'md' | 'lg', default: 'md' }
 })
 
-// --- hash function for deterministic gradient ---
-function hashString(str: string) {
-  let h = 0
-  for (let i = 0; i < str.length; i++) {
-    h = Math.trunc((Math.imul(31, h) + str.charCodeAt(i)))
-  }
-  return Math.abs(h)
-}
-
-const colors = [
-  ['#8B5CF6', '#06B6D4'], // violet  cyan
-  ['#F43F5E', '#F59E0B'], // rose  amber
-  ['#3B82F6', '#06B6D4'], // blue  cyan
-  ['#10B981', '#3B82F6'], // emerald  blue
-  ['#EC4899', '#8B5CF6'], // pink  violet
-  ['#F97316', '#EF4444'], // orange  red
-  ['#14B8A6', '#0EA5E9'], // teal  sky
-]
-
-const gradient = computed(() => {
-  if (!props.title) return 'linear-gradient(135deg, #444, #222)' // fallback
-
-  const h = hashString(props.title)
-  const palette = colors[h % colors.length]
-  return `linear-gradient(135deg, ${palette[0]}, ${palette[1]})`
-})
+const gradient = computed(() => placeholderGradient(props.title))
 
 // --- sizing ---
 const sizeClass = computed(() => {

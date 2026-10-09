@@ -25,7 +25,7 @@ onMounted(() => {
 <template>
   <ErrorBoundary fallback="Something went wrong.">
     <ConfirmDeleteModal />
-    <div :class="[showNavbar ? 'pt-[72px]' : '']">
+    <div :class="[showNavbar ? 'pt-header' : '']">
       <HeaderItem v-cloak v-if="showNavbar" :transparentHeader="transparentHeader"></HeaderItem>
       <RouterView />
       <NotificationToast position="bottom-center" />

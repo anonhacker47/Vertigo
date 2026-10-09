@@ -1,6 +1,6 @@
 <template>
   <div v-if="series" :key="series.id" class="bg-no-repeat select-none bg-center bg-cover">
-    <div class="flex flex-col md:h-[calc(100vh-72px)] w-full">
+    <div class="flex flex-col md:h-[calc(100vh-var(--spacing-header))] w-full">
       <div
         class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
         <div class="flex flex-1 justify-center md:justify-start items-center px-5 wrap-break-word">

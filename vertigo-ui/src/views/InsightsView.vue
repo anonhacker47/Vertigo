@@ -1,7 +1,19 @@
 <template>
-  <div class="flex flex-col w-full min-h-screen px-4 py-8 md:px-8 md:py-10 bg-base-100">
-    <div class="w-full max-w-7xl mx-auto">
-      <h1 class="text-3xl font-bold text-white px-2 py-1">Insights</h1>
-    </div>
-  </div>
+  <main class="min-h-screen w-full pb-20">
+    <UpNextHero />
+    <ReadingQueueShelf />
+    <GetNextShelf />
+    <HabitsSection />
+    <RecordsSection />
+    <FactsSection />
+  </main>
 </template>
+
+<script setup lang="ts">
+import UpNextHero from "@/components/insights/UpNextHero.vue";
+import ReadingQueueShelf from "@/components/insights/ReadingQueueShelf.vue";
+import GetNextShelf from "@/components/insights/GetNextShelf.vue";
+import HabitsSection from "@/components/insights/HabitsSection.vue";
+import RecordsSection from "@/components/insights/RecordsSection.vue";
+import FactsSection from "@/components/insights/FactsSection.vue";
+</script>

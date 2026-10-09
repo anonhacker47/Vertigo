@@ -6,13 +6,12 @@
         }" :navigation="true" :modules="modules" class="max-w-full h-full max-h-full px-2 py-4">
             <swiper-slide v-for="issue in recentPurchasedIssues" :key="issue.id ?? issue.title"
                 style="display: flex; flex-direction: column;">
-                <div class="rounded-md flex items-stretch justify-center w-full px-4 h-auto md:h-[350px]">
+                <div class="flex items-center justify-center w-full px-6 py-2 h-auto md:h-[350px]">
                     <RouterLink :to="{
                         name: 'SeriesDetail',
                         params: { Link: issue.slug, Id: issue.series_id },
-                    }">
-                        <img :src="issue.image" alt=""
-                            class="rounded-md w-full max-w-[14rem] h-auto md:h-[320px] object-cover" />
+                    }" class="block w-full max-w-[13.5rem]" :aria-label="issue.series">
+                        <CoverImage :src="issue.image" :title="issue.series" :alt="issue.series" depth="lg" initials-class="text-4xl" />
                     </RouterLink>
                 </div>
                 <div class="flex flex-col items-center justify-center text-center px-4 h-[100px] overflow-hidden">
@@ -39,6 +38,7 @@ import "swiper/css/navigation";
 
 import { EffectCards, Navigation, Autoplay } from "swiper/modules";
 import { issueDisplayLabel } from "@/utils/issueTitle";
+import CoverImage from "@/components/common/CoverImage.vue";
 
 const modules = [EffectCards, Navigation, Autoplay];
 

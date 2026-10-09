@@ -1,7 +1,7 @@
 <template>
   <nav :class="[
-    'fixed top-0 left-0 right-0 z-50 border-b border-slate-700 py-3 px-6 md:px-16 transition-all duration-200 flex items-center',
-    props.transparentHeader
+    'fixed top-0 left-0 right-0 z-50 h-header border-b border-slate-700 px-6 md:px-16 transition-all duration-200 flex items-center',
+    props.transparentHeader && !scrolled
       ? 'bg-[rgba(18,25,43,0.9)] md:bg-transparent'
       : 'bg-[rgba(18,25,43,0.9)]'
   ]">
@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import AuthenticationService from '@/services/AuthenticationService'
@@ -103,6 +103,16 @@ const userStore = useUserStore()
 const imagesrc = ref('')
 const mobileOpen = ref(false)
 const profileMenu = ref()
+
+const scrolled = ref(false)
+function onScroll() {
+  scrolled.value = window.scrollY > 16
+}
+onMounted(() => {
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const dummy = new URL('@/assets/user.svg', import.meta.url).href
 

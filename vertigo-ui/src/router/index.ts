@@ -29,6 +29,7 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
+        transparentHeader: true,
       },
     },
     {

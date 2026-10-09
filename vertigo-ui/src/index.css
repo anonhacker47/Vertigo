@@ -4,6 +4,8 @@
 }
 
 @theme {
+  --spacing-header: 72px;
+
   --animate-wiggle: wiggle 0.3s ease-in-out infinite;
 
   @keyframes wiggle {

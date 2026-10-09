@@ -55,7 +55,9 @@ def create_app(config_class=Config):
     from api.routes.issue_routes import issues
     app.register_blueprint(issues, url_prefix='/api') 
     from api.routes.dashboard_routes import dashboard
-    app.register_blueprint(dashboard, url_prefix='/api') 
+    app.register_blueprint(dashboard, url_prefix='/api')
+    from api.insights.insights_routes import insights
+    app.register_blueprint(insights, url_prefix='/api')
     from api.routes.sync_routes import sync
     app.register_blueprint(sync, url_prefix='/api') 
 

@@ -1,6 +1,6 @@
 <template>
   <div v-if="issue" :key="issue.id" class="select-none">
-    <div class="flex flex-col md:h-[calc(100vh-72px)] w-full">
+    <div class="flex flex-col md:h-[calc(100vh-var(--spacing-header))] w-full">
 
       <!-- Run navigation: previous issue | series + position | next issue -->
       <nav class="hidden md:grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-3 border-b border-slate-800/60 text-sm">

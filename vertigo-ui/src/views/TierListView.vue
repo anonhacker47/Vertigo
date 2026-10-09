@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col w-full bg-base-100 px-4 pb-8 md:px-8">
-   <div class="flex flex-col py-4 h-[calc(100dvh-72px)]">
+   <div class="flex flex-col py-4 h-[calc(100dvh-var(--spacing-header))]">
     <div class="flex items-center justify-between gap-4 mb-3 mx-24 shrink-0">
       <div class="flex items-baseline gap-3">
         <h1 class="text-2xl font-bold text-white leading-none">Tier List</h1>
