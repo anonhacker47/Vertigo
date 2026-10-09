@@ -11,20 +11,12 @@
         autocomplete="off"
         @keydown.enter.prevent="search"
       />
-      <button
-        v-if="query"
-        type="button"
-        class="fm-iconbtn fm-iconbtn--sm absolute right-1.5 top-1/2 -translate-y-1/2 border-0"
-        aria-label="Clear search"
-        @click="clear"
-      >
-        <i class="pi pi-times" style="font-size: 11px"></i>
-      </button>
+      <span v-if="query" class="absolute right-1 top-1/2 -translate-y-1/2">
+        <Button icon="pi pi-times" text rounded size="small" severity="secondary" aria-label="Clear search" @click="clear" />
+      </span>
     </div>
-    <button type="button" class="fm-btn fm-btn--primary fm-btn--sm" :disabled="searchLoading || query.trim().length < 3" @click="search">
-      <i v-if="searchLoading" class="pi pi-spin pi-spinner" style="font-size: 12px"></i>
-      <span>{{ searchLoading ? "Searching" : "Search" }}</span>
-    </button>
+    <Button :label="searchLoading ? 'Searching' : 'Search'" icon="pi pi-search" size="small" :loading="searchLoading"
+      :disabled="query.trim().length < 3" @click="search" />
 
     <Dialog v-model:visible="showModal" modal header="Choose a series" class="w-[95vw] md:w-240">
       <ul v-if="!seriesDetail && !detailLoading" class="grid gap-2 sm:grid-cols-2">

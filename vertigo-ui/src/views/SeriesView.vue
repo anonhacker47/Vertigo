@@ -157,10 +157,9 @@
               <p class="mt-0.5 text-[13px] font-semibold text-slate-400">{{ issuesSummary }}</p>
             </div>
             <div class="flex items-center gap-2">
-              <button type="button" class="fm-iconbtn fm-iconbtn--danger" :aria-pressed="editMode"
-                :title="editMode ? 'Leave delete mode' : 'Delete issues'" aria-label="Delete mode" @click="toggleEditMode">
-                <i class="pi pi-trash" style="font-size: 14px"></i>
-              </button>
+              <Button icon="pi pi-trash" size="small" :severity="editMode ? 'danger' : 'secondary'" :outlined="!editMode"
+                :aria-pressed="editMode" :title="editMode ? 'Leave delete mode' : 'Delete issues'" aria-label="Delete mode"
+                @click="toggleEditMode" />
               <Button label="Add issue" icon="pi pi-plus" size="small" @click="showAddIssue = true" />                
             </div>
           </div>

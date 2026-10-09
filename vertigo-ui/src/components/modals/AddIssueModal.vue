@@ -15,15 +15,13 @@
       <div class="grid content-start gap-4 sm:grid-cols-[9rem_minmax(0,1fr)]">
         <div>
           <label for="new-issue-number" class="fm-label">Number</label>
-          <input
-            id="new-issue-number"
-            v-model.number="form.number"
-            type="number"
-            min="0"
-            step="1"
-            inputmode="numeric"
-            class="fm-input"
-            :aria-invalid="!!numberError || undefined"
+          <InputNumber
+            v-model="form.number"
+            input-id="new-issue-number"
+            :min="0"
+            :use-grouping="false"
+            fluid
+            :invalid="!!numberError"
             :aria-describedby="numberError ? 'new-issue-number-error' : undefined"
           />
         </div>
@@ -39,7 +37,7 @@
             autocomplete="off"
           />
         </div>
-        <p v-if="numberError" id="new-issue-number-error" class="fm-hint fm-hint--error -mt-2 sm:col-span-2">{{ numberError }}</p>
+        <Message v-if="numberError" id="new-issue-number-error" severity="error" size="small" variant="simple" class="-mt-2 sm:col-span-2">{{ numberError }}</Message>
 
         <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
           <button type="button" class="fm-toggle fm-toggle--own" :aria-pressed="form.is_owned" @click="form.is_owned = !form.is_owned">Own</button>
@@ -50,16 +48,18 @@
         <template v-if="form.is_owned">
           <div>
             <label for="new-issue-bought" class="fm-label">Bought on</label>
-            <input id="new-issue-bought" v-model="form.bought_date" type="date" class="fm-input" />
+            <DatePicker :model-value="ymdToDate(form.bought_date)" input-id="new-issue-bought" date-format="d M yy" show-icon icon-display="input" fluid
+              @update:model-value="form.bought_date = dateToYmd($event as Date | null)" />
           </div>
           <div>
             <label for="new-issue-price" class="fm-label">Price</label>
-            <input id="new-issue-price" v-model.number="form.bought_price" type="number" min="0" step="0.01" placeholder="0.00" class="fm-input" />
+            <InputNumber v-model="form.bought_price" input-id="new-issue-price" mode="decimal" :min="0" :max-fraction-digits="2" placeholder="0.00" fluid />
           </div>
         </template>
         <div v-if="form.is_read" class="sm:col-span-2">
           <label for="new-issue-read" class="fm-label">Read on</label>
-          <input id="new-issue-read" v-model="form.read_date" type="date" class="fm-input sm:max-w-36" />
+          <DatePicker :model-value="ymdToDate(form.read_date)" input-id="new-issue-read" date-format="d M yy" show-icon icon-display="input" class="w-full sm:w-44"
+            @update:model-value="form.read_date = dateToYmd($event as Date | null)" />
         </div>
       </div>
     </div>
@@ -75,6 +75,10 @@
 import { computed, ref, watch } from "vue";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
+import DatePicker from "primevue/datepicker";
+import InputNumber from "primevue/inputnumber";
+import Message from "primevue/message";
+import { dateToYmd, todayYmd, ymdToDate } from "@/utils/dateInput";
 import { useToast } from "primevue/usetoast";
 import IssueService from "@/services/IssueService";
 import ImageUploader from "@/components/createSeries/ImageUploader.vue";
@@ -94,15 +98,14 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const dummy = new URL("../../assets/dummy.webp", import.meta.url).href;
-const today = () => new Date().toISOString().split("T")[0];
 
 const blank = () => ({
-  number: props.defaultNumber as number | "",
+  number: props.defaultNumber as number | null,
   title: "",
   is_owned: false,
   is_read: false,
-  bought_date: today(),
-  read_date: today(),
+  bought_date: todayYmd(),
+  read_date: todayYmd(),
   bought_price: null as number | null,
 });
 
@@ -118,12 +121,12 @@ watch(() => props.visible, (open) => {
   coverPreview.value = dummy;
 });
 
-const numberLabel = computed(() => (form.value.number === "" ? "" : String(form.value.number)));
+const numberLabel = computed(() => (form.value.number == null ? "" : String(form.value.number)));
 const coverTitle = computed(() => form.value.title.trim() || (numberLabel.value ? `#${numberLabel.value}` : ""));
 
 const numberError = computed(() => {
   const n = form.value.number;
-  if (n === "" || n === null || n === undefined || Number.isNaN(n)) return "Give the issue a number.";
+  if (n === null || n === undefined || Number.isNaN(n)) return "Give the issue a number.";
   if (!Number.isInteger(n) || n < 0) return "Use a whole number, 0 or more.";
   if (props.takenNumbers.includes(n)) return `Issue #${n} already exists in this series.`;
   return "";
@@ -152,11 +155,11 @@ async function submit() {
     const title = form.value.title.trim();
     if (title) payload.title = title;
     if (form.value.is_owned) {
-      payload.bought_date = form.value.bought_date ? new Date(form.value.bought_date).toISOString() : null;
+      payload.bought_date = ymdToDate(form.value.bought_date)?.toISOString() ?? null;
       payload.bought_price = form.value.bought_price ?? null;
     }
     if (form.value.is_read) {
-      payload.read_date = form.value.read_date ? new Date(form.value.read_date).toISOString() : null;
+      payload.read_date = ymdToDate(form.value.read_date)?.toISOString() ?? null;
     }
 
     const { data: issue } = await IssueService.createIssue(props.seriesId, payload);

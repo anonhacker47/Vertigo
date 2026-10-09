@@ -47,11 +47,8 @@
     <div class="mx-auto flex w-full max-w-page items-center justify-between gap-4 px-4 md:px-8">
       <p class="fm-hint min-w-0 truncate">{{ summaryLine }}</p>
       <div class="flex shrink-0 items-center gap-3">
-        <RouterLink to="/collection" class="fm-btn fm-btn--ghost">Cancel</RouterLink>
-        <button type="button" class="fm-btn fm-btn--primary" :disabled="creating" @click="createSeries">
-          <i v-if="creating" class="pi pi-spin pi-spinner" style="font-size: 13px"></i>
-          <span>{{ creating ? "Creating" : "Create series" }}</span>
-        </button>
+        <Button label="Cancel" severity="secondary" outlined :disabled="creating" @click="router.push('/collection')" />
+        <Button :label="creating ? 'Creating' : 'Create series'" :loading="creating" @click="createSeries" />
       </div>
     </div>
   </div>
@@ -61,6 +58,7 @@
 import { computed, nextTick, ref, toRaw, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue";
+import Button from "primevue/button";
 
 import type { Series } from "@/types/series.types";
 import type { Issue, IssueDraft } from "@/types/issue.types";

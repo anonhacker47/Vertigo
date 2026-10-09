@@ -10,32 +10,35 @@
       <span v-if="hasOwnCover" class="issue-card__chip">{{ numberLabel }}</span>
       <span v-else class="issue-card__ghost" aria-hidden="true">{{ numberLabel }}</span>
 
-      <button
+      <Button
         v-if="editMode"
-        type="button"
+        icon="pi pi-times"
+        rounded
+        size="small"
+        severity="danger"
         class="issue-card__delete"
         :aria-label="`Delete ${label}`"
         title="Delete issue"
         @click.prevent="$emit('deleteIssue')"
-      >
-        <i class="pi pi-times" style="font-size: 11px"></i>
-      </button>
+      />
     </div>
 
     <div class="issue-card__panel">
       <div class="issue-card__head">
         <RouterLink :to="detailRoute" class="issue-card__title" :title="titleText">{{ titleText }}</RouterLink>
         <template v-if="issue.is_owned">
-          <input
+          <InputNumber
             v-if="editing === 'price'"
-            type="number"
-            min="0"
-            step="0.01"
-            class="fm-input fm-input--sm issue-card__input issue-card__input--price"
-            :value="issue.bought_price ?? ''"
+            :model-value="issue.bought_price ?? null"
+            mode="decimal"
+            :min="0"
+            :max-fraction-digits="2"
+            size="small"
             placeholder="0.00"
+            class="issue-card__input issue-card__input--price"
+            :input-style="{ width: '5.5rem' }"
             aria-label="Price paid"
-            @change="onPrice"
+            @update:model-value="onPrice"
             @blur="editing = null"
             @keydown.escape="editing = null"
           />
@@ -54,14 +57,16 @@
       </div>
 
       <!-- One short row per state, date on the right. A date picker replaces the row while editing. -->
-      <input
+      <DatePicker
         v-if="editing === 'bought'"
-        type="date"
-        class="fm-input fm-input--sm issue-card__input"
-        :value="toInputDate(issue.bought_date)"
+        :model-value="ymdToDate(issue.bought_date)"
+        date-format="d M yy"
+        size="small"
+        fluid
+        class="issue-card__input"
         aria-label="Bought on"
-        @change="onDate('is_owned', $event)"
-        @blur="editing = null"
+        @update:model-value="onDate('is_owned', $event as Date | null)"
+        @hide="editing = null"
         @keydown.escape="editing = null"
       />
       <div v-else class="issue-card__flag issue-card__flag--own" :class="{ 'is-on': issue.is_owned }">
@@ -79,14 +84,16 @@
         </button>
       </div>
 
-      <input
+      <DatePicker
         v-if="editing === 'read'"
-        type="date"
-        class="fm-input fm-input--sm issue-card__input"
-        :value="toInputDate(issue.read_date)"
+        :model-value="ymdToDate(issue.read_date)"
+        date-format="d M yy"
+        size="small"
+        fluid
+        class="issue-card__input"
         aria-label="Read on"
-        @change="onDate('is_read', $event)"
-        @blur="editing = null"
+        @update:model-value="onDate('is_read', $event as Date | null)"
+        @hide="editing = null"
         @keydown.escape="editing = null"
       />
       <div v-else class="issue-card__flag issue-card__flag--read" :class="{ 'is-on': issue.is_read }">
@@ -110,6 +117,10 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import getSymbolFromCurrency from "currency-symbol-map";
+import Button from "primevue/button";
+import DatePicker from "primevue/datepicker";
+import InputNumber from "primevue/inputnumber";
+import { dateToYmd, todayYmd, ymdToDate } from "@/utils/dateInput";
 import type { Issue } from "@/types/issue.types";
 import IssueService from "@/services/IssueService";
 import { placeholderGradient } from "@/utils/placeholderGradient";
@@ -177,12 +188,7 @@ function shortDate(value: Date | string | null | undefined): string {
   return date.toLocaleDateString("en-GB", sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "2-digit" });
 }
 
-function toInputDate(value: Date | string | null | undefined): string {
-  const date = parseDate(value);
-  return date ? date.toISOString().split("T")[0] : "";
-}
-
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => todayYmd();
 
 // Switching on stamps today, matching the create page; the date beside it is there to change it.
 function toggle(status: "is_owned" | "is_read") {
@@ -193,19 +199,17 @@ function toggle(status: "is_owned" | "is_read") {
 function open(field: "bought" | "read" | "price", event: Event) {
   const card = (event.currentTarget as HTMLElement | null)?.closest(".issue-card");
   editing.value = field;
-  nextTick(() => card?.querySelector<HTMLInputElement>(".issue-card__input")?.focus());
+  nextTick(() => card?.querySelector<HTMLInputElement>(".issue-card__input input")?.focus());
 }
 
-function onDate(status: "is_owned" | "is_read", event: Event) {
-  const date = (event.target as HTMLInputElement).value;
+function onDate(status: "is_owned" | "is_read", value: Date | null) {
+  const date = dateToYmd(value);
   if (date) emit("updateStatus", { status, value: true, date });
   editing.value = null;
 }
 
-function onPrice(event: Event) {
-  const raw = (event.target as HTMLInputElement).value;
-  const price = raw === "" ? null : parseFloat(raw);
-  if (price === null || !Number.isNaN(price)) emit("updateStatus", { status: "bought_price", value: price });
+function onPrice(value: number | null) {
+  emit("updateStatus", { status: "bought_price", value });
   editing.value = null;
 }
 </script>
@@ -286,19 +290,8 @@ function onPrice(event: Event) {
   top: 6px;
   right: 6px;
   z-index: 3;
-  display: grid;
-  width: 26px;
-  height: 26px;
-  place-items: center;
-  border-radius: 999px;
-  background: #dc2626;
-  color: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-  cursor: pointer;
-  transition: transform 0.12s ease, background-color 0.12s ease;
 }
-.issue-card__delete:hover { background: #ef4444; transform: scale(1.08); }
-.issue-card__delete:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* ---- panel: title row, status rows, in its own dark box under the framed cover ---- */
 .issue-card__panel {
@@ -398,12 +391,9 @@ function onPrice(event: Event) {
 .issue-card__input {
   width: 100%;
   min-width: 0;
-  min-height: 24px;
-  padding: 0 6px;
-  font-size: 12px;
 }
 .issue-card__input--price {
-  width: 5.5rem;
+  width: auto;
 }
 
 /* Single-column phones: the card is wide, so give the controls room for thumbs. */
@@ -417,15 +407,12 @@ function onPrice(event: Event) {
   .issue-card__when { padding: 6px 10px 6px 8px; border-radius: 8px; }
   .issue-card__when { font-size: 13px; }
   .issue-card__dot { width: 9px; height: 9px; }
-  .issue-card__input { min-height: 36px; font-size: 14px; }
   .issue-card__chip { padding: 3px 9px; font-size: 13px; }
   .issue-card__ghost { font-size: 40px; }
-  .issue-card__delete { width: 34px; height: 34px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .issue-card__cover img,
-  .issue-card__delete,
   .issue-card__price,
   .issue-card__toggle,
   .issue-card__when { transition: none; }

@@ -18,16 +18,19 @@
       @blur="onBlur"
       @keydown="onKeydown"
     />
-    <button
-      v-if="localSelected && !open"
-      type="button"
-      class="fm-iconbtn fm-iconbtn--sm absolute right-1.5 top-1/2 -translate-y-1/2 border-0"
-      :aria-label="`Clear ${placeholder || 'selection'}`"
-      @mousedown.prevent
-      @click="selectItem(null)"
-    >
-      <i class="pi pi-times" style="font-size: 10px"></i>
-    </button>
+    <!-- Wrapper carries the positioning: PrimeVue's button rule sets position on the button itself. -->
+    <span v-if="localSelected && !open" class="absolute right-1 top-1/2 -translate-y-1/2">
+      <Button
+        icon="pi pi-times"
+        text
+        rounded
+        size="small"
+        severity="secondary"
+        :aria-label="`Clear ${placeholder || 'selection'}`"
+        @mousedown.prevent
+        @click="selectItem(null)"
+      />
+    </span>
     <i v-else class="pi pi-chevron-down pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" style="font-size: 11px"></i>
 
     <ul v-if="open && total" :id="listId" role="listbox" class="fm-menu">
@@ -64,6 +67,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
+import Button from "primevue/button";
 
 type Item = { id: any; value: string; title?: string; name?: string };
 

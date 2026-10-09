@@ -24,13 +24,10 @@
 
   <div class="fm-actionbar">
     <div class="mx-auto flex w-full max-w-page items-center justify-between gap-4 px-4 md:px-8">
-      <button type="button" class="fm-btn fm-btn--danger" :disabled="!loaded || saving" @click="confirmDelete">Delete series</button>
+      <Button label="Delete series" icon="pi pi-trash" severity="danger" outlined :disabled="!loaded || saving" @click="confirmDelete" />
       <div class="flex shrink-0 items-center gap-3">
-        <button type="button" class="fm-btn fm-btn--ghost" @click="router.back()">Cancel</button>
-        <button type="button" class="fm-btn fm-btn--primary" :disabled="!loaded || saving" @click="updateSeries">
-          <i v-if="saving" class="pi pi-spin pi-spinner" style="font-size: 13px"></i>
-          <span>{{ saving ? "Saving" : "Save details" }}</span>
-        </button>
+        <Button label="Cancel" severity="secondary" outlined :disabled="saving" @click="router.back()" />
+        <Button :label="saving ? 'Saving' : 'Save details'" :loading="saving" :disabled="!loaded" @click="updateSeries" />
       </div>
     </div>
   </div>
@@ -40,6 +37,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import Button from "primevue/button";
 
 import type { Series } from "@/types/series.types";
 

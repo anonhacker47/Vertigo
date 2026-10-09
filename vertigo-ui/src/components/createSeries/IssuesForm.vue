@@ -6,25 +6,9 @@
         <p class="fm-hint mt-1">{{ summary }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <RunStrip v-if="issues.length" :run="run" :max="32" />
-        <div class="stepper" role="group" :aria-label="`Number of ${unitPlural}`">
-          <button type="button" class="fm-iconbtn fm-iconbtn--sm border-0" :aria-label="`One fewer ${unit}`" :disabled="issueCount <= 1" @click="setCount(issueCount - 1)">
-            <i class="pi pi-minus" style="font-size: 10px"></i>
-          </button>
-          <input
-            :value="issueCount"
-            type="number"
-            min="1"
-            step="1"
-            inputmode="numeric"
-            class="stepper__input"
-            :aria-label="`Number of ${unitPlural}`"
-            @change="setCount(Number(($event.target as HTMLInputElement).value))"
-          />
-          <button type="button" class="fm-iconbtn fm-iconbtn--sm border-0" :aria-label="`One more ${unit}`" @click="setCount(issueCount + 1)">
-            <i class="pi pi-plus" style="font-size: 10px"></i>
-          </button>
-        </div>
+        <InputNumber :model-value="issueCount" show-buttons button-layout="horizontal" :min="1" :step="1" :use-grouping="false" size="small"
+          increment-button-icon="pi pi-plus" decrement-button-icon="pi pi-minus" :input-style="{ width: '3.5rem', textAlign: 'center' }"
+          :aria-label="`Number of ${unitPlural}`" @update:model-value="setCount($event ?? 1)" />
       </div>
     </div>
 
@@ -69,30 +53,25 @@
           <div class="issue__actions">
             <button type="button" class="fm-toggle fm-toggle--own fm-toggle--sm" :aria-pressed="issue.have" @click="toggleFlag(issue, index, 'have')">Own</button>
             <button type="button" class="fm-toggle fm-toggle--read fm-toggle--sm" :aria-pressed="issue.read" @click="toggleFlag(issue, index, 'read')">Read</button>
-            <button
-              type="button"
-              class="fm-iconbtn fm-iconbtn--sm"
-              :aria-expanded="isOpen(index)"
-              :aria-label="`More details for ${unit} ${index + 1}`"
-              @click="toggleOpen(index)"
-            >
-              <i class="pi pi-chevron-down issue__chev" :class="{ 'issue__chev--open': isOpen(index) }" style="font-size: 11px"></i>
-            </button>
+            <Button :icon="isOpen(index) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" text rounded size="small" severity="secondary"
+              :aria-expanded="isOpen(index)" :aria-label="`More details for ${unit} ${index + 1}`" @click="toggleOpen(index)" />
           </div>
         </div>
 
         <div v-if="isOpen(index)" class="issue__details grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <label v-if="issue.have">
             <span class="fm-label">Bought on</span>
-            <input v-model="issue.purchaseDate" type="date" class="fm-input" />
+            <DatePicker :model-value="ymdToDate(issue.purchaseDate)" date-format="d M yy" show-icon icon-display="input" fluid
+              @update:model-value="issue.purchaseDate = dateToYmd($event as Date | null)" />
           </label>
           <label v-if="issue.have">
             <span class="fm-label">Price</span>
-            <input v-model.number="issue.price" type="number" min="0" step="0.01" placeholder="0.00" class="fm-input" />
+            <InputNumber v-model="issue.price" mode="decimal" :min="0" :max-fraction-digits="2" placeholder="0.00" fluid />
           </label>
           <label v-if="issue.read">
             <span class="fm-label">Read on</span>
-            <input v-model="issue.readDate" type="date" class="fm-input" />
+            <DatePicker :model-value="ymdToDate(issue.readDate)" date-format="d M yy" show-icon icon-display="input" fluid
+              @update:model-value="issue.readDate = dateToYmd($event as Date | null)" />
           </label>
           <label>
             <span class="fm-label">Cover link</span>
@@ -101,7 +80,7 @@
           <template v-if="!manga">
             <label>
               <span class="fm-label">Metron ID</span>
-              <input v-model.number="issue.metron_id" type="number" class="fm-input" />
+              <InputNumber v-model="issue.metron_id" :min="0" :use-grouping="false" fluid />
             </label>
             <label>
               <span class="fm-label">Metron URL</span>
@@ -127,8 +106,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
 import type { IssueDraft } from "@/types/issue.types";
-import type { RunTick } from "@/types/insights.types";
-import RunStrip from "@/components/insights/RunStrip.vue";
+import Button from "primevue/button";
+import DatePicker from "primevue/datepicker";
+import InputNumber from "primevue/inputnumber";
+import { dateToYmd, todayYmd, ymdToDate } from "@/utils/dateInput";
 
 const INITIAL_ROWS = 24;
 
@@ -154,10 +135,6 @@ const unitLabel = computed(() => (props.manga ? "Volume" : "Issue"));
 const aUnit = computed(() => (props.manga ? "a volume" : "an issue"));
 
 const visibleIssues = computed(() => (showAll.value ? issues.value : issues.value.slice(0, INITIAL_ROWS)));
-
-const run = computed<RunTick[]>(() =>
-  issues.value.map((issue, i) => ({ number: i + 1, state: issue.read ? "read" : issue.have ? "owned" : "missing" }))
-);
 
 const summary = computed(() => {
   const n = issues.value.length;
@@ -252,7 +229,7 @@ function releaseUnusedObjectUrls(current: IssueDraft[]) {
 
 watch(issues, (val) => {
   if (!val) return;
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayYmd();
   val.forEach((issue) => {
     if (issue.have && !issue.purchaseDate) issue.purchaseDate = today;
     if (issue.read && !issue.readDate) issue.readDate = today;
@@ -272,37 +249,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0b1220;
-}
-.stepper__input {
-  width: 3.25rem;
-  border: 0;
-  outline: none;
-  background: transparent;
-  text-align: center;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-.stepper__input::-webkit-inner-spin-button,
-.stepper__input::-webkit-outer-spin-button {
-  appearance: none;
-  margin: 0;
-}
-.stepper__input:focus-visible {
-  border-radius: 6px;
-  box-shadow: 0 0 0 2px #38bdf8;
-}
 
 .issue-list {
   list-style: none;
@@ -402,12 +348,6 @@ onBeforeUnmount(() => {
     grid-column: auto;
   }
 }
-.issue__chev {
-  transition: transform 0.15s ease;
-}
-.issue__chev--open {
-  transform: rotate(180deg);
-}
 .issue__details {
   padding: 10px 12px 14px 12px;
   border-top: 1px dashed rgba(255, 255, 255, 0.06);
@@ -416,8 +356,5 @@ onBeforeUnmount(() => {
   .issue__details {
     padding-left: 5.25rem;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .issue__chev { transition: none; }
 }
 </style>

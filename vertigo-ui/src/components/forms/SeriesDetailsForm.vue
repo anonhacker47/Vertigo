@@ -28,22 +28,21 @@
           :aria-invalid="!!errors?.title || undefined"
           :aria-describedby="errors?.title ? 'series-title-error' : undefined"
         />
-        <p v-if="errors?.title" id="series-title-error" class="fm-hint fm-hint--error mt-1.5">{{ errors.title }}</p>
+        <Message v-if="errors?.title" id="series-title-error" severity="error" size="small" variant="simple" class="mt-1.5">{{ errors.title }}</Message>
       </div>
 
       <div>
         <label for="series-format" class="fm-label">Format</label>
-        <select
-          id="series-format"
+        <Select
           v-model="localSeriesData.series_format"
-          class="fm-select"
-          :aria-invalid="!!errors?.series_format || undefined"
+          input-id="series-format"
+          :options="FORMATS"
+          placeholder="Choose a format"
+          fluid
+          :invalid="!!errors?.series_format"
           :aria-describedby="errors?.series_format ? 'series-format-error' : undefined"
-        >
-          <option value="" disabled>Choose a format</option>
-          <option v-for="format in FORMATS" :key="format" :value="format">{{ format }}</option>
-        </select>
-        <p v-if="errors?.series_format" id="series-format-error" class="fm-hint fm-hint--error mt-1.5">{{ errors.series_format }}</p>
+        />
+        <Message v-if="errors?.series_format" id="series-format-error" severity="error" size="small" variant="simple" class="mt-1.5">{{ errors.series_format }}</Message>
       </div>
 
       <div>
@@ -93,7 +92,7 @@
       <template v-if="metronEditable && !localSeriesData.manga">
         <div>
           <label for="series-metron-id" class="fm-label">Metron ID</label>
-          <input id="series-metron-id" v-model.number="localSeriesData.metron_id" type="number" min="0" step="1" class="fm-input" placeholder="Leave empty to unlink" />
+          <InputNumber v-model="localSeriesData.metron_id" input-id="series-metron-id" :min="0" :use-grouping="false" fluid placeholder="Leave empty to unlink" />
         </div>
         <div class="sm:col-span-1 xl:col-span-2">
           <label for="series-metron-url" class="fm-label">Metron URL</label>
@@ -114,7 +113,7 @@
           placeholder="General description"
           :aria-invalid="tooLong || undefined"
         ></textarea>
-        <p v-if="tooLong" class="fm-hint fm-hint--error fm-textbox__foot">Keep the description under {{ MAX_TEXT }} characters.</p>
+        <Message v-if="tooLong" severity="error" size="small" variant="simple" class="fm-textbox__foot">Keep the description under {{ MAX_TEXT }} characters.</Message>
       </div>
 
       <div class="fm-textbox sm:col-span-2 xl:col-span-1" :data-invalid="notesTooLong || undefined">
@@ -130,7 +129,7 @@
           placeholder="Notes for your own reference"
           :aria-invalid="notesTooLong || undefined"
         ></textarea>
-        <p v-if="notesTooLong" class="fm-hint fm-hint--error fm-textbox__foot">Keep notes under {{ MAX_TEXT }} characters.</p>
+        <Message v-if="notesTooLong" severity="error" size="small" variant="simple" class="fm-textbox__foot">Keep notes under {{ MAX_TEXT }} characters.</Message>
       </div>
     </div>
   </section>
@@ -142,6 +141,9 @@ import { computed, onMounted, ref, watch } from "vue";
 import SingleSelectCombobox from "@/components/customInputs/SingleSelectCombobox.vue";
 import MultiSelectCombobox from "@/components/customInputs/MultiSelectCombobox.vue";
 import SeriesService from "@/services/SeriesService";
+import InputNumber from "primevue/inputnumber";
+import Message from "primevue/message";
+import Select from "primevue/select";
 
 export interface SeriesFormErrors {
   title?: string;

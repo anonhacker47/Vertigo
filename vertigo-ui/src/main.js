@@ -27,8 +27,21 @@ pinia.use(piniaPluginPersistedstate);
 
 const MyPreset = definePreset(Lara, {
   semantic: {
+    // Form controls share the ink-well look of the hand-built fields (see assets/forms.css).
+    formField: {
+      borderRadius: "10px",
+    },
     colorScheme: {
       dark: {
+        formField: {
+          background: "#0b1220",
+          borderColor: "rgba(255, 255, 255, 0.08)",
+          hoverBorderColor: "rgba(255, 255, 255, 0.16)",
+          focusBorderColor: "#38bdf8",
+          color: "#ffffff",
+          placeholderColor: "#64748b",
+          iconColor: "#94a3b8",
+        },
         surface: {
           0: "#ffffff",
           50: "{slate.50}",
