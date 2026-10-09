@@ -18,7 +18,7 @@
     <!-- three panels, side by side, no scrolling on a desktop -->
     <div class="grid flex-1 grid-cols-1 gap-10 md:grid-cols-[7fr_6fr_7fr] md:gap-8">
       <section class="min-w-0" aria-label="Breakdown">
-        <BreakdownBars>
+        <BreakdownDonut>
           <template #aside>
             <button class="btn btn-circle btn-ghost btn-xs text-info" type="button" aria-label="About this chart" @click="handleInfoClick">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-4 w-4 stroke-current">
@@ -26,11 +26,11 @@
               </svg>
             </button>
           </template>
-        </BreakdownBars>
+        </BreakdownDonut>
       </section>
 
       <section class="flex min-w-0 flex-col" aria-label="Recent purchases">
-        <h2 class="text-xl font-extrabold text-[#F9FAFB]">Recent Purchases</h2>
+        <h2 class="text-xl font-extrabold text-center text-[#F9FAFB]">Recent Purchases</h2>
         <div class="flex flex-1 items-center justify-center">
           <SwiperCardItem v-if="recentPurchasedIssues && recentPurchasedIssues.length > 0" :recentPurchasedIssues="recentPurchasedIssues" />
           <div v-else class="py-10 text-slate-400">No recent purchases found.</div>
@@ -59,7 +59,7 @@ import getSymbolFromCurrency from "currency-symbol-map";
 import { useUserStore } from "../store/user";
 import ShelfFigure from '../components/dashboard/ShelfFigure.vue';
 import SwiperCardItem from '../components/cards/SwiperCardItem.vue';
-import BreakdownBars from '../components/dashboard/BreakdownBars.vue';
+import BreakdownDonut from '../components/dashboard/BreakdownDonut.vue';
 import PurchasesChart from '../components/dashboard/PurchasesChart.vue';
 import DashboardService from '../services/DashboardService';
 
