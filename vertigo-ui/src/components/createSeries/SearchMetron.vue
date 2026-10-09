@@ -1,87 +1,98 @@
-  <template>
-    <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
-      <div class="mb-2 flex items-center gap-2">
-        <i class="pi pi-search text-lg"></i>
-        <h3 class="text-sm font-semibold text-base-content">
-          Search Comics (MetronDB)
-        </h3>
-      </div>
-
-      <div class="flex gap-2">
-        <InputText v-model="query" placeholder="Eg: Watchmen" class="w-full" @keyup.enter="search" />
-        <Button icon="pi pi-search" label="Search" iconPos="left" :loading="searchLoading" class="px-6"
-          severity="primary" @click="search" />
-        <Button icon="pi pi-times" label="Clear" class="px-4" outlined @click="clear" />
-      </div>
+<template>
+  <div class="flex min-w-0 flex-1 items-center gap-2">
+    <div class="relative min-w-0 flex-1">
+      <i class="pi pi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" style="font-size: 14px"></i>
+      <input
+        v-model="query"
+        type="text"
+        class="fm-input fm-input--bare pl-9 pr-9"
+        placeholder="Search Metron for a comic"
+        aria-label="Search Metron for a comic"
+        autocomplete="off"
+        @keydown.enter.prevent="search"
+      />
+      <button
+        v-if="query"
+        type="button"
+        class="fm-iconbtn fm-iconbtn--sm absolute right-1.5 top-1/2 -translate-y-1/2 border-0"
+        aria-label="Clear search"
+        @click="clear"
+      >
+        <i class="pi pi-times" style="font-size: 11px"></i>
+      </button>
     </div>
+    <button type="button" class="fm-btn fm-btn--primary fm-btn--sm" :disabled="searchLoading || query.trim().length < 3" @click="search">
+      <i v-if="searchLoading" class="pi pi-spin pi-spinner" style="font-size: 12px"></i>
+      <span>{{ searchLoading ? "Searching" : "Search" }}</span>
+    </button>
 
-    <Dialog v-model:visible="showModal" modal header="Select Series from Metron" class="w-[95vw] md:w-240">
-      <div v-if="!seriesDetail && !detailLoading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="item in results" :key="item.metron_id"
-          class="rounded-xl border border-base-300 p-3 cursor-pointer select-none transition hover:border-primary"
-          @click="fetchSeriesDetail(item.metron_id)">
-          <h4 class="font-semibold leading-tight">{{ item.name }}</h4>
-          <p class="text-xs opacity-70">Year began: {{ item.year_began }}</p>
-          <p class="mt-1 text-xs opacity-70">{{ item.issue_count }} issues • Vol. {{ item.volume }}</p>
-        </div>
-      </div>
+    <Dialog v-model:visible="showModal" modal header="Choose a series" class="w-[95vw] md:w-240">
+      <ul v-if="!seriesDetail && !detailLoading" class="grid gap-2 sm:grid-cols-2">
+        <li v-for="item in results" :key="item.metron_id">
+          <button type="button" class="result" @click="fetchSeriesDetail(item.metron_id)">
+            <span class="block text-[15px] font-extrabold leading-tight text-white">{{ item.name }}</span>
+            <span class="mt-1 block text-[13px] font-semibold text-slate-400">
+              Began {{ item.year_began }}, {{ item.issue_count }} issues, volume {{ item.volume }}
+            </span>
+          </button>
+        </li>
+      </ul>
 
       <div v-if="detailLoading" class="flex items-center justify-center py-24">
-        <ProgressSpinner style="width:80px;height:80px" strokeWidth="4" animationDuration=".8s" />
+        <ProgressSpinner style="width: 64px; height: 64px" strokeWidth="4" animationDuration=".8s" />
       </div>
 
       <div v-if="seriesDetail" class="flex flex-col gap-4">
-        <Button label="Back" icon="pi pi-arrow-left" class="w-fit" outlined :disabled="entitiesLoading || selecting"
-          @click="seriesDetail = null; seriesEntities = null" />
+        <div>
+          <Button label="Back to results" icon="pi pi-arrow-left" size="small" text :disabled="entitiesLoading || selecting" @click="seriesDetail = null; seriesEntities = null" />
+        </div>
 
-        <div class="flex flex-col md:flex-row gap-4">
-          <img :src="seriesDetail.image_first_issue" alt="First Issue"
-            class="w-48 max-h-96 md:w-64 rounded-lg shadow" />
+        <div class="flex flex-col gap-5 md:flex-row">
+          <div class="w-40 shrink-0 md:w-52">
+            <CoverImage :src="seriesDetail.image_first_issue" :title="seriesDetail.name" alt="First issue cover" :interactive="false" />
+          </div>
 
-          <div class="flex flex-col gap-2">
-            <h3 class="text-xl font-bold">{{ seriesDetail.name }}</h3>
-            <p class="text-sm opacity-70">{{ seriesDetail.publisher.name }}</p>
-            <p class="text-sm opacity-70">Volume: {{ seriesDetail.volume }} • Issues: {{ seriesDetail.issue_count }}</p>
-            <p class="text-sm opacity-70">Years: {{ seriesDetail.year_began }} – {{ seriesDetail.year_end || 'Present'
-              }}
-            </p>
-            <p class="text-sm opacity-70">Status: {{ seriesDetail.status }}</p>
-            <p class="text-sm opacity-70">
-              Genres:
-              {{seriesDetail.genres.map(genre => genre.name).join(', ')}}
-            </p>
-            <p class="text-sm mt-2">{{ seriesDetail.desc }}</p>
+          <div class="flex min-w-0 flex-col gap-2">
+            <h3 class="text-xl font-extrabold leading-tight text-white">{{ seriesDetail.name }}</h3>
+            <p class="text-sm font-semibold text-slate-400">{{ seriesDetail.publisher?.value }}</p>
+            <dl class="meta mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
+              <dt>Volume</dt><dd>{{ seriesDetail.volume }}</dd>
+              <dt>Issues</dt><dd>{{ seriesDetail.issue_count }}</dd>
+              <dt>Years</dt><dd>{{ seriesDetail.year_began }} to {{ seriesDetail.year_end || "present" }}</dd>
+              <dt>Status</dt><dd>{{ seriesDetail.status }}</dd>
+              <dt>Genres</dt><dd>{{ genreList || "none listed" }}</dd>
+            </dl>
+            <p class="mt-1 text-sm text-slate-300">{{ seriesDetail.desc }}</p>
 
-            <div class="flex flex-row flex-wrap gap-3">
+            <div class="mt-1 flex flex-row flex-wrap gap-3">
               <Button as="a" :href="seriesDetail.metron_url" target="_blank" rel="noopener noreferrer"
-                label="View on Metron" icon="pi pi-external-link" severity="info" class="w-fit" />
-              <Button v-if="!seriesEntities" label="Load creators & characters" icon="pi pi-users" class="w-fit"
+                label="View on Metron" icon="pi pi-external-link" size="small" severity="secondary" outlined />
+              <Button v-if="!seriesEntities" label="Load creators and characters" icon="pi pi-users" size="small"
                 severity="secondary" :loading="entitiesLoading" :disabled="selecting"
                 @click="fetchSeriesEntities(seriesDetail.metron_id)" />
             </div>
 
-            <EntityPreview v-if="seriesEntities" class="mt-4" :creators="seriesEntities.creators"
-              :characters="seriesEntities.characters" creators-label="Creators" source="Metron"
-              :note="entitiesNote" />
+            <EntityPreview v-if="seriesEntities" class="mt-3" :creators="seriesEntities.creators"
+              :characters="seriesEntities.characters" creators-label="Creators" source="Metron" :note="entitiesNote" />
           </div>
         </div>
       </div>
 
       <template #footer>
         <Button label="Close" severity="secondary" outlined @click="closeModal" />
-        <Button v-if="seriesDetail" :label="`Select ${seriesDetail.name}`" severity="primary" :loading="selecting"
-          :disabled="entitiesLoading" @click="selectSeries" />
+        <Button v-if="seriesDetail" :label="`Use ${seriesDetail.name}`" :loading="selecting" :disabled="entitiesLoading" @click="selectSeries" />
       </template>
     </Dialog>
-  </template>
+  </div>
+</template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import ProgressSpinner from 'primevue/progressspinner'
 import MokkariService from '@/services/MetronService'
+import CoverImage from '@/components/common/CoverImage.vue'
 import EntityPreview from '@/components/createSeries/EntityPreview.vue'
 import { useToast } from 'primevue/usetoast'
 
@@ -98,6 +109,8 @@ const showModal = ref(false)
 
 const seriesDetail = ref<any>(null)
 const seriesEntities = ref<any | null>(null)
+
+const genreList = computed(() => (seriesDetail.value?.genres || []).map((genre: any) => genre.value).join(', '))
 
 const entitiesNote = computed(() => {
   const e = seriesEntities.value
@@ -136,6 +149,7 @@ async function search() {
     const res = await MokkariService.getSeriesByQuery(query.value)
     results.value = res.data.items || []
     if (results.value.length) showModal.value = true
+    else toast.add({ severity: 'info', summary: 'No matches', detail: `Metron has nothing for "${query.value.trim()}".`, life: 3000 })
   } catch (error) {
     results.value = []
     notifyMetronError(error, 'Comic search failed')
@@ -162,7 +176,7 @@ async function loadEntities(metron_id: number) {
   return res.data
 }
 
-// "Load creators & characters" button: spins that button only.
+// "Load creators and characters" button: spins that button only.
 async function fetchSeriesEntities(metron_id: number) {
   entitiesLoading.value = true
   seriesEntities.value = null
@@ -194,7 +208,7 @@ function closeModal() {
 async function selectSeries() {
   if (!seriesDetail.value) return
 
-  // Footer "Select" button: fetch quietly if needed, spinning that button only.
+  // Footer button: fetch quietly if needed, spinning that button only.
   if (!seriesEntities.value) {
     selecting.value = true
     try {
@@ -213,8 +227,18 @@ async function selectSeries() {
 </script>
 
 <style scoped>
-.p-button {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+.result {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1220;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
 }
+.result:hover { border-color: #38bdf8; }
+.result:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.meta dt { font-weight: 700; color: #64748b; }
+.meta dd { color: #cbd5e1; }
 </style>

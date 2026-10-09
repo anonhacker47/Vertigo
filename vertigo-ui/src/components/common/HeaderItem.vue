@@ -53,7 +53,7 @@
         <button tabindex="0" class="flex items-center">
           <img class="inline-block h-9 w-9 rounded-md hover:opacity-75 cursor-pointer object-cover" @error="changeThumb()" :src="imagesrc" alt="Profile" />
         </button>
-        <div class="dropdown-content right-0 z-[500] pt-2">
+        <div class="dropdown-content right-0 z-500 pt-2">
           <ul class="menu p-2 shadow bg-base-200 text-white rounded-box w-52" tabindex="-1">
             <li><RouterLink to="/settings" class="hover:text-blue-400">Settings</RouterLink></li>
             <li><a @click="logout" class="hover:text-blue-400">Log-out</a></li>

@@ -1,44 +1,66 @@
 <template>
-  <div class="w-full flex flex-col items-center justify-center my-4 mb-2">
-    <h1 class="text-3xl font-bold">Create Series</h1>
+  <div class="mx-auto w-full max-w-page px-4 pt-6 md:px-8">
+    <header>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">Add a series</h1>
+      <p class="mt-1 text-sm font-semibold text-slate-400">Import from Metron or MyAnimeList, or fill in the details yourself.</p>
+    </header>
+
+    <form
+      id="series-form"
+      class="mt-7 grid gap-8 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-10 xl:grid-cols-[16rem_minmax(0,1fr)]"
+      autocomplete="on"
+      novalidate
+      @submit.prevent
+    >
+      <aside class="mx-auto w-56 max-w-full md:sticky md:top-[calc(var(--spacing-header)+1.5rem)] md:mx-0 md:w-auto md:self-start">
+        <ImageUploader v-model="imagesrc" v-model:imageLink="imageLinkInput" :title="seriesData.title" @image-change="onImageChange" />
+      </aside>
+
+      <div class="min-w-0" :class="{ 'just-imported': justImported }">
+        <div class="import-bar">
+          <SegmentedControl
+            :model-value="importSource"
+            :options="sourceOptions"
+            label="Source"
+            @update:model-value="importSource = $event as ImportSource"
+          />
+          <SearchMetron v-if="importSource === 'comic'" class="basis-full sm:basis-0" @select="onMetronSelect" />
+          <SearchManga v-else class="basis-full sm:basis-0" @select="onMetronSelect" />
+        </div>
+        <p class="fm-hint mb-7 mt-2.5">Importing fills in the details, cover and issue list. Everything stays editable.</p>
+
+        <SeriesDetailsForm v-model="seriesData" :errors="errors" />
+
+        <IssuesForm
+          v-model:readAll="readAll"
+          v-model:haveAll="haveAll"
+          v-model:issues="issues"
+          v-model:issueCount="seriesData.issue_count"
+          :imagesrc="imagesrc"
+          :manga="seriesData.manga"
+        />
+      </div>
+    </form>
   </div>
 
-  <form @submit.prevent autocomplete="on"
-    class="z-0 flex items-start justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col">
-
-    <div class="w-94 h-152">
-      <ImageUploader v-model="imagesrc" v-model:imageLink="imageLinkInput" @image-change="onImageChange" />
-    </div>
-
-    <div class="w-[90%] md:w-2/4 flex flex-col items-start justify-start">
-
-      <div class="flex gap-8 mb-4">
-        <div class="w-full max-w-xs rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
-          <div class="mb-4 w-full max-w-xs">
-            <label class="mb-1 block text-sm font-medium text-base-content">
-              Series Type
-            </label>
-            <Select v-model="importSource" :options="seriesTypeOptions" optionLabel="label" optionValue="value"
-              placeholder="Select series type" class="w-full" />
-          </div>
-        </div>
-
-        <SearchMetron v-if="importSource === 'comic'" @select="onMetronSelect" />
-
-        <SearchManga v-else @select="onMetronSelect" />
+  <div class="fm-actionbar">
+    <div class="mx-auto flex w-full max-w-page items-center justify-between gap-4 px-4 md:px-8">
+      <p class="fm-hint min-w-0 truncate">{{ summaryLine }}</p>
+      <div class="flex shrink-0 items-center gap-3">
+        <RouterLink to="/collection" class="fm-btn fm-btn--ghost">Cancel</RouterLink>
+        <button type="button" class="fm-btn fm-btn--primary" :disabled="creating" @click="createSeries">
+          <i v-if="creating" class="pi pi-spin pi-spinner" style="font-size: 13px"></i>
+          <span>{{ creating ? "Creating" : "Create series" }}</span>
+        </button>
       </div>
-      <SeriesForm v-model="seriesData" :showIssueSection="showIssueSection" @next="showIssueSection = true" />
-      <IssuesForm v-model:readAll="readAll" v-model:haveAll="haveAll" v-model:issues="issues"
-        :showIssueSection="showIssueSection" :seriesData="seriesData" :imagesrc="imagesrc"
-        @cancel="showIssueSection = false" @submit="createSeries" />
     </div>
-
-  </form>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, toRaw, watch } from "vue";
+import { computed, nextTick, ref, toRaw, watch } from "vue";
 import { useRouter } from "vue-router";
+import { useToast } from "primevue";
 
 import type { Series } from "@/types/series.types";
 import type { Issue, IssueDraft } from "@/types/issue.types";
@@ -46,46 +68,46 @@ import type { Issue, IssueDraft } from "@/types/issue.types";
 import IssueService from "../services/IssueService";
 import SeriesService from "../services/SeriesService";
 
+import SegmentedControl from "@/components/common/SegmentedControl.vue";
 import ImageUploader from "@/components/createSeries/ImageUploader.vue";
-import SeriesForm from "@/components/createSeries/CreateSeriesForm.vue";
+import SeriesDetailsForm, { type SeriesFormErrors } from "@/components/forms/SeriesDetailsForm.vue";
 import IssuesForm from "@/components/createSeries/IssuesForm.vue";
-import { useToast } from "primevue";
 import SearchMetron from "@/components/createSeries/SearchMetron.vue";
 import SearchManga from "@/components/createSeries/SearchManga.vue";
-import Select from "primevue/dropdown";
 
-const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
-const importSource = ref<'comic' | 'manga'>('comic');
+type ImportSource = "comic" | "manga";
 
-const seriesTypeOptions = [
-  { label: 'Comics', value: 'comic' },
-  { label: 'Manga', value: 'manga' },
-];
-
-const imageLinkInput = ref("");
 const router = useRouter();
 const toast = useToast();
 
-const showIssueSection = ref(false);
+const imagesrc = ref(new URL("../assets/dummy.webp", import.meta.url).href);
+const imageLinkInput = ref("");
+const importSource = ref<ImportSource>("comic");
+const sourceOptions = [
+  { label: "Comics", value: "comic" },
+  { label: "Manga", value: "manga" },
+];
+
 const readAll = ref(false);
 const haveAll = ref(false);
 const issues = ref<IssueDraft[]>([]);
+const errors = ref<SeriesFormErrors>({});
+const creating = ref(false);
+const justImported = ref(false);
 
 let isImportingMetronData = false;
 
 const seriesData = ref<Partial<Series>>({
-  title: '',
+  title: "",
   creator: [],
-  description: '',
+  description: "",
+  notes: "",
   genre: [],
   character: [],
-  series_format: '',
+  series_format: "",
   issue_count: 1,
-  thumbnail: '',
-  publisher: {
-    id: null,
-    name: null
-  },
+  thumbnail: "",
+  publisher: null,
   read_count: 0,
   manga: false,
   owned_count: 0,
@@ -93,10 +115,17 @@ const seriesData = ref<Partial<Series>>({
   metron_url: null,
 });
 
+const summaryLine = computed(() => {
+  const title = seriesData.value.title?.trim() || "Untitled series";
+  const n = issues.value.length;
+  const owned = issues.value.filter((issue) => issue.have).length;
+  const read = issues.value.filter((issue) => issue.read).length;
+  return `${title}: ${n} ${n === 1 ? "issue" : "issues"}, ${owned} owned, ${read} read`;
+});
 
 function updateIssuesCount(newCount: number) {
   const currentLength = issues.value.length;
-  
+
   if (newCount > currentLength) {
     for (let i = currentLength; i < newCount; i++) {
       issues.value.push({
@@ -108,7 +137,7 @@ function updateIssuesCount(newCount: number) {
         price: null,
         metron_id: null,
         metron_url: null,
-        cover: null
+        cover: null,
       });
     }
   } else if (newCount < currentLength) {
@@ -116,17 +145,26 @@ function updateIssuesCount(newCount: number) {
   }
 }
 
-function onMetronSelect(seriesDetail, seriesEntities, metronIssues = []) {
+// One short highlight on the filled-in form so the import visibly lands.
+async function pulseImported() {
+  justImported.value = false;
+  await nextTick();
+  justImported.value = true;
+  window.setTimeout(() => { justImported.value = false; }, 1500);
+}
+
+function onMetronSelect(seriesDetail: any, seriesEntities: any, metronIssues: any[] = []) {
   isImportingMetronData = true;
 
-  imageLinkInput.value = seriesDetail.image_first_issue || seriesDetail.image_url || '';
-  
-  const targetCount = Number(seriesDetail.issue_count) || 1;
+  imageLinkInput.value = seriesDetail.image_first_issue || seriesDetail.image_url || "";
+
+  const isManga = importSource.value === "manga";
+  const targetCount = (isManga ? Number(seriesDetail.volume_count) : Number(seriesDetail.issue_count)) || 1;
 
   issues.value = Array.from({ length: targetCount }, (_, index) => {
     const currentNumber = index + 1;
     const matched = metronIssues.find(
-      mi => Number(mi.number) === currentNumber || String(mi.number) === String(currentNumber)
+      (mi) => Number(mi.number) === currentNumber || String(mi.number) === String(currentNumber)
     );
     return {
       title: "",
@@ -138,29 +176,32 @@ function onMetronSelect(seriesDetail, seriesEntities, metronIssues = []) {
       metron_id: matched ? Number(matched.metron_id) : null,
       metron_url: matched ? matched.metron_url : null,
       // Metron only prefills the cover; whatever is in the field at submit time is what gets sent.
-      cover: matched?.image || null
+      cover: matched?.image || null,
     };
   });
 
   seriesData.value = {
     title: seriesDetail.name,
     creator: seriesEntities?.creators || [],
-    description: seriesDetail.desc || '',
+    description: seriesDetail.desc || "",
+    notes: seriesData.value.notes || "",
     genre: seriesDetail.genres || [],
     character: seriesEntities?.characters || [],
-    series_format: '',
-    issue_count: targetCount, 
-    thumbnail: '',
-    publisher: seriesDetail.publisher || { id: null, name: '' },
+    series_format: seriesData.value.series_format || "",
+    issue_count: targetCount,
+    thumbnail: "",
+    publisher: seriesDetail.publisher || null,
     read_count: 0,
-    manga: importSource.value === 'manga',
+    manga: isManga,
     owned_count: 0,
-    metron_id: seriesDetail.metron_id || null,
-    metron_url: seriesDetail.metron_url || null
+    metron_id: isManga ? null : seriesDetail.metron_id || null,
+    metron_url: isManga ? null : seriesDetail.metron_url || null,
   };
-  
+
   haveAll.value = false;
   readAll.value = false;
+  errors.value = {};
+  pulseImported();
 
   queueMicrotask(() => {
     isImportingMetronData = false;
@@ -168,12 +209,12 @@ function onMetronSelect(seriesDetail, seriesEntities, metronIssues = []) {
 }
 
 watch(importSource, (source) => {
-  seriesData.value.manga = source === 'manga';
+  seriesData.value.manga = source === "manga";
 });
 
 watch(
   () => seriesData.value.issue_count,
- (newCount) => {
+  (newCount) => {
     if (isImportingMetronData) return;
 
     const sanitizedCount = Number(newCount) || 0;
@@ -184,29 +225,33 @@ watch(
   { immediate: true }
 );
 
-watch(
-  issues,
-  (newIssues) => {
-    if (!newIssues) return;
-    newIssues.forEach((issue) => {
-      const today = new Date().toISOString().split('T')[0];
+// Clear a field's error as soon as it is fixed.
+watch(() => seriesData.value.title, (title) => {
+  if (errors.value.title && title?.trim()) errors.value = { ...errors.value, title: undefined };
+});
+watch(() => seriesData.value.series_format, (format) => {
+  if (errors.value.series_format && format) errors.value = { ...errors.value, series_format: undefined };
+});
 
-      if (issue.have && !issue.purchaseDate) {
-        issue.purchaseDate = today;
-      }
-      if (issue.read && !issue.readDate) {
-        issue.readDate = today;
-      }
-    });
-  },
-  { deep: true }
-);
+function validate(): boolean {
+  const next: SeriesFormErrors = {};
+  if (!seriesData.value.title?.trim()) next.title = "Give the series a title.";
+  if (!seriesData.value.series_format) next.series_format = "Choose a format.";
+  errors.value = next;
+
+  const firstInvalid = next.title ? "series-title" : next.series_format ? "series-format" : null;
+  if (!firstInvalid) return true;
+
+  const el = document.getElementById(firstInvalid);
+  el?.scrollIntoView({ block: "center", behavior: "smooth" });
+  el?.focus({ preventScroll: true });
+  toast.add({ severity: "warn", summary: "Missing details", detail: "Add a title and choose a format.", life: 3000 });
+  return false;
+}
 
 async function createSeries() {
-  if (!seriesData.value.title?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Title is required.', life: 3000 });
-    return;
-  }
+  if (creating.value || !validate()) return;
+  creating.value = true;
 
   try {
     const owned_count = issues.value.filter((issue) => issue.have).length;
@@ -214,10 +259,11 @@ async function createSeries() {
     seriesData.value.issue_count = issues.value.length;
 
     const payload = {
-      title: seriesData.value.title,
+      title: (seriesData.value.title ?? "").trim(),
       publisher: seriesData.value.publisher || [],
       creator: seriesData.value.creator || [],
       description: seriesData.value.description || "",
+      notes: seriesData.value.notes || "",
       genre: seriesData.value.genre || [],
       character: seriesData.value.character || [],
       series_format: seriesData.value.series_format || "",
@@ -230,20 +276,16 @@ async function createSeries() {
     };
 
     const formData = new FormData();
-    for (const key in payload) {
-      const value = payload[key];
-
+    for (const [key, value] of Object.entries(payload)) {
       if (value === null || value === undefined) {
         formData.append(key, "");
-      }
-      else if (typeof value === "object") {
+      } else if (typeof value === "object") {
         if (!Array.isArray(value)) {
           formData.append(key, JSON.stringify([value]));
         } else {
           formData.append(key, JSON.stringify(value));
         }
-      }
-      else {
+      } else {
         formData.append(key, value.toString());
       }
     }
@@ -266,46 +308,44 @@ async function createSeries() {
     if (seriesId) {
       await addIssues(seriesId);
       toast.add({
-        severity: 'success',
-        summary: 'Series Created',
-        detail: 'Series created successfully.',
-        life: 3000
+        severity: "success",
+        summary: "Series created",
+        detail: `${payload.title} is on the shelf.`,
+        life: 3000,
       });
 
       if (seriesData.value.metron_id) {
         toast.add({
-          severity: 'info',
-          summary: 'Metron Sync Started',
-          detail: 'New creators, characters, and publisher metadata will be synced in the background.',
-          life: 5000
+          severity: "info",
+          summary: "Metron sync started",
+          detail: "New creators, characters and publisher details will be synced in the background.",
+          life: 5000,
         });
       }
 
       router.push({
         name: "SeriesDetail",
-        params: { Link: response.slug, Id: seriesId }
+        params: { Link: response.slug, Id: seriesId },
       });
-
     } else {
-      toast.add({ severity: 'error', summary: 'Failure', detail: 'Series creation failed.', life: 3000 });
+      toast.add({ severity: "error", summary: "Could not create series", detail: "The server did not return a series.", life: 3000 });
     }
   } catch (error: any) {
     console.error("Error creating series:", error);
-    toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Unexpected error.', life: 3000 });
+    toast.add({ severity: "error", summary: "Could not create series", detail: error.message || "Unexpected error.", life: 3000 });
+  } finally {
+    creating.value = false;
   }
 }
 
 async function addIssues(seriesId: number) {
   try {
-    if (!issues.value.length) {
-      console.log("No issues to add.");
-      return;
-    }
+    if (!issues.value.length) return;
 
     const issuePayload = issues.value.map((issue, index) => ({
       number: index + 1,
       title: issue.title?.trim() || String(index + 1),
-      is_owned: issue.have, 
+      is_owned: issue.have,
       is_read: issue.read,
       bought_date: issue.purchaseDate ? new Date(issue.purchaseDate).toISOString() : null,
       read_date: issue.readDate ? new Date(issue.readDate).toISOString() : null,
@@ -315,10 +355,8 @@ async function addIssues(seriesId: number) {
     }));
 
     const response = await IssueService.addIssues(seriesId, issuePayload);
-    console.log("Issues added successfully!");
-
     await uploadIssueCovers(response.data);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding issues:", error.response?.data || error);
   }
 }
@@ -375,16 +413,42 @@ function onImageChange(file: File | string) {
   seriesData.value.thumbnail = file;
   if (file instanceof File) {
     imagesrc.value = URL.createObjectURL(file);
-  } else if (typeof file === 'string') {
+  } else if (typeof file === "string") {
     imagesrc.value = file;
   }
 }
 </script>
 
 <style scoped>
-img {
-  color: red;
-  font-size: x-large;
-  text-align: center;
+/* The import bar: one wide field with the source switch inside it. */
+.import-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 18, 32, 0.6);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.import-bar:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+/* A single wash over the form when an import lands, then gone. */
+.just-imported {
+  border-radius: 12px;
+  animation: import-pulse 1.5s ease-out;
+}
+@keyframes import-pulse {
+  from { background-color: rgba(56, 189, 248, 0.1); }
+  to { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .import-bar { transition: none; }
+  .just-imported { animation: none; }
 }
 </style>

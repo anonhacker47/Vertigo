@@ -2,20 +2,18 @@
   <div v-if="series" :key="series.id" class="select-none">
     <div class="flex w-full flex-col md:h-[calc(100vh-var(--spacing-header))]">
 
-      <nav class="hidden grid-cols-2 items-center gap-4 border-b border-slate-800/60 px-6 py-3 text-sm md:grid">
+      <nav class="hidden grid-cols-2 items-center gap-4 border-b border-slate-600 px-6 py-3 text-sm md:grid">
         <RouterLink v-if="neighbours.previous" :to="seriesRoute(neighbours.previous)" title="Previous series"
           class="justify-self-start flex min-w-0 max-w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-300 transition hover:bg-slate-800 hover:text-white">
-          <i class="pi pi-chevron-left text-xs"></i>
-          <span class="text-slate-500">Previous</span>
-          <span class="truncate">{{ neighbours.previous.title || 'series' }}</span>
+          <i class="pi pi-chevron-left text-xs" :style="accentStyle"></i>
+          <span class="truncate font-semibold" :style="accentStyle">{{ neighbours.previous.title || 'series' }}</span>
         </RouterLink>
         <span v-else></span>
 
         <RouterLink v-if="neighbours.next" :to="seriesRoute(neighbours.next)" title="Next series"
           class="justify-self-end flex min-w-0 max-w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-300 transition hover:bg-slate-800 hover:text-white">
-          <span class="text-slate-500">Next</span>
-          <span class="truncate">{{ neighbours.next.title || 'series' }}</span>
-          <i class="pi pi-chevron-right text-xs"></i>
+          <span class="truncate font-semibold" :style="accentStyle">{{ neighbours.next.title || 'series' }}</span>
+          <i class="pi pi-chevron-right text-xs" :style="accentStyle"></i>
         </RouterLink>
         <span v-else></span>
       </nav>
@@ -128,25 +126,32 @@
             </template>
           </dl>
 
-          <section>
-            <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Description</h2>
-            <p v-if="series.description" class="max-w-prose whitespace-pre-line text-sm leading-relaxed text-slate-200 md:text-base">
+          <section class="textbox" :style="proseStyle">
+            <div class="mb-2 flex items-baseline justify-between gap-4">
+              <h2 class="text-[13px] font-bold text-slate-400">Description</h2>
+              <button v-if="descriptionIsLong" type="button" class="text-[13px] font-bold text-sky-400 hover:text-sky-300"
+                :aria-expanded="descriptionOpen" @click="descriptionOpen = !descriptionOpen">
+                {{ descriptionOpen ? "Show less" : "Read more" }}
+              </button>
+            </div>
+            <p v-if="series.description" class="textbox__text max-w-prose whitespace-pre-line text-[15px] leading-relaxed md:text-base"
+              :class="{ 'line-clamp-6': descriptionIsLong && !descriptionOpen }" style="text-wrap: pretty" :style="accentStyle">
               {{ series.description }}
             </p>
             <p v-else class="text-sm text-slate-400">No description yet.</p>
           </section>
 
-          <section>
-            <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Notes</h2>
-            <p v-if="series.notes" class="max-w-prose whitespace-pre-line text-sm leading-relaxed text-slate-200 md:text-base">
+          <section class="textbox" :style="proseStyle">
+            <h2 class="mb-2 text-[13px] font-bold text-slate-400">Notes</h2>
+            <p v-if="series.notes" class="textbox__text max-w-prose whitespace-pre-line text-[15px] leading-relaxed md:text-base" style="text-wrap: pretty">
               {{ series.notes }}
             </p>
-            <p v-else class="text-sm text-slate-400">No notes yet.</p>
+            <p v-else class="text-sm text-slate-400" :style="accentStyle">No notes yet.</p>
           </section>
         </section>
 
         <section class="relative flex w-full flex-col items-center border-slate-700 md:w-1/2 md:basis-1/2 md:border-l">
-          <h1 class="px-4 py-2 text-3xl font-bold text-slate-300">Issues</h1>
+          <h1 class="px-4 py-2 text-3xl font-bold text-slate-300" :style="accentStyle">Issues</h1>
           <button type="button" @click="toggleEditMode" :title="editMode ? 'Done editing' : 'Edit issues'"
             class="absolute right-3 top-1 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-2 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400"
             :class="editMode ? 'border-green-700' : 'border-transparent'">
@@ -296,6 +301,18 @@ const themecolor = ref<string | null>(null);
 const image = ref<string | null>(null);
 
 const accentStyle = computed(() => (themecolor.value ? { color: `rgb${themecolor.value}` } : {}));
+// Body text in the boxes carries a light tint of the series colour, kept readable by mixing into slate.
+const proseStyle = computed(() => {
+  if (!themecolor.value) return {};
+  const channels = String(themecolor.value).replace(/[()]/g, "");
+  return { "--prose-tint": `color-mix(in srgb, rgb(${channels}) 28%, #e2e8f0)` };
+});
+
+const descriptionOpen = ref(false);
+const descriptionIsLong = computed(() => {
+  const text = series.value?.description ?? "";
+  return text.length > 600 || text.split("\n").length > 6;
+});
 const accentBorderStyle = computed(() => (themecolor.value ? { borderColor: `rgb${themecolor.value}` } : {}));
 const tagColor = computed(() => themecolor.value || "(255,255,255)");
 const iconColor = computed(() => (themecolor.value ? `rgb${themecolor.value}` : "rgb(203, 213, 225)"));
@@ -476,3 +493,15 @@ onUnmounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.textbox {
+  padding: 14px 16px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1220;
+}
+.textbox__text {
+  color: var(--prose-tint, #e2e8f0);
+}
+</style>

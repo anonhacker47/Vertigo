@@ -1,21 +1,20 @@
 <template>
     <div class="grid gap-4 md:grid-cols-2">
-        <section v-for="group in groups" :key="group.label" class="rounded-xl border border-base-300 p-4">
-            <header class="mb-3 flex items-baseline justify-between gap-2">
-                <h4 class="text-sm font-semibold">{{ group.label }}</h4>
-                <span class="text-xs tabular-nums opacity-60">{{ group.items.length }}</span>
+        <section v-for="group in groups" :key="group.label">
+            <header class="mb-2 flex items-baseline justify-between gap-2">
+                <h4 class="text-[13px] font-bold text-slate-400">{{ group.label }}</h4>
+                <span class="text-xs font-bold tabular-nums text-slate-500">{{ group.items.length }}</span>
             </header>
 
-            <div v-if="group.items.length" class="flex max-h-40 flex-wrap gap-2 overflow-y-auto pr-1">
-                <span v-for="item in group.items" :key="item.key"
-                    class="rounded-md border border-base-300 bg-base-200 px-2.5 py-1 text-sm leading-tight">
+            <div v-if="group.items.length" class="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                <span v-for="item in group.items" :key="item.key" class="fm-chip fm-chip--static">
                     {{ item.value }}
                 </span>
             </div>
-            <p v-else class="text-sm opacity-60">None listed on {{ source }}.</p>
+            <p v-else class="fm-hint">None listed on {{ source }}.</p>
         </section>
 
-        <p v-if="note" class="text-xs opacity-60 md:col-span-2">{{ note }}</p>
+        <p v-if="note" class="fm-hint md:col-span-2">{{ note }}</p>
     </div>
 </template>
 

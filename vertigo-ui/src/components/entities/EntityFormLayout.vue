@@ -4,7 +4,7 @@
     </h1>
   </div>
   <div class="flex flex-col md:flex-row items-center md:items-start justify-center p-6 gap-10 w-full">
-    <div class="w-[20rem] max-h-[36rem]">
+    <div class="w-[18rem] max-w-full">
       <ImageUploader v-model="imageSrc" @image-change="onImageChange" />
     </div>
 

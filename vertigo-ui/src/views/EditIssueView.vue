@@ -10,7 +10,7 @@
     class="z-0 flex items-start justify-center flex-1 gap-6 md:gap-12 md:flex-row flex-col px-4 pb-8">
 
     <div class="w-[24rem] max-w-full flex flex-col gap-3">
-      <div class="h-[38rem]">
+      <div>
         <ImageUploader v-model="imagesrc" @image-change="onImageChange" />
       </div>
       <p class="text-xs text-center text-slate-400">{{ coverStatusText }}</p>

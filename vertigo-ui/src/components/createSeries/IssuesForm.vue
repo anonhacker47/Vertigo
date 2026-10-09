@@ -1,217 +1,423 @@
 <template>
-    <div v-if="showIssueSection" class="card h-full w-full flex flex-col gap-6 shadow-2xl bg-base-100 p-8">
-        <div class="flex gap-4">
-            <label class="label" for="issue-count">Number of Issues</label>
-            <input id="issue-count" type="number" v-model.number="seriesData.issue_count" min="1"
-                class="input input-bordered" />
+  <section class="fm-section" aria-labelledby="issues-title">
+    <div class="fm-section__head">
+      <div>
+        <h2 id="issues-title" class="fm-section__title">{{ manga ? "Volumes" : "Issues" }}</h2>
+        <p class="fm-hint mt-1">{{ summary }}</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <RunStrip v-if="issues.length" :run="run" :max="32" />
+        <div class="stepper" role="group" :aria-label="`Number of ${unitPlural}`">
+          <button type="button" class="fm-iconbtn fm-iconbtn--sm border-0" :aria-label="`One fewer ${unit}`" :disabled="issueCount <= 1" @click="setCount(issueCount - 1)">
+            <i class="pi pi-minus" style="font-size: 10px"></i>
+          </button>
+          <input
+            :value="issueCount"
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            class="stepper__input"
+            :aria-label="`Number of ${unitPlural}`"
+            @change="setCount(Number(($event.target as HTMLInputElement).value))"
+          />
+          <button type="button" class="fm-iconbtn fm-iconbtn--sm border-0" :aria-label="`One more ${unit}`" @click="setCount(issueCount + 1)">
+            <i class="pi pi-plus" style="font-size: 10px"></i>
+          </button>
         </div>
-
-        <div class="flex flex-col md:flex-row gap-4 md:gap-16 justify-around">
-            <div class="flex gap-4 w-full">
-                <label class="label cursor-pointer flex items-center gap-4"
-                    :class="haveAll ? 'text-primary' : 'text-white'">
-                    <span>Have All?</span>
-                    <input type="checkbox" v-model="haveAll" @change="toggleAll('have')" class="checkbox"
-                        :class="haveAll ? 'checkbox-primary' : ''" />
-                </label>
-            </div>
-            <div class="w-full">
-                <label class="label cursor-pointer flex items-center gap-4"
-                    :class="readAll ? 'text-accent' : 'text-white'">
-                    <span>Read Already?</span>
-                    <input type="checkbox" v-model="readAll" @change="toggleAll('read')" class="checkbox"
-                        :class="readAll ? 'checkbox-accent' : ''" />
-                </label>
-            </div>
-        </div>
-
-        <div class="grid place-items-center w-full md:gap-6 md:max-h-[28rem] overflow-y-auto overflow-x-hidden"
-            style="grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1rem;">
-            <div v-for="(issue, index) in issues" :key="index"
-                class="relative card border w-full md:w-fit shadow-md rounded-md flex flex-col items-center"
-                :class="{ 'border-primary': issue.have, 'border-accent': issue.read }">
-
-                <div class="relative w-full md:h-52 h-40">
-                    <img :src="coverPreview(issue)" alt="Issue Thumbnail"
-                        class="w-full h-full object-cover rounded-md transition duration-300"
-                        :class="hasOwnCover(issue) ? 'brightness-100' : 'brightness-50 saturate-50 hover:brightness-75'" />
-                    <p
-                        class="absolute inset-0 flex items-center justify-center text-white text-3xl font-bold bg-black/50 rounded-md">
-                        #{{ index + 1 }}</p>
-         
-                    <button v-if="hasOwnCover(issue)" type="button" @click="clearCover(issue)"
-                        title="Use series cover"
-                        class="absolute top-1 right-1 btn btn-xs btn-circle border-0 bg-black/70 text-white hover:bg-error">
-                        &times;
-                    </button>
-                </div>
-
-                <div class="flex flex-col w-full px-4 pt-4 gap-1 text-sm md:text-md">
-                    <label><span class="text-white">Title</span></label>
-                    <input type="text" v-model.trim="issue.title" maxlength="280" :placeholder="`#${index + 1}`"
-                        class="input input-bordered w-full" />
-                </div>
-
-                <div class="flex flex-col w-full px-4 pt-3 gap-1 text-sm md:text-md">
-                    <label class="flex items-baseline justify-between">
-                        <span class="text-white">Cover</span>
-                        <span class="text-xs opacity-60">optional</span>
-                    </label>
-                    <input type="file" accept="image/*" :ref="(el) => setFileInputRef(el, index)"
-                        @change="onCoverFile(issue, $event)"
-                        class="file-input file-input-bordered file-input-sm w-full" />
-                    <input type="text" :value="typeof issue.cover === 'string' ? issue.cover : ''"
-                        @input="onCoverUrl(issue, $event)" placeholder="or paste image URL"
-                        class="input input-bordered input-sm w-full" />
-                </div>
-
-                <div class="flex w-full justify-around gap-2 text-sm md:text-md md:gap-4 p-4">
-                    <label class="cursor-pointer flex items-center gap-2"
-                        :class="issue.have ? 'text-primary' : 'text-white'">
-                        <span>Have</span>
-                        <input type="checkbox" v-model="issue.have" class="checkbox"
-                            :class="issue.have ? 'checkbox-primary' : ''" />
-                    </label>
-                    <label class="cursor-pointer flex items-center gap-2"
-                        :class="issue.read ? 'text-green-500' : 'text-white'">
-                        <span>Read</span>
-                        <input type="checkbox" v-model="issue.read" class="checkbox"
-                            :class="issue.read ? 'checkbox-accent' : ''" />
-                    </label>
-                </div>
-
-                <div class="flex flex-col w-full pb-4 px-4 gap-2 text-sm md:text-md"
-                    v-if="issue.have || issue.read">
-                    <label class="flex flex-col" v-if="issue.have">
-                        <span class="text-white">Purchase Date</span>
-                        <input type="date" v-model="issue.purchaseDate" class="input input-bordered w-full" />
-                    </label>
-                    <label class="flex flex-col" v-if="issue.read">
-                        <span class="text-white">Read Date</span>
-                        <input type="date" v-model="issue.readDate" class="input input-bordered w-full" />
-                    </label>
-                    <label class="flex flex-col" v-if="issue.have">
-                        <span class="text-white">Price</span>
-                        <input type="number" v-model="issue.price" class="input input-bordered w-full"
-                            step="0.01" />
-                    </label>
-                </div>
-
-                <div class="flex flex-col w-full pb-4 px-4 gap-2 text-sm md:text-md">
-                    <label><span class="text-white">Metron ID</span></label>
-                    <input type="number" v-model.number="issue.metron_id" class="input input-bordered w-full" />
-
-                    <label><span class="text-white">Metron URL</span></label>
-                    <input type="text" v-model="issue.metron_url" class="input input-bordered w-full" />
-                </div>
-            </div>
-        </div>
-
-        <div class="flex justify-between mt-6">
-            <button class="btn btn-danger" @click="$emit('cancel')">Go Back / Cancel</button>
-            <button class="btn btn-primary" :disabled="seriesData.issue_count < 1"
-                @click.prevent="$emit('submit')">Create Series</button>
-        </div>
+      </div>
     </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <button type="button" class="fm-toggle fm-toggle--own" :aria-pressed="haveAll" @click="setAll('have', !haveAll)">Own all</button>
+      <button type="button" class="fm-toggle fm-toggle--read" :aria-pressed="readAll" @click="setAll('read', !readAll)">Read all</button>
+      <p class="fm-hint basis-full sm:ml-auto sm:basis-auto">Marking {{ aUnit }} owned or read stamps today's date and opens the row so you can change it.</p>
+    </div>
+
+    <ol class="issue-list mt-4">
+      <li v-for="(issue, index) in visibleIssues" :key="index" class="issue" :class="{ 'issue--own': issue.have, 'issue--read': issue.read }">
+        <div class="issue__row">
+          <span class="issue__num">{{ index + 1 }}</span>
+
+          <button
+            type="button"
+            class="issue__cover"
+            :title="hasOwnCover(issue) ? `Replace this ${unit}'s cover` : `Add a cover for this ${unit}`"
+            @click="fileInputs.get(index)?.click()"
+          >
+            <img :src="coverPreview(issue)" alt="" :class="{ 'opacity-40': !hasOwnCover(issue) }" />
+            <i class="pi pi-camera"></i>
+          </button>
+          <input
+            type="file"
+            accept="image/*"
+            class="sr-only"
+            tabindex="-1"
+            :ref="(el) => setFileInputRef(el, index)"
+            @change="onCoverFile(issue, $event)"
+          />
+
+          <input
+            v-model.trim="issue.title"
+            type="text"
+            maxlength="280"
+            class="fm-input issue__title"
+            :placeholder="`${unitLabel} ${index + 1}`"
+            :aria-label="`Title of ${unit} ${index + 1}`"
+          />
+
+          <div class="issue__actions">
+            <button type="button" class="fm-toggle fm-toggle--own fm-toggle--sm" :aria-pressed="issue.have" @click="toggleFlag(issue, index, 'have')">Own</button>
+            <button type="button" class="fm-toggle fm-toggle--read fm-toggle--sm" :aria-pressed="issue.read" @click="toggleFlag(issue, index, 'read')">Read</button>
+            <button
+              type="button"
+              class="fm-iconbtn fm-iconbtn--sm"
+              :aria-expanded="isOpen(index)"
+              :aria-label="`More details for ${unit} ${index + 1}`"
+              @click="toggleOpen(index)"
+            >
+              <i class="pi pi-chevron-down issue__chev" :class="{ 'issue__chev--open': isOpen(index) }" style="font-size: 11px"></i>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="isOpen(index)" class="issue__details grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <label v-if="issue.have">
+            <span class="fm-label">Bought on</span>
+            <input v-model="issue.purchaseDate" type="date" class="fm-input" />
+          </label>
+          <label v-if="issue.have">
+            <span class="fm-label">Price</span>
+            <input v-model.number="issue.price" type="number" min="0" step="0.01" placeholder="0.00" class="fm-input" />
+          </label>
+          <label v-if="issue.read">
+            <span class="fm-label">Read on</span>
+            <input v-model="issue.readDate" type="date" class="fm-input" />
+          </label>
+          <label>
+            <span class="fm-label">Cover link</span>
+            <input :value="coverLink(issue)" type="text" placeholder="https://" class="fm-input" @input="onCoverUrl(issue, $event)" />
+          </label>
+          <template v-if="!manga">
+            <label>
+              <span class="fm-label">Metron ID</span>
+              <input v-model.number="issue.metron_id" type="number" class="fm-input" />
+            </label>
+            <label>
+              <span class="fm-label">Metron URL</span>
+              <input v-model="issue.metron_url" type="text" placeholder="https://metron.cloud/issue/" class="fm-input" />
+            </label>
+          </template>
+          <p v-if="hasOwnCover(issue)" class="fm-hint sm:col-span-2 lg:col-span-3">
+            {{ isFileCover(issue) ? `Cover: ${coverFileName(issue)}.` : "Cover from the link above." }}
+            <button type="button" class="font-bold text-sky-400 hover:text-sky-300" @click="clearCover(issue)">Use the series cover instead</button>
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div v-if="issues.length > visibleIssues.length" class="mt-3">
+      <button type="button" class="text-sm font-bold text-sky-400 hover:text-sky-300" @click="showAll = true">
+        Show all {{ issues.length }} {{ unitPlural }}
+      </button>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, watch, type ComponentPublicInstance } from "vue";
+import { computed, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
 import type { IssueDraft } from "@/types/issue.types";
+import type { RunTick } from "@/types/insights.types";
+import RunStrip from "@/components/insights/RunStrip.vue";
+
+const INITIAL_ROWS = 24;
 
 const props = defineProps<{
-    showIssueSection: boolean;
-    seriesData: any;
-    imagesrc: string;
+  imagesrc: string;
+  manga?: boolean;
 }>();
 
-defineEmits(["cancel", "submit"]);
+const readAll = defineModel<boolean>("readAll", { default: false });
+const haveAll = defineModel<boolean>("haveAll", { default: false });
+const issues = defineModel<IssueDraft[]>("issues", { default: () => [] });
+const issueCount = defineModel<number>("issueCount", { default: 1 });
 
-// Two-way bound models wired straight to parent components state
-const readAll = defineModel<boolean>('readAll', { default: false });
-const haveAll = defineModel<boolean>('haveAll', { default: false });
-const issues = defineModel<IssueDraft[]>('issues', { default: () => [] });
+const showAll = ref(false);
+const openRows = ref(new Set<number>());
 
-// Preview object URLs for File covers, keyed by the File so each is created once and revoked once dropped.
 const objectUrls = new Map<File, string>();
-// Native file inputs per card, so they can be blanked when a cover becomes a URL or is cleared.
 const fileInputs = new Map<number, HTMLInputElement>();
 
-function setFileInputRef(el: Element | ComponentPublicInstance | null, index: number) {
-    if (el instanceof HTMLInputElement) fileInputs.set(index, el);
-    else fileInputs.delete(index);
+const unit = computed(() => (props.manga ? "volume" : "issue"));
+const unitPlural = computed(() => `${unit.value}s`);
+const unitLabel = computed(() => (props.manga ? "Volume" : "Issue"));
+const aUnit = computed(() => (props.manga ? "a volume" : "an issue"));
+
+const visibleIssues = computed(() => (showAll.value ? issues.value : issues.value.slice(0, INITIAL_ROWS)));
+
+const run = computed<RunTick[]>(() =>
+  issues.value.map((issue, i) => ({ number: i + 1, state: issue.read ? "read" : issue.have ? "owned" : "missing" }))
+);
+
+const summary = computed(() => {
+  const n = issues.value.length;
+  const owned = issues.value.filter((i) => i.have).length;
+  const read = issues.value.filter((i) => i.read).length;
+  return `${n} ${n === 1 ? unit.value : unitPlural.value}, ${owned} owned, ${read} read`;
+});
+
+function setCount(next: number) {
+  issueCount.value = Math.max(1, Math.floor(Number(next) || 1));
 }
 
+function setAll(type: "have" | "read", value: boolean) {
+  if (type === "have") haveAll.value = value;
+  else readAll.value = value;
+  issues.value.forEach((issue) => { issue[type] = value; });
+}
+
+// Switching Own or Read on opens the row so the stamped date (and price) are right there to change.
+function toggleFlag(issue: IssueDraft, index: number, type: "have" | "read") {
+  issue[type] = !issue[type];
+  if (issue[type]) openRow(index);
+}
+
+const isOpen = (index: number) => openRows.value.has(index);
+function openRow(index: number) {
+  if (openRows.value.has(index)) return;
+  const next = new Set(openRows.value);
+  next.add(index);
+  openRows.value = next;
+}
+function toggleOpen(index: number) {
+  const next = new Set(openRows.value);
+  if (next.has(index)) next.delete(index);
+  else next.add(index);
+  openRows.value = next;
+}
+
+function setFileInputRef(el: Element | ComponentPublicInstance | null, index: number) {
+  if (el instanceof HTMLInputElement) fileInputs.set(index, el);
+  else fileInputs.delete(index);
+}
+
+const isFileCover = (issue: IssueDraft) => issue.cover instanceof File;
+const coverFileName = (issue: IssueDraft) => (issue.cover instanceof File ? issue.cover.name : "");
+const coverLink = (issue: IssueDraft) => (typeof issue.cover === "string" ? issue.cover : "");
+
 function hasOwnCover(issue: IssueDraft): boolean {
-    return issue.cover instanceof File || (typeof issue.cover === "string" && issue.cover.trim() !== "");
+  return issue.cover instanceof File || (typeof issue.cover === "string" && issue.cover.trim() !== "");
 }
 
 function coverPreview(issue: IssueDraft): string {
-    const cover = issue.cover;
-    if (cover instanceof File) {
-        let url = objectUrls.get(cover);
-        if (!url) {
-            url = URL.createObjectURL(cover);
-            objectUrls.set(cover, url);
-        }
-        return url;
+  const cover = issue.cover;
+  if (cover instanceof File) {
+    let url = objectUrls.get(cover);
+    if (!url) {
+      url = URL.createObjectURL(cover);
+      objectUrls.set(cover, url);
     }
-    if (typeof cover === "string" && cover.trim()) return cover.trim();
-    return props.imagesrc;
+    return url;
+  }
+  if (typeof cover === "string" && cover.trim()) return cover.trim();
+  return props.imagesrc;
 }
 
 function onCoverFile(issue: IssueDraft, event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) issue.cover = file;
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (file) issue.cover = file;
 }
 
 function onCoverUrl(issue: IssueDraft, event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    issue.cover = value === "" ? null : value;
+  const value = (event.target as HTMLInputElement).value;
+  issue.cover = value === "" ? null : value;
 }
 
 function clearCover(issue: IssueDraft) {
-    issue.cover = null;
+  issue.cover = null;
 }
 
 function releaseUnusedObjectUrls(current: IssueDraft[]) {
-    const live = new Set<File>();
-    current.forEach((issue) => {
-        if (issue.cover instanceof File) live.add(issue.cover);
-    });
-    for (const [file, url] of objectUrls) {
-        if (!live.has(file)) {
-            URL.revokeObjectURL(url);
-            objectUrls.delete(file);
-        }
+  const live = new Set<File>();
+  current.forEach((issue) => {
+    if (issue.cover instanceof File) live.add(issue.cover);
+  });
+  for (const [file, url] of objectUrls) {
+    if (!live.has(file)) {
+      URL.revokeObjectURL(url);
+      objectUrls.delete(file);
     }
+  }
 }
 
 watch(issues, (val) => {
-    if (!val) return;
-    const today = new Date().toISOString().split("T")[0];
-    val.forEach((issue) => {
-        if (issue.have && !issue.purchaseDate) issue.purchaseDate = today;
-        if (issue.read && !issue.readDate) issue.readDate = today;
-    });
+  if (!val) return;
+  const today = new Date().toISOString().split("T")[0];
+  val.forEach((issue) => {
+    if (issue.have && !issue.purchaseDate) issue.purchaseDate = today;
+    if (issue.read && !issue.readDate) issue.readDate = today;
+  });
 
-    releaseUnusedObjectUrls(val);
-    // A file input should only show a name while the cover is that File.
-    fileInputs.forEach((input, index) => {
-        if (!(val[index]?.cover instanceof File) && input.value) input.value = "";
-    });
+  releaseUnusedObjectUrls(val);
+  // A file input should only hold a file while the cover is that File.
+  fileInputs.forEach((input, index) => {
+    if (!(val[index]?.cover instanceof File) && input.value) input.value = "";
+  });
 }, { deep: true });
 
 onBeforeUnmount(() => {
-    objectUrls.forEach((url) => URL.revokeObjectURL(url));
-    objectUrls.clear();
+  objectUrls.forEach((url) => URL.revokeObjectURL(url));
+  objectUrls.clear();
 });
-
-function toggleAll(type: "read" | "have") {
-    if (!issues.value) return;
-
-    issues.value.forEach((issue) => {
-        issue[type] = type === "read" ? readAll.value : haveAll.value;
-    });
-}
 </script>
+
+<style scoped>
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1220;
+}
+.stepper__input {
+  width: 3.25rem;
+  border: 0;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.stepper__input::-webkit-inner-spin-button,
+.stepper__input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.stepper__input:focus-visible {
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px #38bdf8;
+}
+
+.issue-list {
+  list-style: none;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1220;
+}
+.issue {
+  position: relative;
+}
+.issue + .issue {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.issue::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+}
+.issue--own::before { background: #38bdf8; }
+.issue--read::before { background: #4ade80; }
+.issue--own.issue--read::before { background: linear-gradient(to bottom, #38bdf8 50%, #4ade80 50%); }
+
+.issue__row {
+  display: grid;
+  grid-template-columns: 2rem 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 12px;
+}
+@media (min-width: 640px) {
+  .issue__row {
+    grid-template-columns: 2rem 2rem minmax(0, 1fr) auto;
+  }
+}
+.issue__num {
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.issue__cover {
+  position: relative;
+  width: 2rem;
+  height: 3rem;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #1e293b;
+  cursor: pointer;
+}
+.issue__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.issue__cover i {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: #fff;
+  background: rgba(11, 18, 32, 0.6);
+  opacity: 0;
+}
+.issue__cover:hover i,
+.issue__cover:focus-visible i {
+  opacity: 1;
+}
+.issue__cover:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 1px;
+}
+/* The title sits quietly in the row until it is hovered or focused. */
+.issue__title {
+  min-height: 36px;
+  border-color: transparent;
+  background: transparent;
+}
+.issue__title:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.issue__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  grid-column: 2 / -1;
+}
+@media (min-width: 640px) {
+  .issue__actions {
+    grid-column: auto;
+  }
+}
+.issue__chev {
+  transition: transform 0.15s ease;
+}
+.issue__chev--open {
+  transform: rotate(180deg);
+}
+.issue__details {
+  padding: 10px 12px 14px 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+@media (min-width: 640px) {
+  .issue__details {
+    padding-left: 5.25rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .issue__chev { transition: none; }
+}
+</style>

@@ -32,6 +32,7 @@ def new():
     # Parse FormData fields
     title = request.form.get('title', '')
     description = request.form.get('description', '')
+    notes = request.form.get('notes', '')
     series_format = request.form.get('series_format', '')
     issue_count = int(request.form.get('issue_count', 0))
     read_count = int(request.form.get('read_count', 0))
@@ -45,6 +46,7 @@ def new():
         user=user,
         title=title,
         description=description,
+        notes=notes,
         series_format=series_format,
         issue_count=issue_count,
         read_count=read_count,
@@ -184,6 +186,9 @@ def update_series(id):
 
     if 'description' in form:
         series.description = form.get('description', '').strip()
+
+    if 'notes' in form:
+        series.notes = form.get('notes', '').strip()
 
     if 'series_format' in form:
         series.series_format = form.get('series_format', '').strip()

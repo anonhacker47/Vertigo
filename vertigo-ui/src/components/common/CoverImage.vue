@@ -8,7 +8,7 @@
         loading="lazy"
         decoding="async"
         class="absolute inset-0 h-full w-full object-cover"
-        @error="failed = true"
+        @error="onError"
       />
       <div
         v-else
@@ -40,8 +40,15 @@ const props = withDefaults(
   { src: null, aspect: true, depth: "md", interactive: true, initialsClass: "text-2xl" }
 );
 
+const emit = defineEmits<{ (e: "error"): void }>();
+
 const failed = ref(false);
 watch(() => props.src, () => { failed.value = false; });
+
+function onError() {
+  failed.value = true;
+  emit("error");
+}
 </script>
 
 <style scoped>

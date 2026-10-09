@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./assets/forms.css" layer(components);
 @plugin "daisyui" {
   themes: night;
 }
