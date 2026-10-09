@@ -1,7 +1,24 @@
 import { MetronIdentifiable } from "./metron_identifiable.types";
 
+export interface SeriesEntityRef {
+  id: number;
+  title: string;
+  slug: string;
+}
+
+export interface SeriesNeighbour {
+  id: number;
+  slug: string;
+  title?: string;
+}
+
+export interface SeriesNeighbours {
+  previous: SeriesNeighbour | null;
+  next: SeriesNeighbour | null;
+}
+
 export interface Series extends MetronIdentifiable {
-  character: string[];
+  character: SeriesEntityRef[];
   description: string;
   dominant_color: [number, number, number];
   genre: string[];
@@ -31,7 +48,7 @@ export interface Series extends MetronIdentifiable {
     username: string;
   };
   user_rating: number;
-  creator: string[];
+  creator: SeriesEntityRef[];
   metron_id?: number | null;
   metron_url?: string | null;
 }

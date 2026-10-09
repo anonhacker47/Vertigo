@@ -386,6 +386,7 @@ def neighbors(id):
         return {
             "id": item.id,
             "slug": item.slug,
+            "title": item.title,
         }
 
     return jsonify({

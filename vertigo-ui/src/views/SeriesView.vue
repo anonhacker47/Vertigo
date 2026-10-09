@@ -1,243 +1,209 @@
 <template>
-  <div v-if="series" :key="series.id" class="bg-no-repeat select-none bg-center bg-cover">
-    <div class="flex flex-col md:h-[calc(100vh-var(--spacing-header))] w-full">
-      <div
-        class="flex flex-col md:flex-row md:justify-between justify-center items-center py-4 px-4 border-b gap-4 border-slate-700 flex-wrap">
-        <div class="flex flex-1 justify-center md:justify-start items-center px-5 wrap-break-word">
-          <div class="tooltip tooltip-success tooltip-bottom" :data-tip="series.title">
-            <span :v-tooltip.bottom="series.title" :style="themecolor ? { color: `rgb${themecolor}` } : {}"
-              class="font-bold xl:max-w-xl lg:max-w-md max-w-2xs block text-wrap md:text-nowrap text-center text-2xl md:truncate text-primary">
-              {{ series.title }}
-            </span>
-          </div>
-        </div>
-        <div class="flex flex-1 justify-center items-center md:w-1/4 gap-5">
-          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Number of Issues">
-            <div class="flex flex-row items-center">
-              <img class="" src="../assets/wishlist.svg" alt="" width="28" height="28" />
-              <p class="pl-2 text-primary font-bold text-lg">
-                {{ issueCount.total_count }}
-              </p>
-            </div>
-          </div>
-          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Collected">
-            <div class="flex flex-row items-center">
-              <img src="../assets/collection.svg" alt="" width="28" height="28" />
-              <p class="pl-2 text-primary font-bold text-lg">
-                {{ issueCount.owned_count + "/" + issueCount.total_count }}
-              </p>
-            </div>
-          </div>
-          <div class="tooltip tooltip-success tooltip-bottom" data-tip="Read">
-            <div class="flex flex-row items-center">
-              <img src="../assets/read.svg" alt="" width="28" height="28" />
-              <p class="pl-2 text-primary font-bold text-lg">
-                {{ issueCount.read_count + "/" + issueCount.total_count }}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="flex flex-1 justify-center md:justify-end items-center w-1/3">
-          <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
-        </div>
-        <div class="md:hidden flex w-full flex-row justify-between ">
-          <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
-            class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center"
-            :style="`color: rgb${themecolor}`">
-            <i class="pi pi-chevron-left"></i>
-            <span>Previous Series </span>
-          </RouterLink>
+  <div v-if="series" :key="series.id" class="select-none">
+    <div class="flex w-full flex-col md:h-[calc(100vh-var(--spacing-header))]">
 
-          <div v-else></div>
+      <nav class="hidden grid-cols-2 items-center gap-4 border-b border-slate-800/60 px-6 py-3 text-sm md:grid">
+        <RouterLink v-if="neighbours.previous" :to="seriesRoute(neighbours.previous)" title="Previous series"
+          class="justify-self-start flex min-w-0 max-w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-300 transition hover:bg-slate-800 hover:text-white">
+          <i class="pi pi-chevron-left text-xs"></i>
+          <span class="text-slate-500">Previous</span>
+          <span class="truncate">{{ neighbours.previous.title || 'series' }}</span>
+        </RouterLink>
+        <span v-else></span>
 
-          <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
-            class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center"
-            :style="`color: rgb${themecolor}`">
-            <span>Next Series </span>
-            <i class="pi pi-chevron-right"></i>
-          </RouterLink>
+        <RouterLink v-if="neighbours.next" :to="seriesRoute(neighbours.next)" title="Next series"
+          class="justify-self-end flex min-w-0 max-w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-300 transition hover:bg-slate-800 hover:text-white">
+          <span class="text-slate-500">Next</span>
+          <span class="truncate">{{ neighbours.next.title || 'series' }}</span>
+          <i class="pi pi-chevron-right text-xs"></i>
+        </RouterLink>
+        <span v-else></span>
+      </nav>
 
-        </div>
-      </div>
+      <div class="flex flex-1 flex-col md:flex-row md:overflow-hidden">
 
-      <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
-        <div class="flex flex-col relative pr-2 md:basis-1/2 justify-between md:w-1/2 w-full md:overflow-y-auto">
-          <div class="flex flex-col md:flex-row pt-8 basis-1/2  relative gap-4">
-            <div class="flex flex-col basis-1/3 px-28 h-fit md:px-4">
-              <img v-if="image && image !== 'noimage'" :src="image" alt=""
-                class="rounded-lg border-2 border-primary max-h-100 object-cover w-full h-full"
-                :style="themecolor ? { borderColor: `rgb${themecolor}` } : {}" />
+        <section class="flex w-full flex-col gap-5 px-6 py-6 md:w-1/2 md:basis-1/2 md:overflow-y-auto md:px-8 md:pb-10">
 
+          <div class="flex flex-col gap-6 xl:flex-row xl:gap-7">
+            <div class="mx-auto flex w-44 shrink-0 flex-col gap-2.5 xl:mx-0">
+              <img v-if="image && image !== 'noimage'" :src="image" :alt="`${series.title} cover`"
+                class="w-full rounded-lg border-2 border-primary object-cover" :style="accentBorderStyle" />
               <div v-else
-                class="w-full border-2 rounded-lg h-full flex bg-slate-900 items-center justify-center p-4 text-center">
-                <span class="text-4xl text-primary font-semibold opacity-70">
+                class="flex aspect-[2/3] w-full items-center justify-center rounded-lg border-2 border-primary bg-slate-900 p-4 text-center"
+                :style="accentBorderStyle">
+                <span class="break-words text-2xl font-semibold opacity-70" :style="accentStyle">
                   {{ series.title }}
                 </span>
               </div>
-              <div class="flex flex-col gap-2 mt-2">
-                <RouterLink :to="{
-                  path: '/collection',
-                  query: { series_format: series.series_format }
-                }"
-                  class="flex flex-row items-center justify-center gap-2 px-2 py-1 rounded-sm text-slate-300 bg-slate-800"
-                  :style="`border-color: rgb${themecolor}; color: rgb${themecolor}`">
-                  <p class="text-sm font-bold">
-                    {{ series.series_format }}
-                  </p>
-                </RouterLink>
 
-                <a v-if="series.metron_url" :href="series.metron_url" target="_blank" rel="noopener noreferrer"
-                  class="flex flex-row items-center justify-center border border-slate-600 gap-2 px-2 py-1  rounded-sm text-slate-300 bg-slate-900 hover:bg-slate-700 transition"
-                  :style="`color: rgb${themecolor}`">
-                  <p class="text-sm font-semibold flex items-center gap-2">
-                    View on Metron
-                    <i class="pi pi-external-link text-sm"></i>
-                  </p>
-                </a>
-                <p v-if="series.metron_id" class="mt-1 text-sm text-slate-400 text-center select-all">
-                  Metron ID: {{ series.metron_id }}
-                </p>
+              <a v-if="series.metron_url" :href="series.metron_url" target="_blank" rel="noopener noreferrer"
+                class="flex items-center justify-center gap-2 rounded-sm border border-slate-600 bg-slate-900 px-2 py-1 text-sm font-semibold text-slate-300 transition hover:bg-slate-700"
+                :style="accentStyle">
+                View on Metron
+                <i class="pi pi-external-link text-sm"></i>
+              </a>
+              <p v-if="series.metron_id" class="select-all text-center text-sm text-slate-400">
+                Metron ID: {{ series.metron_id }}
+              </p>
+            </div>
+
+            <div class="flex min-w-0 flex-1 flex-col gap-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <h1 class="break-words text-3xl font-extrabold leading-[1.15] tracking-tight text-primary xl:text-4xl"
+                    :style="accentStyle">
+                    {{ series.title }}
+                  </h1>
+                  <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                    <TagLink v-if="series.publisher" :label="series.publisher.title"
+                      :to="`/publisher/${series.publisher.id}-${series.publisher.slug}`" :color="tagColor" />
+                    <TagLink v-if="series.series_format" :label="series.series_format"
+                      :to="{ path: '/collection', query: { series_format: series.series_format } }" :color="tagColor" />
+                    <span v-if="startedYear" class="text-slate-400">Started {{ startedYear }}</span>
+                  </div>
+                </div>
+
+                <div class="tooltip tooltip-success tooltip-left shrink-0" data-tip="Edit Series">
+                  <RouterLink :to="{ name: 'EditSeries', params: { Link: series.slug, Id: series.id } }"
+                    class="flex h-10 w-10 items-center justify-center rounded-full transition duration-200 ease-in-out hover:scale-110 hover:border-2 hover:border-emerald-400">
+                    <EditIcon class="h-6 w-6" :fill-color="iconColor" />
+                  </RouterLink>
+                </div>
               </div>
+
+              <Rating @update:model-value="updateRating" :modelValue="series.user_rating" :cancel="false" :stars="5" />
+
+              <div v-if="issuesList.length" class="mt-1 flex flex-col gap-3.5">
+                <div v-for="track in progressTracks" :key="track.field" class="flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between gap-3 text-sm">
+                    <div class="flex items-center gap-2 font-semibold text-slate-200">
+                      <img :src="track.icon" alt="" width="20" height="20" />
+                      <span>{{ track.label }}</span>
+                    </div>
+                    <span class="tabular-nums text-slate-400">{{ track.count }} of {{ totalIssues }}</span>
+                  </div>
+
+                  <div v-if="segmented" class="grid" :class="issuesList.length > 48 ? 'gap-0' : 'gap-0.5'"
+                    :style="{ gridTemplateColumns: `repeat(${issuesList.length}, minmax(0, 1fr))` }">
+                    <RouterLink v-for="issue in issuesList" :key="issue.id" :to="issueRoute(issue)"
+                      :title="segmentTitle(issue, track)" :aria-label="segmentTitle(issue, track)"
+                      class="block h-3 rounded-[2px] transition-opacity hover:opacity-70"
+                      :class="issue[track.field] ? '' : 'bg-slate-700/70'"
+                      :style="issue[track.field] ? { backgroundColor: fillColor } : {}" />
+                  </div>
+                  <div v-else class="h-3 overflow-hidden rounded-[2px] bg-slate-700/70" role="img"
+                    :aria-label="`${track.count} of ${totalIssues} ${track.label.toLowerCase()}`">
+                    <div class="h-full"
+                      :style="{ width: `${Math.round((track.count / totalIssues) * 100)}%`, backgroundColor: fillColor }">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p v-else class="text-sm text-slate-400">No issues yet.</p>
             </div>
-            <div class="basis-2/3 shrink h-fit overflow-y-auto my-4">
-              <table class="w-full border-collapse">
-                <tbody class="flex md:block flex-col items-center justify-center">
-
-                  <tr class="block md:table-row md:border-b md:border-slate-700/50">
-                    <th
-                      class="block md:table-cell md:py-4 md:pr-6  md:text-left text-sm uppercase tracking-wider text-slate-300">
-                      Publisher
-                    </th>
-                    <td class="py-4 block md:table-cell">
-                      <TagLink v-if="series.publisher" :label="series.publisher.title"
-                        :to="`/publisher/${series.publisher.id}-${series.publisher.slug}`" :color="themecolor" />
-                    </td>
-                  </tr>
-
-                  <tr class="block md:table-row md:border-b md:border-slate-700/50">
-                    <th
-                      class="block md:table-cell md:py-4 md:pr-6 md:text-left text-sm uppercase tracking-wider text-slate-300">
-                      Genre
-                    </th>
-                    <td class="py-4">
-                      <div class="flex flex-wrap gap-2">
-                        <span v-for="genre in series.genre" :key="genre"
-                          class="bg-slate-800 px-3 py-1 select-none rounded text-sm font-bold"
-                          :style="`color: rgb${themecolor}`">
-                          {{ genre }}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr class="block md:table-row md:border-b border-slate-700/50">
-                    <th
-                      class="block md:table-cell md:py-4 md:pr-6 md:text-left text-sm uppercase tracking-wider text-slate-300">
-                      Characters
-                    </th>
-                    <td class="py-4 block md:table-cell">
-                      <div class="flex md:justify-start justify-center flex-wrap gap-2 max-h-36 overflow-y-auto">
-                        <TagLink v-for="character in series.character" :key="character.id || character.title"
-                          :label="character.title" :to="`/character/${character.id}-${character.slug}`"
-                          :color="themecolor" />
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr class="block md:table-row md:border-b md:border-slate-700/50">
-                    <th
-                      class="block md:table-cell md:py-4 md:pr-6 md:text-left text-sm uppercase tracking-wider text-slate-300">
-                      Creators
-                    </th>
-                    <td class="py-4 block md:table-cell">
-                      <div class="flex md:justify-start justify-center flex-wrap gap-2 max-h-36 overflow-y-auto">
-                        <TagLink v-for="creator in series.creator" :key="creator.id || creator.title"
-                          :label="creator.title" :to="`/creator/${creator.id}-${creator.slug}`" :color="themecolor" />
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-
-            <RouterLink :to="{
-              name: 'EditSeries',
-              params: { Link: series.slug, Id: series.id },
-            }"
-              class="absolute right-0 top-2 cursor-pointer w-12 h-12 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400 hover:border-2 rounded-full flex items-center justify-center">
-              <EditIcon class="w-7 h-7 fill-slate-300" :fill-color="`rgb${themecolor}`" />
-            </RouterLink>
           </div>
-          <div class="flex flex-col relative shrink-0">
-            <div class="mx-8 my-5">
-              <p class="text-xl text-center font-bold text-slate-300">
-                Description
-              </p>
-              <p class="mt-4 text-justify" :style="`color: rgb${themecolor}`">
-                {{ series.description }}
-              </p>
-            </div>
 
-          </div>
-          <div class="hidden md:flex w-full pl-2 flex-row justify-between mb-12">
-            <RouterLink v-if="neighbours.previous" :to="`/series/${neighbours.previous.id}-${neighbours.previous.slug}`"
-              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 gap-2 items-center flex">
-              <i class="pi pi-chevron-left"></i>
-              <span>Previous Series</span>
-            </RouterLink>
+          <section>
+            <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Description</h2>
+            <p v-if="series.description" class="max-w-prose whitespace-pre-line text-sm leading-relaxed text-slate-200 md:text-base">
+              {{ series.description }}
+            </p>
+            <p v-else class="text-sm text-slate-400">No description yet.</p>
+          </section>
 
-            <div v-else></div>
+          <dl v-if="hasTags" class="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t border-slate-800/60 pt-5">
+            <template v-if="series.genre?.length">
+              <dt class="pt-1 text-sm text-slate-400">Genre</dt>
+              <dd class="flex flex-wrap gap-2">
+                <TagLink v-for="genre in series.genre" :key="genre" :label="genre"
+                  :to="{ path: '/collection', query: { genre } }" :color="tagColor" />
+              </dd>
+            </template>
+            <template v-if="series.character?.length">
+              <dt class="pt-1 text-sm text-slate-400">Characters</dt>
+              <dd class="flex flex-wrap gap-2">
+                <TagLink v-for="character in series.character" :key="character.id || character.title"
+                  :label="character.title" :to="`/character/${character.id}-${character.slug}`" :color="tagColor" />
+              </dd>
+            </template>
+            <template v-if="series.creator?.length">
+              <dt class="pt-1 text-sm text-slate-400">Creators</dt>
+              <dd class="flex flex-wrap gap-2">
+                <TagLink v-for="creator in series.creator" :key="creator.id || creator.title"
+                  :label="creator.title" :to="`/creator/${creator.id}-${creator.slug}`" :color="tagColor" />
+              </dd>
+            </template>
+          </dl>
 
-            <RouterLink v-if="neighbours.next" :to="`/series/${neighbours.next.id}-${neighbours.next.slug}`"
-              class="px-4 py-2 bg-slate-800 rounded-md font-bold hover:bg-slate-700 transition text-slate-300 flex gap-2 items-center">
-              <span>Next Series </span>
-              <i class="pi pi-chevron-right"></i>
-            </RouterLink>
+          <section>
+            <h2 class="mb-1.5 text-sm font-semibold text-slate-300">Notes</h2>
+            <p v-if="series.notes" class="max-w-prose whitespace-pre-line text-sm leading-relaxed text-slate-200 md:text-base">
+              {{ series.notes }}
+            </p>
+            <p v-else class="text-sm text-slate-400">No notes yet.</p>
+          </section>
+        </section>
 
-          </div>
-        </div>
-        <div
-          class="relative flex flex-col w-full items-center justify-evenly md:basis-1/2 md:w-1/2 shrink border-l border-slate-700">
-          <h1 class="flex justify-center py-2 px-4 font-bold text-3xl text-slate-300">
-            Issues
-          </h1>
-          <div class="md:overflow-scroll pb-12 h-full w-full">
-            <div class="grid gap-y-8 md:px-20 place-items-center my-4 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]">
+        <section class="relative flex w-full flex-col items-center border-slate-700 md:w-1/2 md:basis-1/2 md:border-l">
+          <h1 class="px-4 py-2 text-3xl font-bold text-slate-300">Issues</h1>
+          <button type="button" @click="toggleEditMode" :title="editMode ? 'Done editing' : 'Edit issues'"
+            class="absolute right-3 top-1 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-2 transition duration-200 ease-in-out hover:scale-110 hover:border-emerald-400"
+            :class="editMode ? 'border-green-700' : 'border-transparent'">
+            <EditIcon class="h-7 w-7" :fill-color="editMode ? 'white' : iconColor" />
+          </button>
+
+          <div class="w-full flex-1 pb-12 md:overflow-y-auto">
+            <div v-if="issuesList.length || editMode"
+              class="my-4 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] justify-items-center gap-y-8 px-6 md:px-10 xl:px-16">
               <IssueCard v-for="(issue, index) in issuesList" :key="issue.id" :issue="issue" :edit_mode="editMode"
                 :is_last="index === issuesList.length - 1 && issuesList.length > 1"
                 :preferred_currency="preferred_currency" :image="image" :themecolor="themecolor" :series="series"
                 @updateStatus="updateStatus(issue, $event)" @deleteIssue="confirmDelete(issue)" />
 
               <div v-if="editMode" @click="addIssue"
-                class="w-44 h-64 flex relative flex-col items-center bg-cover bg-center justify-center rounded-lg border-green-500 border-2 overflow-hidden shadow-lg cursor-pointer bg-zinc-800 border-dashed hover:bg-zinc-700 transition-all"
+                class="relative flex h-64 w-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-green-500 bg-zinc-800 bg-cover bg-center shadow-lg transition-all hover:bg-zinc-700"
                 :style="`background-image: url(${image})`">
-                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center px-3">
-                  <div class="flex flex-col items-center justify-center text-white gap-2">
-                    <img src="@/assets/add.svg" alt="Add" class="w-12 h-12 opacity-80" />
-                    <p class="text-white text-md font-bold">Add Issue</p>
+                <div class="absolute inset-0 flex items-center justify-center bg-black/60 px-3 backdrop-blur-sm">
+                  <div class="flex flex-col items-center justify-center gap-2 text-white">
+                    <img src="@/assets/add.svg" alt="Add" class="h-12 w-12 opacity-80" />
+                    <p class="text-md font-bold text-white">Add Issue</p>
                   </div>
                 </div>
               </div>
             </div>
+            <p v-else class="px-6 py-4 text-center text-sm text-slate-400">
+              No issues yet. Use the edit button to add the first one.
+            </p>
           </div>
-          <button @click="toggleEditMode"
-            class="mt-4 absolute right-2 -top-2 w-12 h-12 cursor-pointer hover:scale-110 rounded-full transition duration-200 ease-in-out hover:border-emerald-400 hover:border-2 flex items-center justify-center"
-            :class="editMode ? ' border-green-700' : ' border-zinc-500'">
-            <EditIcon class="w-7 h-7" :fill="editMode ? 'white' : `rgb${themecolor}`" />
-          </button>
-        </div>
+        </section>
       </div>
     </div>
+
+    <nav v-if="neighbours.previous || neighbours.next" class="flex justify-between gap-3 px-6 pb-8 md:hidden">
+      <RouterLink v-if="neighbours.previous" :to="seriesRoute(neighbours.previous)"
+        class="flex min-w-0 items-center gap-2 rounded-md bg-slate-800 px-4 py-2 font-bold text-slate-300 transition hover:bg-slate-700"
+        :style="accentStyle">
+        <i class="pi pi-chevron-left"></i>
+        <span class="truncate">{{ neighbours.previous.title || 'Previous series' }}</span>
+      </RouterLink>
+      <div v-else></div>
+
+      <RouterLink v-if="neighbours.next" :to="seriesRoute(neighbours.next)"
+        class="flex min-w-0 items-center gap-2 rounded-md bg-slate-800 px-4 py-2 font-bold text-slate-300 transition hover:bg-slate-700"
+        :style="accentStyle">
+        <span class="truncate">{{ neighbours.next.title || 'Next series' }}</span>
+        <i class="pi pi-chevron-right"></i>
+      </RouterLink>
+    </nav>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, watch, onUnmounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, ref, watch, onUnmounted } from "vue";
+import { useRoute } from "vue-router";
 import { useUserStore } from "../store/user";
 
-import type { Series } from "@/types/series.types";
+import type { Series, SeriesNeighbour, SeriesNeighbours } from "@/types/series.types";
 import type { Issue } from "@/types/issue.types";
 
 import IssueCard from "../components/cards/IssueCard.vue";
@@ -248,12 +214,13 @@ import Rating from "primevue/rating";
 import { useToast } from "primevue/usetoast";
 import { useConfirmAction } from "@/composables/useConfirmAction";
 import TagLink from "@/components/common/TagLink.vue";
+import { issueDisplayLabel } from "@/utils/issueTitle";
 
 const { confirmAction } = useConfirmAction();
 const toast = useToast();
 
 const message = ref();
-const neighbours = ref({ next: null, previous: null });
+const neighbours = ref<SeriesNeighbours>({ next: null, previous: null });
 
 async function addIssue() {
   try {
@@ -279,7 +246,7 @@ async function addIssue() {
 
 async function deleteIssue(issueToDelete: Issue) {
   try {
-    const response = await IssueService.removeIssue(issueToDelete.id);
+    await IssueService.removeIssue(issueToDelete.id);
     getIssues();
     getIssueCount();
   } catch (error) {
@@ -319,7 +286,6 @@ const issuesList = ref<Issue[]>([]);
 const pagination = ref();
 const editMode = ref(false);
 
-const updatedSeries = reactive({ value: series });
 const issueCount = ref({
   owned_count: 0,
   read_count: 0,
@@ -327,6 +293,47 @@ const issueCount = ref({
 });
 const themecolor = ref<string | null>(null);
 const image = ref<string | null>(null);
+
+const accentStyle = computed(() => (themecolor.value ? { color: `rgb${themecolor.value}` } : {}));
+const accentBorderStyle = computed(() => (themecolor.value ? { borderColor: `rgb${themecolor.value}` } : {}));
+const tagColor = computed(() => themecolor.value || "(255,255,255)");
+const iconColor = computed(() => (themecolor.value ? `rgb${themecolor.value}` : "rgb(203, 213, 225)"));
+
+const startedYear = computed(() => {
+  if (!series.value?.release_date) return null;
+  const date = new Date(series.value.release_date);
+  return Number.isNaN(date.getTime()) ? null : date.getFullYear();
+});
+const hasTags = computed(() =>
+  !!(series.value?.genre?.length || series.value?.character?.length || series.value?.creator?.length)
+);
+
+type StatusField = "is_owned" | "is_read";
+interface ProgressTrack {
+  field: StatusField;
+  label: string;
+  icon: string;
+  count: number;
+}
+const collectionIcon = new URL("../assets/collection.svg", import.meta.url).href;
+const readIcon = new URL("../assets/read.svg", import.meta.url).href;
+const progressTracks = computed<ProgressTrack[]>(() => [
+  { field: "is_owned", label: "Owned", icon: collectionIcon, count: issueCount.value.owned_count },
+  { field: "is_read", label: "Read", icon: readIcon, count: issueCount.value.read_count },
+]);
+const totalIssues = computed(() => issueCount.value.total_count || issuesList.value.length);
+// Past ~120 issues the segments get too thin to hit, so fall back to a plain bar.
+const segmented = computed(() => issuesList.value.length <= 120);
+const fillColor = computed(() => (themecolor.value ? `rgb${themecolor.value}` : "rgb(74, 222, 128)"));
+
+const issueRoute = (issue: Issue) => ({
+  name: "IssueDetail",
+  params: { seriesId: String(series.value?.id), slug: series.value?.slug ?? "", number: String(issue.number) },
+});
+const segmentTitle = (issue: Issue, track: ProgressTrack) =>
+  `${issueDisplayLabel(issue.title, issue.number)}: ${issue[track.field] ? "" : "not "}${track.label.toLowerCase()}`;
+
+const seriesRoute = (neighbour: SeriesNeighbour) => `/series/${neighbour.id}-${neighbour.slug}`;
 
 async function getSeries(id: number) {
   try {
@@ -340,7 +347,6 @@ async function getSeries(id: number) {
 
     if (response.thumbnail) {
       image.value = `${SeriesService.getSeriesImageById(series.value.id, series.value.last_updated)}`;
-      console.log("getSeries", image.value);
     }
   } catch (error) {
     console.log(error);
@@ -395,7 +401,7 @@ async function updateStatus(
       updateData[dateField] = isoDate;
     }
 
-    const response = await IssueService.updateIssue(issue.id, updateData);
+    await IssueService.updateIssue(issue.id, updateData);
     getIssueCount();
   } catch (error) {
     console.log(error);
@@ -407,24 +413,32 @@ async function updateRating(newRating: number) {
     const formData = new FormData();
     formData.append("user_rating", String(newRating));
 
-    await SeriesService.updateSeries(Number(route.params.Id), formData); // or use a PATCH method if available
-    await getSeries(Number(route.params.Id)); // re-fetch the full series data to reflect the change
+    await SeriesService.updateSeries(Number(route.params.Id), formData);
+    await getSeries(Number(route.params.Id));
   } catch (error) {
     console.error("Failed to update rating:", error);
   }
 }
 
 async function getNeighbours(id: number) {
-  const res = await SeriesService.getSeriesNeighbours(id);
-  neighbours.value = res.data;
+  try {
+    const res = await SeriesService.getSeriesNeighbours(id);
+    neighbours.value = res.data;
+  } catch (error) {
+    neighbours.value = { next: null, previous: null };
+    console.log(error);
+  }
 }
 
 watch(
   () => route.params.Id,
   (newId) => {
-    image.value = null;      // clear old image
+    // Clear the previous series before the new one loads.
+    image.value = null;
     series.value = null;
     themecolor.value = null;
+    neighbours.value = { next: null, previous: null };
+    editMode.value = false;
     getSeries(Number(newId));
     getIssues();
     getIssueCount();
@@ -460,7 +474,4 @@ onUnmounted(() => {
     app.style.background = '';
   }
 });
-
-
-
 </script>
