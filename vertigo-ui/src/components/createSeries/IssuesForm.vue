@@ -15,7 +15,6 @@
     <div class="mt-4 flex flex-wrap items-center gap-2">
       <button type="button" class="fm-toggle fm-toggle--own" :aria-pressed="haveAll" @click="setAll('have', !haveAll)">Own all</button>
       <button type="button" class="fm-toggle fm-toggle--read" :aria-pressed="readAll" @click="setAll('read', !readAll)">Read all</button>
-      <p class="fm-hint basis-full sm:ml-auto sm:basis-auto">Marking {{ aUnit }} owned or read stamps today's date and opens the row so you can change it.</p>
     </div>
 
     <ol class="issue-list mt-4">

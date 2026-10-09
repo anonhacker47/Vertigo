@@ -1,7 +1,6 @@
 <template>
-  <section class="fm-section" aria-labelledby="details-title">
+  <section class="fm-section pt-2" aria-labelledby="details-title">
     <div class="fm-section__head">
-      <h2 id="details-title" class="fm-section__title">Details</h2>
       <a
         v-if="!metronEditable && localSeriesData.metron_url"
         :href="localSeriesData.metron_url"
@@ -12,7 +11,6 @@
         Linked to Metron
         <i class="pi pi-external-link" style="font-size: 11px"></i>
       </a>
-      <p v-else class="fm-hint">Title and format are required.</p>
     </div>
 
     <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

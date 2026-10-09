@@ -27,7 +27,6 @@
           <SearchMetron v-if="importSource === 'comic'" class="basis-full sm:basis-0" @select="onMetronSelect" />
           <SearchManga v-else class="basis-full sm:basis-0" @select="onMetronSelect" />
         </div>
-        <p class="fm-hint mb-7 mt-2.5">Importing fills in the details, cover and issue list. Everything stays editable.</p>
 
         <SeriesDetailsForm v-model="seriesData" :errors="errors" />
 

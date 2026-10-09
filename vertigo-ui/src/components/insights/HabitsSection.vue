@@ -30,7 +30,7 @@
       <div :class="{ 'opacity-50': refreshing }">
         <ActivityChart v-if="hasAnyActivity" :buckets="data.buckets" :mode="data.mode" />
         <p v-else class="py-4 text-slate-400">
-          No dates yet. Marking an issue as owned or read stamps today's date.
+          No dates yet.
           <RouterLink to="/collection" class="font-bold text-sky-400 hover:text-sky-300">Open collection</RouterLink>
         </p>
         <p v-if="hasAnyActivity" class="mt-3 text-[15px] font-semibold text-slate-300">{{ sentence }}</p>
