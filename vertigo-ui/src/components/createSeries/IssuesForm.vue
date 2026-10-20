@@ -25,8 +25,12 @@
           <button
             type="button"
             class="issue__cover"
-            :title="hasOwnCover(issue) ? `Replace this ${unit}'s cover` : `Add a cover for this ${unit}`"
-            @click="fileInputs.get(index)?.click()"
+            :aria-label="hasOwnCover(issue) ? `Replace the cover of ${unit} ${index + 1}` : `Add a cover for ${unit} ${index + 1}`"
+            @mouseenter="peek?.show($event, coverPreview(issue), coverCaption(index))"
+            @focus="peek?.show($event, coverPreview(issue), coverCaption(index))"
+            @mouseleave="peek?.hide()"
+            @blur="peek?.hide()"
+            @click="peek?.hide(); fileInputs.get(index)?.click()"
           >
             <img :src="coverPreview(issue)" alt="" :class="{ 'opacity-40': !hasOwnCover(issue) }" />
             <i class="pi pi-camera"></i>
@@ -52,6 +56,8 @@
           <div class="issue__actions">
             <button type="button" class="fm-toggle fm-toggle--own fm-toggle--sm" :aria-pressed="issue.have" @click="toggleFlag(issue, index, 'have')">Own</button>
             <button type="button" class="fm-toggle fm-toggle--read fm-toggle--sm" :aria-pressed="issue.read" @click="toggleFlag(issue, index, 'read')">Read</button>
+            <Button icon="pi pi-search-plus" text rounded size="small" severity="secondary"
+              :aria-label="`View the cover of ${unit} ${index + 1}`" @click="openLightbox(index)" />
             <Button :icon="isOpen(index) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" text rounded size="small" severity="secondary"
               :aria-expanded="isOpen(index)" :aria-label="`More details for ${unit} ${index + 1}`" @click="toggleOpen(index)" />
           </div>
@@ -99,14 +105,41 @@
         Show all {{ issues.length }} {{ unitPlural }}
       </button>
     </div>
+
+    <CoverPeek ref="peek" />
+
+    <Galleria :visible="lightboxIndex !== null" :active-index="lightboxIndex ?? 0" :value="visibleIssues" full-screen
+      :show-thumbnails="false" :show-indicators="false" show-item-navigators circular
+      :container-style="{ maxWidth: 'min(92vw, 30rem)' }" :aria-label="`${unitLabel} covers`"
+      @update:visible="(open: boolean) => !open && closeLightbox()" @update:active-index="lightboxIndex = $event">
+      <template #item="{ item }">
+        <img :src="coverPreview(item)" :alt="lightboxTitle" class="lightbox__img" />
+      </template>
+      <template #caption="{ item }">
+        <p class="text-sm font-bold text-white">{{ lightboxTitle }}</p>
+        <p class="text-xs text-slate-300">
+          {{ hasOwnCover(item) ? "Own cover" : "Series cover" }} · {{ (lightboxIndex ?? 0) + 1 }} of {{ visibleIssues.length }}
+        </p>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 p-3">
+          <Button v-if="lightboxIssue && hasOwnCover(lightboxIssue)" label="Use series cover" size="small" text severity="secondary"
+            @click="clearCover(lightboxIssue)" />
+          <Button label="Replace cover" icon="pi pi-camera" size="small" severity="secondary" outlined
+            @click="lightboxIndex !== null && fileInputs.get(lightboxIndex)?.click()" />
+        </div>
+      </template>
+    </Galleria>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
 import type { IssueDraft } from "@/types/issue.types";
+import CoverPeek from "@/components/common/CoverPeek.vue";
 import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
+import Galleria from "primevue/galleria";
 import InputNumber from "primevue/inputnumber";
 import { dateToYmd, todayYmd, ymdToDate } from "@/utils/dateInput";
 
@@ -152,7 +185,6 @@ function setAll(type: "have" | "read", value: boolean) {
   issues.value.forEach((issue) => { issue[type] = value; });
 }
 
-// Switching Own or Read on opens the row so the stamped date (and price) are right there to change.
 function toggleFlag(issue: IssueDraft, index: number, type: "have" | "read") {
   issue[type] = !issue[type];
   if (issue[type]) openRow(index);
@@ -213,6 +245,50 @@ function clearCover(issue: IssueDraft) {
   issue.cover = null;
 }
 
+function coverCaption(index: number): string {
+  const label = `${unitLabel.value} ${index + 1}`;
+  return hasOwnCover(issues.value[index]) ? label : `${label} · series cover`;
+}
+
+const peek = ref<InstanceType<typeof CoverPeek> | null>(null);
+
+const lightboxIndex = ref<number | null>(null);
+const lightboxIssue = computed(() => (lightboxIndex.value === null ? null : issues.value[lightboxIndex.value] ?? null));
+const lightboxTitle = computed(() => {
+  if (lightboxIndex.value === null) return "";
+  const label = `${unitLabel.value} ${lightboxIndex.value + 1}`;
+  const title = lightboxIssue.value?.title;
+  return title ? `${label} · ${title}` : label;
+});
+
+function openLightbox(index: number) {
+  peek.value?.hide();
+  lightboxIndex.value = index;
+}
+
+function closeLightbox() {
+  lightboxIndex.value = null;
+}
+
+function stepLightbox(delta: number) {
+  if (lightboxIndex.value === null) return;
+  const count = visibleIssues.value.length;
+  lightboxIndex.value = (lightboxIndex.value + delta + count) % count;
+}
+
+function onLightboxKey(event: KeyboardEvent) {
+  if (event.key === "ArrowRight") stepLightbox(1);
+  else if (event.key === "ArrowLeft") stepLightbox(-1);
+  else return;
+  event.preventDefault();
+}
+
+watch(lightboxIndex, (open, was) => {
+  if (open !== null && was === null) window.addEventListener("keydown", onLightboxKey);
+  else if (open === null && was !== null) window.removeEventListener("keydown", onLightboxKey);
+});
+
+
 function releaseUnusedObjectUrls(current: IssueDraft[]) {
   const live = new Set<File>();
   current.forEach((issue) => {
@@ -242,6 +318,7 @@ watch(issues, (val) => {
 }, { deep: true });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("keydown", onLightboxKey);
   objectUrls.forEach((url) => URL.revokeObjectURL(url));
   objectUrls.clear();
 });
@@ -355,5 +432,12 @@ onBeforeUnmount(() => {
   .issue__details {
     padding-left: 5.25rem;
   }
+}
+
+.lightbox__img {
+  display: block;
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
 }
 </style>
