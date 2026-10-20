@@ -40,10 +40,10 @@ class Config:
 
     PACKAGE_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
 
-    #Metron Integraion
-    METRON_USERNAME =  os.environ.get('METRON_USERNAME', 'set_username')
-    METRON_PASSWORD =  os.environ.get('METRON_PASSWORD', 'set_password')
+    # Metron (mokkari)
+    METRON_API_TOKEN = os.environ.get('METRON_API_TOKEN') or None
     METRON_CACHE_DB = os.path.join(DATA_DIR, 'metron_cache.db')
+    METRON_DEV_MODE = as_bool(os.environ.get('METRON_DEV_MODE'))
 
     # Tenrai (MyAnimeList) integration.
     TENRAI_SERVER_KEY = os.environ.get('TENRAI_SERVER_KEY')

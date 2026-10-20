@@ -55,6 +55,16 @@ After extracting the ZIP, run the app using the appropriate script for your os:
 This will set up and launch the webapp in http://localhost:6166
 <br/>
 
+## Integrations:
+
+Vertigo can fetch series details, covers, creators and characters.
+
+- **Comics** come from [Metron](https://metron.cloud/). You'll need a Metron account and an API token. Paste it in under **Settings > Integrations** and comic search is good to go.
+
+- **Manga** comes from MyAnimeList through [Tenrai](https://tenrai.org/), a public mirror of MAL. Nothing to set up.
+
+<br/>
+
 ## Developer Guide:
 
 #### Prerequisites:

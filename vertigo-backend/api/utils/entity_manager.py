@@ -1,6 +1,7 @@
 from api.app import db
 from flask import json
 from api.models.series_entities import Publisher, Creator, Character, Genre
+from api.models.user import User
 from api import db
 from api.integrations.mokkari.utils import fetch_metron_entity_info
 from api import media
@@ -43,7 +44,7 @@ def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
         entity = db.session.get(model, entity_id)
         if not entity:
             return
-        info = fetch_metron_entity_info(metron_type, metron_id)
+        info = fetch_metron_entity_info(metron_type, metron_id, db.session.get(User, user_id))
         if not info:
             return
         if hasattr(entity, "description"):

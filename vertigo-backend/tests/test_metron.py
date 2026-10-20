@@ -2,24 +2,16 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-import requests
 from mokkari.exceptions import ApiError, RateLimitError
 
 from api.integrations.mokkari import mokkari_routes
-from api.integrations.mokkari.mokkari_rate_limiter import retry_after_seconds
+from api.integrations.mokkari.status import retry_after_seconds
 from tests.base_test_case import BaseTestCase
 
 
-def _rate_limit_error(retry_after=None,
+def _rate_limit_error(retry_after=28,
                       message="Metron API Rate Limit exceeded, need to wait for 28 seconds."):
-    """Build the exception exactly the way mokkari raises it."""
-    err = RateLimitError(message)
-    if retry_after is not None:
-        resp = requests.Response()
-        resp.status_code = 429
-        resp.headers["Retry-After"] = str(retry_after)
-        err.__cause__ = requests.exceptions.HTTPError("429", response=resp)
-    return err
+    return RateLimitError(message, retry_after=retry_after)
 
 
 def _stub(i):
@@ -37,16 +29,13 @@ def _detail(i):
 
 
 class TestRetryAfterSeconds(unittest.TestCase):
-    def test_prefers_header(self):
+    def test_rounds_up_to_whole_seconds(self):
         self.assertEqual(retry_after_seconds(_rate_limit_error(retry_after=28)), 28)
+        self.assertEqual(retry_after_seconds(_rate_limit_error(retry_after=27.2)), 28)
 
-    def test_parses_message_when_no_header(self):
-        err = _rate_limit_error(message="need to wait for 1 minute, 5 seconds.")
-        self.assertEqual(retry_after_seconds(err), 65)
-
-    def test_default_when_nothing_to_parse(self):
-        self.assertEqual(retry_after_seconds(RateLimitError("nope"), default=40), 40)
+    def test_none_when_mokkari_reports_no_wait(self):
         self.assertIsNone(retry_after_seconds(RateLimitError("nope")))
+        self.assertIsNone(retry_after_seconds(ApiError("nope")))
 
 
 class TestIssueUrl(unittest.TestCase):
@@ -70,15 +59,23 @@ class TestMetronRoutes(BaseTestCase):
         self.session = MagicMock()
         self.session.series.return_value = SimpleNamespace(
             resource_url="https://metron.cloud/series/watchmen-1986/")
-        patches = [
-            patch('api.integrations.mokkari.mokkari_routes.get_mokkari_session',
-                  return_value=self.session),
-            patch('api.integrations.mokkari.mokkari_routes.wait_for_mokkari_slot'),
-            patch('api.integrations.mokkari.mokkari_routes.note_rate_limit'),
-        ]
-        for p in patches:
-            p.start()
-            self.addCleanup(p.stop)
+        self.get_session = patch(
+            'api.integrations.mokkari.mokkari_routes.get_mokkari_session',
+            return_value=self.session)
+        self.get_session.start()
+        self.addCleanup(self.get_session.stop)
+
+    def test_without_a_token_every_route_says_not_configured(self):
+        self.get_session.stop()
+        with patch('api.integrations.mokkari.mokkari_routes.get_mokkari_session',
+                   return_value=None):
+            for url in ('/api/metron/series/search?query=Watchmen',
+                        '/api/metron/series/564',
+                        '/api/metron/series/564/entities'):
+                rv = self.client.get(url)
+                self.assertEqual(rv.status_code, 503, url)
+                self.assertEqual(rv.json['error'], 'not_configured')
+        self.get_session.start()
 
     def test_search_rate_limited_returns_429_with_retry_after(self):
         self.session.series_list.side_effect = _rate_limit_error(retry_after=28)
@@ -127,7 +124,7 @@ class TestMetronRoutes(BaseTestCase):
         self.assertEqual({c['value'] for c in body['creators']}, {'Alan Moore', 'Dave Gibbons'})
 
     def test_entities_rate_limited_before_issue_list_returns_429(self):
-        self.session.issues_list.side_effect = _rate_limit_error()
+        self.session.issues_list.side_effect = _rate_limit_error(retry_after=28)
         rv = self.client.get('/api/metron/series/564/entities')
 
         self.assertEqual(rv.status_code, 429)

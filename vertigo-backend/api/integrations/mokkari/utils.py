@@ -1,56 +1,54 @@
+import time
+
 from flask import current_app
-from api.integrations.mokkari.client import get_mokkari_session
-from api.integrations.mokkari.mokkari_rate_limiter import wait_for_mokkari_slot, retry_after_seconds
 from mokkari.exceptions import RateLimitError
 
-def fetch_metron_entity_info(
-    entity_type: str,
-    entity_id: int,
-    *,
-    max_retries: int = 2,
-):
+from api.integrations.mokkari.client import get_mokkari_session
+from api.integrations.mokkari.status import retry_after_seconds
+
+MAX_RETRY_WAIT_SECONDS = 90
+
+_FETCHERS = {
+    "creator": lambda session, _id: session.creator(_id),
+    "publisher": lambda session, _id: session.publisher(_id),
+    "character": lambda session, _id: session.character(_id),
+}
+
+
+def fetch_metron_entity_info(entity_type, entity_id, user=None, *, max_retries=2):
+    """Creator, publisher or character from Metron, or None.
+
+    ``user`` picks the token; background tasks must pass it.
+    """
     if not entity_id:
         return None
 
-    session = get_mokkari_session()
+    fetch = _FETCHERS.get(entity_type)
+    if fetch is None:
+        return None
+
+    session = get_mokkari_session(user)
     if not session:
         return None
 
     for attempt in range(max_retries + 1):
         try:
-            wait_for_mokkari_slot()
-            
-            if entity_type == "creator":
-                return session.creator(entity_id)
-            elif entity_type == "publisher":
-                return session.publisher(entity_id)
-            elif entity_type == "character":
-                return session.character(entity_id)
-            else:
-                return None
+            return fetch(session, entity_id)
 
         except RateLimitError as e:
-            if attempt >= max_retries:
+            wait = retry_after_seconds(e) or 5
+            if attempt >= max_retries or wait > MAX_RETRY_WAIT_SECONDS:
                 current_app.logger.warning(
-                    f"Metron rate limit exceeded "
-                    f"({entity_type}:{entity_id}), giving up"
-                )
+                    "Metron rate limit exceeded (%s:%s), giving up: %s",
+                    entity_type, entity_id, e)
                 return None
-
-            retry_after = retry_after_seconds(e, default=40)
-
             current_app.logger.info(
-                f"Metron rate limited "
-                f"({entity_type}:{entity_id}), retrying in {retry_after}s"
-            )
-
-            wait_for_mokkari_slot(retry_after)
+                "Metron rate limited (%s:%s), retrying in %ss", entity_type, entity_id, wait)
+            time.sleep(wait)
 
         except Exception as e:
             current_app.logger.warning(
-                f"Metron fetch failed "
-                f"({entity_type}:{entity_id}) → {e}"
-            )
+                "Metron fetch failed (%s:%s) -> %s", entity_type, entity_id, e)
             return None
 
     return None

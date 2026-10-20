@@ -15,7 +15,7 @@ python-dotenv
 sqlalchemy
 pillow
 python-slugify
-mokkari
+mokkari>=4.10
 babel
 pandas
 openpyxl

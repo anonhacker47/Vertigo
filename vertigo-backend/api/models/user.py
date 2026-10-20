@@ -57,6 +57,7 @@ class User(Updateable, db.Model):
             
     preferred_currency = sqla.Column(sqla.String(3), default='USD')
     profile_picture = sqla.Column(sqla.String(280))
+    metron_api_token = sqla.Column(sqla.String(255))
 
     following = sqla_orm.relationship(
         'User', secondary=followers,

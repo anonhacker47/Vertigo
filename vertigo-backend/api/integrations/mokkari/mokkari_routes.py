@@ -5,10 +5,8 @@ from apifairy import authenticate, arguments
 from marshmallow import Schema, fields
 from mokkari.exceptions import RateLimitError, ApiError
 
-from api.integrations.mokkari.mokkari_rate_limiter import (
-    wait_for_mokkari_slot, note_rate_limit, retry_after_seconds,
-)
 from api.integrations.mokkari.client import get_mokkari_session
+from api.integrations.mokkari.status import retry_after_seconds
 from api.utils.auth import token_auth
 
 mokkari = Blueprint('mokkari', __name__, url_prefix="/api")
@@ -16,9 +14,15 @@ mokkari = Blueprint('mokkari', __name__, url_prefix="/api")
 #avoid fetching entity list from all issues.
 ENTITY_SAMPLE_ISSUES = 10
 
+NOT_CONFIGURED_MESSAGE = "Metron isn't connected. Add a token under Settings > Integrations."
+
+
+def _not_configured():
+    return {"error": "not_configured", "message": NOT_CONFIGURED_MESSAGE}, 503
+
+
 def _rate_limited(e: RateLimitError):
     retry_after = retry_after_seconds(e)
-    note_rate_limit(retry_after)
     current_app.logger.warning("Metron rate limited: %s", e)
     return {"error": "rate_limited", "retry_after": retry_after, "message": str(e)}, 429
 
@@ -42,9 +46,10 @@ class SearchQuerySchema(Schema):
 def search_series(args):
     query = args["query"]
     session = get_mokkari_session()
+    if not session:
+        return _not_configured()
 
     try:
-        wait_for_mokkari_slot()
         series_list = session.series_list({"name": query})
         items = []
 
@@ -74,10 +79,9 @@ def search_series(args):
 def get_series_detail(series_id):
     session = get_mokkari_session()
     if not session:
-        return {"error": "no_session"}, 500
+        return _not_configured()
 
     try:
-        wait_for_mokkari_slot()
         series = session.series(series_id)
 
         issues = session.issues_list({"series_id": series_id, "number": "1"})
@@ -117,12 +121,10 @@ def get_series_detail(series_id):
 def get_series_entities(series_id):
     """Issue list plus the creators and characters seen in the first few issues"""
     session = get_mokkari_session()
-
     if not session:
-        return {"error": "no_session"}, 500
+        return _not_configured()
 
     try:
-        wait_for_mokkari_slot()
         series = session.series(series_id)
         issue_stubs = session.issues_list({"series_id": series_id})
     except RateLimitError as e:
@@ -151,7 +153,6 @@ def get_series_entities(series_id):
             issue = session.issue(stub.id)
         except RateLimitError as e:
             retry_after = retry_after_seconds(e)
-            note_rate_limit(retry_after)
             current_app.logger.warning(
                 "Metron rate limited after %d of %d sampled issues for series %s: %s",
                 sampled, min(len(issue_stubs), ENTITY_SAMPLE_ISSUES), series_id, e)

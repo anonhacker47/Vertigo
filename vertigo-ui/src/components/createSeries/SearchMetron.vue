@@ -1,5 +1,13 @@
 <template>
-  <div class="flex min-w-0 flex-1 items-center gap-2">
+  <div v-if="metronReady === false" class="notice">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <span>
+      Metron isn't connected.
+      <RouterLink :to="{ name: 'SettingsIntegrations' }">Add your API token</RouterLink>
+    </span>
+  </div>
+
+  <div v-else class="flex min-w-0 flex-1 items-center gap-2">
     <div class="relative min-w-0 flex-1">
       <i class="pi pi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" style="font-size: 14px"></i>
       <input
@@ -79,11 +87,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import ProgressSpinner from 'primevue/progressspinner'
 import MokkariService from '@/services/MetronService'
+import IntegrationsService from '@/services/IntegrationsService'
 import CoverImage from '@/components/common/CoverImage.vue'
 import EntityPreview from '@/components/createSeries/EntityPreview.vue'
 import { useToast } from 'primevue/usetoast'
@@ -92,7 +101,7 @@ const emit = defineEmits(['select'])
 const toast = useToast()
 
 const query = ref('')
-const results = ref([])
+const results = ref<any[]>([])
 const searchLoading = ref(false)
 const detailLoading = ref(false)
 const entitiesLoading = ref(false)
@@ -101,6 +110,18 @@ const showModal = ref(false)
 
 const seriesDetail = ref<any>(null)
 const seriesEntities = ref<any | null>(null)
+
+// null until the status check answers; on error keep the search so the real failure shows.
+const metronReady = ref<boolean | null>(null)
+
+onMounted(async () => {
+  try {
+    const res = await IntegrationsService.getStatus()
+    metronReady.value = res.data.metron.configured
+  } catch {
+    metronReady.value = true
+  }
+})
 
 const genreList = computed(() => (seriesDetail.value?.genres || []).map((genre: any) => genre.value).join(', '))
 
@@ -123,6 +144,9 @@ function notifyMetronError(error: any, summary: string) {
   if (data?.error === 'rate_limited') {
     const wait = data.retry_after ? ` Try again in ${data.retry_after}s.` : ' Try again in a minute.'
     detail = 'Metron is rate limiting requests.' + wait
+  } else if (data?.error === 'not_configured') {
+    metronReady.value = false
+    detail = data.message || 'Metron is not connected. Add your API token under Settings > Integrations.'
   } else {
     detail = data?.message || data?.description || 'Could not reach Metron. Please try again.'
   }
@@ -219,6 +243,23 @@ async function selectSeries() {
 </script>
 
 <style scoped>
+.notice {
+  display: flex;
+  flex: 1 1 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px dashed rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.06);
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+}
+.notice i { color: #fbbf24; }
+.notice a { color: #38bdf8; }
+.notice a:hover { text-decoration: underline; }
 .result {
   width: 100%;
   padding: 10px 12px;

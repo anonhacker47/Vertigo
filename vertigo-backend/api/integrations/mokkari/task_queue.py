@@ -1,6 +1,5 @@
 import queue
 import threading
-from api.integrations.mokkari.mokkari_rate_limiter import wait_for_mokkari_slot
 
 _mokkari_queue = queue.Queue(maxsize=500)
 _workers_started = False
@@ -18,7 +17,6 @@ def _mokkari_worker(app):
             func, args, kwargs = task
 
             try:
-                wait_for_mokkari_slot()
                 func(*args, **kwargs)
             except Exception:
                 app.logger.exception("Mokkari task failed")

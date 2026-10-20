@@ -45,10 +45,33 @@ const router = createRouter({
       path: "/settings",
       name: "Settings",
       component: () => import("@/views/SettingsView.vue"),
+      redirect: { name: "SettingsProfile" },
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
       },
+      children: [
+        {
+          path: "profile",
+          name: "SettingsProfile",
+          component: () => import("@/components/settings/ProfileSettings.vue"),
+        },
+        {
+          path: "security",
+          name: "SettingsSecurity",
+          component: () => import("@/components/settings/SecuritySettings.vue"),
+        },
+        {
+          path: "integrations",
+          name: "SettingsIntegrations",
+          component: () => import("@/components/settings/IntegrationsSettings.vue"),
+        },
+        {
+          path: "data",
+          name: "SettingsData",
+          component: () => import("@/components/settings/DataSettings.vue"),
+        },
+      ],
     },
     {
       path: "/collection",

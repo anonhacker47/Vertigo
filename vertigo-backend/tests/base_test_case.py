@@ -9,6 +9,9 @@ class TestConfig(Config):
     TESTING = True
     DISABLE_AUTH = True
     ALCHEMICAL_DATABASE_URL = 'sqlite://'
+    # Keep tests away from the real Metron cache file and any token in .env.
+    METRON_CACHE_DB = None
+    METRON_API_TOKEN = None
 
 
 class TestConfigWithAuth(TestConfig):

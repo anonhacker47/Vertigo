@@ -75,6 +75,9 @@ def create_app(config_class=Config):
     from api.integrations.tenrai.tenrai_routes import tenrai
     app.register_blueprint(tenrai, url_prefix='/api')
 
+    from api.routes.integrations_routes import integrations
+    app.register_blueprint(integrations, url_prefix='/api')
+
     # define the shell context
     @app.shell_context_processor
     def shell_context():  # pragma: no cover
