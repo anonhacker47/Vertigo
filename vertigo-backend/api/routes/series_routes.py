@@ -14,6 +14,7 @@ from api import media
 
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
+from api.routes.series_sorts import SERIES_SORTS
 from api.schemas.pagination_schema import DateTimePaginationSchema
 from api.utils.entity_manager import create_or_get_entity, safe_json_list, ENTITY_MODEL_MAP
 from api.helpers.cover_bg_generator import background_path, submit_background_regeneration
@@ -127,7 +128,8 @@ def all():
 @authenticate(token_auth)
 @paginated_response(multi_series_schema, order_by=Series.timestamp,
                     order_direction='desc',
-                    pagination_schema=DateTimePaginationSchema)
+                    pagination_schema=DateTimePaginationSchema,
+                    sorts=SERIES_SORTS, tiebreak=Series.title)
 @other_responses({404: 'User not found'})
 def user_all():
     """Retrieve all series of a user with optional search and filters"""

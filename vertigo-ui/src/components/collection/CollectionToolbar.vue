@@ -16,7 +16,7 @@
     <button v-if="activeCount" type="button" class="h-9 px-2 text-[13px] font-bold text-sky-400 hover:text-sky-300" @click="$emit('clear')">Clear all</button>
 
     <div class="ml-auto flex flex-wrap items-center gap-2">
-      <FilterPill label="Sort" :options="SORTS" :model-value="sortKey" :clearable="false" @update:model-value="setSort" />
+      <SortPill :options="SORTS" :order-by="orderBy" :order-dir="orderDir" @update:sort="$emit('update:sort', $event)" />
 
       <div class="viewtoggle" role="group" aria-label="View">
         <button type="button" :aria-pressed="viewMode === 'card'" aria-label="Card view" title="Cards" @click="$emit('update:viewMode', 'card')"><i class="pi pi-th-large"></i></button>
@@ -45,6 +45,7 @@ import type { ViewMode } from "@/store/userPreferences";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import SeriesService from "@/services/SeriesService";
 import FilterPill, { type PillOption } from "./FilterPill.vue";
+import SortPill, { type SortOption } from "./SortPill.vue";
 import PillMenu from "./PillMenu.vue";
 import SegmentedControl from "@/components/common/SegmentedControl.vue";
 
@@ -74,26 +75,32 @@ const emit = defineEmits<{
   (e: "clear"): void;
 }>();
 
-const SORTS: PillOption[] = [
-  { label: "Newest first", value: "timestamp:desc" },
-  { label: "Oldest first", value: "timestamp:asc" },
-  { label: "Title A–Z", value: "title:asc" },
-  { label: "Title Z–A", value: "title:desc" },
+// Keys the collection endpoint accepts (see series_sorts.py), grouped: what it is, how far along, when, and yours.
+const SORTS: SortOption[] = [
+  { label: "Title", value: "title", defaultDir: "asc", group: "what" },
+  { label: "Publisher", value: "publisher", defaultDir: "asc", group: "what" },
+  { label: "Format", value: "series_format", defaultDir: "asc", group: "what" },
+  { label: "Date added", value: "timestamp", defaultDir: "desc", group: "what" },
+  { label: "Issues", value: "issue_count", defaultDir: "desc", group: "progress" },
+  { label: "Owned", value: "owned_count", defaultDir: "desc", group: "progress" },
+  { label: "Collected", value: "collected", defaultDir: "desc", group: "progress" },
+  { label: "Read", value: "read", defaultDir: "desc", group: "progress" },
+  { label: "Missing", value: "missing", defaultDir: "desc", group: "progress" },
+  { label: "Unread on the shelf", value: "unread", defaultDir: "desc", group: "progress" },
+  { label: "Last bought", value: "last_bought", defaultDir: "desc", group: "when" },
+  { label: "Last read", value: "last_read", defaultDir: "desc", group: "when" },
+  { label: "Rating", value: "user_rating", defaultDir: "desc", group: "yours" },
+  { label: "Spent", value: "purchase_cost", defaultDir: "desc", group: "yours" },
 ];
 const PAGE_SIZES = [10, 25, 50, 100].map((n) => ({ label: String(n), value: String(n) }));
 const FIELDS = ["publisher", "creator", "character", "genre", "series_format"] as const;
 
 const options = ref<Record<(typeof FIELDS)[number], PillOption[]>>({ publisher: [], creator: [], character: [], genre: [], series_format: [] });
 
-const sortKey = computed(() => `${props.orderBy}:${props.orderDir}`);
 const activeCount = computed(() => FIELDS.filter((f) => props.filters[f]).length + (props.filters.query ? 1 : 0));
 
 function set(field: (typeof FIELDS)[number], value: string) {
   emit("update:filters", { ...props.filters, [field]: value });
-}
-function setSort(key: string) {
-  const [orderBy, orderDir] = key.split(":");
-  emit("update:sort", { orderBy, orderDir });
 }
 
 const term = ref(props.filters.query ?? "");
