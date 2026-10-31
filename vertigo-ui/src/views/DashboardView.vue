@@ -19,11 +19,13 @@
       <section class="min-w-0" aria-label="Breakdown">
         <BreakdownDonut>
           <template #aside>
-            <button class="btn btn-circle btn-ghost btn-xs text-info" type="button" aria-label="About this chart" @click="handleInfoClick">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-4 w-4 stroke-current">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </button>
+            <div class="tooltip tooltip-left shrink-0" data-tip="How your shelf splits by publisher, genre, creator or character, counted in series or issues.">
+              <button class="btn btn-circle btn-ghost btn-xs text-info" type="button" aria-label="About this chart" @click="handleInfoClick">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-4 w-4 stroke-current">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </button>
+            </div>
           </template>
         </BreakdownDonut>
       </section>
@@ -42,18 +44,15 @@
     </div>
   </div>
 
-  <Dialog v-model:visible="showModal" modal header="💰 Total Spent" :style="{ width: '28rem' }" class="rounded-2xl shadow-2xl">
-    <div class="flex flex-col items-center justify-center gap-4 p-6">
-      <div class="text-4xl font-extrabold text-primary">{{ symbol }} {{ totalSpent }}</div>
-      <div class="text-lg font-semibold text-gray-400">Impressive!</div>
-      <div class="text-sm italic text-gray-400">Keep collecting and expanding your library 📚</div>
-    </div>
+  <Dialog v-model:visible="showModal" modal header="Total spent" :style="{ width: '26rem' }" :draggable="false" class="rounded-2xl shadow-2xl" @hide="countUp?.kill()">
+    <div class="flex items-center justify-center px-4 pb-6 pt-2 text-[44px] font-black leading-none tracking-tight text-white tabular-nums">{{ symbol }}{{ shownTotal }}</div>
   </Dialog>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { Dialog } from "primevue";
+import { gsap } from 'gsap';
 import getSymbolFromCurrency from "currency-symbol-map";
 import { useUserStore } from "../store/user";
 import ShelfFigure from '../components/dashboard/ShelfFigure.vue';
@@ -74,7 +73,22 @@ const pct = (part: number, whole: number) => (whole ? (100 * part) / whole : 0);
 
 const infoClickCount = ref(0);
 const showModal = ref(false);
-const totalSpent = ref(0);
+const shownTotal = ref('0.00');
+let countUp: gsap.core.Tween | null = null;
+
+const money = (value: number) => value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// The total counts up from zero when the dialog opens.
+function startCounting(total: number) {
+  countUp?.kill();
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    shownTotal.value = money(total);
+    return;
+  }
+  const counter = { value: 0 };
+  shownTotal.value = money(0);
+  countUp = gsap.to(counter, { value: total, duration: 1.4, ease: 'power3.out', onUpdate: () => { shownTotal.value = money(counter.value); } });
+}
 
 async function getSeriesInfo() {
   try {
@@ -110,8 +124,8 @@ async function handleInfoClick() {
     infoClickCount.value = 0;
     try {
       const response = await DashboardService.getTotalSpent();
-      totalSpent.value = response.data.totalSpent;
       showModal.value = true;
+      startCounting(response.data.totalSpent);
     } catch (error) {
       console.error(error);
     }
