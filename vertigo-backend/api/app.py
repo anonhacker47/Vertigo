@@ -58,6 +58,8 @@ def create_app(config_class=Config):
     app.register_blueprint(dashboard, url_prefix='/api')
     from api.insights.insights_routes import insights
     app.register_blueprint(insights, url_prefix='/api')
+    from api.routes.search_routes import search
+    app.register_blueprint(search, url_prefix='/api')
     from api.routes.sync_routes import sync
     app.register_blueprint(sync, url_prefix='/api') 
 
