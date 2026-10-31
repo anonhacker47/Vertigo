@@ -16,14 +16,14 @@
         </div>
       </header>
 
-      <div class="grid gap-6 border-t border-slate-800/60 pt-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
-        <nav aria-label="Settings sections" class="-mx-6 px-6 lg:mx-0 lg:px-0">
-          <ul class="flex gap-1 overflow-x-auto pb-1 lg:sticky lg:top-[calc(var(--spacing-header)+2rem)] lg:flex-col lg:overflow-visible lg:pb-0">
-            <li v-for="section in sections" :key="section.name">
+      <div class="grid grid-cols-[minmax(0,1fr)] gap-6 border-t border-slate-800/60 pt-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12 lg:pt-8">
+        <nav aria-label="Settings sections" class="min-w-0">
+          <ul class="grid grid-cols-4 gap-1 lg:sticky lg:top-[calc(var(--spacing-header)+2rem)] lg:flex lg:flex-col">
+            <li v-for="section in sections" :key="section.name" class="min-w-0">
               <RouterLink :to="{ name: section.name }" class="nav-link" active-class="is-active">
                 <i :class="section.icon" aria-hidden="true"></i>
                 <span class="min-w-0">
-                  <span class="block">{{ section.label }}</span>
+                  <span class="block truncate">{{ section.label }}</span>
                   <span class="hint hidden lg:block">{{ section.hint }}</span>
                 </span>
               </RouterLink>
@@ -117,22 +117,42 @@ onUnmounted(releaseAvatar);
 </script>
 
 <style scoped>
+/* Phones: a stacked tab, icon over a centred label. */
 .nav-link {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 9px 12px;
+  gap: 6px;
+  padding: 10px 6px 8px;
   border-radius: 10px;
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
   line-height: 1.25;
+  text-align: center;
   white-space: nowrap;
   transition: color 0.12s ease, background-color 0.12s ease;
 }
+.nav-link > span {
+  width: 100%;
+}
 .nav-link i {
-  font-size: 15px;
+  font-size: 17px;
   flex: none;
+}
+/* Wide screens: a row per section, icon beside the label, hint underneath. */
+@media (min-width: 1024px) {
+  .nav-link {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    font-size: 14px;
+    text-align: left;
+  }
+  .nav-link i {
+    font-size: 15px;
+  }
 }
 .nav-link:hover {
   color: #cbd5e1;

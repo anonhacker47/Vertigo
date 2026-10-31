@@ -1,17 +1,17 @@
 <template>
   <div class="mx-auto flex w-full max-w-page flex-col gap-7 px-4 pb-8 pt-6 md:min-h-[calc(100vh-var(--spacing-header))] md:px-8">
     <!-- the shelf in numbers -->
-    <div class="grid grid-cols-2 items-center gap-x-6 gap-y-5 border-b border-white/8 pb-5 md:grid-cols-[1fr_1fr_1fr_auto]">
+    <div class="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-white/8 pb-5 md:grid-cols-[1fr_1fr_1fr_auto]">
       <ShelfFigure :value="seriesInfo.totalSeriesCount" unit="series"
         :label="`${seriesInfo.collectedSeriesCount} fully collected · ${seriesInfo.readSeriesCount} fully read`"
         :ratio="pct(seriesInfo.collectedSeriesCount, seriesInfo.totalSeriesCount)" />
-      <ShelfFigure :value="issueInfo.collectedIssueCount" :unit="`of ${issueInfo.totalIssueCount} issues`" label="owned"
+      <ShelfFigure :value="issueInfo.collectedIssueCount" unit="owned" :label="`of ${issueInfo.totalIssueCount} issues`"
         :ratio="pct(issueInfo.collectedIssueCount, issueInfo.totalIssueCount)" />
       <ShelfFigure :value="issueInfo.readIssueCount" unit="read" :label="`of the ${issueInfo.collectedIssueCount} you own`"
         :ratio="pct(issueInfo.readIssueCount, issueInfo.collectedIssueCount)" tone="read" />
-        <RouterLink :to="{ name: 'AddSeries' }" custom v-slot="{ navigate }">
-          <Button label="Add series"  icon="pi pi-plus" size="small" @click="navigate" />
-        </RouterLink>
+      <RouterLink :to="{ name: 'AddSeries' }" custom v-slot="{ navigate }">
+        <Button label="Add series" icon="pi pi-plus" size="small" class="w-full self-start md:w-auto md:self-center" @click="navigate" />
+      </RouterLink>
     </div>
 
     <!-- three panels, side by side, no scrolling on a desktop -->

@@ -1,12 +1,11 @@
 <template>
   <nav :class="[
-    'fixed top-0 left-0 right-0 z-50 h-header border-b border-slate-700 px-6 md:px-16 transition-all duration-200 flex items-center',
+    'fixed top-0 left-0 right-0 z-50 h-header border-b border-slate-700 backdrop-blur-md transition-all duration-200 flex items-center',
     props.transparentHeader && !scrolled
       ? 'bg-[rgba(18,25,43,0.9)] md:bg-transparent'
       : 'bg-[rgba(18,25,43,0.9)]'
   ]">
     
-    <!-- Desktop: equal side columns keep the link group dead centre whatever sits beside it. -->
     <div class="hidden w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center md:grid">
       <RouterLink to="/" class="justify-self-start">
         <img src="@/assets/logo.svg" alt="Logo" width="40" height="40" />
@@ -62,7 +61,7 @@
       </div>
     </div>
 
-    <div v-if="searchOpen" class="absolute inset-y-0 left-[4.5rem] right-[4.5rem] z-20 hidden items-center gap-3 bg-[rgba(18,25,43,0.98)] md:flex lg:hidden">
+    <div v-if="searchOpen" class="absolute inset-y-0 left-5 right-5 z-20 flex items-center gap-3 bg-[rgba(18,25,43,0.98)] md:left-[4.5rem] md:right-[4.5rem] lg:hidden">
       <GlobalSearch wide autofocus class="flex-1" @navigate="searchOpen = false" @dismiss="searchOpen = false" />
       <button type="button" class="grid h-9 w-9 place-items-center rounded-lg text-slate-300 transition hover:bg-slate-800 hover:text-white"
         aria-label="Close search" @click="searchOpen = false">
@@ -70,42 +69,75 @@
       </button>
     </div>
 
-    <div class="flex md:hidden justify-between items-center w-full">
-      <RouterLink to="/">
-        <img src="@/assets/logo.svg" alt="Logo" width="40" height="40" />
+    <div class="flex w-full items-center justify-between md:hidden">
+      <RouterLink to="/" aria-label="Home">
+        <img src="@/assets/logo.svg" alt="" width="36" height="36" />
       </RouterLink>
-      <Button icon="pi pi-bars" class="p-button-text p-button-rounded p-button-lg text-white" @click="mobileOpen = true" />
+      <div class="flex items-center gap-1">
+        <button type="button" class="nav-icon" aria-label="Search" @click="searchOpen = true">
+          <i class="pi pi-search"></i>
+        </button>
+        <button type="button" class="nav-icon" aria-label="Open menu" @click="mobileOpen = true">
+          <i class="pi pi-bars"></i>
+        </button>
+      </div>
     </div>
 
-    <Drawer v-model:visible="mobileOpen" position="right" class="w-72 flex justify-between bg-[#12192b]">
-      <div class="flex items-center w-full justify-center gap-3 mb-6">
-        <img class="inline-block h-30 w-30 rounded-md" @error="changeThumb()" :src="imagesrc" alt="" />
+    <!-- The menu sheet: who you are, where you can go, and the way out. -->
+    <Drawer v-model:visible="mobileOpen" position="right" class="mnav" style="width: min(88vw, 22rem)" :show-close-icon="false">
+      <template #header>
+        <div class="mnav__who">
+          <img class="mnav__avatar" :src="imagesrc" alt="" @error="changeThumb()" />
+          <div class="min-w-0 flex-1">
+            <p class="mnav__name">{{ userName }}</p>
+            <p v-if="userEmail" class="mnav__email">{{ userEmail }}</p>
+          </div>
+          <button type="button" class="nav-icon" aria-label="Close menu" @click="mobileOpen = false">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </template>
+
+      <nav class="mnav__list" aria-label="Main">
+        <RouterLink v-for="link in mainLinks" :key="link.label" :to="link.to" class="mnav__row" @click="mobileOpen = false">
+          <i :class="link.icon" aria-hidden="true"></i>
+          <span>{{ link.label }}</span>
+        </RouterLink>
+      </nav>
+
+      <div>
+        <p class="mnav__section">Browse</p>
+        <nav class="mnav__list" aria-label="Browse">
+          <RouterLink v-for="link in browseLinks" :key="link.label" :to="link.to" class="mnav__row" @click="mobileOpen = false">
+            <i :class="link.icon" aria-hidden="true"></i>
+            <span>{{ link.label }}</span>
+          </RouterLink>
+        </nav>
       </div>
 
-      <GlobalSearch block class="mb-5" @navigate="mobileOpen = false" />
-
-      <PanelMenu :model="menuItems" class="border-none" />
-
-      <div class="mt-8">
-        <button class="w-full text-left text-white py-2 hover:text-sky-300" @click="router.push('/settings')">
-          <i class="pi pi-cog mr-2"></i> Settings
-        </button>
-        <button class="w-full text-left text-white py-2 hover:text-red-400" @click="logout">
-          <i class="pi pi-sign-out mr-2"></i> Log out
-        </button>
-      </div>
+      <template #footer>
+        <nav class="mnav__list" aria-label="Account">
+          <RouterLink to="/settings" class="mnav__row" @click="mobileOpen = false">
+            <i class="pi pi-cog" aria-hidden="true"></i>
+            <span>Settings</span>
+          </RouterLink>
+          <button type="button" class="mnav__row mnav__row--leave" @click="logout">
+            <i class="pi pi-sign-out" aria-hidden="true"></i>
+            <span>Log out</span>
+          </button>
+        </nav>
+      </template>
     </Drawer>
 
   </nav>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import AuthenticationService from '@/services/AuthenticationService'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
-import menuIcon from '@/assets/menu.svg'
 
 const props = defineProps<{
   transparentHeader?: boolean
@@ -116,11 +148,26 @@ const userStore = useUserStore()
 
 const imagesrc = ref('')
 const mobileOpen = ref(false)
+// Overlay search for phones and tablets; "/" summons it whenever the inline box is hidden.
 const searchOpen = ref(false)
 function summonSearch() {
-  if (window.innerWidth >= 768) searchOpen.value = true
+  searchOpen.value = true
 }
-const profileMenu = ref()
+
+const userName = computed(() => userStore.user?.username ?? 'Your shelf')
+const userEmail = computed(() => userStore.user?.email ?? '')
+
+const mainLinks = [
+  { label: 'Dashboard', icon: 'pi pi-home', to: '/dashboard' },
+  { label: 'Collection', icon: 'pi pi-book', to: '/collection' },
+  { label: 'Insights', icon: 'pi pi-chart-bar', to: '/insights' },
+]
+const browseLinks = [
+  { label: 'Publishers', icon: 'pi pi-print', to: { name: 'PublisherList' } },
+  { label: 'Creators', icon: 'pi pi-user', to: { name: 'CreatorList' } },
+  { label: 'Characters', icon: 'pi pi-users', to: { name: 'CharacterList' } },
+  { label: 'Tier list', icon: 'pi pi-sort-amount-down', to: { name: 'TierList' } },
+]
 
 const scrolled = ref(false)
 function onScroll() {
@@ -139,64 +186,10 @@ function changeThumb() {
 }
 
 function logout() {
+  mobileOpen.value = false
   userStore.logout()
   router.push('/')
 }
-
-const menuItems = [
-  {
-    label: 'Dashboard',
-    icon: 'pi pi-home',
-    command: () => {
-      mobileOpen.value = false
-      router.push('/dashboard')
-    }
-  },
-  {
-    label: 'Insights',
-    icon: 'pi pi-chart-bar',
-    command: () => {
-      mobileOpen.value = false
-      router.push('/insights')
-    }
-  },
-  {
-    label: 'Collection',
-    icon: 'pi pi-book',
-    command: () => {
-      mobileOpen.value = false
-      router.push('/collection')
-    }
-  },
-  {
-    label: 'Browse',
-    icon: '',
-    items: [
-      {
-        label: 'Publishers',
-        icon: 'pi pi-print',
-        command: () => router.push({ name: 'PublisherList' })
-      },
-      {
-        label: 'Creators',
-        icon: 'pi pi-user',
-        command: () => router.push({ name: 'CreatorList' })
-      },
-      {
-        label: 'Characters',
-        icon: 'pi pi-users',
-        command: () => router.push({ name: 'CharacterList' })
-      },
-      { separator: true },
-      {
-        label: 'Tier List',
-        icon: 'pi pi-sort-amount-down',
-        command: () => router.push({ name: 'TierList' })
-      }
-    ]
-  }
-]
-
 
 watch(
   () => userStore.user,
@@ -229,30 +222,147 @@ onMounted(async () => {
 
 <style scoped>
 nav {
-  padding-left: 4.5rem;
-  padding-right: 4.5rem;
-  transition: ease-in-out;
-  transition-duration: 200ms;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+@media (min-width: 768px) {
+  nav {
+    padding-left: 4.5rem;
+    padding-right: 4.5rem;
+  }
 }
 
 .router-link-active {
   color: #38bdf8;
 }
 
-:deep(.p-panelmenu-header-content) {
-  background: transparent;
-  color: white;
+/* Round icon targets in the bar and the sheet header. */
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 999px;
+  color: #e2e8f0;
+  font-size: 17px;
+  transition: background-color 0.12s ease;
+}
+.nav-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.nav-icon:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
 }
 
-:deep(.p-panelmenu-content) {
-  background: transparent;
+/* ---- the menu sheet ---- */
+.mnav {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+:deep(.p-drawer-header) {
+  padding: 16px 12px 8px 16px;
+}
+:deep(.p-drawer-content) {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 10px 12px 16px;
+}
+:deep(.p-drawer-footer) {
+  padding: 10px 12px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-:deep(.p-menuitem-link) {
-  color: white;
+.mnav__who {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+}
+.mnav__avatar {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #1e293b;
+}
+.mnav__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.mnav__email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #94a3b8;
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
-:deep(.p-menuitem-link:hover) {
+.mnav__section {
+  padding: 0 14px 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+.mnav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mnav__row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.mnav__row i {
+  width: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 16px;
+}
+.mnav__row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.mnav__row:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: -2px;
+}
+/* The page you are on wears the accent, in text and icon, on a faint sky wash. */
+.mnav__row.router-link-active {
+  background: rgba(56, 189, 248, 0.12);
   color: #38bdf8;
+}
+.mnav__row.router-link-active i {
+  color: #38bdf8;
+}
+.mnav__row--leave:hover,
+.mnav__row--leave:hover i {
+  color: #fda4af;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-icon,
+  .mnav__row {
+    transition: none;
+  }
 }
 </style>
