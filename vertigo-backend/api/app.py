@@ -60,6 +60,8 @@ def create_app(config_class=Config):
     app.register_blueprint(insights, url_prefix='/api')
     from api.routes.search_routes import search
     app.register_blueprint(search, url_prefix='/api')
+    from api.jobs.jobs_routes import jobs
+    app.register_blueprint(jobs, url_prefix='/api')
     from api.routes.sync_routes import sync
     app.register_blueprint(sync, url_prefix='/api') 
 

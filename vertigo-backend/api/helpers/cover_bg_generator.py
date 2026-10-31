@@ -11,6 +11,7 @@ import random
 from PIL import Image, ImageOps
 
 from api import media
+from api.jobs import registry as jobs
 
 TILE_W = 216
 TILE_H = 320
@@ -80,4 +81,5 @@ def regenerate_background(user_id) -> None:
 
 
 def submit_background_regeneration(user_id) -> None:
-    media.submit(regenerate_background, user_id)
+    jobs.submit(media.submit, 'collage', 'Rebuild the cover collage', user_id,
+                regenerate_background, user_id, queue='media')

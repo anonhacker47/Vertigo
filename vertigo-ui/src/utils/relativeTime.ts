@@ -58,3 +58,4 @@ export function sinceText(value: string | null | undefined): string {
   if (days >= 0 && days < 60) return relativeTime(days).replace(" ago", "");
   return formatMonth(value);
 }
+

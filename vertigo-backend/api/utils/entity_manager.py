@@ -8,6 +8,7 @@ from api import media
 from api.integrations.mokkari.task_queue import submit_mokkari_task
 from api.integrations.tenrai.utils import fetch_tenrai_entity_info
 from api.integrations.tenrai.task_queue import submit_tenrai_task
+from api.jobs import registry as jobs
 
 ENTITY_MODEL_MAP = {
     "publisher": Publisher,
@@ -123,14 +124,10 @@ def create_or_get_entity(model, name, user, entity_type=None, external_id=None, 
         and hasattr(model, "metron_id")
         and entity.metron_id
     ):
-        submit_mokkari_task(
-            enrich_entity,
-            entity.id,
-            model.__name__.lower(),
-            entity_type,
-            entity.metron_id,
-            name,
-            user.id
+        jobs.submit(
+            submit_mokkari_task, 'enrich', f'Metron details for {name}', user.id,
+            enrich_entity, entity.id, model.__name__.lower(), entity_type, entity.metron_id, name, user.id,
+            queue='metron',
         )
     elif (
         series_is_manga
@@ -138,14 +135,10 @@ def create_or_get_entity(model, name, user, entity_type=None, external_id=None, 
         and hasattr(model, "mal_id")
         and entity.mal_id
     ):
-        submit_tenrai_task(
-            enrich_tenrai_entity,
-            entity.id,
-            model.__name__.lower(),
-            entity_type,
-            entity.mal_id,
-            name,
-            user.id
+        jobs.submit(
+            submit_tenrai_task, 'enrich', f'MyAnimeList details for {name}', user.id,
+            enrich_tenrai_entity, entity.id, model.__name__.lower(), entity_type, entity.mal_id, name, user.id,
+            queue='mal',
         )
 
     return entity

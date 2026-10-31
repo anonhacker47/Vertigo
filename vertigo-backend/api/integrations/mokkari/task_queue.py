@@ -46,8 +46,10 @@ def start_mokkari_workers(app, num_workers=1):
 def submit_mokkari_task(func, *args, **kwargs):
     try:
         _mokkari_queue.put_nowait((func, args, kwargs))
+        return True
     except queue.Full:
         from flask import current_app
         current_app.logger.warning(
             "Mokkari queue full – dropping enrichment task"
         )
+        return False

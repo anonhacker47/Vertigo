@@ -71,6 +71,7 @@ import SeriesDetailsForm, { type SeriesFormErrors } from "@/components/forms/Ser
 import IssuesForm from "@/components/createSeries/IssuesForm.vue";
 import SearchMetron from "@/components/createSeries/SearchMetron.vue";
 import SearchManga from "@/components/createSeries/SearchManga.vue";
+import { refreshJobs } from "@/composables/useJobs";
 
 type ImportSource = "comic" | "manga";
 
@@ -306,6 +307,7 @@ async function createSeries() {
 
     if (seriesId) {
       await addIssues(seriesId);
+      refreshJobs();
       toast.add({
         severity: "success",
         summary: "Series created",
@@ -392,8 +394,8 @@ function uploadIssueCovers(createdIssues: Pick<Issue, "id" | "number">[]): Promi
   const all = [...inline, ...background];
   if (!all.length) return Promise.resolve();
 
-  // Report once everything has settled; for background uploads this may be after navigation.
   Promise.allSettled(all).then((results) => {
+    refreshJobs();
     const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
     if (!failed.length) return;
 
@@ -420,7 +422,6 @@ function onImageChange(file: File | string) {
 </script>
 
 <style scoped>
-/* The import bar: one wide field with the source switch inside it. */
 .import-bar {
   display: flex;
   flex-wrap: wrap;

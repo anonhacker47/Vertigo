@@ -48,8 +48,10 @@ def start_tenrai_workers(app, num_workers=1):
 def submit_tenrai_task(func, *args, **kwargs):
     try:
         _tenrai_queue.put_nowait((func, args, kwargs))
+        return True
     except queue.Full:
         from flask import current_app
         current_app.logger.warning(
             "Tenrai queue full – dropping enrichment task"
         )
+        return False

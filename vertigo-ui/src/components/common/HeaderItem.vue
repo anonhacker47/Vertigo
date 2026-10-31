@@ -41,7 +41,8 @@
 
       <div class="flex min-w-0 items-center justify-end gap-5">
         <GlobalSearch class="hidden lg:block" @summon="summonSearch" />
-        <!-- Tablet widths have no room for the box, so an icon opens it over the links. -->
+        <JobsIndicator />
+        <!-- Tablets: no room for the box, so an icon opens it as an overlay. -->
         <button type="button" class="hidden h-9 w-9 place-items-center rounded-lg text-slate-300 transition hover:bg-slate-800 hover:text-white md:grid lg:hidden"
           aria-label="Search" title="Search (/)" @click="searchOpen = true">
           <i class="pi pi-search"></i>
@@ -77,13 +78,13 @@
         <button type="button" class="nav-icon" aria-label="Search" @click="searchOpen = true">
           <i class="pi pi-search"></i>
         </button>
+        <JobsIndicator />
         <button type="button" class="nav-icon" aria-label="Open menu" @click="mobileOpen = true">
           <i class="pi pi-bars"></i>
         </button>
       </div>
     </div>
 
-    <!-- The menu sheet: who you are, where you can go, and the way out. -->
     <Drawer v-model:visible="mobileOpen" position="right" class="mnav" style="width: min(88vw, 22rem)" :show-close-icon="false">
       <template #header>
         <div class="mnav__who">
@@ -138,6 +139,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import AuthenticationService from '@/services/AuthenticationService'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
+import JobsIndicator from '@/components/common/JobsIndicator.vue'
 
 const props = defineProps<{
   transparentHeader?: boolean
@@ -148,7 +150,7 @@ const userStore = useUserStore()
 
 const imagesrc = ref('')
 const mobileOpen = ref(false)
-// Overlay search for phones and tablets; "/" summons it whenever the inline box is hidden.
+// Overlay search below the large breakpoint; "/" summons it when the inline box is hidden.
 const searchOpen = ref(false)
 function summonSearch() {
   searchOpen.value = true
@@ -236,7 +238,6 @@ nav {
   color: #38bdf8;
 }
 
-/* Round icon targets in the bar and the sheet header. */
 .nav-icon {
   display: grid;
   place-items: center;
@@ -256,7 +257,6 @@ nav {
   outline-offset: 2px;
 }
 
-/* ---- the menu sheet ---- */
 .mnav {
   background: #0f172a;
   color: #e2e8f0;
@@ -346,7 +346,6 @@ nav {
   outline: 2px solid #38bdf8;
   outline-offset: -2px;
 }
-/* The page you are on wears the accent, in text and icon, on a faint sky wash. */
 .mnav__row.router-link-active {
   background: rgba(56, 189, 248, 0.12);
   color: #38bdf8;

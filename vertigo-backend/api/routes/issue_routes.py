@@ -7,6 +7,7 @@ import sqlalchemy as sqla
 from sqlalchemy.orm import joinedload, selectinload
 from api import db
 from api import media
+from api.jobs import registry as jobs
 from api.models.user import User
 from api.models.series import Series
 from api.models.issue import Issue
@@ -386,7 +387,8 @@ def set_cover(id):
     background = (request.form.get('background') or '').lower() in ('1', 'true', 'yes')
 
     if background and not has_file and value.startswith(('http://', 'https://')):
-        media.submit(download_issue_cover, issue.id, value, user.id)
+        jobs.submit(media.submit, 'cover', f'Cover for {issue.series.title} #{issue.number}', user.id,
+                    download_issue_cover, issue.id, value, user.id, queue='media')
         return issue_schema.dump(issue), 202
 
     try:
