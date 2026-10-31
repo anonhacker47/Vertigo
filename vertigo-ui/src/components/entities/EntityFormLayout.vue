@@ -150,7 +150,7 @@ if (thumbnailChanged.value) {
 
 const confirmDelete = (entity: Partial<Entity>) => {
   confirmAction({
-    message: `${pascalType.value} ${entity.title}`,
+    message: `Delete ${pascalType.value.toLowerCase()} ${entity.title}? This cannot be undone.`,
     header: "Confirm Deletion",
     acceptLabel: "Delete",
     severity: "danger",

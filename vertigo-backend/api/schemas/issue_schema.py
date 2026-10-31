@@ -58,6 +58,23 @@ class IssueSchema(ma.SQLAlchemySchema):
         return data
 
 
+class BulkIssueIdsSchema(ma.Schema):
+    """Which issues of the series a bulk call acts on."""
+    class Meta:
+        ordered = True
+
+    ids = ma.List(ma.Integer(), required=True, validate=validate.Length(min=1, max=500))
+
+
+class BulkIssueUpdateSchema(BulkIssueIdsSchema):
+    """Fields set on every listed issue; anything omitted is left as it is."""
+    is_owned = ma.Boolean()
+    is_read = ma.Boolean()
+    bought_date = ma.DateTime(allow_none=True)
+    read_date = ma.DateTime(allow_none=True)
+    bought_price = ma.Float(allow_none=True)
+
+
 class SlimIssueSchema(IssueSchema):
     class Meta:
         model = Issue

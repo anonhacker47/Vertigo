@@ -1,6 +1,6 @@
 import Api from "@/services/Api";
 import { ApiResponse, Pagination } from "@/types/api-response.types";
-import { Issue, IssueNeighbours, LibraryIssue, NewIssue } from "@/types/issue.types";
+import { BulkIssueFields, Issue, IssueNeighbours, LibraryIssue, NewIssue } from "@/types/issue.types";
 
 export default {
   async fetchIssues(
@@ -48,6 +48,14 @@ export default {
 
   removeIssue(id: number) {
     return Api().delete(`series/issues/${id}/`);
+  },
+
+  bulkUpdateIssues(seriesId: number, ids: number[], fields: BulkIssueFields) {
+    return Api().put<Issue[]>(`series/${seriesId}/issues/bulk`, { ids, ...fields });
+  },
+
+  bulkRemoveIssues(seriesId: number, ids: number[]) {
+    return Api().delete<void>(`series/${seriesId}/issues/bulk`, { data: { ids } });
   },
 
   createIssue(seriesId: number, data: NewIssue) {

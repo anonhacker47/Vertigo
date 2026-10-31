@@ -190,9 +190,11 @@ import EditIcon from "@/assets/EditIcon.vue";
 import TagLink from "@/components/common/TagLink.vue";
 import getSymbolFromCurrency from "currency-symbol-map";
 import { hasCustomIssueTitle, issueDisplayLabel, issueNumberLabel } from "@/utils/issueTitle";
+import { useConfirmAction } from "@/composables/useConfirmAction";
 
 const route = useRoute();
 const toast = useToast();
+const { confirmAction } = useConfirmAction();
 
 // Read on every fetch: the component is reused when moving between issues of the same series.
 const routeParams = () => ({
@@ -281,31 +283,46 @@ function loadIssue() {
   getNeighbours();
 }
 
-async function toggleStatus(field: 'is_owned' | 'is_read') {
+function toggleStatus(field: 'is_owned' | 'is_read') {
   if (!issue.value) return;
-  const targetValue = !issue.value[field];
 
-  if (field === 'is_owned' && targetValue) {
-    showPriceModal.value = true;
+  // Switching on asks for the date (and price) in a modal.
+  if (!issue.value[field]) {
+    if (field === 'is_owned') showPriceModal.value = true;
+    else showReadModal.value = true;
     return;
   }
 
-  if (field === 'is_read' && targetValue) {
-    showReadModal.value = true;
-    return;
+  const label = issueDisplayLabel(issue.value.title, issue.value.number);
+  if (field === 'is_owned') {
+    confirmAction({
+      message: `Remove ${label} from your collection? Its bought date and price will be cleared.`,
+      header: "Remove from collection",
+      acceptLabel: "Remove",
+      severity: "danger",
+      onAccept: () => void clearOwned(),
+    });
+  } else {
+    confirmAction({
+      message: `Mark ${label} as unread? Its read date will be cleared.`,
+      header: "Mark as unread",
+      acceptLabel: "Mark unread",
+      severity: "warning",
+      onAccept: () => void submitValueUpdate('is_read', false),
+    });
   }
+}
 
-  if (field === 'is_owned' && !targetValue) {
-    try {
-      await IssueService.updateIssue(issue.value.id, { bought_price: null, bought_date: null });
-      editForm.bought_price = null;
-      editForm.bought_date = "";
-    } catch (e) {
-      console.error(e);
-    }
+async function clearOwned() {
+  if (!issue.value) return;
+  try {
+    await IssueService.updateIssue(issue.value.id, { bought_price: null, bought_date: null });
+    editForm.bought_price = null;
+    editForm.bought_date = "";
+  } catch (e) {
+    console.error(e);
   }
-
-  await submitValueUpdate(field, targetValue);
+  await submitValueUpdate('is_owned', false);
 }
 
 function cancelPriceModal() {

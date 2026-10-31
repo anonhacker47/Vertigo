@@ -228,7 +228,7 @@ function confirmDelete() {
   if (!issue.value) return;
   const target = issue.value;
   confirmAction({
-    message: `Issue ${target.title}`,
+    message: `Delete issue ${target.title}? This cannot be undone.`,
     header: "Confirm Deletion",
     acceptLabel: "Delete",
     severity: "danger",

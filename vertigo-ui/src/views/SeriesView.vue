@@ -157,25 +157,46 @@
               <p class="mt-0.5 text-[13px] font-semibold text-slate-400">{{ issuesSummary }}</p>
             </div>
             <div class="flex items-center gap-2">
-              <Button icon="pi pi-trash" size="small" :severity="editMode ? 'danger' : 'secondary'" :outlined="!editMode"
-                :aria-pressed="editMode" :title="editMode ? 'Leave delete mode' : 'Delete issues'" aria-label="Delete mode"
+              <Button :label="editMode ? 'Done' : 'Edit'" :icon="editMode ? 'pi pi-check' : 'pi pi-check-square'" size="small"
+                :severity="editMode ? 'primary' : 'secondary'" :outlined="!editMode" :aria-pressed="editMode"
+                :title="editMode ? 'Leave edit mode' : 'Select issues to edit together'" :disabled="!issuesList.length"
                 @click="toggleEditMode" />
-              <Button label="Add issue" icon="pi pi-plus" size="small" @click="showAddIssue = true" />                
+              <Button label="Add issue" icon="pi pi-plus" size="small" :disabled="editMode" @click="showAddIssue = true" />
             </div>
           </div>
 
-          <div class="w-full flex-1 pb-12 md:overflow-y-auto">
+          <div class="w-full flex-1 md:overflow-y-auto" :class="editMode ? 'pb-36' : 'pb-12'">
             <div v-if="issuesList.length"
               class="grid grid-cols-1 gap-5 px-6 pt-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:gap-x-4 sm:gap-y-6 md:px-8">
               <IssueCard v-for="issue in issuesList" :key="issue.id" :issue="issue" :edit_mode="editMode"
-                :preferred_currency="preferred_currency" :image="image" :themecolor="themecolor" :series="series"
-                @updateStatus="updateStatus(issue, $event)" @deleteIssue="confirmDelete(issue)" />
+                :selected="selectedIds.has(issue.id)" :preferred_currency="preferred_currency" :image="image"
+                :themecolor="themecolor" :series="series"
+                @updateStatus="onUpdateStatus(issue, $event)" @select="onSelect(issue, $event)" />
             </div>
             <p v-else class="px-6 py-6 text-sm text-slate-400 md:px-8">No issues yet. Use Add issue to start the run.</p>
 
             <AddIssueModal v-model:visible="showAddIssue" :series-id="series.id" :taken-numbers="takenNumbers"
               :default-number="nextNumber" @added="onIssueAdded" />
           </div>
+
+          <div v-if="editMode" class="bulk-bar" role="toolbar" aria-label="Edit the selected issues">
+            <p class="bulk-bar__count">
+              <span class="text-white">{{ selectedIds.size }}</span>
+              <span class="text-slate-400">of {{ issuesList.length }} selected</span>
+              <button type="button" class="bulk-bar__link" @click="allSelected ? clearSelection() : selectAll()">
+                {{ allSelected ? "Clear" : "Select all" }}
+              </button>
+            </p>
+            <div class="bulk-bar__actions">
+              <Button label="Mark owned" size="small" severity="secondary" :disabled="!selectedIds.size" @click="showBulkPurchase = true" />
+              <Button label="Mark read" size="small" severity="secondary" :disabled="!selectedIds.size" @click="showBulkRead = true" />
+              <Button label="Clear owned" size="small" severity="secondary" outlined :disabled="!selectedIds.size" @click="confirmBulkClear('is_owned')" />
+              <Button label="Clear read" size="small" severity="secondary" outlined :disabled="!selectedIds.size" @click="confirmBulkClear('is_read')" />
+              <Button label="Delete" icon="pi pi-trash" size="small" severity="danger" :disabled="!selectedIds.size" @click="confirmBulkDelete" />
+            </div>
+          </div>
+          <PurchaseConfirmModal :show="showBulkPurchase" :currency="currencySymbol" @cancel="showBulkPurchase = false" @confirm="bulkMarkOwned" />
+          <ReadConfirmModal :show="showBulkRead" @cancel="showBulkRead = false" @confirm="bulkMarkRead" />
         </section>
       </div>
     </div>
@@ -205,10 +226,13 @@ import { useRoute } from "vue-router";
 import { useUserStore } from "../store/user";
 
 import type { Series, SeriesNeighbour, SeriesNeighbours } from "@/types/series.types";
-import type { Issue } from "@/types/issue.types";
+import type { BulkIssueFields, Issue, IssueStatusChange } from "@/types/issue.types";
 
 import IssueCard from "../components/cards/IssueCard.vue";
 import AddIssueModal from "@/components/modals/AddIssueModal.vue";
+import PurchaseConfirmModal from "@/components/modals/PurchaseConfirmModal.vue";
+import ReadConfirmModal from "@/components/modals/ReadConfirmModal.vue";
+import getSymbolFromCurrency from "currency-symbol-map";
 import SeriesService from "../services/SeriesService";
 import IssueService from "../services/IssueService";
 import EditIcon from "@/assets/EditIcon.vue";
@@ -222,7 +246,6 @@ import Button from "primevue/button";
 const { confirmAction } = useConfirmAction();
 const toast = useToast();
 
-const message = ref();
 const neighbours = ref<SeriesNeighbours>({ next: null, previous: null });
 
 function onIssueAdded(issue: Issue) {
@@ -231,40 +254,110 @@ function onIssueAdded(issue: Issue) {
   toast.add({ severity: "success", summary: "Issue added", detail: `#${issue.number} is on the shelf.`, life: 3000 });
 }
 
-async function deleteIssue(issueToDelete: Issue) {
-  try {
-    await IssueService.removeIssue(issueToDelete.id);
-    getIssues();
-    getIssueCount();
-  } catch (error) {
-    message.value = error;
-    toast.add({
-      severity: "error",
-      summary: "Error",
-      detail: message.value,
-      life: 3000,
-    });
-  }
-}
-
-const confirmDelete = (issue: Issue) => {
-  const name = issue.title && issue.title !== String(issue.number) ? ` (${issue.title})` : "";
-  confirmAction({
-    message: `Delete issue #${issue.number}${name}? This cannot be undone.`,
-    header: "Delete issue",
-    acceptLabel: "Delete",
-    severity: "danger",
-    onAccept: () => deleteIssue(issue),
-  });
-};
+// ---- edit mode: pick issues, then act on all of them at once from the bar
+const selectedIds = ref<Set<number>>(new Set());
+const anchorIndex = ref<number | null>(null);
+const showBulkPurchase = ref(false);
+const showBulkRead = ref(false);
+const allSelected = computed(() => issuesList.value.length > 0 && selectedIds.value.size === issuesList.value.length);
+const plural = (n: number) => (n === 1 ? "1 issue" : `${n} issues`);
 
 const toggleEditMode = (): void => {
   editMode.value = !editMode.value;
+  if (!editMode.value) clearSelection();
 };
+
+function clearSelection() {
+  selectedIds.value = new Set();
+  anchorIndex.value = null;
+}
+
+function selectAll() {
+  selectedIds.value = new Set(issuesList.value.map((issue) => issue.id));
+}
+
+// A click toggles one card; shift-click adds the whole range from the last plain click.
+function onSelect(issue: Issue, { shift }: { shift: boolean }) {
+  const index = issuesList.value.findIndex((i) => i.id === issue.id);
+  const next = new Set(selectedIds.value);
+  if (shift && anchorIndex.value !== null) {
+    const [from, to] = [Math.min(anchorIndex.value, index), Math.max(anchorIndex.value, index)];
+    for (const picked of issuesList.value.slice(from, to + 1)) next.add(picked.id);
+  } else {
+    if (next.has(issue.id)) next.delete(issue.id);
+    else next.add(issue.id);
+    anchorIndex.value = index;
+  }
+  selectedIds.value = next;
+}
+
+async function bulkApply(fields: BulkIssueFields, done: string) {
+  if (!series.value || !selectedIds.value.size) return;
+  const ids = [...selectedIds.value];
+  try {
+    await IssueService.bulkUpdateIssues(series.value.id, ids, fields);
+    toast.add({ severity: "success", summary: "Updated", detail: `${plural(ids.length)} ${done}.`, life: 3000 });
+    clearSelection();
+    getIssues();
+    getIssueCount();
+  } catch (error) {
+    toast.add({ severity: "error", summary: "Update failed", detail: String(error), life: 4000 });
+  }
+}
+
+function bulkMarkOwned(payload: { price: number | null; date: string | null }) {
+  showBulkPurchase.value = false;
+  bulkApply({ is_owned: true, bought_date: payload.date, bought_price: payload.price }, "marked owned");
+}
+
+function bulkMarkRead(payload: { date: string | null }) {
+  showBulkRead.value = false;
+  bulkApply({ is_read: true, read_date: payload.date }, "marked read");
+}
+
+function confirmBulkClear(status: StatusField) {
+  const n = plural(selectedIds.value.size);
+  const owned = status === "is_owned";
+  confirmAction({
+    message: owned
+      ? `Remove ${n} from your collection? Their bought dates and prices will be cleared.`
+      : `Mark ${n} as unread? Their read dates will be cleared.`,
+    header: owned ? "Remove from collection" : "Mark as unread",
+    acceptLabel: owned ? "Remove" : "Mark unread",
+    severity: owned ? "danger" : "warning",
+    onAccept: () =>
+      void bulkApply(owned ? { is_owned: false } : { is_read: false }, owned ? "removed from your collection" : "marked unread"),
+  });
+}
+
+function confirmBulkDelete() {
+  confirmAction({
+    message: `Delete ${plural(selectedIds.value.size)}? This cannot be undone.`,
+    header: "Delete issues",
+    acceptLabel: "Delete",
+    severity: "danger",
+    onAccept: () => void bulkDelete(),
+  });
+}
+
+async function bulkDelete() {
+  if (!series.value || !selectedIds.value.size) return;
+  const ids = [...selectedIds.value];
+  try {
+    await IssueService.bulkRemoveIssues(series.value.id, ids);
+    toast.add({ severity: "success", summary: "Deleted", detail: `${plural(ids.length)} deleted.`, life: 3000 });
+    clearSelection();
+    getIssues();
+    getIssueCount();
+  } catch (error) {
+    toast.add({ severity: "error", summary: "Delete failed", detail: String(error), life: 4000 });
+  }
+}
 
 const userstore = useUserStore();
 
 const preferred_currency = userstore.getUser()?.preferred_currency ?? '';
+const currencySymbol = getSymbolFromCurrency(preferred_currency) || "";
 
 const route = useRoute();
 const series = ref<Series | null>(null);
@@ -395,10 +488,26 @@ async function getIssueCount() {
   }
 }
 
-async function updateStatus(
-  issue: { [x: string]: any; id: any },
-  payload: { status: string; value: boolean; date?: string },
-) {
+function onUpdateStatus(issue: Issue, payload: IssueStatusChange) {
+  const { status, value } = payload;
+  if (value !== false || (status !== "is_owned" && status !== "is_read")) {
+    updateStatus(issue, payload);
+    return;
+  }
+  const name = issue.title && issue.title !== String(issue.number) ? ` (${issue.title})` : "";
+  const owned = status === "is_owned";
+  confirmAction({
+    message: owned
+      ? `Remove issue #${issue.number}${name} from your collection? Its bought date and price will be cleared.`
+      : `Mark issue #${issue.number}${name} as unread? Its read date will be cleared.`,
+    header: owned ? "Remove from collection" : "Mark as unread",
+    acceptLabel: owned ? "Remove" : "Mark unread",
+    severity: owned ? "danger" : "warning",
+    onAccept: () => updateStatus(issue, payload),
+  });
+}
+
+async function updateStatus(issue: { [x: string]: any; id: any }, payload: IssueStatusChange) {
   const { status, value, date } = payload;
 
   issue[status] = value;
@@ -453,6 +562,7 @@ watch(
     themecolor.value = null;
     neighbours.value = { next: null, previous: null };
     editMode.value = false;
+    clearSelection();
     getSeries(Number(newId));
     getIssues();
     getIssueCount();
@@ -499,5 +609,50 @@ onUnmounted(() => {
 }
 .textbox__text {
   color: var(--prose-tint, #e2e8f0);
+}
+
+.bulk-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  width: calc(100% - 2rem);
+  max-width: 44rem;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 18, 32, 0.96);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  transform: translateX(-50%);
+}
+@media (min-width: 768px) {
+  .bulk-bar {
+    left: 75%;
+    width: calc(50% - 3rem);
+  }
+}
+.bulk-bar__count {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.bulk-bar__link {
+  margin-left: 6px;
+  color: #38bdf8;
+  font-weight: 800;
+}
+.bulk-bar__link:hover { color: #7dd3fc; }
+.bulk-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 </style>

@@ -166,7 +166,7 @@ const pascalType = usePascalType(props.type);
 
 const confirmDelete = (id: number, title: string) => {
     confirmAction({
-        message: `${pascalType.value} ${title}`,
+        message: `Delete ${pascalType.value.toLowerCase()} ${title}? This cannot be undone.`,
         header: "Confirm Deletion",
         acceptLabel: "Delete",
         severity: "danger",

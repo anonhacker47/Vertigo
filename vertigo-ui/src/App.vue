@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
-import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal.vue';
+import ConfirmModal from './components/modals/ConfirmModal.vue';
 import HeaderItem from "./components/common/HeaderItem.vue";
 import { useUserStore } from "./store/user";
 import { onMounted, computed, ref, Ref } from "vue";
@@ -24,7 +24,7 @@ onMounted(() => {
 
 <template>
   <ErrorBoundary fallback="Something went wrong.">
-    <ConfirmDeleteModal />
+    <ConfirmModal />
     <div :class="[showNavbar ? 'pt-header' : '']">
       <HeaderItem v-cloak v-if="showNavbar" :transparentHeader="transparentHeader"></HeaderItem>
       <RouterView />

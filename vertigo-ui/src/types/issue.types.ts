@@ -33,6 +33,20 @@ export interface NewIssue {
     metron_url?: string | null;
 }
 
+export interface IssueStatusChange {
+    status: "is_owned" | "is_read" | "bought_price";
+    value: boolean | number | null;
+    date?: string;
+}
+
+export interface BulkIssueFields {
+    is_owned?: boolean;
+    is_read?: boolean;
+    bought_date?: string | null;
+    read_date?: string | null;
+    bought_price?: number | null;
+}
+
 export interface IssueNeighbour {
     id: number;
     number: number;

@@ -11,7 +11,8 @@ from api.models.user import User
 from api.models.series import Series
 from api.models.issue import Issue
 
-from api.schemas.issue_schema import IssueSchema, SlimIssueSchema, LibraryIssueSchema
+from api.schemas.issue_schema import (IssueSchema, SlimIssueSchema, LibraryIssueSchema,
+                                      BulkIssueIdsSchema, BulkIssueUpdateSchema)
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
@@ -23,6 +24,8 @@ issues_schema = IssueSchema(many=True)
 slim_issue_schema = SlimIssueSchema()
 library_issue_schema = LibraryIssueSchema()
 update_issue_schema = IssueSchema(partial=True)
+bulk_issue_ids_schema = BulkIssueIdsSchema()
+bulk_issue_update_schema = BulkIssueUpdateSchema()
 
 
 def _refresh_counts(series):
@@ -32,6 +35,33 @@ def _refresh_counts(series):
     series.read_count = sum(i.is_read for i in issues_data)
     series.issue_count = len(issues_data)
     series.purchase_cost = sum(i.bought_price or 0 for i in issues_data if i.is_owned)
+
+
+def _apply_status(issue, data):
+    """Keep the dates in step with the flags: switching on stamps the given date or now,
+    switching off clears the date (and, for owned, the price)."""
+    if data.get('is_owned') is False:
+        issue.bought_date = None
+        issue.bought_price = None
+    elif data.get('is_owned') is True:
+        issue.bought_date = data.get('bought_date') or datetime.now(timezone.utc)
+
+    if data.get('is_read') is False:
+        issue.read_date = None
+    elif data.get('is_read') is True:
+        issue.read_date = data.get('read_date') or datetime.now(timezone.utc)
+
+
+def _bulk_targets(series_id, ids):
+    """The caller's series and the listed issues, all of which must belong to it."""
+    series = db.session.get(Series, series_id) or abort(404)
+    if series.user != token_auth.current_user():
+        abort(403)
+    wanted = set(ids)
+    found = db.session.scalars(series.issue_select().where(Issue.id.in_(wanted))).all()
+    if len(found) != len(wanted):
+        abort(404, 'Some of those issues are not in this series.')
+    return series, found
 
 
 @issues.route('/series/<int:series_id>/issues', methods=['POST'])
@@ -235,19 +265,7 @@ def put(data, id):
     if issue.user != token_auth.current_user():
         abort(403)
     issue.update(data)
-
-   # Check if `owned or read` is True, update `bought_date` and 'read_date'
-    if data.get('is_owned') is False:
-        issue.bought_date = None
-        issue.bought_price = None
-    elif data.get('is_owned') is True:
-        issue.bought_date = data.get('bought_date') or datetime.now(timezone.utc)
-
-# Read status handling
-    if data.get('is_read') is False:
-        issue.read_date = None
-    elif data.get('is_read') is True:
-        issue.read_date = data.get('read_date') or datetime.now(timezone.utc)
+    _apply_status(issue, data)
 
     # Recalculate series counters
     issues = issue.series.issue_select()
@@ -282,6 +300,44 @@ def delete(id):
     _refresh_counts(series)
     db.session.commit()
     return '', 204
+
+@issues.route('/series/<int:series_id>/issues/bulk', methods=['PUT'])
+@authenticate(token_auth)
+@body(bulk_issue_update_schema)
+@response(issues_schema)
+@other_responses({403: 'Not allowed to edit this series',
+                  404: 'Series not found, or an issue is not in it'})
+def bulk_update(data, series_id):
+    """Set the same owned/read state, dates and price on several issues at once."""
+    series, targets = _bulk_targets(series_id, data['ids'])
+    fields = {k: v for k, v in data.items() if k != 'ids'}
+    for issue in targets:
+        issue.update(fields)
+        _apply_status(issue, fields)
+    _refresh_counts(series)
+    db.session.commit()
+    return targets
+
+
+@issues.route('/series/<int:series_id>/issues/bulk', methods=['DELETE'])
+@authenticate(token_auth)
+@body(bulk_issue_ids_schema)
+@other_responses({403: 'Not allowed to edit this series',
+                  404: 'Series not found, or an issue is not in it'})
+def bulk_delete(data, series_id):
+    """Delete several issues of a series at once."""
+    series, targets = _bulk_targets(series_id, data['ids'])
+    covers = [(issue.user_id, issue.thumbnail) for issue in targets]
+    for issue in targets:
+        db.session.delete(issue)
+    db.session.commit()
+    for user_id, thumbnail in covers:
+        media.remove(user_id, thumbnail)
+
+    _refresh_counts(series)
+    db.session.commit()
+    return '', 204
+
 
 def download_issue_cover(issue_id, url, user_id):
     """Media-worker task: fetch ``url`` as the issue's cover.

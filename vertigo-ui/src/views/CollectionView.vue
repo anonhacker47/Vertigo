@@ -194,7 +194,7 @@ async function deleteSeries(id: number) {
 
 const confirmDelete = (id: number, title: string) => {
   confirmAction({
-    message: `Series ${title}`,
+    message: `Delete ${title} and all of its issues? This cannot be undone.`,
     header: "Confirm Deletion",
     acceptLabel: "Delete",
     severity: "danger",

@@ -150,3 +150,73 @@ class TestListUserIssues(IssueTestCase):
         rest = [r['id'] for r in rv.json['data']]
         self.assertEqual(len(rest), 1)
         self.assertGreater(rest[0], first[-1])
+
+
+class TestBulkIssues(IssueTestCase):
+    def bulk_url(self):
+        return f'/api/series/{self.series.id}/issues/bulk'
+
+    def ids(self, *numbers):
+        return [self.issue(n).id for n in numbers]
+
+    def test_marks_several_owned_with_one_date_and_price(self):
+        rv = self.client.put(self.bulk_url(), json={
+            'ids': self.ids(2, 3), 'is_owned': True,
+            'bought_date': '2026-10-01T00:00:00Z', 'bought_price': 2.5,
+        })
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(sorted(i['number'] for i in rv.json), [2, 3])
+        for n in (2, 3):
+            issue = self.issue(n)
+            self.assertTrue(issue.is_owned)
+            self.assertEqual(issue.bought_price, 2.5)
+            self.assertEqual(issue.bought_date.strftime('%Y-%m-%d'), '2026-10-01')
+        db.session.refresh(self.series)
+        self.assertEqual(self.series.owned_count, 3)
+        self.assertEqual(self.series.purchase_cost, 9.0)
+
+    def test_clearing_owned_drops_date_and_price(self):
+        rv = self.client.put(self.bulk_url(), json={'ids': self.ids(1), 'is_owned': False})
+        self.assertEqual(rv.status_code, 200)
+        issue = self.issue(1)
+        self.assertFalse(issue.is_owned)
+        self.assertIsNone(issue.bought_date)
+        self.assertIsNone(issue.bought_price)
+        db.session.refresh(self.series)
+        self.assertEqual(self.series.owned_count, 0)
+        self.assertEqual(self.series.purchase_cost, 0)
+
+    def test_marking_read_without_a_date_stamps_now(self):
+        rv = self.client.put(self.bulk_url(), json={'ids': self.ids(1, 2), 'is_read': True})
+        self.assertEqual(rv.status_code, 200)
+        for n in (1, 2):
+            self.assertTrue(self.issue(n).is_read)
+            self.assertIsNotNone(self.issue(n).read_date)
+        self.assertFalse(self.issue(3).is_read)
+        db.session.refresh(self.series)
+        self.assertEqual(self.series.read_count, 2)
+
+    def test_rejects_an_issue_from_another_series_and_changes_nothing(self):
+        other = Series(title='Swamp Thing', user=self.user)
+        db.session.add(other)
+        db.session.flush()
+        stray = Issue(title='1', number=1, series=other, user=self.user, is_owned=0, is_read=0)
+        db.session.add(stray)
+        db.session.commit()
+
+        rv = self.client.put(self.bulk_url(), json={'ids': self.ids(2) + [stray.id], 'is_owned': True})
+        self.assertEqual(rv.status_code, 404)
+        self.assertFalse(self.issue(2).is_owned)
+        self.assertFalse(db.session.get(Issue, stray.id).is_owned)
+
+    def test_requires_at_least_one_id(self):
+        rv = self.client.put(self.bulk_url(), json={'ids': [], 'is_owned': True})
+        self.assertEqual(rv.status_code, 400)
+
+    def test_deletes_several_and_recounts(self):
+        rv = self.client.delete(self.bulk_url(), json={'ids': self.ids(2, 3)})
+        self.assertEqual(rv.status_code, 204)
+        self.assertEqual(self.numbers(), [1])
+        db.session.refresh(self.series)
+        self.assertEqual(self.series.issue_count, 1)
+        self.assertEqual(self.series.owned_count, 1)

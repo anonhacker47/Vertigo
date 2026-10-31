@@ -1,29 +1,22 @@
 <template>
-  <article class="issue-card" :class="{ 'issue-card--fallback': !hasOwnCover, 'motion-safe:animate-wiggle': editMode }">
+  <article class="issue-card"
+    :class="{ 'issue-card--fallback': !hasOwnCover, 'issue-card--editing': editMode, 'issue-card--selected': editMode && selected }"
+    @click="onCardClick">
     <div class="relative">
-      <RouterLink :to="detailRoute" class="issue-card__cover" :style="borderStyle" :aria-label="`Open ${label}`">
+      <!-- In edit mode the cover is the selection checkbox; otherwise it opens the issue. -->
+      <component :is="editMode ? 'button' : RouterLink" v-bind="coverAttrs" class="issue-card__cover" :style="borderStyle">
         <img v-if="coverSrc && !coverFailed" :src="coverSrc" :alt="label" loading="lazy" decoding="async" @error="coverFailed = true" />
         <span v-else class="issue-card__placeholder" :style="{ background: placeholderGradient(series.title) }" role="img" :aria-label="label"></span>
-      </RouterLink>
+      </component>
 
       <!-- Own cover: a small corner chip. Series cover standing in: a large ghost number over the dimmed art. -->
       <span v-if="hasOwnCover" class="issue-card__chip">{{ numberLabel }}</span>
       <span v-else class="issue-card__ghost" aria-hidden="true">{{ numberLabel }}</span>
 
-      <Button
-        v-if="editMode"
-        icon="pi pi-times"
-        rounded
-        size="small"
-        severity="danger"
-        class="issue-card__delete"
-        :aria-label="`Delete ${label}`"
-        title="Delete issue"
-        @click.prevent="$emit('deleteIssue')"
-      />
+      <span v-if="editMode" class="issue-card__check" aria-hidden="true"><i class="pi pi-check"></i></span>
     </div>
 
-    <div class="issue-card__panel">
+    <div class="issue-card__panel" :inert="editMode || undefined">
       <div class="issue-card__head">
         <RouterLink :to="detailRoute" class="issue-card__title" :title="titleText">{{ titleText }}</RouterLink>
         <template v-if="issue.is_owned">
@@ -117,11 +110,11 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, type PropType } from "vue";
 import getSymbolFromCurrency from "currency-symbol-map";
-import Button from "primevue/button";
+import { RouterLink } from "vue-router";
 import DatePicker from "primevue/datepicker";
 import InputNumber from "primevue/inputnumber";
 import { dateToYmd, todayYmd, ymdToDate } from "@/utils/dateInput";
-import type { Issue } from "@/types/issue.types";
+import type { Issue, IssueStatusChange } from "@/types/issue.types";
 import IssueService from "@/services/IssueService";
 import { placeholderGradient } from "@/utils/placeholderGradient";
 import { hasCustomIssueTitle, issueNumberLabel } from "@/utils/issueTitle";
@@ -133,10 +126,15 @@ const props = defineProps({
   themecolor: { type: String as PropType<string | null> },
   preferred_currency: String,
   edit_mode: Boolean,
+  /** Edit mode only: whether this card is in the selection. */
+  selected: Boolean,
   series: { type: Object, required: true },
 });
 
-const emit = defineEmits(["updateStatus", "deleteIssue"]);
+const emit = defineEmits<{
+  (e: "updateStatus", payload: IssueStatusChange): void;
+  (e: "select", payload: { shift: boolean }): void;
+}>();
 
 const editMode = computed(() => props.edit_mode);
 const editing = ref<"bought" | "read" | "price" | null>(null);
@@ -166,6 +164,16 @@ const detailRoute = computed(() => ({
   name: "IssueDetail",
   params: { seriesId: props.series.id, slug: props.series.slug, number: props.issue.number },
 }));
+const coverAttrs = computed(() =>
+  editMode.value
+    ? { type: "button", role: "checkbox", "aria-checked": props.selected, "aria-label": `Select ${label.value}` }
+    : { to: detailRoute.value, "aria-label": `Open ${label.value}` }
+);
+
+function onCardClick(event: MouseEvent) {
+  if (!editMode.value) return;
+  emit("select", { shift: event.shiftKey });
+}
 
 const symbol = getSymbolFromCurrency(props.preferred_currency || "") || "";
 
@@ -285,13 +293,30 @@ function onPrice(value: number | null) {
   pointer-events: none;
 }
 
-.issue-card__delete {
+/* ---- edit mode: the whole card is a checkbox, the panel is read-only ---- */
+.issue-card--editing { cursor: pointer; }
+.issue-card--editing .issue-card__cover { padding: 0; border: 0; cursor: pointer; }
+.issue-card--editing .issue-card__cover:hover img { transform: none; }
+.issue-card--editing .issue-card__panel { opacity: 0.6; }
+.issue-card__check {
   position: absolute;
   top: 6px;
   right: 6px;
   z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  background: rgba(11, 18, 32, 0.75);
+  color: transparent;
+  font-size: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
+.issue-card--selected .issue-card__check { background: #38bdf8; border-color: #38bdf8; color: #0b1220; }
+.issue-card--selected .issue-card__cover { outline: 3px solid #38bdf8; outline-offset: -3px; }
 
 /* ---- panel: title row, status rows, in its own dark box under the framed cover ---- */
 .issue-card__panel {
