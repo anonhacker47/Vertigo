@@ -1,4 +1,5 @@
 import unittest
+from datetime import date
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -15,7 +16,8 @@ def _rate_limit_error(retry_after=28,
 
 
 def _stub(i):
-    return SimpleNamespace(id=1000 + i, number=str(i), image=f"https://img/{i}.jpg")
+    return SimpleNamespace(id=1000 + i, number=str(i), image=f"https://img/{i}.jpg",
+                           cover_date=date(1986, 9, 1))
 
 
 def _detail(i):
@@ -107,6 +109,7 @@ class TestMetronRoutes(BaseTestCase):
         self.assertEqual(by_number['25']['metron_url'], 'https://metron.cloud/issue/watchmen-1986-25/')
         self.assertEqual(by_number['25']['image'], 'https://img/25.jpg')
         self.assertEqual(by_number['25']['metron_id'], 1025)
+        self.assertEqual(by_number['25']['cover_date'], '1986-09-01')
 
     def test_entities_partial_when_rate_limited_mid_scan(self):
         self.session.issues_list.return_value = [_stub(i) for i in range(1, 6)]

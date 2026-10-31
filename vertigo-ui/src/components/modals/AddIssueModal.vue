@@ -39,6 +39,12 @@
         </div>
         <Message v-if="numberError" id="new-issue-number-error" severity="error" size="small" variant="simple" class="-mt-2 sm:col-span-2">{{ numberError }}</Message>
 
+        <div class="sm:col-span-2">
+          <label for="new-issue-cover-date" class="fm-label">Cover date</label>
+          <DatePicker :model-value="ymdToDate(form.cover_date)" input-id="new-issue-cover-date" date-format="d M yy" show-icon icon-display="input" class="w-full sm:w-44"
+            @update:model-value="form.cover_date = dateToYmd($event as Date | null)" />
+        </div>
+
         <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
           <button type="button" class="fm-toggle fm-toggle--own" :aria-pressed="form.is_owned" @click="form.is_owned = !form.is_owned">Own</button>
           <button type="button" class="fm-toggle fm-toggle--read" :aria-pressed="form.is_read" @click="form.is_read = !form.is_read">Read</button>
@@ -107,6 +113,7 @@ const blank = () => ({
   bought_date: todayYmd() as string | null,
   read_date: todayYmd() as string | null,
   bought_price: null as number | null,
+  cover_date: null as string | null,
 });
 
 const form = ref(blank());
@@ -154,6 +161,7 @@ async function submit() {
     };
     const title = form.value.title.trim();
     if (title) payload.title = title;
+    if (form.value.cover_date) payload.cover_date = ymdToDate(form.value.cover_date)?.toISOString() ?? null;
     if (form.value.is_owned) {
       payload.bought_date = ymdToDate(form.value.bought_date)?.toISOString() ?? null;
       payload.bought_price = form.value.bought_price ?? null;

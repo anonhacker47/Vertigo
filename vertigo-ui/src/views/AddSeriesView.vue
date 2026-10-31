@@ -132,6 +132,7 @@ function updateIssuesCount(newCount: number) {
         purchaseDate: null,
         readDate: null,
         price: null,
+        coverDate: null,
         metron_id: null,
         metron_url: null,
         cover: null,
@@ -170,6 +171,7 @@ function onMetronSelect(seriesDetail: any, seriesEntities: any, metronIssues: an
       purchaseDate: null,
       readDate: null,
       price: null,
+      coverDate: matched?.cover_date || null,
       metron_id: matched ? Number(matched.metron_id) : null,
       metron_url: matched ? matched.metron_url : null,
       // Metron only prefills the cover; whatever is in the field at submit time is what gets sent.
@@ -347,6 +349,7 @@ async function addIssues(seriesId: number) {
       bought_date: issue.purchaseDate ? new Date(issue.purchaseDate).toISOString() : null,
       read_date: issue.readDate ? new Date(issue.readDate).toISOString() : null,
       bought_price: issue.price || null,
+      cover_date: issue.coverDate ? new Date(issue.coverDate).toISOString() : null,
       metron_id: issue.metron_id || null,
       metron_url: issue.metron_url || null,
     }));

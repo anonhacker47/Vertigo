@@ -89,6 +89,7 @@ def new(args, series_id):
         bought_date=issue_data.get("bought_date") or (datetime.now(timezone.utc) if issue_data["is_owned"] else None),
         read_date=issue_data.get("read_date") or (datetime.now(timezone.utc) if issue_data["is_read"] else None),
         bought_price=issue_data.get("bought_price"),
+        cover_date=issue_data.get("cover_date"),
         metron_id=issue_data.get("metron_id"),
         metron_url=issue_data.get("metron_url"),
         )

@@ -152,6 +152,18 @@ class TestListUserIssues(IssueTestCase):
         self.assertGreater(rest[0], first[-1])
 
 
+class TestCreateIssues(IssueTestCase):
+    def test_keeps_the_cover_date(self):
+        rv = self.client.post(f'/api/series/{self.series.id}/issues', json=[
+            {'number': 4, 'title': '4', 'is_owned': False, 'is_read': False,
+             'cover_date': '1988-01-01T00:00:00Z'},
+            {'number': 5, 'title': '5', 'is_owned': False, 'is_read': False},
+        ])
+        self.assertEqual(rv.status_code, 201)
+        self.assertEqual(self.issue(4).cover_date.strftime('%Y-%m-%d'), '1988-01-01')
+        self.assertIsNone(self.issue(5).cover_date)
+
+
 class TestBulkIssues(IssueTestCase):
     def bulk_url(self):
         return f'/api/series/{self.series.id}/issues/bulk'

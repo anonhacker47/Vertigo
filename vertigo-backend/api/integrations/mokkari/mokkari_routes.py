@@ -140,6 +140,7 @@ def get_series_entities(series_id):
             "number": getattr(stub, "number", None),
             "metron_url": _issue_url(series_url, getattr(stub, "number", None)),
             "image": str(stub.image) if getattr(stub, "image", None) else None,
+            "cover_date": stub.cover_date.isoformat() if getattr(stub, "cover_date", None) else None,
         }
 
     creators = {}

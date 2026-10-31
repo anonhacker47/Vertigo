@@ -61,21 +61,25 @@
         </div>
 
         <!-- Title, status, prose -->
-        <div class="flex-1 min-w-0 md:overflow-y-auto flex flex-col gap-6 pr-1">
-          <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0 md:overflow-y-auto flex flex-col gap-5 pr-1">
+          <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h1 class="font-bold leading-tight text-2xl md:text-3xl text-primary break-words" :style="accentStyle">
+              <h1 class="font-bold leading-tight text-2xl md:text-3xl text-primary wrap-break-word" :style="accentStyle">
                 <span class="font-medium opacity-80" :class="hasCustomTitle ? 'text-xl md:text-2xl mr-3' : ''">
                   #{{ issue.number }}
                 </span>
                 <span v-if="hasCustomTitle">{{ issue.title }}</span>
               </h1>
-              <div class="flex flex-wrap items-center gap-2 mt-3 text-sm text-slate-300">
-                <TagLink :label="issue.series.title" :to="seriesRoute" :color="themecolor || '(255,255,255)'" />
+              <div class="flex flex-wrap flex-col items-start gap-2 mt-3 text-sm text-slate-300">
                 <TagLink v-if="issue.series.series_format" :label="issue.series.series_format"
                   :to="{ path: '/collection', query: { series_format: issue.series.series_format } }"
                   :color="themecolor || '(255,255,255)'" />
-                <span v-if="issue.cover_date" class="text-slate-400">Cover date {{ formatMonth(issue.cover_date) }}</span>
+                <span v-if="issue.cover_date" class="inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-900/60 px-3 py-1 text-sm"
+                  title="Cover date">
+                  <i class="pi pi-calendar text-xs text-slate-500" aria-hidden="true"></i>
+                  <span class="font-semibold text-slate-500">Cover</span>
+                  <span class="font-bold text-slate-200">{{ formatMonth(issue.cover_date) }}</span>
+                </span>
               </div>
             </div>
 

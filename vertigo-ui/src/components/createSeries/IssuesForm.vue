@@ -79,6 +79,11 @@
               @update:model-value="issue.readDate = dateToYmd($event as Date | null)" />
           </label>
           <label>
+            <span class="fm-label">Cover date</span>
+            <DatePicker :model-value="ymdToDate(issue.coverDate)" date-format="d M yy" show-icon icon-display="input" fluid
+              @update:model-value="issue.coverDate = dateToYmd($event as Date | null)" />
+          </label>
+          <label>
             <span class="fm-label">Cover link</span>
             <input :value="coverLink(issue)" type="text" placeholder="https://" class="fm-input" @input="onCoverUrl(issue, $event)" />
           </label>

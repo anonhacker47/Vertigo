@@ -29,6 +29,7 @@ export interface NewIssue {
     bought_date?: string | null;
     read_date?: string | null;
     bought_price?: number | null;
+    cover_date?: string | null;
     metron_id?: number | null;
     metron_url?: string | null;
 }
@@ -82,6 +83,8 @@ export interface IssueDraft {
     purchaseDate: string | null;
     readDate: string | null;
     price: number | null;
+    /** "YYYY-MM-DD"; Metron fills it on import, otherwise optional. */
+    coverDate: string | null;
     metron_id: number | null;
     metron_url: string | null;
     cover: File | string | null;
