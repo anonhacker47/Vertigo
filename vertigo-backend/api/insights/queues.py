@@ -53,10 +53,11 @@ def build_get_next(collection: Collection) -> dict:
             continue
         caught_up = all(i.is_read for i in owned)
         last_bought = facts.last_bought_at()
+        next_issue = min(missing, key=lambda i: i.number)
         items.append({
             'series': series_basics(facts, now, dupes),
             'missing_count': len(missing),
-            'next_missing': min(i.number for i in missing),
+            'next_issue': issue_basics(next_issue, facts),
             'caught_up': caught_up,
             'unread_on_shelf': len(facts.candidates()),
             'last_bought': iso(last_bought),

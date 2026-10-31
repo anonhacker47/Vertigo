@@ -10,7 +10,7 @@
 
     <template v-else-if="items.length">
       <ul class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-x-3 gap-y-5 md:grid-cols-[repeat(auto-fill,minmax(148px,1fr))] md:gap-x-[18px] md:gap-y-6" :class="{ 'opacity-50': refreshing }">
-        <SeriesTile v-for="item in visible" :key="item.series.id" :series="item.series">
+        <SeriesTile v-for="item in visible" :key="item.series.id" :series="item.series" :issue="item.next_issue">
           <RunStrip :run="item.run" />
           <span class="truncate text-xs font-semibold text-slate-400" :title="progressLine(item)">{{ progressLine(item) }}</span>
           <span class="truncate text-xs font-semibold text-slate-400" :title="statusLine(item)">{{ statusLine(item) }}</span>

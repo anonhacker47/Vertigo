@@ -76,7 +76,7 @@ export interface ReadingQueueResponse {
 export interface GetNextItem {
   series: SeriesBasics;
   missing_count: number;
-  next_missing: number;
+  next_issue: IssueBasics;
   caught_up: boolean;
   unread_on_shelf: number;
   last_bought: string | null;

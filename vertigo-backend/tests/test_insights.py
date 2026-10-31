@@ -166,7 +166,7 @@ class TestGetNext(InsightsTestCase):
         self.assertEqual(rv.json['one_away'], 2)
         first = rv.json['items'][0]
         self.assertTrue(first['caught_up'])
-        self.assertEqual(first['next_missing'], 2)
+        self.assertEqual(first['next_issue']['number'], 2)
         self.assertEqual(rv.json['items'][2]['missing_count'], 2)
         self.assertEqual(rv.json['unstarted'], {'count': 1, 'titles': ['Hellblazer']})
         self.assertNotIn('estimated_cost', first)

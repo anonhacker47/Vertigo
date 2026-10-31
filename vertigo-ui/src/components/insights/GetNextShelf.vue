@@ -15,10 +15,10 @@
 
     <template v-else-if="items.length">
       <ul class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-x-3 gap-y-5 md:grid-cols-[repeat(auto-fill,minmax(148px,1fr))] md:gap-x-4.5 md:gap-y-6" :class="{ 'opacity-50': refreshing }">
-        <SeriesTile v-for="item in visible" :key="item.series.id" :series="item.series">
+        <SeriesTile v-for="item in visible" :key="item.series.id" :series="item.series" :issue="item.next_issue">
           <RunStrip :run="item.run" />
           <span class="truncate text-[13px] font-extrabold text-white">{{ item.missing_count === 1 ? "1 issue away" : `${item.missing_count} to go` }}</span>
-          <span class="truncate text-xs font-semibold text-slate-400">Next #{{ item.next_missing }} · {{ item.series.owned_count }} of {{ item.series.issue_count }} owned</span>
+          <span class="truncate text-xs font-semibold text-slate-400">Next #{{ item.next_issue.number }} · {{ item.series.owned_count }} of {{ item.series.issue_count }} owned</span>
           <span class="truncate text-xs font-semibold text-slate-400">{{ item.caught_up ? "Read everything you own" : `${item.unread_on_shelf} unread on the shelf` }}</span>
         </SeriesTile>
       </ul>
