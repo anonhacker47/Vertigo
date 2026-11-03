@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from flask import url_for
@@ -32,18 +32,18 @@ def rgb_hex(rgb: Optional[tuple]) -> Optional[str]:
 
 def _bust(dt: Optional[datetime]) -> Optional[int]:
     dt = as_naive(dt)
-    return int(dt.timestamp() * 1000) if dt else None
+    return int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000) if dt else None
 
 
 def series_cover(series) -> str:
     return url_for('series.get_series_image', id=series.id, _external=True,
-                   t=_bust(series.last_updated))
+                   t=_bust(series.thumbnail_updated or series.last_updated))
 
 
 def issue_cover(issue, series) -> str:
     if issue.thumbnail:
         return url_for('issue.get_issue_image', id=issue.id, _external=True,
-                       t=_bust(issue.last_updated))
+                       t=_bust(issue.thumbnail_updated or issue.last_updated))
     return series_cover(series)
 
 

@@ -51,6 +51,7 @@ class SeriesSchema(ma.SQLAlchemySchema):
     dominant_color = ma.String()
     slug = ma.String()
     thumbnail = ma.String()
+    thumbnail_updated = ma.auto_field(dump_only=True)
     timestamp = ma.auto_field(dump_only=True)
     last_updated = ma.auto_field(dump_only=True)
     user = ma.Nested(UserSchema, dump_only=True)
@@ -74,4 +75,5 @@ class SlimSeriesSchema(ma.Schema):
     slug = ma.String()
     manga = ma.Integer()
     thumbnail = ma.String()
+    thumbnail_updated = ma.DateTime()
     last_updated = ma.DateTime()

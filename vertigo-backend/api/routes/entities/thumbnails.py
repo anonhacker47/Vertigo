@@ -21,6 +21,7 @@ def apply_entity_thumbnail(entity, kind: str, user_id):
 
     if state == 'set':
         entity.thumbnail = relpath
+        entity.touch_thumbnail()
     elif state == 'cleared':
         entity.thumbnail = None
     return None

@@ -9,10 +9,11 @@ from flask import url_for
 
 from api.app import db
 from api.models.syncable import Syncable
+from api.models.thumbnailed import Thumbnailed
 from api.models.updatable import Updateable
 from api.models.metron_identifiable import MetronIdentifiable
 from api.models import associations
-class Series(Updateable, MetronIdentifiable, Syncable, db.Model):
+class Series(Updateable, MetronIdentifiable, Thumbnailed, Syncable, db.Model):
     __tablename__ = 'series'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -55,7 +56,6 @@ class Series(Updateable, MetronIdentifiable, Syncable, db.Model):
 
     dominant_color = sqla.Column(sqla.String(280))
     slug = sqla.Column(sqla.String(280))
-    thumbnail = sqla.Column(sqla.String(280))
     
     timestamp = sqla.Column(sqla.DateTime, index=True, default=lambda: datetime.now(timezone.utc), nullable=False)
 

@@ -9,16 +9,16 @@ from flask import url_for
 from api.app import db
 from api.models.updatable import Updateable
 from api.models.syncable import Syncable
+from api.models.thumbnailed import Thumbnailed
 from api.models.metron_identifiable import MetronIdentifiable
 from api.models.mal_identifiable import MalIdentifiable
 
-class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Model):
+class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, Thumbnailed, Syncable, db.Model):
     __tablename__ = 'publisher'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(3000))
-    thumbnail = sqla.Column(sqla.String(280))
     
     
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -44,13 +44,12 @@ class Publisher(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Mo
     def url(self):
         return url_for('publisher.get', id=self.id)
 
-class Character(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Model):
+class Character(Updateable, MetronIdentifiable, MalIdentifiable, Thumbnailed, Syncable, db.Model):
     __tablename__ = 'character'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(3000))
-    thumbnail = sqla.Column(sqla.String(280))
 
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
     
@@ -75,13 +74,12 @@ class Character(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Mo
     def url(self):
         return url_for('character.get', id=self.id)
 
-class Creator(Updateable, MetronIdentifiable, MalIdentifiable, Syncable, db.Model):
+class Creator(Updateable, MetronIdentifiable, MalIdentifiable, Thumbnailed, Syncable, db.Model):
     __tablename__ = 'creator'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
     title = sqla.Column(sqla.String(280), nullable=False)
     description = sqla.Column(sqla.String(3000))
-    thumbnail = sqla.Column(sqla.String(280))
 
     timestamp = sqla.Column(sqla.DateTime, default=lambda: datetime.now(timezone.utc))
 

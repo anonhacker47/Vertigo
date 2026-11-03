@@ -354,6 +354,7 @@ def download_issue_cover(issue_id, url, user_id):
         relpath, _ = media.store(
             user_id, media.issues_dir(issue.series_id), str(issue.id), url)
         issue.thumbnail = relpath
+        issue.touch_thumbnail()
         db.session.commit()
     except media.MediaError as exc:
         db.session.rollback()
@@ -402,6 +403,7 @@ def set_cover(id):
 
     if state == 'set':
         issue.thumbnail = relpath
+        issue.touch_thumbnail()
     elif state == 'cleared':
         issue.thumbnail = None
     db.session.commit()

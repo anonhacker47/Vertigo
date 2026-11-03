@@ -98,6 +98,7 @@ def new():
         return jsonify({"error": f"Failed to save thumbnail: {e}"}), 400
     if state == 'set':
         series.thumbnail = relpath
+        series.touch_thumbnail()
         series.dominant_color = color
         submit_background_regeneration(user.id)
 
@@ -257,6 +258,7 @@ def update_series(id):
 
     if state == 'set':
         series.thumbnail = relpath
+        series.touch_thumbnail()
         series.dominant_color = color
         submit_background_regeneration(user.id)
     elif state == 'cleared':

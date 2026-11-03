@@ -54,6 +54,7 @@ def enrich_entity(entity_id, model_name, metron_type, metron_id, name, user_id):
             thumb = _store_entity_thumbnail(entity, metron_type, str(info.image), user_id)
             if thumb:
                 entity.thumbnail = thumb
+                entity.touch_thumbnail()
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -82,6 +83,7 @@ def enrich_tenrai_entity(entity_id, model_name, entity_type, mal_id, name, user_
             thumb = _store_entity_thumbnail(entity, entity_type, image_url, user_id)
             if thumb:
                 entity.thumbnail = thumb
+                entity.touch_thumbnail()
         db.session.commit()
     except Exception:
         db.session.rollback()

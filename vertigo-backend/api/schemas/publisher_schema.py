@@ -20,6 +20,7 @@ class PublisherSchema(ma.SQLAlchemySchema):
         min=0, max=3000))
     
     thumbnail = ma.String()
+    thumbnail_updated = ma.auto_field(dump_only=True)
     slug = ma.String()
 
     timestamp = ma.auto_field(dump_only=True)

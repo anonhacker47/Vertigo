@@ -8,10 +8,11 @@ from flask import url_for
 
 from api.app import db
 from api.models.syncable import Syncable
+from api.models.thumbnailed import Thumbnailed
 from api.models.updatable import Updateable
 from api.models.metron_identifiable import MetronIdentifiable
 
-class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
+class Issue(Updateable, MetronIdentifiable, Thumbnailed, Syncable, db.Model):
     __tablename__ = 'issue'
 
     id = sqla.Column(sqla.Integer, primary_key=True)
@@ -24,7 +25,6 @@ class Issue(Updateable, MetronIdentifiable, Syncable, db.Model):
     notes = sqla.Column(sqla.String(3000))
 
     slug = sqla.Column(sqla.String(280))
-    thumbnail = sqla.Column(sqla.String(280))
     
     is_read = sqla.Column(sqla.Integer)
     is_owned = sqla.Column(sqla.Integer)

@@ -135,7 +135,7 @@ class TestListUserIssues(IssueTestCase):
         self.assertEqual(sandman['title'], 'Sleep of the Just')
         self.assertEqual(sandman['user_rating'], 4.5)
         self.assertEqual(sandman['series_id'], self.other_series.id)
-        self.assertEqual(set(sandman['series']), {'id', 'title', 'slug', 'manga', 'thumbnail', 'last_updated'})
+        self.assertEqual(set(sandman['series']), {'id', 'title', 'slug', 'manga', 'thumbnail', 'thumbnail_updated', 'last_updated'})
         self.assertEqual(sandman['series']['slug'], 'sandman')
 
     def test_pages_in_id_order(self):

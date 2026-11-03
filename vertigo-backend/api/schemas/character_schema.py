@@ -1,14 +1,14 @@
 from marshmallow import validate, post_dump
 from sqlalchemy import func
 from api import ma, db
-from api.models.series_entities import Genre
+from api.models.series_entities import Character
 from api.utils.auth import token_auth
 from api.models import associations
 from api.models.series import Series
 
 class CharacterSchema(ma.SQLAlchemySchema):
     class Meta:
-        model = Genre
+        model = Character
         include_fk = True
         ordered = True
 
@@ -21,6 +21,7 @@ class CharacterSchema(ma.SQLAlchemySchema):
         min=0, max=3000))
     
     thumbnail = ma.String()
+    thumbnail_updated = ma.auto_field(dump_only=True)
 
     metron_id = ma.Integer(allow_none=True)
     metron_url = ma.String(allow_none=True)

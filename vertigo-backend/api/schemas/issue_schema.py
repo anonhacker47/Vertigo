@@ -40,6 +40,8 @@ class IssueSchema(ma.SQLAlchemySchema):
     # Relative path of the issue's own cover (see api/media); set only through
     # PUT /series/issues/<id>/cover. Null means "fall back to the series cover".
     thumbnail = ma.String(dump_only=True)
+    # Moves only when the cover image changes.
+    thumbnail_updated = ma.auto_field(dump_only=True)
 
     timestamp = ma.auto_field(dump_only=True)
     last_updated = ma.auto_field(dump_only=True)
