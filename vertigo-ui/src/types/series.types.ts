@@ -43,6 +43,8 @@ export interface Series extends MetronIdentifiable {
   slug: string;
   team: string[];
   thumbnail: string;
+  /** Moves only when the cover image changes. */
+  thumbnail_updated?: string | null;
   timestamp: string;
   last_updated?: string;
   title: string;

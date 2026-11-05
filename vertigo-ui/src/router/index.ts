@@ -42,6 +42,15 @@ const router = createRouter({
       },
     },
     {
+      path: "/reading-room",
+      name: "ReadingRoom",
+      component: () => import("@/views/ReadingRoomView.vue"),
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+    },
+    {
       path: "/settings",
       name: "Settings",
       component: () => import("@/views/SettingsView.vue"),
