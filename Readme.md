@@ -34,7 +34,7 @@
 - [x] Track reading progress (read/unread, backlog and ratings if needed).
 - [x] Generate insightful statistics on collection.
 - [x] Export User Data to commonly used formats like spreadsheets.
-- [ ] Explore options to integrate with external APIs for automatic fetching of details.
+- [x] Explore options to integrate with external APIs for automatic fetching of details.
 
 Feel free to reach out if you have anything else you'd like to see!
 

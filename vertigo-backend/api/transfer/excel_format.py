@@ -1,10 +1,10 @@
+"""openpyxl styling for the exported Series, Issues and Stats sheets."""
 import os
 from openpyxl.styles import PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as OpenpyxlImage
 from openpyxl.styles import Font
 from openpyxl.chart import BarChart, Reference, PieChart
-from openpyxl.styles import Font
 
 # Global Fills
 green_fill = PatternFill(start_color="58d68d", end_color="58d68d", fill_type="solid")
@@ -107,7 +107,7 @@ def format_series_sheet(sheet, df, resolve_path):
 def format_issues_sheet(sheet, df):
     merge_series_titles(sheet, df)
     color_status_cells(sheet, df, ["Owned Already?", "Read Already?"])
-    format_date_columns(sheet, df, ["Bought Date", "Read Date"])
+    format_date_columns(sheet, df, [c for c in ("Bought Date", "Read Date", "Cover Date") if c in df.columns])
     set_sheet_dimensions(sheet, df, row_height=20)
     set_header_font_size(sheet)
 

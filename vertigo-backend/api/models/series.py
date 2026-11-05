@@ -66,6 +66,14 @@ class Series(Updateable, MetronIdentifiable, Thumbnailed, Syncable, db.Model):
     def issue_select(self):
         return Issue.select().where(sqla_orm.with_parent(self, Series.issue))
 
+    def refresh_counts(self):
+        """Recompute the cached counters and the total spent from the issues."""
+        issues = db.session.scalars(self.issue_select()).all()
+        self.issue_count = len(issues)
+        self.owned_count = sum(1 for i in issues if i.is_owned)
+        self.read_count = sum(1 for i in issues if i.is_read)
+        self.purchase_cost = sum(i.bought_price or 0 for i in issues if i.is_owned)
+
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs:
             kwargs['slug'] = slugify(kwargs.get('title', ''))

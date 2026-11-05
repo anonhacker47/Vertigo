@@ -64,6 +64,8 @@ def create_app(config_class=Config):
     app.register_blueprint(jobs, url_prefix='/api')
     from api.routes.sync_routes import sync
     app.register_blueprint(sync, url_prefix='/api') 
+    from api.transfer.transfer_routes import transfer
+    app.register_blueprint(transfer, url_prefix='/api')
 
     from api.routes.entities.publisher_routes import publisher
     app.register_blueprint(publisher, url_prefix='/api')

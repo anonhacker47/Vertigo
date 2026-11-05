@@ -31,11 +31,7 @@ bulk_issue_update_schema = BulkIssueUpdateSchema()
 
 def _refresh_counts(series):
     """Recompute the series' cached counters from its issues."""
-    issues_data = db.session.scalars(series.issue_select()).all()
-    series.owned_count = sum(i.is_owned for i in issues_data)
-    series.read_count = sum(i.is_read for i in issues_data)
-    series.issue_count = len(issues_data)
-    series.purchase_cost = sum(i.bought_price or 0 for i in issues_data if i.is_owned)
+    series.refresh_counts()
 
 
 def _apply_status(issue, data):
