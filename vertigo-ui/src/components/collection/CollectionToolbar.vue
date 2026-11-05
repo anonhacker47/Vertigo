@@ -8,12 +8,14 @@
       </button>
     </label>
 
+    <div class="filters">
     <FilterPill label="Publisher" :options="options.publisher" :model-value="filters.publisher || ''" searchable @update:model-value="set('publisher', $event)" />
     <FilterPill label="Creator" :options="options.creator" :model-value="filters.creator || ''" searchable @update:model-value="set('creator', $event)" />
     <FilterPill label="Character" :options="options.character" :model-value="filters.character || ''" searchable @update:model-value="set('character', $event)" />
     <FilterPill label="Genre" :options="options.genre" :model-value="filters.genre || ''" searchable @update:model-value="set('genre', $event)" />
     <FilterPill label="Format" :options="options.series_format" :model-value="filters.series_format || ''" @update:model-value="set('series_format', $event)" />
     <button v-if="activeCount" type="button" class="h-9 px-2 text-[13px] font-bold text-sky-400 hover:text-sky-300" @click="$emit('clear')">Clear all</button>
+    </div>
 
     <div class="ml-auto flex flex-wrap items-center gap-2">
       <SortPill :options="SORTS" :order-by="orderBy" :order-dir="orderDir" @update:sort="$emit('update:sort', $event)" />
@@ -21,9 +23,14 @@
       <div class="viewtoggle" role="group" aria-label="View">
         <button type="button" :aria-pressed="viewMode === 'card'" aria-label="Card view" title="Cards" @click="$emit('update:viewMode', 'card')"><i class="pi pi-th-large"></i></button>
         <button type="button" :aria-pressed="viewMode === 'list'" aria-label="List view" title="List" @click="$emit('update:viewMode', 'list')"><i class="pi pi-list"></i></button>
+        <button type="button" :aria-pressed="viewMode === 'longbox'" aria-label="Longbox view" title="Longbox" @click="$emit('update:viewMode', 'longbox')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10h18v10H3z" /><path d="m7 10 1.5-5h7L17 10" /><path d="M10.5 10V5M13.5 10V5" />
+          </svg>
+        </button>
       </div>
 
-      <PillMenu label="Display" icon="pi-sliders-h" align="end">
+      <PillMenu v-if="viewMode !== 'longbox'" label="Display" icon="pi-sliders-h" align="end">
         <div v-if="viewMode === 'card'" class="mb-4">
           <div class="mb-2 flex items-baseline justify-between text-[13px] font-bold text-slate-300">
             <span>Cards per row</span><span class="tabular-nums text-slate-400">{{ cardsPerLine }}</span>
@@ -156,6 +163,25 @@ onMounted(async () => {
 .viewtoggle { display: inline-flex; gap: 2px; padding: 3px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); }
 .viewtoggle button { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 5px; color: #94a3b8; font-size: 12px; }
 .viewtoggle button:hover { color: #fff; }
+.viewtoggle svg { width: 14px; height: 14px; }
 .viewtoggle button[aria-pressed="true"] { background: #1e293b; color: #fff; }
 .viewtoggle button:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
+.filters { display: contents; }
+@media (max-width: 767px) {
+  .search { width: 100%; }
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+  .filters > * { min-width: 0; }
+  .filters :deep(.pill) { width: 100%; max-width: none; justify-content: space-between; }
+  .filters > :nth-child(even) :deep(.popover) { left: auto; right: 0; }
+  .toolbar__right { width: 100%; margin-left: 0; }
+  .toolbar__right > :first-child { flex: 1 1 auto; min-width: 0; }
+  .toolbar__right > :first-child :deep(.pill) { width: 100%; justify-content: space-between; }
+  .toolbar__right > :last-child { margin-left: auto; }
+}
 </style>

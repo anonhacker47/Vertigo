@@ -22,7 +22,11 @@
       @update:cards-per-line="setCardsPerLine" @update:items-per-page="pagination.limit = $event" @clear="clearFilters" />
   </div>
 
-  <div v-if="loading && !seriesList.length" class="mx-auto grid w-full max-w-page gap-3 px-4 pt-5 md:gap-5 md:px-8" :style="gridStyle" aria-hidden="true">
+  <div v-if="loading && !seriesList.length && viewMode === 'longbox'" class="mx-auto w-full max-w-page px-4 pt-5 md:px-8" aria-hidden="true">
+    <div class="animate-pulse rounded-lg bg-white/6" style="height: 460px"></div>
+  </div>
+
+  <div v-else-if="loading && !seriesList.length" class="mx-auto grid w-full max-w-page gap-3 px-4 pt-5 md:gap-5 md:px-8" :style="gridStyle" aria-hidden="true">
     <div v-for="n in skeletonCount" :key="n" class="aspect-2/3 animate-pulse rounded-md bg-white/6"></div>
   </div>
 
@@ -48,13 +52,17 @@
         </TransitionGroup>
       </div>
 
-      <div v-else key="list" class="mx-auto w-full max-w-page px-4 md:px-8">
+      <div v-else-if="viewMode === 'list'" key="list" class="mx-auto w-full max-w-page px-4 md:px-8">
         <CollectionTable :seriesList="seriesList" :deleteMode="deleteMode" :confirmDelete="confirmDelete" />
+      </div>
+
+      <div v-else key="longbox" class="mx-auto w-full max-w-page px-4 md:px-8">
+        <LongboxView :series-list="seriesList" :order-by="orderBy" :delete-mode="deleteMode" :pending="pendingCount" :results-key="resultsKey" @confirmDelete="confirmDelete" />
       </div>
     </Transition>
   </div>
 
-  <CollectionPager :total="pagination.total" :limit="pagination.limit" :offset="pagination.offset" @page="onPageChange" />
+  <CollectionPager v-if="viewMode !== 'longbox'" :total="pagination.total" :limit="pagination.limit" :offset="pagination.offset" @page="onPageChange" />
 </template>
 
 <script setup lang="ts">
@@ -69,6 +77,7 @@ import CollectionCard from "@/components/cards/CollectionCard.vue";
 import CollectionTable from "@/components/tables/CollectionTable.vue";
 import CollectionToolbar, { type SeriesFilters } from "@/components/collection/CollectionToolbar.vue";
 import CollectionPager from "@/components/collection/CollectionPager.vue";
+import LongboxView from "@/components/collection/longbox/LongboxView.vue";
 
 const EMPTY_FILTERS: SeriesFilters = { query: "", genre: "", creator: "", character: "", publisher: "", series_format: "" };
 
@@ -88,6 +97,10 @@ const animateResults = ref(false); // true only for the render right after a fet
 const loading = ref(false);
 const pagination = ref({ total: 0, limit: 25, offset: 0, base_total: 0 });
 const currentFilter = ref<SeriesFilters>({ ...EMPTY_FILTERS });
+const pendingCount = ref(0); // series the longbox is still waiting on after its first page
+let fetchToken = 0;          // bumped per request, so a slow reply cannot overwrite a newer one
+const LONGBOX_PAGE = 100;    // the API caps a page at 100 (paginated_response max_limit)
+const LONGBOX_PARALLEL = 3;  // follow-up pages in flight at once, so a big box is not a burst of requests
 
 const viewMode = computed({
   get: () => userPreferences.viewMode,
@@ -114,15 +127,18 @@ function filtersFromQuery(query: Record<string, any>): SeriesFilters {
   };
 }
 
+const withThumbnails = (list: Series[]) =>
+  list.map((series) => ({ ...series, thumbnail: SeriesService.getSeriesImageById(series.id, series.last_updated) }));
+
 const getseriesList = async (filter = currentFilter.value, offset = 0, limit = pagination.value.limit) => {
   if (limit === 0) return;
+  if (viewMode.value === "longbox") return getWholeBox(filter);
+  const token = ++fetchToken;
   loading.value = true;
   try {
     const result: any = await SeriesService.fetchSeries(orderBy.value, orderDir.value, limit, offset, filter);
-    seriesList.value = result.seriesList.map((series: Series) => ({
-      ...series,
-      thumbnail: SeriesService.getSeriesImageById(series.id, series.last_updated),
-    }));
+    if (token !== fetchToken) return;
+    seriesList.value = withThumbnails(result.seriesList);
     pagination.value = result.pagination;
     resultsKey.value++;
     animateResults.value = true;
@@ -132,9 +148,55 @@ const getseriesList = async (filter = currentFilter.value, offset = 0, limit = p
     console.error("Error loading series:", error);
     toast.add({ severity: "error", summary: "Error", detail: "Failed to load series.", life: 3000 });
   } finally {
-    loading.value = false;
+    if (token === fetchToken) loading.value = false;
   }
 };
+
+// The longbox holds the whole filtered collection. The first page shows at once; the rest arrive
+// a few pages at a time and are appended in order, so a big collection starts riffling quickly
+// and keeps growing without a burst of requests against the API.
+async function getWholeBox(filter: SeriesFilters) {
+  const token = ++fetchToken;
+  loading.value = true;
+  pendingCount.value = 0;
+  let first: Awaited<ReturnType<typeof SeriesService.fetchSeries>>;
+  try {
+    first = await SeriesService.fetchSeries(orderBy.value, orderDir.value, LONGBOX_PAGE, 0, filter);
+  } catch (error) {
+    console.error("Error loading series:", error);
+    if (token === fetchToken) {
+      loading.value = false;
+      toast.add({ severity: "error", summary: "Error", detail: "Failed to load series.", life: 3000 });
+    }
+    return;
+  }
+  if (token !== fetchToken) return;
+  seriesList.value = withThumbnails(first.seriesList);
+  pagination.value = { ...first.pagination, limit: pagination.value.limit };
+  resultsKey.value++;
+  loading.value = false;
+
+  const total: number = first.pagination.total ?? seriesList.value.length;
+  pendingCount.value = Math.max(0, total - seriesList.value.length);
+  const offsets: number[] = [];
+  for (let next = LONGBOX_PAGE; next < total; next += LONGBOX_PAGE) offsets.push(next);
+  try {
+    for (let i = 0; i < offsets.length; i += LONGBOX_PARALLEL) {
+      const batch = offsets.slice(i, i + LONGBOX_PARALLEL);
+      const pages = await Promise.all(batch.map((next) => SeriesService.fetchSeries(orderBy.value, orderDir.value, LONGBOX_PAGE, next, filter)));
+      if (token !== fetchToken) return;
+      seriesList.value = [...seriesList.value, ...pages.flatMap((page) => withThumbnails(page.seriesList))];
+      pendingCount.value = Math.max(0, total - seriesList.value.length);
+    }
+  } catch (error) {
+    console.error("Error loading the rest of the collection:", error);
+    if (token === fetchToken) {
+      toast.add({ severity: "error", summary: "Error", detail: `Only the first ${seriesList.value.length} series loaded. Change the sort or a filter to try again.`, life: 5000 });
+    }
+  } finally {
+    if (token === fetchToken) pendingCount.value = 0;
+  }
+}
 
 // filters mirror into the URL, and the URL watcher refetches, so a link is a saved search
 const handleSearch = (filters: SeriesFilters) => {
@@ -177,6 +239,12 @@ watch(() => pagination.value.limit, (newLimit) => {
 watch(() => route.query, (newQuery) => {
   currentFilter.value = filtersFromQuery(newQuery);
   getseriesList(currentFilter.value, 0, pagination.value.limit);
+});
+
+// Cards and the table share a page; the longbox needs the whole collection. Crossing that line
+// refetches, while switching between cards and the table keeps what is already loaded.
+watch(viewMode, (mode, previous) => {
+  if ((mode === "longbox") !== (previous === "longbox")) getseriesList(currentFilter.value, 0, pagination.value.limit);
 });
 
 const toggleDelete = () => {

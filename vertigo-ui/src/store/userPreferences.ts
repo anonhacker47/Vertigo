@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 
-export type ViewMode = "card" | "list";
+export type ViewMode = "card" | "list" | "longbox";
 
 interface UserPreferencesState {
     viewMode: ViewMode;
@@ -10,7 +10,8 @@ interface UserPreferencesState {
 }
 
 function storedViewMode(): ViewMode {
-    return localStorage.getItem('viewMode') === 'list' ? 'list' : 'card';
+    const stored = localStorage.getItem('viewMode');
+    return stored === 'list' || stored === 'longbox' ? stored : 'card';
 }
 
 function storedOrderDir(): 'asc' | 'desc' {
