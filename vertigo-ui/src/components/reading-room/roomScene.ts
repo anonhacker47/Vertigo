@@ -114,6 +114,56 @@ function mulberry32(seed: number) {
   };
 }
 
+/** Covers stand at most ~200 px wide on screen; a picked-up one swaps in the full file. */
+const SHELF_TEXTURE_WIDTH = 512;
+const KEEP_PAGES = 3;
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.decoding = "async";
+  img.src = url;
+  return img.decode().then(() => img);
+}
+
+/** The cover as a texture; wider than maxWidth it is drawn down to that width first. */
+async function loadCover(url: string, maxWidth?: number): Promise<{ texture: THREE.Texture; downscaled: boolean }> {
+  const img = await loadImage(url);
+  let texture: THREE.Texture, downscaled = false;
+  if (maxWidth && img.naturalWidth > maxWidth) {
+    const canvas = document.createElement("canvas");
+    canvas.width = maxWidth;
+    canvas.height = Math.round((img.naturalHeight * maxWidth) / img.naturalWidth);
+    const g = canvas.getContext("2d")!;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(img, 0, 0, canvas.width, canvas.height);
+    texture = new THREE.CanvasTexture(canvas);
+    downscaled = true;
+  } else {
+    texture = new THREE.Texture(img);
+    texture.needsUpdate = true;
+  }
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  return { texture, downscaled };
+}
+
+function dropTexture(t: THREE.Texture | null) {
+  t?.dispose();
+}
+
+interface CoverEntry {
+  mat: THREE.MeshPhysicalMaterial;
+  placeholder: THREE.Texture;
+  small: THREE.Texture | null;
+  full: THREE.Texture | null;
+  downscaled: boolean;
+  loading: boolean;
+  wantFull: boolean;
+  pinned: boolean;
+  url: string;
+}
+
 export function createRoom(container: HTMLElement, series: RoomSeries[], issues: RoomIssue[], options: RoomOptions = {}): RoomHandle {
   const rng = mulberry32(21);
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -147,7 +197,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
 
   const pickables: THREE.Object3D[] = [];
   const states = new Map<THREE.Object3D, Pickable>();
-  const coverMaterials = new Map<string, THREE.MeshPhysicalMaterial>();
+  const coverMaterials = new Map<string, CoverEntry>();
+  const coverByMaterial = new Map<THREE.Material, CoverEntry>();
   const disposables: { dispose(): void }[] = [];
   const mouse = new THREE.Vector2(-10, -10);
   const raycaster = new THREE.Raycaster();
@@ -395,23 +446,60 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     }
     g.putImageData(img, 0, 0);
   }, 256, 256, false);
-  /** The cover art as a glossy board with the spine crease, cached per series. */
-  function coverMaterial(s: RoomItem, onDone: () => void) {
+  /** The cover art as a glossy board with the spine crease, cached per item; pinned props never unload. */
+  function coverMaterial(s: RoomItem, onDone: () => void, pinned = false) {
     const key = `${s.kind}:${s.id}`;
-    const cached = coverMaterials.get(key);
-    if (cached) { setTimeout(onDone, 0); return cached; }
-    const mat = keep(new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.48, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.4, map: coverPlaceholder(s) }));
-    mat.normalMap = spineNormal; mat.normalScale.set(0.6, 0.6); mat.onBeforeCompile = spineShade;
-    coverMaterials.set(key, mat);
-    const loader = new THREE.TextureLoader();
-    loader.crossOrigin = "anonymous";
-    loader.load(
-      s.cover,
-      (t) => { if (disposed) { t.dispose(); return; } t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; keep(t); mat.map?.dispose(); mat.map = t; mat.needsUpdate = true; wake(); onDone(); },
-      undefined,
-      () => onDone(),
-    );
-    return mat;
+    let entry = coverMaterials.get(key);
+    if (!entry) {
+      const placeholder = coverPlaceholder(s);
+      const mat = keep(new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.48, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.4, map: placeholder }));
+      mat.normalMap = spineNormal; mat.normalScale.set(0.6, 0.6); mat.onBeforeCompile = spineShade;
+      entry = { mat, placeholder, small: null, full: null, downscaled: false, loading: false, wantFull: false, pinned, url: s.cover };
+      coverMaterials.set(key, entry);
+      coverByMaterial.set(mat, entry);
+    }
+    entry.pinned ||= pinned;
+    if (entry.small || entry.loading) { setTimeout(onDone, 0); return entry.mat; }
+    const e = entry;
+    e.loading = true;
+    loadCover(e.url, SHELF_TEXTURE_WIDTH)
+      .then(({ texture, downscaled }) => {
+        if (disposed || e.small) { dropTexture(texture); return; }
+        e.small = texture; e.downscaled = downscaled;
+        if (!e.full) { e.mat.map = texture; e.mat.needsUpdate = true; }
+        if (focused && coverOf(focused) === e) sharpen(e);
+        wake();
+      })
+      .catch(() => undefined)
+      .finally(() => { e.loading = false; onDone(); });
+    return entry.mat;
+  }
+  function coverOf(m: THREE.Object3D) {
+    const mat = (m as THREE.Mesh).material;
+    return coverByMaterial.get(Array.isArray(mat) ? mat[0] : mat);
+  }
+  function sharpen(entry: CoverEntry) {
+    if (!entry.downscaled || entry.full || entry.wantFull) return;
+    entry.wantFull = true;
+    loadCover(entry.url)
+      .then(({ texture }) => {
+        if (disposed || !entry.wantFull) { dropTexture(texture); return; }
+        entry.full = texture; entry.mat.map = texture; entry.mat.needsUpdate = true;
+        wake();
+      })
+      .catch(() => undefined);
+  }
+  function soften(entry: CoverEntry) {
+    entry.wantFull = false;
+    if (!entry.full) return;
+    entry.mat.map = entry.small ?? entry.placeholder; entry.mat.needsUpdate = true;
+    dropTexture(entry.full); entry.full = null;
+  }
+  function unloadCover(entry: CoverEntry) {
+    soften(entry);
+    if (!entry.small) return;
+    entry.mat.map = entry.placeholder; entry.mat.needsUpdate = true;
+    dropTexture(entry.small); entry.small = null; entry.downscaled = false;
   }
   const pagesTexture = canvasTexture((g) => { g.fillStyle = "#e9e2d2"; g.fillRect(0, 0, 64, 64); for (let i = 0; i < 64; i += 2) { g.fillStyle = `rgba(0,0,0,${0.06 + rng() * 0.1})`; g.fillRect(0, i, 64, 1); } }, 64, 64);
   pagesTexture.wrapS = pagesTexture.wrapT = THREE.RepeatWrapping;
@@ -531,8 +619,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     for (const x of [front, block, back, spine, face]) x.dispose();
     return { geo: keep(geo), body: keep(body) };
   }
-  function addComic(s: RoomItem, geo: THREE.BufferGeometry, x: number, y: number, z: number, parent: THREE.Object3D, onDone: () => void) {
-    const m = new THREE.Mesh(geo, [coverMaterial(s, onDone), ghostPages]);
+  function addComic(s: RoomItem, geo: THREE.BufferGeometry, x: number, y: number, z: number, parent: THREE.Object3D, onDone: () => void, pinned = false) {
+    const m = new THREE.Mesh(geo, [coverMaterial(s, onDone, pinned), ghostPages]);
     m.position.set(x, y, z);
     m.rotation.x = -0.1;
     m.castShadow = true;
@@ -1003,6 +1091,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const pageCount = Math.max(1, Math.ceil(shelfItems.length / SHELF_SLOTS));
   const noop = () => {};
   let currentPage = 0, busyUntil = 0, pageBusy = false;
+  let recentPages = [0];
   function showPage(page: number) {
     const target = ((page % pageCount) + pageCount) % pageCount;
     const now = performance.now() / 1000;
@@ -1020,6 +1109,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     pageBusy = true;
     wake();
     options.onPage?.(currentPage, pageCount, true);
+    recentPages = [target, ...recentPages.filter((p) => p !== target)].slice(0, KEEP_PAGES);
+    const live = new Set<string>();
+    for (const p of recentPages) for (let i = 0; i < SHELF_SLOTS; i++) { const s = shelfItems[p * SHELF_SLOTS + i]; if (s) live.add(`${s.kind}:${s.id}`); }
+    for (const [key, entry] of coverMaterials) if (!entry.pinned && !live.has(key)) unloadCover(entry);
   }
   options.onPage?.(0, pageCount, false);
 
@@ -1102,7 +1195,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   put(cyl(0.07, 0.07, 0.05, 24), std(0x2d3039, 0.6), -0.13, 0.36, 0, { parent: hp, rot: [0, 0, Math.PI / 2] }); put(cyl(0.07, 0.07, 0.05, 24), std(0x2d3039, 0.6), 0.13, 0.36, 0, { parent: hp, rot: [0, 0, Math.PI / 2] });
   const flatGeo = comicGeometry(FACE.w, FACE.h, FACE.d * 0.7);
   const deskStack = byLove.slice(0, 4).map((s, i) => {
-    const m = new THREE.Mesh(flatGeo.geo, [coverMaterial(s, bump), ghostPages]);
+    const m = new THREE.Mesh(flatGeo.geo, [coverMaterial(s, bump, true), ghostPages]);
     m.position.set(-0.05 + (i % 2) * 0.03, 1.05 + 0.035 + i * 0.068, BZ + 0.75 + (i % 3) * 0.02);
     m.rotation.set(-Math.PI / 2, 0, 0.5 + (rng() - 0.5) * 0.2);
     m.castShadow = true;
@@ -1126,7 +1219,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   put(box(2.36, 0.05, 0.66, 0.015), walnut, 4.6, 1.16, BZ + 0.35);
   for (const x of [4.05, 5.15]) { put(box(1.0, 0.8, 0.03, 0.008), std(0x3a2a1c, 0.6, { map: shelfWood }), x, 0.55, BZ + 0.66, { shadow: false }); put(box(0.05, 0.16, 0.02, 0.006), brassMat, x + (x < 4.6 ? 0.4 : -0.4), 0.55, BZ + 0.69, { shadow: false }); }
   blob(4.6, BZ + 0.5, 2.7, 1.1, 0.45);
-  byLove.slice(7, 10).forEach((s, i) => addComic(s, faceGeo.geo, 3.75 + i * 0.6, 1.185 + FACE.h / 2, BZ + 0.2 + i * 0.03, scene, bump));
+  byLove.slice(7, 10).forEach((s, i) => addComic(s, faceGeo.geo, 3.75 + i * 0.6, 1.185 + FACE.h / 2, BZ + 0.2 + i * 0.03, scene, bump, true));
   const syncBodies = [bodyInstances(faceGeo.body, faceComics), bodyInstances(flatGeo.body, deskStack)];
   const consoleMat = std(0xd8d4c8, 0.55), consoleDark = std(0x2a2d35, 0.6);
   put(box(0.44, 0.09, 0.3, 0.015), consoleMat, 5.45, 1.23, BZ + 0.42);
@@ -1281,7 +1374,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   blob(2.2, 1.7, 1.0, 1.0, 0.4);
   const smallFlat = twoSided(new THREE.BoxGeometry(FACE.w * 0.9, FACE.d * 0.7, FACE.h * 0.9), 2); // the cover is the top
   byLove.slice(4, 7).forEach((s, i) => {
-    const m = new THREE.Mesh(smallFlat, [coverMaterial(s, () => undefined), pages]);
+    const m = new THREE.Mesh(smallFlat, [coverMaterial(s, () => undefined, true), pages]);
     m.position.set(2.1 + (i % 2) * 0.02, 0.68 + i * 0.065, 1.78);
     m.rotation.y = 0.3 + (rng() - 0.5) * 0.3;
     m.castShadow = true;
@@ -1632,6 +1725,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
 
   function pickUp(m: THREE.Object3D) {
     focused = m;
+    const cover = coverOf(m);
+    if (cover) sharpen(cover);
     hovered = null;
     options.onHover?.(null);
     if (m.parent !== scene) scene.attach(m);
@@ -1645,6 +1740,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     if (!focused) { closeSecret(); return; }
     const st = states.get(focused);
     if (st && st.parent !== scene) st.parent.attach(focused);
+    const cover = coverOf(focused);
+    if (cover) soften(cover);
     focused = null;
     options.onPick?.(null);
     options.onPhoto?.(null);
@@ -1850,6 +1947,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
       el.removeEventListener("pointerleave", onLeave);
       el.removeEventListener("wheel", onWheel);
       for (const d of disposables) d.dispose();
+      for (const entry of coverMaterials.values()) { dropTexture(entry.small); dropTexture(entry.full); }
       for (const f of falling) f.mats.forEach((m) => m.dispose());
       for (const ph of photos) if (ph.url) URL.revokeObjectURL(ph.url);
       gtao.dispose();
