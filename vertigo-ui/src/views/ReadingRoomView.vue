@@ -15,10 +15,20 @@
     <Transition name="snap"><div v-if="flash" class="room__flash"></div></Transition>
 
     <Transition name="card">
+      <aside v-if="character" class="room__card">
+        <h2>{{ character.title }}</h2>
+        <p class="room__meta">in {{ character.series }} series</p>
+        <RouterLink :to="{ name: 'CharacterDetail', params: { Id: character.id, Link: character.slug ?? 'character' } }" class="btn">Open character</RouterLink>
+        <button type="button" class="link" @click="putBack">Put it back</button>
+      </aside>
+    </Transition>
+
+    <Transition name="card">
       <aside v-if="photo" class="room__card">
         <h2>Shelfie</h2>
         <p class="room__meta">{{ photo.taken.toLocaleString() }}</p>
-        <a :href="photo.jpeg" :download="`shelfie-${stamp(photo.taken)}.jpg`" class="btn">Download photo</a>
+        <a v-if="photo.url" :href="photo.url" :download="`shelfie-${stamp(photo.taken)}.jpg`" class="btn">Download photo</a>
+        <span v-else class="btn">Still developing…</span>
         <button type="button" class="link" @click="room?.removePhoto(photo.id)">Take it down</button>
         <button type="button" class="link" @click="putBack">Pin it back</button>
       </aside>
@@ -71,7 +81,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { loadRoomSeries, loadRoomSummary, type RoomSeries } from "@/components/reading-room/roomData";
+import { loadRoomCharacters, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomSeries } from "@/components/reading-room/roomData";
 import { createRoom, type RoomHandle, type RoomPhoto } from "@/components/reading-room/roomScene";
 
 const stage = ref<HTMLElement | null>(null);
@@ -93,6 +103,7 @@ const shelfFoot = ref({ x: 0.28, y: 0.78 });
 const holding = ref(false);
 const secretOpen = ref(false);
 const photo = ref<RoomPhoto | null>(null);
+const character = ref<RoomCharacter | null>(null);
 const flash = ref(false);
 let room: RoomHandle | null = null;
 
@@ -163,10 +174,12 @@ onMounted(async () => {
       onHold: (held) => { holding.value = held; },
       onSecret: (open) => { secretOpen.value = open; },
       onPhoto: (p) => { photo.value = p; },
+      onCharacter: (c) => { character.value = c; },
     });
     // a slow network still gets the room; the covers keep arriving behind it
     veilTimer = window.setTimeout(() => { target = 100; }, 6000);
     loadRoomSummary({ series: total.value, issues: issues.value }).then((summary) => room?.setSummary(summary)).catch(() => {});
+    loadRoomCharacters().then((list) => room?.setCharacters(list)).catch(() => {});
   } catch (error) {
     console.error("The reading room could not start", error);
     failed.value = "Your browser could not start the 3D room.";

@@ -1,8 +1,10 @@
 import getSymbolFromCurrency from "currency-symbol-map";
+import CharacterService from "@/services/CharacterService";
 import DashboardService from "@/services/DashboardService";
 import InsightsService from "@/services/InsightsService";
 import SeriesService from "@/services/SeriesService";
 import { useUserStore } from "@/store/user";
+import type { Entity } from "@/types/entity.types";
 import type { Series } from "@/types/series.types";
 
 /** What the room needs to know about a series: enough for a cover, a spine colour and the card. */
@@ -89,4 +91,24 @@ export async function loadRoomSummary(fallback: { series: number; issues: number
     series: Number(seriesStats?.totalSeriesCount ?? fallback.series),
     since: date ? new Date(date).getFullYear() : null,
   };
+}
+
+/** A character whose picture stands on the shelf. */
+export interface RoomCharacter {
+  id: number;
+  title: string;
+  slug: string | null;
+  series: number;
+  image: string;
+}
+
+/** The characters in the most series, among those with a picture. */
+export async function loadRoomCharacters(count = 2): Promise<RoomCharacter[]> {
+  const page = await CharacterService.fetchCharacters(100, 0);
+  const list: Entity[] = page?.data ?? [];
+  return list
+    .filter((c) => c.thumbnail)
+    .sort((a, b) => (b.series_count ?? 0) - (a.series_count ?? 0))
+    .slice(0, count)
+    .map((c) => ({ id: c.id, title: c.title, slug: c.slug, series: c.series_count ?? 0, image: CharacterService.getCharacterImageById(c.id, c.last_updated) }));
 }

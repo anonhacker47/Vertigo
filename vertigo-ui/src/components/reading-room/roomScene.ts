@@ -9,17 +9,18 @@ import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import smileyUrl from "@/assets/comedian-smiley.png";
-import type { RoomSeries, RoomSummary } from "./roomData";
+import type { RoomCharacter, RoomSeries, RoomSummary } from "./roomData";
 
 /** A shelfie: a straight-on photo of the bookcase, kept as a print on the wall and as a JPEG. */
 export interface RoomPhoto {
   id: number;
   taken: Date;
-  jpeg: string;
+  url: string; // an object URL for the JPEG; the room revokes it when the print goes
 }
 
 export interface RoomOptions {
   onPhoto?: (photo: RoomPhoto | null) => void;
+  onCharacter?: (character: RoomCharacter | null) => void;
   /** The shelf shows one page of the collection at a time; this reports which, and when it is mid-turn. */
   onPage?: (page: number, pages: number, busy: boolean) => void;
   /** Where the foot of the shelf sits on screen, as fractions of the stage, whenever that moves. */
@@ -38,6 +39,8 @@ export interface RoomHandle {
   /** Takes a shelfie and pins it; null while the bookcase is away. */
   takeShelfie(): RoomPhoto | null;
   removePhoto(id: number): void;
+  /** Stands pictures of these characters in the shelf's empty end slots. */
+  setCharacters(list: RoomCharacter[]): void;
   /** What the plaque in the secret says; it can arrive after the room is up. */
   setSummary(summary: RoomSummary | null): void;
   putBack(): void;
@@ -147,6 +150,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   let focused: THREE.Object3D | null = null;
   let lastMove = 0;
   let frameNo = 0;
+  let shadowFrames = 6; // shadow maps re-render only while something moves, plus a frame to settle
   let lean = 0;
   let camLean = 0;
   let loaded = 0;
@@ -173,6 +177,39 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     m.receiveShadow = true;
     parent.add(m);
     return m;
+  }
+  /** Static meshes under `root` that share a material become one mesh each; `skip` subtrees stay as they are. */
+  function mergeStatic(root: THREE.Object3D, skip: THREE.Object3D[] = []) {
+    const skipSet = new Set<THREE.Object3D>();
+    for (const o of skip) o.traverse((c) => skipSet.add(c));
+    scene.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), local = new THREE.Matrix4();
+    // materials made alike are treated alike, so pieces built with their own copy of the same settings still merge
+    const signature = (m: THREE.Mesh) => {
+      const x = m.material as THREE.MeshPhysicalMaterial;
+      return [x.type, x.color?.getHex(), x.roughness, x.metalness, x.map?.uuid, x.bumpMap?.uuid, x.bumpScale, x.normalMap?.uuid, x.emissive?.getHex(), x.emissiveIntensity, x.emissiveMap?.uuid, x.side, x.transparent, x.opacity, x.blending, x.depthWrite, x.clearcoat, x.envMap?.uuid, x.envMapIntensity, m.castShadow, m.receiveShadow, m.renderOrder].join("|");
+    };
+    const groups = new Map<string, { mat: THREE.Material; geos: THREE.BufferGeometry[]; meshes: THREE.Mesh[]; cast: boolean; receive: boolean; order: number }>();
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh || m === root || !m.visible || skipSet.has(m) || m.children.length || Array.isArray(m.material) || (m.material as THREE.Material).onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) return;
+      const geo = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()).applyMatrix4(local.multiplyMatrices(inv, m.matrixWorld));
+      for (const name of Object.keys(geo.attributes)) if (name !== "position" && name !== "normal" && name !== "uv") geo.deleteAttribute(name);
+      if (!geo.attributes.uv) geo.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array(geo.attributes.position.count * 2), 2));
+      const key = signature(m);
+      const g = groups.get(key) ?? { mat: m.material as THREE.Material, geos: [], meshes: [], cast: false, receive: false, order: m.renderOrder };
+      g.geos.push(geo); g.meshes.push(m); g.cast ||= m.castShadow; g.receive ||= m.receiveShadow;
+      groups.set(key, g);
+    });
+    for (const g of groups.values()) {
+      const merged = g.meshes.length > 1 ? mergeGeometries(g.geos, false) : null;
+      g.geos.forEach((x) => x.dispose());
+      if (!merged) continue;
+      for (const m of g.meshes) m.parent?.remove(m);
+      const mesh = new THREE.Mesh(keep(merged), g.mat);
+      mesh.castShadow = g.cast; mesh.receiveShadow = g.receive; mesh.renderOrder = g.order;
+      root.add(mesh);
+    }
   }
   /** Many small static pieces of one material become one draw call. */
   interface Piece { geo: THREE.BufferGeometry; x: number; y: number; z: number; rot?: [number, number, number] }
@@ -432,7 +469,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     }
     if (parent === scene) blob(x, z, 1.1, 1.1, 0.35);
   }
-  /** A comic as a slim hardcover: cover board, inset page block, back board with spine. Groups: cover, pages, spine. */
+  /** A comic as a slim hardcover: cover board and spine, then page block and back board. Groups: cover, pages. */
   function comicGeometry(w: number, h: number, d: number) {
     const board = 0.012, inset = 0.014;
     // the rounded boxes come non-indexed, so the plain ones must match before they can merge
@@ -441,21 +478,18 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     const block = plain(new THREE.BoxGeometry(w - inset, h - inset * 2, d - board * 2)).translate(inset / 2, 0, 0);
     const back = new RoundedBoxGeometry(w, h, board, 3, 0.006).translate(0, 0, -d / 2 + board / 2);
     const spine = plain(new THREE.BoxGeometry(0.02, h, d - board * 2)).translate(-w / 2 + 0.01, 0, 0);
-    const shell = mergeGeometries([back, spine], false);
-    if (!shell) throw new Error("comic shell");
-    const g = mergeGeometries([front, block, shell], true);
+    // the spine wears the cover's own left edge: every spine vertex samples a hair in from u = 0
+    const uv = spine.attributes.uv as THREE.BufferAttribute, pos = spine.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, 0.004, (pos.getY(i) + h / 2) / h);
+    const face = mergeGeometries([front, spine], false), body = mergeGeometries([block, back], false);
+    if (!face || !body) throw new Error("comic geometry");
+    const g = mergeGeometries([face, body], true);
     if (!g) throw new Error("comic geometry");
-    for (const x of [front, block, back, spine, shell]) x.dispose();
+    for (const x of [front, block, back, spine, face, body]) x.dispose();
     return keep(g);
   }
-  const spineMaterials = new Map<number, THREE.MeshStandardMaterial>();
-  const spineMaterial = (s: RoomSeries) => {
-    let m = spineMaterials.get(s.id);
-    if (!m) { m = std(`rgb(${s.rgb.join(",")})`, 0.7); spineMaterials.set(s.id, m); }
-    return m;
-  };
   function addComic(s: RoomSeries, geo: THREE.BufferGeometry, x: number, y: number, z: number, parent: THREE.Object3D, onDone: () => void) {
-    const m = new THREE.Mesh(geo, [coverMaterial(s, onDone), pages, spineMaterial(s)]);
+    const m = new THREE.Mesh(geo, [coverMaterial(s, onDone), pages]);
     m.position.set(x, y, z);
     m.rotation.x = -0.1;
     m.castShadow = true;
@@ -616,6 +650,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     put(sphere(0.045, 16, 12), skin, 0, 0.31, 0, { parent: g });
     put(sphere(0.047, 16, 12), dark, 0, 0.32, -0.01, { parent: g, shadow: false }).scale.set(1, 0.7, 1);
     if (cape !== null) { const c = put(box(0.11, 0.2, 0.012, 0.004), std(cape, 0.8), 0, 0.17, -0.055, { parent: g }); c.rotation.x = 0.12; }
+    mergeStatic(g);
   }
 
   // ---- the shell --------------------------------------------------------------------------
@@ -805,8 +840,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   // ---- the shelves and the comics -------------------------------------------------------------
   const shelfWood = woodTexture(22, false);
   shelfWood.repeat.set(1.2, 1.2);
-  const walnut = std(0xffffff, 0.62, { map: shelfWood, bumpMap: shelfWood, bumpScale: 0.015 }), walnutBack = std(0x2c2016, 0.92, { bumpMap: plasterGrain, bumpScale: 0.01 });
-  const unit = shelfUnit(4.7, 5.25, 0.85, SHELF_ROWS, walnut, walnutBack);
+  const walnut = std(0xffffff, 0.62, { map: shelfWood, bumpMap: shelfWood, bumpScale: 0.015 });
+  const charcoal = std(0x1d1e23, 0.55, { metalness: 0.08, bumpMap: clothGrain, bumpScale: 0.005 }), charcoalBack = std(0x141519, 0.9, { bumpMap: plasterGrain, bumpScale: 0.01 });
+  const unit = shelfUnit(4.7, 5.25, 0.85, SHELF_ROWS, charcoal, charcoalBack);
   // the bookcase rides a lift: when the secret opens it sinks through the slot in the floor, out of sight
   const lift = new THREE.Group();
   lift.position.set(DOOR_X, 0, BZ + 0.43);
@@ -901,6 +937,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const bump = () => { loaded++; options.onProgress?.(loaded, total); };
   const faceGeo = comicGeometry(FACE.w, FACE.h, FACE.d);
   const slots: { mesh: THREE.Mesh; row: number; col: number }[] = [];
+  const standeeSlots: [number, number, number][] = [];
   shelves.forEach((y, si) => {
     const left = -unit.inner / 2;
     for (let i = 0; i < FACE_PER_SHELF; i++) {
@@ -909,6 +946,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       slots.push({ mesh: addComic(s, faceGeo, left + FACE.w / 2 + i * FACE_STEP, y + FACE.h / 2 - 0.012, unit.backZ + 0.16 + i * 0.018, unit.group, bump), row: si, col: i });
     }
     const endX = unit.inner / 2 - 0.26, endZ = unit.backZ + 0.36;
+    if (si === 1 || si === 2) standeeSlots.push([endX, y, endZ]);
     if (si === 3) logo(endX, y, unit.backZ + 0.2, 0.52, unit.group, 0.35, 0.22);
   });
   // turning the shelf over: each slot steps out, turns edge on, swaps its cover, turns back; staggered
@@ -942,7 +980,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   for (const [dx, dz] of [[-1.9, -0.35], [-1.9, 0.35]]) put(leg, dark, 1.6 + dx, 0.48, BZ + 0.55 + dz);
   blob(1.6, BZ + 0.6, 4.4, 1.3, 0.4);
   // digital rain on an unlit canvas, stepped a few times a second
-  const RAIN = { w: 768, h: 432, cell: 21, step: 24, glyphs: "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789VERTIGO" };
+  const RAIN = { w: 640, h: 360, cell: 18, step: 20, glyphs: "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789VERTIGO" };
   const screenTex = canvasTexture((g, w, h) => { g.fillStyle = "#060914"; g.fillRect(0, 0, w, h); }, RAIN.w, RAIN.h);
   const rainCtx = (screenTex.image as HTMLCanvasElement).getContext("2d");
   const rainCols = Math.floor(RAIN.w / RAIN.cell);
@@ -954,7 +992,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     if (!g) return;
     g.fillStyle = "rgba(6,9,20,0.2)";
     g.fillRect(0, 0, RAIN.w, RAIN.h);
-    g.font = "bold 21px ui-monospace, Menlo, monospace";
+    g.font = "bold 18px ui-monospace, Menlo, monospace";
     g.textBaseline = "top";
     for (let i = 0; i < rainCols; i++) {
       const x = i * RAIN.cell, y = rainDrops[i] * RAIN.step;
@@ -977,11 +1015,11 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     g.fillStyle = "#07070a"; g.fillRect(0, 0, w, h);
     const lines = ["Tonight, a comedian", "died in New York.", "Somebody knows why."];
     let left = Math.floor(t * 1000 / 55);
-    g.font = "600 48px 'Courier New', ui-monospace, monospace"; g.fillStyle = "#e4dfd2"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "600 40px 'Courier New', ui-monospace, monospace"; g.fillStyle = "#e4dfd2"; g.textAlign = "center"; g.textBaseline = "middle";
     lines.forEach((text, i) => {
       const shown = text.slice(0, Math.max(0, left));
       const cursor = left >= 0 && left < text.length && Math.floor(now / 400) % 2 ? "_" : "";
-      g.fillText(shown + cursor, w / 2, h * 0.5 + (i - 1) * 64);
+      g.fillText(shown + cursor, w / 2, h * 0.5 + (i - 1) * 54);
       left -= text.length + 1 + (i === 1 ? 22 : 0); // a beat before the last line
     });
     const base = Math.min(0.58, 0.05 + t * 0.016) * h;
@@ -1013,7 +1051,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   put(cyl(0.07, 0.07, 0.05, 24), std(0x2d3039, 0.6), -0.13, 0.36, 0, { parent: hp, rot: [0, 0, Math.PI / 2] }); put(cyl(0.07, 0.07, 0.05, 24), std(0x2d3039, 0.6), 0.13, 0.36, 0, { parent: hp, rot: [0, 0, Math.PI / 2] });
   const flatGeo = comicGeometry(FACE.w, FACE.h, FACE.d * 0.7);
   byLove.slice(0, 4).forEach((s, i) => {
-    const m = new THREE.Mesh(flatGeo, [coverMaterial(s, bump), pages, spineMaterial(s)]);
+    const m = new THREE.Mesh(flatGeo, [coverMaterial(s, bump), pages]);
     m.position.set(-0.05 + (i % 2) * 0.03, 1.05 + 0.035 + i * 0.068, BZ + 0.75 + (i % 3) * 0.02);
     m.rotation.set(-Math.PI / 2, 0, 0.5 + (rng() - 0.5) * 0.2);
     m.castShadow = true;
@@ -1099,6 +1137,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     g.rotation.set(0, -Math.PI / 2, 0);
     g.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), tilt);
     g.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), skew);
+    mergeStatic(g);
     pickables.push(g);
     states.set(g, { series: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent: board, lift: 0, reach: 0.65, offsetX: -0.07, offsetY: 0, tilt: 1.6, glow: 0.8, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
   }
@@ -1161,7 +1200,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   plant(5.5, BZ + 1.2, 1.1, true);
   lamp(5.45, 0, 0.9, 3.3, 0.46, 13, true, false);
 
-  // ---- the armchair, the side table, the candle, a gamepad, a plant ------------------------------------
+  // ---- the armchair, the side table, a gamepad, a plant -----------------------------------------------
   const fabric = std(0x2f5c63, 0.92, { bumpMap: clothGrain, bumpScale: 0.012 }), cushion = std(0xc49447, 0.92, { bumpMap: clothGrain, bumpScale: 0.012 });
   const chair = new THREE.Group();
   chair.position.set(3.9, 0, 0.9);
@@ -1195,13 +1234,6 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     m.receiveShadow = true;
     scene.add(m);
   });
-  put(cyl(0.045, 0.045, 0.16, 24), std(0xf1e6cf, 0.6), 2.46, 0.76, 1.52);
-  put(cyl(0.05, 0.05, 0.01, 24), brassMat, 2.46, 0.685, 1.52, { shadow: false });
-  const flameSprite = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: radialSprite("rgba(255,170,70,1)"), color: 0xffb050, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
-  flameSprite.position.set(2.46, 0.88, 1.52); flameSprite.scale.set(0.09, 0.14, 1); scene.add(flameSprite); sprites.push(flameSprite);
-  const candleLight = new THREE.PointLight(0xffa050, 1.4, 2.6, 2);
-  candleLight.position.set(2.46, 0.9, 1.52);
-  scene.add(candleLight);
   const pad = new THREE.Group(); pad.position.set(0.68, 0.96, 0.25); pad.rotation.y = -0.3; chair.add(pad);
   put(box(0.24, 0.04, 0.13, 0.015), std(0x23262e, 0.5), 0, 0, 0, { parent: pad });
   put(cyl(0.02, 0.02, 0.02, 12), std(0x3a3e48, 0.5), -0.05, 0.03, 0.01, { parent: pad, shadow: false }); put(cyl(0.02, 0.02, 0.02, 12), std(0x3a3e48, 0.5), 0.03, 0.03, 0.03, { parent: pad, shadow: false });
@@ -1274,6 +1306,49 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   }
   applyTime(NIGHT);
 
+  // ---- character standees: a framed picture on a little base with a brass nameplate, in the shelf's empty
+  // end slots; they come to hand like the comics --------------------------------------------------------
+  const characterByMesh = new Map<THREE.Object3D, RoomCharacter>();
+  const standees: THREE.Group[] = [];
+  const standeeFrame = std(0x1a1b20, 0.5, { metalness: 0.2 }), standeePic = keep(new THREE.PlaneGeometry(0.33, 0.46)), standeePlate = keep(new THREE.PlaneGeometry(0.24, 0.022));
+  function setCharacters(list: RoomCharacter[]) {
+    for (const g of standees) {
+      if (focused === g) putBack();
+      pickables.splice(pickables.indexOf(g), 1);
+      states.delete(g);
+      characterByMesh.delete(g);
+      unit.group.remove(g);
+    }
+    standees.length = 0;
+    list.slice(0, standeeSlots.length).forEach((c, i) => {
+      const [x, y, z] = standeeSlots[i];
+      const g = new THREE.Group();
+      g.position.set(x, y, z);
+      g.rotation.x = -0.08;
+      unit.group.add(g);
+      put(box(0.3, 0.035, 0.14, 0.006), standeeFrame, 0, 0.017, 0, { parent: g });
+      put(box(0.37, 0.5, 0.014, 0.004), standeeFrame, 0, 0.3, -0.02, { parent: g });
+      const pic = std(0x2a2d35, 0.6);
+      put(standeePic, pic, 0, 0.3, -0.012, { parent: g, shadow: false });
+      const plate = canvasTexture((gc, w, h) => { gc.fillStyle = "#b08a3e"; gc.fillRect(0, 0, w, h); gc.fillStyle = "#2a1f0f"; gc.font = "bold 40px system-ui, sans-serif"; gc.textAlign = "center"; gc.textBaseline = "middle"; gc.fillText(c.title.toUpperCase(), w / 2, h / 2 + 2); }, 512, 64);
+      put(standeePlate, std(0xffffff, 0.35, { map: plate, metalness: 0.5 }), 0, 0.018, 0.0705, { parent: g, shadow: false });
+      const loader = new THREE.TextureLoader();
+      loader.crossOrigin = "anonymous";
+      loader.load(c.image, (tex) => {
+        if (disposed) { tex.dispose(); return; }
+        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; keep(tex);
+        const img = tex.image as { width: number; height: number }, want = 0.33 / 0.46, have = img.width / img.height;
+        if (have > want) { tex.repeat.set(want / have, 1); tex.offset.set((1 - want / have) / 2, 0); } else { tex.repeat.set(1, have / want); tex.offset.set(0, (1 - have / want) / 2); }
+        pic.map = tex; pic.color.setHex(0xffffff); pic.needsUpdate = true;
+      });
+      pickables.push(g);
+      states.set(g, { series: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent: unit.group, lift: 0, reach: 1.15, offsetX: 0, offsetY: -0.27, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+      characterByMesh.set(g, c);
+      standees.push(g);
+    });
+    retarget();
+  }
+
   // ---- shelfies: the bookcase shot straight on, then pinned to the wall by the window as a print --------
   interface Photo extends RoomPhoto { mesh: THREE.Mesh }
   const photos: Photo[] = [];
@@ -1293,14 +1368,15 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
     composer.render();
-    const jpeg = renderer.domElement.toDataURL("image/jpeg", 0.92);
+    // the canvas is read now and encoded off the main thread into a blob, so no multi-megabyte string is made
+    const taken = new Date(), img = new Image();
+    const photo: Photo = { id: ++photoSeq, taken, url: "", mesh: new THREE.Mesh() };
+    renderer.domElement.toBlob((blob) => { if (!blob || disposed) return; photo.url = URL.createObjectURL(blob); img.src = photo.url; }, "image/jpeg", 0.92);
     renderPass.camera = camera; gtao.camera = camera;
     renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
     resize();
-    const taken = new Date();
     const tex = canvasTexture((g, w, h) => { g.fillStyle = "#f6f3ec"; g.fillRect(0, 0, w, h); g.fillStyle = "#1a1a1e"; g.fillRect(56, 56, w - 112, 1216); }, 1024, 1600);
     tex.anisotropy = 16;
-    const img = new Image();
     img.onload = () => {
       const c = tex.image as HTMLCanvasElement, g = c.getContext("2d");
       if (!g || disposed) return;
@@ -1309,13 +1385,12 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       g.fillText(`reading room · ${taken.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, c.width / 2, 1436);
       tex.needsUpdate = true;
     };
-    img.src = jpeg;
     const mesh = new THREE.Mesh(photoGeo, [paper, paper, paper, paper, keep(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 })), paper]);
     put(pinGeo, pinMat, 0, 0.235, 0.008, { parent: mesh, shadow: false });
     mesh.castShadow = true;
     camera.getWorldDirection(mesh.position).multiplyScalar(2.2).add(camera.position); // it starts in front of you and flies to its pin
     scene.add(mesh);
-    const photo: Photo = { id: ++photoSeq, taken, jpeg, mesh };
+    photo.mesh = mesh;
     photoByMesh.set(mesh, photo);
     pickables.push(mesh);
     states.set(mesh, { series: null, home: new THREE.Vector3(), homeQ: new THREE.Quaternion(), parent: scene, lift: 0, reach: 1.0, offsetX: 0, offsetY: 0, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
@@ -1323,7 +1398,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     while (photos.length > PINS.length) dropPhoto(photos.pop() as Photo);
     pinPhotos();
     retarget();
-    return { id: photo.id, taken, jpeg };
+    return { id: photo.id, taken, url: photo.url };
   }
   function pinPhotos() {
     photos.forEach((ph, i) => {
@@ -1337,6 +1412,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const falling: { mesh: THREE.Mesh; v: THREE.Vector3; spin: THREE.Vector3; landed: number; mats: THREE.Material[] }[] = [];
   function dropPhoto(ph: Photo) {
     if (focused === ph.mesh) putBack();
+    setTimeout(() => URL.revokeObjectURL(ph.url), 2000);
     pickables.splice(pickables.indexOf(ph.mesh), 1);
     states.delete(ph.mesh);
     photoByMesh.delete(ph.mesh);
@@ -1370,6 +1446,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   }
 
   // ---- pointing, picking, the loop -------------------------------------------------------------------
+  mergeStatic(passage, [plaque]);
+  mergeStatic(unit.group, pickables);
+  mergeStatic(chair);
+  mergeStatic(clock, [clockHands.hour, clockHands.minute]);
   const el = renderer.domElement;
   let press: { x: number; y: number } | null = null;
   const readMouse = (e: PointerEvent) => { const r = el.getBoundingClientRect(); mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); };
@@ -1416,6 +1496,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const onLeave = () => { mouse.set(-10, -10); el.style.cursor = ""; lampHot = null; };
   const lampParts = lamps.flatMap((l) => l.parts);
   // the walls and the bookcase's back panel count too, so nothing hidden behind them can be reached
+  // everything static at scene level, last: the lift's subtree, lamps, the pane, the bars and the flash stay as they are
+  mergeStatic(scene, [...pickables, ...lampParts, lift, pane, flash, ...bars.map((b) => b.mesh)]);
   const occluders: THREE.Object3D[] = [unit.back, ...scene.children.filter((o) => (o as THREE.Mesh).material === paint || (o as THREE.Mesh).material === paintSide)];
   let hitTargets = pickables.concat(lampParts, occluders);
   const retarget = () => { hitTargets = pickables.concat(lampParts, occluders); }; // when prints come and go
@@ -1441,7 +1523,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     if (m.parent !== scene) scene.attach(m);
     options.onPick?.(states.get(m)?.series ?? null);
     const ph = photoByMesh.get(m);
-    options.onPhoto?.(ph ? { id: ph.id, taken: ph.taken, jpeg: ph.jpeg } : null);
+    options.onPhoto?.(ph ? { id: ph.id, taken: ph.taken, url: ph.url } : null);
+    options.onCharacter?.(characterByMesh.get(m) ?? null);
     options.onHold?.(true);
   }
   function putBack() {
@@ -1451,6 +1534,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     focused = null;
     options.onPick?.(null);
     options.onPhoto?.(null);
+    options.onCharacter?.(null);
     options.onHold?.(false);
   }
 
@@ -1476,7 +1560,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     const frameMs = now - last;
     last = now;
     const t = (now - started) / 1000;
-    if (++frameNo % 2 === 0) renderer.shadowMap.needsUpdate = true;
+    frameNo++;
     if (t > 2 && detailLevel > 0) { slowFrames = frameMs > 34 ? slowFrames + 1 : Math.max(0, slowFrames - 2); if (slowFrames > 90) { degrade(); slowFrames = 0; } }
 
     const px = mouse.x > -5 ? mouse.x : 0, py = mouse.y > -5 ? mouse.y : 0;
@@ -1495,9 +1579,6 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     handFill.intensity += (4 * glow - handFill.intensity) * 0.1;
     gloom += ((blackout ? 1 : 0) - gloom) * 0.12;
     const lit = 1 - gloom;
-    candleLight.intensity = (1.4 + Math.sin(t * 13.1) * 0.12 + Math.sin(t * 7.3) * 0.1) * lit; // the draught takes the candle too
-    flameSprite.scale.set((0.09 + Math.sin(t * 11) * 0.008) * lit, (0.14 + Math.sin(t * 9) * 0.015) * lit, 1);
-    flameSprite.visible = lit > 0.05;
 
     if (!focused && now - lastMove < 120 && mouse.x > -5) {
       raycaster.setFromCamera(mouse, camera);
@@ -1514,9 +1595,11 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       }
       el.style.cursor = lampHot || (next && !states.get(next)?.series) ? "pointer" : "";
     }
+    if (focused || secret === "opening" || secret === "closing" || burstT >= 0 || falling.length || clockDrag) shadowFrames = 2;
     for (const m of pickables) {
       const st = states.get(m);
       if (!st) continue;
+      if (st.flip) shadowFrames = 2;
       if (st.flip) {
         const u = (now / 1000 - st.flip.start) / st.flip.dur;
         if (u >= 0) {
@@ -1528,7 +1611,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
             const s = st.flip.series;
             st.series = s;
             m.visible = !!s;
-            if (s) (m as THREE.Mesh).material = [coverMaterial(s, noop), pages, spineMaterial(s)];
+            if (s) (m as THREE.Mesh).material = [coverMaterial(s, noop), pages];
           }
           if (u >= 1) { st.flip = undefined; st.spin = 0; st.pop = 0; }
         }
@@ -1552,11 +1635,14 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
         tmpE.y += st.spin;
         tmpQ.setFromEuler(tmpE);
         if (st.flip) { m.position.copy(tmpV); m.quaternion.copy(tmpQ); }
-        else { m.position.lerp(tmpV, 0.15); m.quaternion.slerp(tmpQ, 0.15); }
+        else {
+          if (m.position.distanceToSquared(tmpV) > 1e-8 || 1 - Math.abs(m.quaternion.dot(tmpQ)) > 1e-7) shadowFrames = 2;
+          m.position.lerp(tmpV, 0.15); m.quaternion.slerp(tmpQ, 0.15);
+        }
       }
     }
     if (pageBusy && now / 1000 >= busyUntil) { pageBusy = false; options.onPage?.(currentPage, pageCount, false); }
-    if (now - rainAt > 120) { rainAt = now; if (screenMode === "rain") rainStep(); else comedianStep(now); }
+    if (now - rainAt > 150) { rainAt = now; if (screenMode === "rain") rainStep(); else comedianStep(now); }
     if (clockFlipped && now > midnightUntil) setMidnight(false);
     for (let i = falling.length - 1; i >= 0; i--) {
       const f = falling[i], m = f.mesh;
@@ -1627,6 +1713,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     unit.group.getWorldPosition(footV); footV.y = 0; footV.z += 0.55; footV.project(camera);
     const fx = (footV.x + 1) / 2, fy = (1 - footV.y) / 2;
     if (Math.abs(fx - lastFoot.x) > 0.002 || Math.abs(fy - lastFoot.y) > 0.002) { lastFoot.x = fx; lastFoot.y = fy; options.onLayout?.({ x: fx, y: fy }); }
+    if (shadowFrames > 0) { renderer.shadowMap.needsUpdate = true; shadowFrames--; }
     composer.render();
   }
   renderer.setAnimationLoop(tick);
@@ -1635,6 +1722,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     showPage,
     takeShelfie,
     removePhoto,
+    setCharacters,
     setSummary,
     putBack,
     dispose() {
@@ -1649,6 +1737,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       el.removeEventListener("wheel", onWheel);
       for (const d of disposables) d.dispose();
       for (const f of falling) f.mats.forEach((m) => m.dispose());
+      for (const ph of photos) if (ph.url) URL.revokeObjectURL(ph.url);
       gtao.dispose();
       composer.dispose();
       scene.environment?.dispose();
