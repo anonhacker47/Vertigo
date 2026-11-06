@@ -177,6 +177,15 @@ export interface OnThisDay {
   anniversary: { years: number; since: string } | null;
 }
 
+export interface InsightsResponse {
+  up_next: UpNextResponse;
+  reading_queue: ReadingQueueResponse;
+  get_next: GetNextResponse;
+  activity: ActivityResponse;
+  records: RecordsResponse;
+  facts: FactsResponse;
+}
+
 export interface FactsResponse {
   on_this_day: OnThisDay | null;
   facts: Fact[];

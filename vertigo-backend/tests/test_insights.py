@@ -230,6 +230,23 @@ class TestActivity(InsightsTestCase):
         self.assertEqual(rv.json['range'], 'ytd')
 
 
+class TestEverything(InsightsTestCase):
+    def test_one_response_matches_the_sections(self):
+        self.add_series('Akira', [
+            {'number': 1, 'owned': True, 'read': True, 'bought': ago(40), 'read_at': ago(30)},
+            {'number': 2, 'owned': True, 'bought': ago(20)},
+            {'number': 3},
+        ])
+        self.add_series('Berserk', [{'number': 1, 'owned': True, 'bought': ago(3)}])
+        rv = self.client.get('/api/insights')
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(set(rv.json), {'up_next', 'reading_queue', 'get_next', 'activity', 'records', 'facts'})
+        for key, path in (('up_next', 'up-next'), ('reading_queue', 'reading-queue'), ('get_next', 'get-next'),
+                          ('activity', 'activity'), ('records', 'records'), ('facts', 'facts')):
+            self.assertEqual(rv.json[key], self.client.get(f'/api/insights/{path}').json, key)
+        self.assertEqual(self.client.get('/api/insights?range=all').json['activity']['range'], 'all')
+
+
 class TestRecords(InsightsTestCase):
     def test_completed_runs_records_and_single_volumes(self):
         self.add_series('Sandman', [

@@ -43,8 +43,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import InsightsService from "@/services/InsightsService";
-import { useInsightsSection } from "@/composables/useInsightsSection";
+import { loadInsights, useInsightsSection } from "@/composables/useInsightsSection";
 import { capitalize, formatMonth, relativeTime, spanText } from "@/utils/relativeTime";
 import SectionHead from "./SectionHead.vue";
 import StatFigure from "./StatFigure.vue";
@@ -60,8 +59,8 @@ const RANGES: { key: ActivityRange; label: string }[] = [
 const PERIOD: Record<ActivityRange, string> = { ytd: "so far this year", last_year: "last year", all: "all time" };
 
 const range = ref<ActivityRange>("ytd");
-const { data, loading, refreshing, error, reload } = useInsightsSection(() => InsightsService.getActivity(range.value));
-watch(range, () => reload());
+const { data, loading, refreshing, error, reload } = useInsightsSection("activity");
+watch(range, (next) => loadInsights(next));
 
 const figures = computed(() => data.value!.figures);
 const hasAnyActivity = computed(() => (data.value?.buckets ?? []).some((b) => b.bought || b.read));

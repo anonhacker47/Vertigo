@@ -74,7 +74,7 @@ import CoverImage from "@/components/common/CoverImage.vue";
 import Skeleton from "./Skeleton.vue";
 import type { UpNextEntry } from "@/types/insights.types";
 
-const { data, loading, error, reload } = useInsightsSection(() => InsightsService.getUpNext());
+const { data, loading, error, reload } = useInsightsSection("up_next");
 const washFailedId = ref<number | null>(null);
 
 const entries = computed<UpNextEntry[]>(() => (data.value?.hero ? [data.value.hero, ...data.value.on_deck] : []));

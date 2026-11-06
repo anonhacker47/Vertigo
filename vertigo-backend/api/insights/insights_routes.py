@@ -19,6 +19,30 @@ def _collection():
     return user, load_collection(user.id)
 
 
+def _hero_series_id(collection):
+    entries = ranked(collection)
+    return entries[0][2].series.id if entries else None
+
+
+@insights.route('/insights', methods=['GET'])
+@authenticate(token_auth)
+@other_responses({401: 'Not authenticated'})
+def everything():
+    """Every section of the page from one load of the collection (?range= applies to activity)"""
+    user, collection = _collection()
+    return jsonify({
+        'up_next': build_up_next(collection),
+        'reading_queue': build_reading_queue(collection, exclude_series_id=_hero_series_id(collection)),
+        'get_next': build_get_next(collection),
+        'activity': build_activity(collection, request.args.get('range', 'ytd')),
+        'records': build_records(collection, user),
+        'facts': {
+            'on_this_day': build_on_this_day(collection, user),
+            'facts': build_facts(collection, user),
+        },
+    })
+
+
 @insights.route('/insights/up-next', methods=['GET'])
 @authenticate(token_auth)
 @other_responses({401: 'Not authenticated'})
@@ -34,9 +58,7 @@ def up_next():
 def reading_queue():
     """Series with unread issues on the shelf, hero's series excluded"""
     _, collection = _collection()
-    entries = ranked(collection)
-    hero_series_id = entries[0][2].series.id if entries else None
-    return jsonify(build_reading_queue(collection, exclude_series_id=hero_series_id))
+    return jsonify(build_reading_queue(collection, exclude_series_id=_hero_series_id(collection)))
 
 
 @insights.route('/insights/get-next', methods=['GET'])

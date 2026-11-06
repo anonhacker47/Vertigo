@@ -48,7 +48,7 @@ import StatFigure from "./StatFigure.vue";
 import Skeleton from "./Skeleton.vue";
 import type { CompletedStatus, RecordEvent } from "@/types/insights.types";
 
-const { data, loading, error, reload } = useInsightsSection(() => InsightsService.getRecords());
+const { data, loading, error, reload } = useInsightsSection("records");
 
 const STATUS_TEXT: Record<CompletedStatus, string> = { both: "Collected & read", collected: "Collected", read: "Read" };
 const STATUS_CHIP: Record<CompletedStatus, string> = {

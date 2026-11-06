@@ -46,7 +46,7 @@ import CoverImage from "@/components/common/CoverImage.vue";
 import Skeleton from "./Skeleton.vue";
 import type { Fact, FactLink, OnThisDay } from "@/types/insights.types";
 
-const { data, loading, error, reload } = useInsightsSection(() => InsightsService.getFacts());
+const { data, loading, error, reload } = useInsightsSection("facts");
 
 interface Card {
   key: string;

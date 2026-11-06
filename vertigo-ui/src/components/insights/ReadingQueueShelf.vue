@@ -42,7 +42,7 @@ import Skeleton from "./Skeleton.vue";
 import type { ReadingQueueItem } from "@/types/insights.types";
 
 const LIMIT = 8;
-const { data, loading, refreshing, error, reload } = useInsightsSection(() => InsightsService.getReadingQueue());
+const { data, loading, refreshing, error, reload } = useInsightsSection("reading_queue");
 const expanded = ref(false);
 
 const items = computed(() => data.value?.items ?? []);

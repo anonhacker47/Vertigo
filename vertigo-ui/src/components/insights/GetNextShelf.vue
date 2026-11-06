@@ -51,7 +51,7 @@ import RunStrip from "./RunStrip.vue";
 import Skeleton from "./Skeleton.vue";
 
 const LIMIT = 8;
-const { data, loading, refreshing, error, reload } = useInsightsSection(() => InsightsService.getGetNext());
+const { data, loading, refreshing, error, reload } = useInsightsSection("get_next");
 const expanded = ref(false);
 const sort = ref<"closest" | "recent">("closest");
 
