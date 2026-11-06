@@ -1,6 +1,6 @@
 from marshmallow import validate, validates,\
     ValidationError, post_dump
-from api import ma, db
+from api import ma, db, media
 from api.utils.auth import token_auth
 from api.models.user import User
 
@@ -22,6 +22,8 @@ class UserSchema(ma.SQLAlchemySchema):
                           dump_only=True)
     
     profile_picture = ma.String()
+    avatar = ma.Function(lambda u: media.versioned_url('users.get_avatar', u.id, u.profile_picture, id=u.id),
+                         dump_only=True)
     preferred_currency = ma.String(
         validate=validate.Length(equal=3),
         metadata={"description": "Three-letter ISO currency code, e.g. USD, EUR, INR"}

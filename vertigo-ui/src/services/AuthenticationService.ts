@@ -38,11 +38,9 @@ export default {
     }
   },
 
-  async getUserPicture() {
-    const response = await Api().get("me/profile-picture/", {
-      responseType: "blob",
-    });
-    return URL.createObjectURL(response.data);
+  avatarUrl(user: { id: number; profile_picture: string | null; avatar?: string | null } | null | undefined) {
+    if (!user) return null;
+    return user.avatar ?? (user.profile_picture ? `${Api().defaults.baseURL}/users/${user.id}/avatar` : null);
   },
 
   refreshToken(data: any) {

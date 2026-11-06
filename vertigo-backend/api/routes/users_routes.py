@@ -119,18 +119,14 @@ def put():
     db.session.commit()
     return user
 
-@users.route('me/profile-picture/',methods=['GET'])
-@authenticate(token_auth)
-def get_profile_picture():
-    """Retrieve the User profile picture"""
-    user = token_auth.current_user()
-
+@users.route('/users/<int:id>/avatar', methods=['GET'])
+def get_avatar(id):
+    """Retrieve the user's avatar (JSON "noimage" when there is none)"""
+    user = db.session.get(User, id)
     if user is None:
         return jsonify("User not found"), 404
-
-
     return media.send(user.id, user.profile_picture)
-   
+
 
 
 @users.route('/me/shelf', methods=['GET'])

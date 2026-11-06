@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import InputText from "primevue/inputtext";
 import Select from "primevue/select";
 import Button from "primevue/button";
@@ -144,21 +144,9 @@ function applyUser(user: User | null) {
   Object.assign(form, original);
 }
 
-function releaseStoredAvatar() {
-  if (storedAvatar.value) URL.revokeObjectURL(storedAvatar.value);
-  storedAvatar.value = "";
-}
-
-async function loadStoredAvatar(user: User | null) {
-  releaseStoredAvatar();
-  loadedPicture.value = user?.profile_picture;
-  if (user?.profile_picture) {
-    try {
-      storedAvatar.value = await AuthenticationService.getUserPicture();
-    } catch (e) {
-      console.error("Failed to load profile picture:", e);
-    }
-  }
+function loadStoredAvatar(user: User | null) {
+  storedAvatar.value = AuthenticationService.avatarUrl(user) || "";
+  loadedPicture.value = storedAvatar.value;
   if (pendingPhoto.value === null) avatarPreview.value = storedAvatar.value || fallbackAvatar;
 }
 
@@ -212,7 +200,7 @@ async function saveProfile() {
     pendingPhoto.value = null;
     photoLink.value = "";
     showLinkInput.value = false;
-    if (photoChanged) await loadStoredAvatar(response.data);
+    if (photoChanged) loadStoredAvatar(response.data);
     userStore.addUser(response.data);
     toast.add({ severity: "success", summary: "Saved", detail: "Your profile is up to date.", life: 3000 });
   } catch (error: any) {
@@ -228,15 +216,13 @@ watch(
   async (fresh) => {
     if (!fresh) return;
     if (!profileDirty.value) applyUser(fresh);
-    if (fresh.profile_picture !== loadedPicture.value) await loadStoredAvatar(fresh);
+    if ((AuthenticationService.avatarUrl(fresh) || "") !== loadedPicture.value) loadStoredAvatar(fresh);
   }
 );
 
 onMounted(async () => {
   const user = currentUser();
   applyUser(user);
-  await loadStoredAvatar(user);
+  loadStoredAvatar(user);
 });
-
-onUnmounted(releaseStoredAvatar);
 </script>

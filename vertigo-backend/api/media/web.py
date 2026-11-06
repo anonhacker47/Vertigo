@@ -1,10 +1,20 @@
-from flask import jsonify, send_file
+import os
+
+from flask import jsonify, send_file, url_for
 
 from api.media.paths import resolve
 from api.media.storage import MediaError, store, remove
 
 # Returned when no image is set; also accepted on upload to clear one.
 NOIMAGE = "noimage"
+
+
+def versioned_url(endpoint, user_id, relpath, **values):
+    """Absolute URL of an image route with the file's mtime as cache buster; None without a file."""
+    path = resolve(user_id, relpath)
+    if not path:
+        return None
+    return url_for(endpoint, _external=True, t=int(os.path.getmtime(path)), **values)
 
 
 def send(user_id, relpath):

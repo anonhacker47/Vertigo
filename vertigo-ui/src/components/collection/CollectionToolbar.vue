@@ -125,16 +125,13 @@ watch(() => props.filters.query, (q) => { if ((q ?? "") !== term.value) term.val
 onBeforeUnmount(() => { if (timer) clearTimeout(timer); });
 
 onMounted(async () => {
-  for (const field of FIELDS) {
-    try {
-      const response = await SeriesService.getSeriesFieldValues(field);
-      options.value[field] = (response.data as any[]).map((item) => {
-        const value = typeof item === "string" ? item : item.value;
-        return { label: String(value), value: String(value) };
-      });
-    } catch (error) {
-      console.error(error);
+  try {
+    const { data } = await SeriesService.getSeriesFilterValues();
+    for (const field of FIELDS) {
+      options.value[field] = ((data[field] ?? []) as { value: string }[]).map((item) => ({ label: String(item.value), value: String(item.value) }));
     }
+  } catch (error) {
+    console.error(error);
   }
 });
 </script>

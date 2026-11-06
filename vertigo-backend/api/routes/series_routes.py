@@ -22,6 +22,7 @@ from api.helpers.cover_bg_generator import background_path, submit_background_re
 series = Blueprint('series', __name__)
 series_schema = SeriesSchema()
 multi_series_schema = SeriesSchema(many=True)
+list_series_schema = SeriesSchema(many=True, exclude=('character', 'creator', 'description', 'notes', 'user'))
 update_series_schema = SeriesSchema(partial=True)
 
 @series.route('/series', methods=['POST'])
@@ -117,7 +118,7 @@ def get(id):
 
 @series.route('/series', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(multi_series_schema, order_by=Series.timestamp,
+@paginated_response(list_series_schema, order_by=Series.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
 def all():
@@ -127,7 +128,7 @@ def all():
 
 @series.route('/users/series', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(multi_series_schema, order_by=Series.timestamp,
+@paginated_response(list_series_schema, order_by=Series.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema,
                     sorts=SERIES_SORTS, tiebreak=Series.title)
@@ -295,7 +296,7 @@ def delete(id):
 
 @series.route('/feed', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(multi_series_schema, order_by=Series.timestamp,
+@paginated_response(list_series_schema, order_by=Series.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
 def feed():
@@ -322,36 +323,26 @@ def key():
     else:
         return jsonify(f"{obj.id}")
     
-@series.route('/series/filter/<table>', methods=['GET'])
+@series.route('/series/filters', methods=['GET'])
 @authenticate(token_auth)
-def get_series_by_table(table):
-    """Retrieve values from a specific table across all series objects."""
-
+def filter_values():
+    """Distinct publishers, creators, characters, genres and formats across the user's series, as {id, value} lists"""
     user = token_auth.current_user()
 
-    table_class = {
-        'character': series_entities.Character,
-        'genre': series_entities.Genre,
-        'creator': series_entities.Creator,
-        'publisher': series_entities.Publisher,
-        'series_format': Series.series_format
-    }.get(table.lower())
+    def options(values):
+        return [{'id': str(i + 1), 'value': v} for i, v in enumerate(sorted({v for v in values if v}))]
 
-    if table_class is None:
-        return jsonify({'error': 'Invalid table name'}), 400
-        
-    if table == 'series_format':
-        values = db.session.query(Series.series_format).distinct().filter(Series.user_id == user.id,Series.series_format.isnot(None)).all()
-        values = {value[0] for value in values if value[0]}
-        return jsonify(sorted(values))    
-    
-    values = db.session.query(table_class.title).distinct().filter(table_class.user_id == user.id).all()
-    values = {value.title for value in values}
+    def titles(model):
+        return db.session.scalars(select(model.title).where(model.user_id == user.id).distinct()).all()
 
-    # Sort and format the final list
-    values = sorted(values)
-    values = [{'id': str(i + 1), 'value': value} for i, value in enumerate(values)]
-    return jsonify(values)
+    formats = db.session.scalars(select(Series.series_format).where(Series.user_id == user.id).distinct()).all()
+    return jsonify({
+        'publisher': options(titles(series_entities.Publisher)),
+        'creator': options(titles(series_entities.Creator)),
+        'character': options(titles(series_entities.Character)),
+        'genre': options(titles(series_entities.Genre)),
+        'series_format': options(formats),
+    })
 
 @series.route('/series/thumbnail/bg', methods=['GET'])
 def get_series_with_thumbnail():

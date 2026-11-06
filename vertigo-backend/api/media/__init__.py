@@ -35,7 +35,7 @@ from api.media.paths import (
 from api.media.storage import (
     MediaError, MAX_IMAGE_BYTES, store, remove, remove_dir, delete_user_media,
 )
-from api.media.web import NOIMAGE, send, apply_thumbnail_field
+from api.media.web import NOIMAGE, send, apply_thumbnail_field, versioned_url
 from api.media.dominant_color import dominant_color
 from api.media.task_queue import start_media_worker, submit
 
@@ -47,7 +47,7 @@ __all__ = [
     # storage
     "MediaError", "MAX_IMAGE_BYTES", "store", "remove", "remove_dir", "delete_user_media",
     # web
-    "NOIMAGE", "send", "apply_thumbnail_field",
+    "NOIMAGE", "send", "apply_thumbnail_field", "versioned_url",
     # dominant_color
     "dominant_color",
     # task_queue

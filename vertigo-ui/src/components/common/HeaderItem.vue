@@ -197,29 +197,11 @@ function logout() {
 
 watch(
   () => userStore.user,
-  async (user) => {
-    try {
-      imagesrc.value = user?.profile_picture ? await AuthenticationService.getUserPicture() : dummy
-    } catch (error) {
-      console.error("Failed to load user profile picture:", error)
-      imagesrc.value = dummy
-    }
-  }
+  (user) => { imagesrc.value = AuthenticationService.avatarUrl(user) || dummy }
 )
 
-onMounted(async () => {
-  try {
-    const user = userStore.getUser()
-
-    if (user?.profile_picture) {
-      imagesrc.value = await AuthenticationService.getUserPicture()
-    } else {
-      imagesrc.value = dummy
-    }
-  } catch (error) {
-    console.error("Failed to load user profile picture:", error)
-    imagesrc.value = dummy
-  }
+onMounted(() => {
+  imagesrc.value = AuthenticationService.avatarUrl(userStore.getUser()) || dummy
 })
 </script>
 

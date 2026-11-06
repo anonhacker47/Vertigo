@@ -106,6 +106,26 @@ class TestCollectionSorts(BaseTestCase):
         self.assertEqual(self.titles(orderBy='issue_count', orderDir='asc'), ['Constantine', 'Animal Man', 'Batman'])
         self.assertEqual(self.titles(orderBy='purchase_cost', orderDir='desc'), ['Animal Man', 'Batman', 'Constantine'])
 
+    def test_list_rows_leave_out_the_heavy_fields(self):
+        rv = self.client.get('/api/users/series')
+        row = rv.json['data'][0]
+        for key in ('character', 'creator', 'description', 'notes', 'user'):
+            self.assertNotIn(key, row)
+        for key in ('publisher', 'genre', 'thumbnail', 'owned_count', 'dominant_color', 'series_format'):
+            self.assertIn(key, row)
+        rv = self.client.get(f"/api/series/{self.b.id}")
+        self.assertEqual(rv.status_code, 200)
+        self.assertIn('character', rv.json)
+
+    def test_filter_values_come_in_one_response(self):
+        rv = self.client.get('/api/series/filters')
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(set(rv.json), {'publisher', 'creator', 'character', 'genre', 'series_format'})
+        publishers = sorted({p.title for p in db.session.scalars(Publisher.select()).all()})
+        self.assertEqual([o['value'] for o in rv.json['publisher']], publishers)
+        self.assertEqual(rv.json['publisher'][0]['id'], '1')
+        self.assertEqual(rv.json['series_format'], [])
+
     def test_unknown_sort_is_refused(self):
         rv = self.client.get('/api/users/series', query_string={'orderBy': 'user'})
         self.assertEqual(rv.status_code, 400)

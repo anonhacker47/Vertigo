@@ -76,8 +76,8 @@ export default {
     return Api().get("series/key");
   },
 
-  getSeriesFieldValues(field: string) {
-    return Api().get(`series/filter/${field}`);
+  getSeriesFilterValues() {
+    return Api().get("series/filters");
   },
 
   getSeriesThumbBg() {

@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useUserStore } from "@/store/user";
 import type { User } from "@/types/user.types";
 import AuthenticationService from "@/services/AuthenticationService";
@@ -69,25 +69,11 @@ const memberSince = computed(() => {
 });
 
 const avatar = ref<string>(fallbackAvatar);
-const avatarUrl = ref("");
 const loadedPicture = ref<string | null | undefined>(undefined);
 
-function releaseAvatar() {
-  if (avatarUrl.value) URL.revokeObjectURL(avatarUrl.value);
-  avatarUrl.value = "";
-}
-
-async function loadAvatar(current: User | null) {
-  releaseAvatar();
-  loadedPicture.value = current?.profile_picture;
-  if (current?.profile_picture) {
-    try {
-      avatarUrl.value = await AuthenticationService.getUserPicture();
-    } catch (e) {
-      console.error("Failed to load profile picture:", e);
-    }
-  }
-  avatar.value = avatarUrl.value || fallbackAvatar;
+function loadAvatar(current: User | null) {
+  loadedPicture.value = AuthenticationService.avatarUrl(current) || "";
+  avatar.value = loadedPicture.value || fallbackAvatar;
 }
 
 function onAvatarError() {
@@ -97,14 +83,14 @@ function onAvatarError() {
 watch(
   () => userStore.user,
   async (fresh) => {
-    if (fresh && fresh.profile_picture !== loadedPicture.value) await loadAvatar(fresh);
+    if (fresh && (AuthenticationService.avatarUrl(fresh) || "") !== loadedPicture.value) loadAvatar(fresh);
   }
 );
 
 onMounted(async () => {
   const cached = userStore.getUser();
   if (cached && !userStore.user) userStore.addUser(cached);
-  else await loadAvatar(user.value);
+  else loadAvatar(user.value);
 
   try {
     const response = await AuthenticationService.getUser();
@@ -114,7 +100,6 @@ onMounted(async () => {
   }
 });
 
-onUnmounted(releaseAvatar);
 </script>
 
 <style scoped>

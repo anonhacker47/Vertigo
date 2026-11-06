@@ -6,5 +6,6 @@ export interface User {
   first_seen: string;
   series_url: string;
   profile_picture: string | null;
+  avatar: string | null;
   preferred_currency: string | null;
 }

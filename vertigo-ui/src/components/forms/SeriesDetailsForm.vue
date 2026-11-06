@@ -194,9 +194,9 @@ onMounted(getSeriesFields);
 
 async function getSeriesFields() {
   try {
-    const responses = await Promise.all(seriesFields.map((field) => SeriesService.getSeriesFieldValues(field)));
-    seriesFields.forEach((field, i) => {
-      fieldValues.value[field] = responses[i].data;
+    const { data } = await SeriesService.getSeriesFilterValues();
+    seriesFields.forEach((field) => {
+      fieldValues.value[field] = data[field] ?? [];
     });
   } catch (error) {
     console.error("Could not load series field values:", error);
