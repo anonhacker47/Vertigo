@@ -11,7 +11,15 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import smileyUrl from "@/assets/comedian-smiley.png";
 import type { RoomSeries, RoomSummary } from "./roomData";
 
+/** A shelfie: a straight-on photo of the bookcase, kept as a print on the wall and as a JPEG. */
+export interface RoomPhoto {
+  id: number;
+  taken: Date;
+  jpeg: string;
+}
+
 export interface RoomOptions {
+  onPhoto?: (photo: RoomPhoto | null) => void;
   /** The shelf shows one page of the collection at a time; this reports which, and when it is mid-turn. */
   onPage?: (page: number, pages: number, busy: boolean) => void;
   /** Where the foot of the shelf sits on screen, as fractions of the stage, whenever that moves. */
@@ -27,6 +35,9 @@ export interface RoomOptions {
 
 export interface RoomHandle {
   showPage(page: number): void;
+  /** Takes a shelfie and pins it; null while the bookcase is away. */
+  takeShelfie(): RoomPhoto | null;
+  removePhoto(id: number): void;
   /** What the plaque in the secret says; it can arrive after the room is up. */
   setSummary(summary: RoomSummary | null): void;
   putBack(): void;
@@ -327,7 +338,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     loader.crossOrigin = "anonymous";
     loader.load(
       s.cover,
-      (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; keep(t); mat.map?.dispose(); mat.map = t; mat.needsUpdate = true; onDone(); },
+      (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16; keep(t); mat.map?.dispose(); mat.map = t; mat.needsUpdate = true; onDone(); },
       undefined,
       () => onDone(),
     );
@@ -1232,7 +1243,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
 
   // ---- post: ambient occlusion seats everything on everything ----------------------------------------
   const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
+  const renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
   const gtao = new GTAOPass(scene, camera, container.clientWidth || 1, container.clientHeight || 1);
   gtao.output = GTAOPass.OUTPUT.Default;
   gtao.blendIntensity = 0.8;
@@ -1257,6 +1269,79 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     scene.environmentIntensity = T.env;
   }
   applyTime(NIGHT);
+
+  // ---- shelfies: the bookcase shot straight on, then pinned to the wall by the window as a print --------
+  interface Photo extends RoomPhoto { mesh: THREE.Mesh }
+  const photos: Photo[] = [];
+  const photoByMesh = new Map<THREE.Object3D, Photo>();
+  let photoSeq = 0;
+  const PINS = [[-0.72, 4.6], [-0.72, 3.86], [-0.72, 3.12]];
+  const shelfCam = new THREE.PerspectiveCamera(44, 0.8, 0.1, 60);
+  shelfCam.position.set(-3.35, 2.75, BZ + 0.86 + 8.6);
+  shelfCam.lookAt(-3.35, 2.62, BZ);
+  const paper = std(0xf4f0e8, 0.9), pinMat = std(0xc0392b, 0.4);
+  const photoGeo = box(0.32, 0.5, 0.006, 0.002), pinGeo = sphere(0.012, 10, 8);
+  function takeShelfie(): RoomPhoto | null {
+    if (secret !== "closed") return null;
+    const W = 1800, H = 2250;
+    renderPass.camera = shelfCam; gtao.camera = shelfCam;
+    renderer.setPixelRatio(1);
+    renderer.setSize(W, H, false);
+    composer.setSize(W, H);
+    composer.render();
+    const jpeg = renderer.domElement.toDataURL("image/jpeg", 0.92);
+    renderPass.camera = camera; gtao.camera = camera;
+    renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+    resize();
+    const taken = new Date();
+    const tex = canvasTexture((g, w, h) => { g.fillStyle = "#f6f3ec"; g.fillRect(0, 0, w, h); g.fillStyle = "#1a1a1e"; g.fillRect(56, 56, w - 112, 1216); }, 1024, 1600);
+    tex.anisotropy = 16;
+    const img = new Image();
+    img.onload = () => {
+      const c = tex.image as HTMLCanvasElement, g = c.getContext("2d");
+      if (!g) return;
+      g.drawImage(img, 56, 56, c.width - 112, 1216);
+      g.fillStyle = "#2b2b33"; g.font = "64px 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(`reading room · ${taken.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, c.width / 2, 1436);
+      tex.needsUpdate = true;
+    };
+    img.src = jpeg;
+    const mesh = new THREE.Mesh(photoGeo, [paper, paper, paper, paper, keep(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 })), paper]);
+    put(pinGeo, pinMat, 0, 0.235, 0.008, { parent: mesh, shadow: false });
+    mesh.castShadow = true;
+    camera.getWorldDirection(mesh.position).multiplyScalar(2.2).add(camera.position); // it starts in front of you and flies to its pin
+    scene.add(mesh);
+    const photo: Photo = { id: ++photoSeq, taken, jpeg, mesh };
+    photoByMesh.set(mesh, photo);
+    pickables.push(mesh);
+    states.set(mesh, { series: null, home: new THREE.Vector3(), homeQ: new THREE.Quaternion(), parent: scene, lift: 0, reach: 1.0, offsetX: 0, offsetY: 0, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+    photos.unshift(photo);
+    while (photos.length > PINS.length) dropPhoto(photos.pop() as Photo);
+    pinPhotos();
+    return { id: photo.id, taken, jpeg };
+  }
+  function pinPhotos() {
+    photos.forEach((ph, i) => {
+      const st = states.get(ph.mesh);
+      if (!st) return;
+      st.home.set(PINS[i][0], PINS[i][1], BZ + 0.02);
+      st.homeQ.setFromEuler(new THREE.Euler(0, 0, (ph.id % 2 ? 1 : -1) * (0.03 + (ph.id % 3) * 0.015)));
+    });
+  }
+  function dropPhoto(ph: Photo) {
+    if (focused === ph.mesh) putBack();
+    scene.remove(ph.mesh);
+    pickables.splice(pickables.indexOf(ph.mesh), 1);
+    states.delete(ph.mesh);
+    photoByMesh.delete(ph.mesh);
+  }
+  function removePhoto(id: number) {
+    const i = photos.findIndex((ph) => ph.id === id);
+    if (i < 0) return;
+    dropPhoto(photos[i]);
+    photos.splice(i, 1);
+    pinPhotos();
+  }
 
   // When the machine cannot keep up, the costly half of the look goes quietly: occlusion first, then shadows.
   let detailLevel = 2;
@@ -1319,10 +1404,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     press = null;
   };
   const onLeave = () => { mouse.set(-10, -10); el.style.cursor = ""; lampHot = null; };
-  const clickables = pickables.concat(lamps.flatMap((l) => l.parts));
+  const lampParts = lamps.flatMap((l) => l.parts);
   // the walls and the bookcase's back panel count too, so nothing hidden behind them can be reached
   const occluders: THREE.Object3D[] = [unit.back, ...scene.children.filter((o) => (o as THREE.Mesh).material === paint || (o as THREE.Mesh).material === paintSide)];
-  const hitTargets = clickables.concat(occluders);
+  const hitTargets = () => pickables.concat(lampParts, occluders); // pickables change as prints come and go
   // nothing smaller than a coin casts a shadow
   scene.traverse((o) => {
     const m = o as THREE.Mesh;
@@ -1344,6 +1429,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     options.onHover?.(null);
     if (m.parent !== scene) scene.attach(m);
     options.onPick?.(states.get(m)?.series ?? null);
+    const ph = photoByMesh.get(m);
+    options.onPhoto?.(ph ? { id: ph.id, taken: ph.taken, jpeg: ph.jpeg } : null);
     options.onHold?.(true);
   }
   function putBack() {
@@ -1352,6 +1439,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     if (st && st.parent !== scene) st.parent.attach(focused);
     focused = null;
     options.onPick?.(null);
+    options.onPhoto?.(null);
     options.onHold?.(false);
   }
 
@@ -1402,7 +1490,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
 
     if (!focused && now - lastMove < 120 && mouse.x > -5) {
       raycaster.setFromCamera(mouse, camera);
-      const first = raycaster.intersectObjects(hitTargets, true).find((h) => h.object.visible);
+      const first = raycaster.intersectObjects(hitTargets(), true).find((h) => h.object.visible);
       const hit = first && !occluders.includes(first.object) ? first : undefined;
       let next: THREE.Object3D | null = hit ? hit.object : null;
       lampHot = (hit && lampByMesh.get(hit.object)) ?? null;
@@ -1521,6 +1609,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
 
   return {
     showPage,
+    takeShelfie,
+    removePhoto,
     setSummary,
     putBack,
     dispose() {

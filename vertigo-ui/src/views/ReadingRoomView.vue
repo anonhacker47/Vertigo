@@ -7,7 +7,22 @@
       <p>{{ subtitle }}</p>
     </div>
 
-    <p v-show="!secretOpen" class="room__hint">Scroll to lean in · click a comic to pick it up · <kbd>Esc</kbd> puts it back · click a lamp to switch it<template v-if="pages > 1"> · <kbd>←</kbd> <kbd>→</kbd> turn the shelf</template></p>
+    <p v-show="!secretOpen" class="room__hint">Scroll to lean in · click a comic to pick it up · <kbd>Esc</kbd> puts it back · click a lamp to switch it · <kbd>P</kbd> takes a shelfie<template v-if="pages > 1"> · <kbd>←</kbd> <kbd>→</kbd> turn the shelf</template></p>
+
+    <Transition name="fade">
+      <button v-if="!holding && !secretOpen && !loading" type="button" class="room__shutter" aria-label="Take a shelfie" title="Take a shelfie (P)" @click="shelfie"><i class="pi pi-camera"></i></button>
+    </Transition>
+    <Transition name="snap"><div v-if="flash" class="room__flash"></div></Transition>
+
+    <Transition name="card">
+      <aside v-if="photo" class="room__card">
+        <h2>Shelfie</h2>
+        <p class="room__meta">{{ photo.taken.toLocaleString() }}</p>
+        <a :href="photo.jpeg" :download="`shelfie-${stamp(photo.taken)}.jpg`" class="btn">Download photo</a>
+        <button type="button" class="link" @click="room?.removePhoto(photo.id)">Take it down</button>
+        <button type="button" class="link" @click="putBack">Pin it back</button>
+      </aside>
+    </Transition>
 
     <Transition name="fade">
       <div v-if="pages > 1 && !holding && !secretOpen" class="room__pager" role="group" aria-label="Shelf pages" :style="{ left: `${shelfFoot.x * 100}%`, top: `${shelfFoot.y * 100}%` }">
@@ -57,7 +72,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { loadRoomSeries, loadRoomSummary, type RoomSeries } from "@/components/reading-room/roomData";
-import { createRoom, type RoomHandle } from "@/components/reading-room/roomScene";
+import { createRoom, type RoomHandle, type RoomPhoto } from "@/components/reading-room/roomScene";
 
 const stage = ref<HTMLElement | null>(null);
 const loading = ref(true);
@@ -76,6 +91,8 @@ const busy = ref(false);
 const shelfFoot = ref({ x: 0.28, y: 0.78 });
 const holding = ref(false);
 const secretOpen = ref(false);
+const photo = ref<RoomPhoto | null>(null);
+const flash = ref(false);
 let room: RoomHandle | null = null;
 
 const subtitle = computed(() => {
@@ -94,6 +111,13 @@ const share = (count: number, all: number) => `${all ? Math.min(100, (count / al
 function putBack() {
   room?.putBack();
 }
+const stamp = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function shelfie() {
+  if (!room || holding.value || secretOpen.value) return;
+  flash.value = true;
+  setTimeout(() => { flash.value = false; }, 160);
+  room.takeShelfie();
+}
 function turn(step: number) {
   room?.showPage(page.value + step);
 }
@@ -101,6 +125,7 @@ function onKey(event: KeyboardEvent) {
   if (event.key === "Escape") putBack();
   else if (event.key === "ArrowLeft") turn(-1);
   else if (event.key === "ArrowRight") turn(1);
+  else if (event.key === "p" || event.key === "P") shelfie();
 }
 
 onMounted(async () => {
@@ -136,6 +161,7 @@ onMounted(async () => {
       onLayout: (foot) => { shelfFoot.value = foot; },
       onHold: (held) => { holding.value = held; },
       onSecret: (open) => { secretOpen.value = open; },
+      onPhoto: (p) => { photo.value = p; },
     });
     // a slow network still gets the room; the covers keep arriving behind it
     setTimeout(() => { target = 100; }, 6000);
@@ -201,6 +227,13 @@ onBeforeUnmount(() => {
 .room__hint { position: absolute; left: 32px; bottom: 20px; z-index: 3; margin: 0; font-size: 12px; font-weight: 700; color: #64748b; pointer-events: none; }
 .room__hint kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.12); font: inherit; font-size: 11px; line-height: 18px; text-align: center; color: #94a3b8; }
 
+.room__shutter { position: absolute; right: 32px; bottom: 18px; z-index: 3; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(10, 11, 16, 0.55); color: #e2e8f0; font-size: 16px; }
+.room__shutter:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+.room__flash { position: absolute; inset: 0; z-index: 6; background: #fff; pointer-events: none; }
+.snap-enter-active { transition: opacity 0.04s; }
+.snap-leave-active { transition: opacity 0.3s ease-out; }
+.snap-enter-from, .snap-leave-to { opacity: 0; }
+
 /* sits just under the bookcase; the scene says where that is on screen */
 .room__pager { position: absolute; z-index: 3; transform: translate(-50%, 12px); display: inline-flex; align-items: center; gap: 6px; padding: 3px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(10, 11, 16, 0.55); }
 .room__pager span { padding: 0 6px; font-size: 12px; font-weight: 700; color: #94a3b8; }
@@ -261,6 +294,7 @@ onBeforeUnmount(() => {
 @media (max-width: 767px) {
   .room__title { left: 16px; top: 16px; }
   .room__hint { display: none; }
+  .room__shutter { right: 16px; bottom: 16px; }
   .room__card { right: 16px; left: 16px; top: auto; bottom: 16px; width: auto; padding: 16px 18px 18px; transform: none; }
   .card-enter-from { transform: translateY(24px); }
 }
