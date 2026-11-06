@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 import unittest
 from api.app import create_app, db
 from api.models.user import User
@@ -24,6 +26,9 @@ class BaseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app(self.config)
+        # each test gets its own data folder, so media code can never reach the real one
+        self.data_dir = tempfile.mkdtemp(prefix='vertigo-test-')
+        self.app.config['DATA_DIR'] = self.data_dir
         self.app_context = self.app.app_context()
         self.app_context.push()
         db.create_all()
@@ -36,3 +41,4 @@ class BaseTestCase(unittest.TestCase):
         db.session.close()
         db.drop_all()
         self.app_context.pop()
+        shutil.rmtree(self.data_dir, ignore_errors=True)
