@@ -1,11 +1,24 @@
-"""Habits: bought vs read per period, and the pace figures next to the chart."""
+"""Activity: bought vs read per period, and the figures above the chart."""
 from datetime import date
-from statistics import median
 
 from api.insights.collection import Collection, as_naive, days_between
 from api.insights.serializers import issue_basics, series_basics, iso
 
 RANGES = ('ytd', 'last_year', 'all')
+
+
+def _latest(rows, collection, now, dupes):
+    """The most recent (date, issue) row as a figure, or None."""
+    if not rows:
+        return None
+    d, issue = max(rows, key=lambda r: r[0])
+    facts = collection.facts_for_issue(issue)
+    return {
+        'issue': issue_basics(issue, facts),
+        'series': series_basics(facts, now, dupes),
+        'date': iso(d),
+        'days': days_between(now, d),
+    }
 
 
 def _buckets(range_key, now, bought_dates, read_dates):
@@ -41,8 +54,9 @@ def build_activity(collection: Collection, range_key: str = 'ytd') -> dict:
     now = collection.now
     dupes = collection.duplicate_titles()
 
-    bought_dates = [as_naive(i.bought_date) for i in collection.owned() if i.bought_date]
+    bought_rows = [(as_naive(i.bought_date), i) for i in collection.owned() if i.bought_date]
     read_rows = [(as_naive(i.read_date), i) for i in collection.all_issues if i.is_read and i.read_date]
+    bought_dates = [d for d, _ in bought_rows]
     read_dates = [d for d, _ in read_rows]
 
     mode, buckets = _buckets(range_key, now, bought_dates, read_dates)
@@ -50,24 +64,9 @@ def build_activity(collection: Collection, range_key: str = 'ytd') -> dict:
     candidates = collection.candidates()
     series_with_unread = sum(1 for f in collection.series if f.candidates())
 
-    last_read = None
-    if read_rows:
-        d, issue = max(read_rows, key=lambda r: r[0])
-        facts = collection.facts_for_issue(issue)
-        last_read = {
-            'issue': issue_basics(issue, facts),
-            'series': series_basics(facts, now, dupes),
-            'date': iso(d),
-            'days': days_between(now, d),
-        }
-
-    gaps = []
-    for i in collection.all_issues:
-        if i.is_read and i.read_date and i.bought_date:
-            gap = days_between(i.read_date, i.bought_date)
-            if gap is not None and gap >= 0:
-                gaps.append(gap)
-    bought_to_read = {'median_days': int(median(gaps)), 'sample': len(gaps)} if len(gaps) >= 5 else None
+    # a purchase dated ahead is a pre-order, not bought yet
+    last_bought = _latest([r for r in bought_rows if r[0] <= now], collection, now, dupes)
+    last_read = _latest(read_rows, collection, now, dupes)
 
     waiting_longest = None
     dated = [i for i in candidates if i.bought_date]
@@ -91,8 +90,8 @@ def build_activity(collection: Collection, range_key: str = 'ytd') -> dict:
         },
         'figures': {
             'unread': {'count': len(candidates), 'series_count': series_with_unread},
+            'last_bought': last_bought,
             'last_read': last_read,
-            'bought_to_read': bought_to_read,
             'waiting_longest': waiting_longest,
         },
     }

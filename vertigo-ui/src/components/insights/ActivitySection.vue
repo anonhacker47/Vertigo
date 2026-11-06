@@ -1,6 +1,6 @@
 <template>
-  <section id="habits" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="habits-title">
-    <SectionHead title="Habits">
+  <section id="activity" class="scroll-mt-[calc(var(--spacing-header)+1rem)] mx-auto mt-14 w-full max-w-page px-4 md:mt-16 md:px-8" aria-labelledby="activity-title">
+    <SectionHead title="Activity">
       <div class="seg" role="group" aria-label="Range">
         <button v-for="r in RANGES" :key="r.key" type="button" :aria-pressed="range === r.key" @click="range = r.key">{{ r.label }}</button>
       </div>
@@ -18,10 +18,12 @@
     <template v-else-if="data">
       <div class="mb-6 grid grid-cols-2 gap-5 md:grid-cols-4">
         <StatFigure label="Unread on the shelf" :value="format(figures.unread.count)" :detail="`across ${figures.unread.series_count} series`" />
+        <StatFigure v-if="figures.last_bought" label="Last bought" :value="capitalize(relativeTime(figures.last_bought.days))">
+          <RouterLink :to="issueRoute(figures.last_bought)" class="border-b border-slate-600 hover:border-sky-400 hover:text-sky-300">{{ issueLabel(figures.last_bought) }}</RouterLink>
+        </StatFigure>
         <StatFigure v-if="figures.last_read" label="Last read" :value="capitalize(relativeTime(figures.last_read.days))">
           <RouterLink :to="issueRoute(figures.last_read)" class="border-b border-slate-600 hover:border-sky-400 hover:text-sky-300">{{ issueLabel(figures.last_read) }}</RouterLink>
         </StatFigure>
-        <StatFigure v-if="figures.bought_to_read" label="Bought to read" :value="spanText(figures.bought_to_read.median_days)" :detail="`typical wait, over ${figures.bought_to_read.sample} books`" />
         <StatFigure v-if="figures.waiting_longest" label="Waiting longest" :value="spanText(figures.waiting_longest.days)">
           <RouterLink :to="issueRoute(figures.waiting_longest)" class="border-b border-slate-600 hover:border-sky-400 hover:text-sky-300">{{ issueLabel(figures.waiting_longest) }}</RouterLink>, since {{ formatMonth(figures.waiting_longest.since) }}
         </StatFigure>

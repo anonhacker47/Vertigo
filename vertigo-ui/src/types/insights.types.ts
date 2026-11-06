@@ -110,8 +110,8 @@ export interface ActivityResponse {
   totals: { bought: number; read: number };
   figures: {
     unread: { count: number; series_count: number };
+    last_bought: (DatedIssue & { date: string; days: number }) | null;
     last_read: (DatedIssue & { date: string; days: number }) | null;
-    bought_to_read: { median_days: number; sample: number } | null;
     waiting_longest: (DatedIssue & { since: string; days: number }) | null;
   };
 }

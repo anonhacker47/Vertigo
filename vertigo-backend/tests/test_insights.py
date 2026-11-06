@@ -67,6 +67,7 @@ class TestEmptyShelf(InsightsTestCase):
         self.assertEqual(len(rv.json['buckets']), datetime.now().month)
         self.assertEqual(rv.json['totals'], {'bought': 0, 'read': 0})
         self.assertIsNone(rv.json['figures']['last_read'])
+        self.assertIsNone(rv.json['figures']['last_bought'])
 
         rv = self.client.get('/api/insights/records')
         self.assertEqual(rv.json['completed'], [])
@@ -193,7 +194,8 @@ class TestActivity(InsightsTestCase):
         self.assertEqual(figures['unread'], {'count': 2, 'series_count': 1})
         self.assertEqual(figures['last_read']['issue']['number'], 1)
         self.assertEqual(figures['last_read']['days'], 10)
-        self.assertIsNone(figures['bought_to_read'])
+        self.assertIn(figures['last_bought']['issue']['number'], (1, 2))
+        self.assertEqual(figures['last_bought']['days'], (now.date() - this_year(1).date()).days)
         self.assertEqual(figures['waiting_longest']['issue']['number'], 3)
         self.assertEqual(figures['waiting_longest']['days'], 700)
 
@@ -213,6 +215,15 @@ class TestActivity(InsightsTestCase):
         self.assertEqual(rv.json['mode'], 'month')
         self.assertEqual([b['key'] for b in rv.json['buckets']], [f'{then.year}-{m:02d}' for m in range(1, 13)])
         self.assertEqual(rv.json['totals'], {'bought': 1, 'read': 1})
+
+    def test_last_bought_skips_purchases_dated_ahead(self):
+        self.add_series('Bone', [
+            {'number': 1, 'owned': True, 'bought': ago(5)},
+            {'number': 2, 'owned': True, 'bought': ago(-30)},
+        ])
+        rv = self.client.get('/api/insights/activity')
+        self.assertEqual(rv.json['figures']['last_bought']['issue']['number'], 1)
+        self.assertEqual(rv.json['figures']['last_bought']['days'], 5)
 
     def test_unknown_range_falls_back(self):
         rv = self.client.get('/api/insights/activity?range=bogus')

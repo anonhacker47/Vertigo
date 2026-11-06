@@ -3,7 +3,7 @@
     <UpNextHero />
     <ReadingQueueShelf />
     <GetNextShelf />
-    <HabitsSection />
+    <ActivitySection />
     <RecordsSection />
     <FactsSection />
   </main>
@@ -13,7 +13,7 @@
 import UpNextHero from "@/components/insights/UpNextHero.vue";
 import ReadingQueueShelf from "@/components/insights/ReadingQueueShelf.vue";
 import GetNextShelf from "@/components/insights/GetNextShelf.vue";
-import HabitsSection from "@/components/insights/HabitsSection.vue";
+import ActivitySection from "@/components/insights/ActivitySection.vue";
 import RecordsSection from "@/components/insights/RecordsSection.vue";
 import FactsSection from "@/components/insights/FactsSection.vue";
 </script>
