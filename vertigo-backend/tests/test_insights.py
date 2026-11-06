@@ -195,7 +195,7 @@ class TestActivity(InsightsTestCase):
         self.assertEqual(figures['last_read']['issue']['number'], 1)
         self.assertEqual(figures['last_read']['days'], 10)
         self.assertIn(figures['last_bought']['issue']['number'], (1, 2))
-        self.assertEqual(figures['last_bought']['days'], (now.date() - this_year(1).date()).days)
+        self.assertEqual(figures['last_bought']['days'], (datetime.now(timezone.utc).date() - this_year(1).date()).days)
         self.assertEqual(figures['waiting_longest']['issue']['number'], 3)
         self.assertEqual(figures['waiting_longest']['days'], 700)
 
