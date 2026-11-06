@@ -43,7 +43,16 @@
     </Transition>
 
     <Transition name="card">
-      <aside v-if="picked" class="room__card">
+      <aside v-if="picked && picked.kind === 'issue'" class="room__card">
+        <h2>{{ picked.seriesTitle }} <span class="num">#{{ picked.number }}</span></h2>
+        <p class="room__meta">{{ [picked.issueTitle, picked.year, picked.read ? "Read" : "Unread"].filter(Boolean).join(" · ") }}</p>
+        <RouterLink :to="{ name: 'IssueDetail', params: { seriesId: picked.seriesId, slug: picked.slug, number: picked.number } }" class="btn">Open issue</RouterLink>
+        <button type="button" class="link" @click="putBack">Put it back</button>
+      </aside>
+    </Transition>
+
+    <Transition name="card">
+      <aside v-if="picked && picked.kind === 'series'" class="room__card">
         <h2>{{ picked.title }}</h2>
         <p class="room__meta">{{ [picked.publisher, picked.format, picked.year].filter(Boolean).join(" · ") }}</p>
         <div class="bars">
@@ -81,7 +90,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { loadRoomCharacters, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomSeries } from "@/components/reading-room/roomData";
+import { loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
 import { createRoom, type RoomHandle, type RoomPhoto } from "@/components/reading-room/roomScene";
 
 const stage = ref<HTMLElement | null>(null);
@@ -94,8 +103,8 @@ let veilTimer = 0;
 const seriesCount = ref(0);
 const total = ref(0);
 const issues = ref(0);
-const picked = ref<RoomSeries | null>(null);
-const hovered = ref<RoomSeries | null>(null);
+const picked = ref<RoomItem | null>(null);
+const hovered = ref<RoomItem | null>(null);
 const page = ref(0);
 const pages = ref(1);
 const busy = ref(false);
@@ -144,9 +153,11 @@ onMounted(async () => {
   document.addEventListener("keydown", onKey);
   easeVeil();
   let series: RoomSeries[];
+  let shelf: Awaited<ReturnType<typeof loadRoomIssues>> = { issues: [], total: 0 };
   try {
-    const result = await loadRoomSeries();
+    const [result, issueResult] = await Promise.all([loadRoomSeries(), loadRoomIssues().catch(() => shelf)]);
     series = result.series;
+    shelf = issueResult;
     total.value = result.total;
     target = Math.max(target, 18);
   } catch (error) {
@@ -156,13 +167,13 @@ onMounted(async () => {
     return;
   }
   seriesCount.value = series.length;
-  issues.value = series.reduce((sum, s) => sum + s.owned, 0);
+  issues.value = shelf.total || series.reduce((sum, s) => sum + s.owned, 0);
   if (!series.length || !stage.value) {
     loading.value = false;
     return;
   }
   try {
-    room = createRoom(stage.value, series, {
+    room = createRoom(stage.value, series, shelf.issues, {
       onProgress: (loaded, all) => {
         const done = Math.min(100, (loaded / all) * 100);
         target = done >= 60 ? 100 : Math.max(target, done); // from sixty the rest arrives behind the room

@@ -2,13 +2,16 @@ import getSymbolFromCurrency from "currency-symbol-map";
 import CharacterService from "@/services/CharacterService";
 import DashboardService from "@/services/DashboardService";
 import InsightsService from "@/services/InsightsService";
+import IssueService from "@/services/IssueService";
 import SeriesService from "@/services/SeriesService";
 import { useUserStore } from "@/store/user";
 import type { Entity } from "@/types/entity.types";
+import type { LibraryIssue } from "@/types/issue.types";
 import type { Series } from "@/types/series.types";
 
 /** What the room needs to know about a series: enough for a cover, a spine colour and the card. */
 export interface RoomSeries {
+  kind: "series";
   id: number;
   title: string;
   slug: string;
@@ -37,6 +40,7 @@ export function rgbOf(value: unknown): [number, number, number] | null {
 
 function toRoomSeries(s: Series): RoomSeries {
   return {
+    kind: "series",
     id: s.id,
     title: s.title,
     slug: s.slug,
@@ -111,4 +115,57 @@ export async function loadRoomCharacters(count = 2): Promise<RoomCharacter[]> {
     .sort((a, b) => (b.series_count ?? 0) - (a.series_count ?? 0))
     .slice(0, count)
     .map((c) => ({ id: c.id, title: c.title, slug: c.slug, series: c.series_count ?? 0, image: CharacterService.getCharacterImageById(c.id, c.last_updated) }));
+}
+
+/** An owned issue standing on the shelf. */
+export interface RoomIssue {
+  kind: "issue";
+  id: number;
+  number: number;
+  title: string;
+  issueTitle: string;
+  seriesId: number;
+  seriesTitle: string;
+  slug: string;
+  year: number | null;
+  read: boolean;
+  price: number | null;
+  rgb: [number, number, number];
+  cover: string;
+}
+export type RoomItem = RoomSeries | RoomIssue;
+
+export const ROOM_MAX_ISSUES = 1500;
+const ISSUE_PAGE = 500;
+
+function toRoomIssue(i: LibraryIssue): RoomIssue {
+  return {
+    kind: "issue",
+    id: i.id,
+    number: i.number,
+    title: `${i.series.title} #${i.number}`,
+    issueTitle: i.title ?? "",
+    seriesId: i.series.id,
+    seriesTitle: i.series.title,
+    slug: i.series.slug,
+    year: i.cover_date ? new Date(i.cover_date).getFullYear() : null,
+    read: !!i.is_read,
+    price: i.bought_price ?? null,
+    rgb: [70, 80, 110],
+    cover: i.thumbnail ? IssueService.getIssueImageById(i.id, i.last_updated ?? undefined) : SeriesService.getSeriesImageById(i.series.id, i.series.last_updated ?? undefined),
+  };
+}
+
+/** Every owned issue, in series order then by number, up to the room's capacity. */
+export async function loadRoomIssues(): Promise<{ issues: RoomIssue[]; total: number }> {
+  const first = await IssueService.fetchUserIssues(ISSUE_PAGE, 0);
+  let list = first.issuesList;
+  const total: number = first.pagination?.total ?? list.length;
+  for (let offset = ISSUE_PAGE; offset < Math.min(total, ROOM_MAX_ISSUES); offset += ISSUE_PAGE) {
+    const page = await IssueService.fetchUserIssues(ISSUE_PAGE, offset);
+    list = list.concat(page.issuesList);
+  }
+  const owned = list.filter((i) => i.is_owned).map(toRoomIssue);
+  owned.sort((a, b) => a.seriesTitle.localeCompare(b.seriesTitle) || a.number - b.number);
+  return { issues: owned, total: owned.length };
 }

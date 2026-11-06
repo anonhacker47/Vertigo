@@ -9,7 +9,7 @@ import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import smileyUrl from "@/assets/comedian-smiley.png";
-import type { RoomCharacter, RoomSeries, RoomSummary } from "./roomData";
+import type { RoomCharacter, RoomIssue, RoomItem, RoomSeries, RoomSummary } from "./roomData";
 
 /** A shelfie: a straight-on photo of the bookcase, kept as a print on the wall and as a JPEG. */
 export interface RoomPhoto {
@@ -30,8 +30,8 @@ export interface RoomOptions {
   /** The room has a secret; this says when it is showing. */
   onSecret?: (open: boolean) => void;
   onProgress?: (loaded: number, total: number) => void;
-  onPick?: (series: RoomSeries | null) => void;
-  onHover?: (series: RoomSeries | null) => void;
+  onPick?: (item: RoomItem | null) => void;
+  onHover?: (item: RoomItem | null) => void;
 }
 
 export interface RoomHandle {
@@ -75,16 +75,16 @@ const KEY_INTENSITY = 26;
 const CAM = { x: 0.2, y: 2.25, z: 9.4, tx: 0.2, ty: 2.15, tz: -3 };
 const BZ = -4; // the back wall
 const H = 6.2; // the ceiling
-/** A comic changing over to another series: it steps out, turns edge on, swaps, and turns back. */
+/** A comic changing over to another item: it steps out, turns edge on, swaps, and turns back. */
 interface Flip {
   start: number;
   dur: number;
-  series: RoomSeries | null;
+  item: RoomItem | null;
   swapped: boolean;
 }
 /** Something you can pick up: where it lives, and how it sits in the hand. */
 interface Pickable {
-  series: RoomSeries | null;
+  item: RoomItem | null;
   home: THREE.Vector3;
   homeQ: THREE.Quaternion;
   parent: THREE.Object3D;
@@ -111,7 +111,7 @@ function mulberry32(seed: number) {
   };
 }
 
-export function createRoom(container: HTMLElement, series: RoomSeries[], options: RoomOptions = {}): RoomHandle {
+export function createRoom(container: HTMLElement, series: RoomSeries[], issues: RoomIssue[], options: RoomOptions = {}): RoomHandle {
   const rng = mulberry32(21);
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
@@ -142,7 +142,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
 
   const pickables: THREE.Object3D[] = [];
   const states = new Map<THREE.Object3D, Pickable>();
-  const coverMaterials = new Map<number, THREE.MeshPhysicalMaterial>();
+  const coverMaterials = new Map<string, THREE.MeshPhysicalMaterial>();
   const disposables: { dispose(): void }[] = [];
   const mouse = new THREE.Vector2(-10, -10);
   const raycaster = new THREE.Raycaster();
@@ -323,7 +323,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     for (let x = 0; x < w; ) { const bw = 30 + rng() * 60, top = 40 + rng() * 170; block(x, top, bw, "#0f1a30", ["rgba(140,180,255,.6)", "rgba(120,160,230,.4)", "rgba(190,210,255,.5)"], 7, 3, 0.55); x += bw + 2 + rng() * 8; }
     for (let x = -10; x < w; ) { const bw = 36 + rng() * 90, top = 120 + rng() * 250; block(x, top, bw, "#06070d", ["#f6c24a", "#f6c24a", "#f6c24a", "#f08a2a", "#ffe08a", "#d8321c", "#4fc46a"], 8, 4, 0.64); x += bw + 3 + rng() * 12; }
   }, 1024, 512);
-  function coverPlaceholder(s: RoomSeries) {
+  function coverPlaceholder(s: RoomItem) {
     return canvasTexture((g) => {
       const [r, gg, b] = s.rgb;
       const grad = g.createLinearGradient(0, 0, 200, 384);
@@ -372,12 +372,13 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     g.putImageData(img, 0, 0);
   }, 256, 256, false);
   /** The cover art as a glossy board with the spine crease, cached per series. */
-  function coverMaterial(s: RoomSeries, onDone: () => void) {
-    const cached = coverMaterials.get(s.id);
+  function coverMaterial(s: RoomItem, onDone: () => void) {
+    const key = `${s.kind}:${s.id}`;
+    const cached = coverMaterials.get(key);
     if (cached) { setTimeout(onDone, 0); return cached; }
     const mat = keep(new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.48, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.4, map: coverPlaceholder(s) }));
     mat.normalMap = spineNormal; mat.normalScale.set(0.6, 0.6); mat.onBeforeCompile = spineShade;
-    coverMaterials.set(s.id, mat);
+    coverMaterials.set(key, mat);
     const loader = new THREE.TextureLoader();
     loader.crossOrigin = "anonymous";
     loader.load(
@@ -488,7 +489,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     for (const x of [front, block, back, spine, face, body]) x.dispose();
     return keep(g);
   }
-  function addComic(s: RoomSeries, geo: THREE.BufferGeometry, x: number, y: number, z: number, parent: THREE.Object3D, onDone: () => void) {
+  function addComic(s: RoomItem, geo: THREE.BufferGeometry, x: number, y: number, z: number, parent: THREE.Object3D, onDone: () => void) {
     const m = new THREE.Mesh(geo, [coverMaterial(s, onDone), pages]);
     m.position.set(x, y, z);
     m.rotation.x = -0.1;
@@ -496,7 +497,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     m.receiveShadow = true;
     parent.add(m);
     pickables.push(m);
-    states.set(m, { series: s, home: m.position.clone(), homeQ: m.quaternion.clone(), parent, lift: 0, reach: 2.2, offsetX: -0.3, offsetY: -0.05, tilt: 1, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+    states.set(m, { item: s, home: m.position.clone(), homeQ: m.quaternion.clone(), parent, lift: 0, reach: 2.2, offsetX: -0.3, offsetY: -0.05, tilt: 1, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
     return m;
   }
   /** The Vertigo mark as the solid its logo draws in isometric: two bars, two caps, a block where the sides meet. */
@@ -632,7 +633,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       g.add(m);
     }
     pickables.push(g);
-    states.set(g, { series: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent, lift: 0, reach: 1.5, offsetX: 0, offsetY: -0.3, tilt: 1.7, glow: 0.3, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+    states.set(g, { item: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent, lift: 0, reach: 1.5, offsetX: 0, offsetY: -0.3, tilt: 1.7, glow: 0.3, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
   }
   /** A collector's figure: a bright little hero on a round base. */
   function figure(x: number, y: number, z: number, suit: number, cape: number | null, parent: THREE.Object3D, facing = 0) {
@@ -923,7 +924,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   plaque.castShadow = true;
   passage.add(plaque);
   pickables.push(plaque);
-  states.set(plaque, { series: null, home: plaque.position.clone(), homeQ: plaque.quaternion.clone(), parent: passage, lift: 0, reach: 1.1, offsetX: 0, offsetY: 0, tilt: 1.3, glow: 0.6, spin: 0, pop: 0, out: new THREE.Vector3(1, 0, 0) });
+  states.set(plaque, { item: null, home: plaque.position.clone(), homeQ: plaque.quaternion.clone(), parent: passage, lift: 0, reach: 1.1, offsetX: 0, offsetY: 0, tilt: 1.3, glow: 0.6, spin: 0, pop: 0, out: new THREE.Vector3(1, 0, 0) });
   const caseSpot = new THREE.SpotLight(0xd6e4ff, 0, 7, 0.5, 0.6, 1.2);
   caseSpot.position.set(0.2, PH - 0.1, -0.7);
   caseSpot.target.position.copy(PLAQUE);
@@ -932,8 +933,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const byLove = series.slice().sort((a, b) => b.rating * 12 + b.owned - (a.rating * 12 + a.owned));
   const shelves = unit.ys.slice().reverse();
   const onShelves = FACE_PER_SHELF * shelves.length;
-  const faceOut = byLove.slice(0, onShelves + 3);
-  total = Math.min(series.length, onShelves + 3) + 4;
+  // the shelf holds the issues; the series stand elsewhere in the room as props
+  const shelfItems: RoomItem[] = issues.length ? issues : byLove;
+  const faceOut = shelfItems.slice(0, onShelves);
+  total = faceOut.length + Math.min(3, byLove.length) + Math.min(4, byLove.length);
   const bump = () => { loaded++; options.onProgress?.(loaded, total); };
   const faceGeo = comicGeometry(FACE.w, FACE.h, FACE.d);
   const slots: { mesh: THREE.Mesh; row: number; col: number }[] = [];
@@ -950,7 +953,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     if (si === 3) logo(endX, y, unit.backZ + 0.2, 0.52, unit.group, 0.35, 0.22);
   });
   // turning the shelf over: each slot steps out, turns edge on, swaps its cover, turns back; staggered
-  const pageCount = Math.max(1, Math.ceil(byLove.length / SHELF_SLOTS));
+  const pageCount = Math.max(1, Math.ceil(shelfItems.length / SHELF_SLOTS));
   const noop = () => {};
   let currentPage = 0, busyUntil = 0, pageBusy = false;
   function showPage(page: number) {
@@ -960,11 +963,11 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     if (focused && slots.some((slot) => slot.mesh === focused)) putBack();
     currentPage = target;
     for (const { mesh, row, col } of slots) {
-      const s = byLove[target * SHELF_SLOTS + row * FACE_PER_SHELF + col] ?? null;
+      const s = shelfItems[target * SHELF_SLOTS + row * FACE_PER_SHELF + col] ?? null;
       if (s) coverMaterial(s, noop); // start the download now, ahead of the turn
       const start = now + row * 0.1 + col * 0.045;
       const st = states.get(mesh);
-      if (st) st.flip = { start, dur: 0.75, series: s, swapped: false };
+      if (st) st.flip = { start, dur: 0.75, item: s, swapped: false };
       busyUntil = Math.max(busyUntil, start + 0.75);
     }
     pageBusy = true;
@@ -1063,7 +1066,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   put(keep(new THREE.TorusGeometry(0.055, 0.016, 10, 24, Math.PI)), mugMat, 2.56, 1.17, BZ + 0.8, { rot: [0, 0, -Math.PI / 2] });
   put(cyl(0.085, 0.085, 0.004, 24), std(0x3b2a1a, 0.5), 2.45, 1.25, BZ + 0.8, { shadow: false });
   lamp(3.3, 1.05, BZ + 0.7, 0.78, 0.27, 16, false, true);
-  const overflow = series.length - faceOut.length;
+  const overflow = Math.max(0, shelfItems.length - faceOut.length);
   if (overflow > 0) {
     const cardboard = std(0xe6dcc4, 0.9, { bumpMap: clothGrain, bumpScale: 0.004 });
     for (let i = 0; i < Math.min(2, Math.ceil(overflow / 100)); i++) { put(box(1.0, 0.42, 0.42, 0.02), cardboard, 0.9 + i * 0.03, 0.21 + i * 0.44, BZ + 0.52); put(box(0.98, 0.01, 0.4, 0.004), std(0xcfc3a8, 1), 0.9 + i * 0.03, 0.42 + i * 0.44, BZ + 0.52, { shadow: false }); }
@@ -1074,7 +1077,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   put(box(2.36, 0.05, 0.66, 0.015), walnut, 4.6, 1.16, BZ + 0.35);
   for (const x of [4.05, 5.15]) { put(box(1.0, 0.8, 0.03, 0.008), std(0x3a2a1c, 0.6, { map: shelfWood }), x, 0.55, BZ + 0.66, { shadow: false }); put(box(0.05, 0.16, 0.02, 0.006), brassMat, x + (x < 4.6 ? 0.4 : -0.4), 0.55, BZ + 0.69, { shadow: false }); }
   blob(4.6, BZ + 0.5, 2.7, 1.1, 0.45);
-  byLove.slice(onShelves, onShelves + 3).forEach((s, i) => addComic(s, faceGeo, 3.75 + i * 0.6, 1.185 + FACE.h / 2, BZ + 0.2 + i * 0.03, scene, bump));
+  byLove.slice(7, 10).forEach((s, i) => addComic(s, faceGeo, 3.75 + i * 0.6, 1.185 + FACE.h / 2, BZ + 0.2 + i * 0.03, scene, bump));
   const consoleMat = std(0xd8d4c8, 0.55), consoleDark = std(0x2a2d35, 0.6);
   put(box(0.44, 0.09, 0.3, 0.015), consoleMat, 5.45, 1.23, BZ + 0.42);
   put(box(0.3, 0.012, 0.06, 0.004), consoleDark, 5.45, 1.28, BZ + 0.36, { shadow: false });
@@ -1139,7 +1142,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     g.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), skew);
     mergeStatic(g);
     pickables.push(g);
-    states.set(g, { series: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent: board, lift: 0, reach: 0.65, offsetX: -0.07, offsetY: 0, tilt: 1.6, glow: 0.8, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+    states.set(g, { item: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent: board, lift: 0, reach: 0.65, offsetX: -0.07, offsetY: 0, tilt: 1.6, glow: 0.8, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
   }
   dart(0, 0.275, -0.32, 0.1); // treble twenty
   dart(-0.085, -0.26, -0.26, -0.14); // treble nineteen
@@ -1177,7 +1180,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   };
   setClock();
   pickables.push(clock);
-  states.set(clock, { series: null, home: clock.position.clone(), homeQ: clock.quaternion.clone(), parent: scene, lift: 0, reach: 2.7, offsetX: 0, offsetY: 0, tilt: 0.6, glow: 0.7, spin: 0, pop: 0, out: new THREE.Vector3(1, 0, 0) });
+  states.set(clock, { item: null, home: clock.position.clone(), homeQ: clock.quaternion.clone(), parent: scene, lift: 0, reach: 2.7, offsetX: 0, offsetY: 0, tilt: 0.6, glow: 0.7, spin: 0, pop: 0, out: new THREE.Vector3(1, 0, 0) });
   // midnight turns the clock over; it turns back after a while or when the hands move
   let clockFlipped = false, midnightUntil = 0;
   const MIDNIGHT_LASTS = 30000;
@@ -1342,7 +1345,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
         pic.map = tex; pic.color.setHex(0xffffff); pic.needsUpdate = true;
       });
       pickables.push(g);
-      states.set(g, { series: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent: unit.group, lift: 0, reach: 1.15, offsetX: 0, offsetY: -0.27, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+      states.set(g, { item: null, home: g.position.clone(), homeQ: g.quaternion.clone(), parent: unit.group, lift: 0, reach: 1.15, offsetX: 0, offsetY: -0.27, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
       characterByMesh.set(g, c);
       standees.push(g);
     });
@@ -1393,7 +1396,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     photo.mesh = mesh;
     photoByMesh.set(mesh, photo);
     pickables.push(mesh);
-    states.set(mesh, { series: null, home: new THREE.Vector3(), homeQ: new THREE.Quaternion(), parent: scene, lift: 0, reach: 1.0, offsetX: 0, offsetY: 0, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
+    states.set(mesh, { item: null, home: new THREE.Vector3(), homeQ: new THREE.Quaternion(), parent: scene, lift: 0, reach: 1.0, offsetX: 0, offsetY: 0, tilt: 1.2, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, 0, 1) });
     photos.unshift(photo);
     while (photos.length > PINS.length) dropPhoto(photos.pop() as Photo);
     pinPhotos();
@@ -1521,7 +1524,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     hovered = null;
     options.onHover?.(null);
     if (m.parent !== scene) scene.attach(m);
-    options.onPick?.(states.get(m)?.series ?? null);
+    options.onPick?.(states.get(m)?.item ?? null);
     const ph = photoByMesh.get(m);
     options.onPhoto?.(ph ? { id: ph.id, taken: ph.taken, url: ph.url } : null);
     options.onCharacter?.(characterByMesh.get(m) ?? null);
@@ -1591,9 +1594,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       if (next && states.get(next)?.flip) next = null; // mid-turn, not for taking
       if (next !== hovered) {
         hovered = next;
-        options.onHover?.(next ? states.get(next)?.series ?? null : null);
+        options.onHover?.(next ? states.get(next)?.item ?? null : null);
       }
-      el.style.cursor = lampHot || (next && !states.get(next)?.series) ? "pointer" : "";
+      el.style.cursor = lampHot || (next && !states.get(next)?.item) ? "pointer" : "";
     }
     if (focused || secret === "opening" || secret === "closing" || burstT >= 0 || falling.length || clockDrag) shadowFrames = 2;
     for (const m of pickables) {
@@ -1608,8 +1611,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
           st.pop = Math.sin(e * Math.PI) * 0.55;
           if (!st.flip.swapped && e >= 0.5) {
             st.flip.swapped = true;
-            const s = st.flip.series;
-            st.series = s;
+            const s = st.flip.item;
+            st.item = s;
             m.visible = !!s;
             if (s) (m as THREE.Mesh).material = [coverMaterial(s, noop), pages];
           }
