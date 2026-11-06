@@ -13,6 +13,7 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "./src"),
       src: fileURLToPath(new URL("./src", import.meta.url)),
+      vuedraggable: resolve(__dirname, "node_modules/vuedraggable/src/vuedraggable.js"),
     },
   },
   build: {
