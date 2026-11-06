@@ -11,8 +11,10 @@ On-disk layout, relative to DATA_DIR (default ``<backend>/Config``, override wit
         entities/<kind>/<entity_id>.<ext>        kind = publisher | creator | character
 
 Model columns (``thumbnail`` / ``profile_picture``) store the path *relative to the
-user's root*, e.g. ``series/12/cover.jpeg``. Installs created before this layout are
-moved into it by ``api.media_migrate`` (run at startup and via ``flask media migrate``).
+user's root*, e.g. ``series/12/cover.webp``. Uploads are re-encoded to WebP on the way in;
+only animated images keep their format. Installs created before this layout are moved into
+it by ``api.media_migrate`` and older images re-encoded by ``api.media_convert`` (both run
+at startup and via ``flask media migrate`` / ``convert``).
 
 Routes never build paths themselves: they call ``apply_thumbnail_field`` / ``store`` /
 ``remove`` / ``send`` and persist the returned relative path.
@@ -21,6 +23,7 @@ Modules:
 
     paths           on-disk layout constants and path resolution
     storage         fetch, validate and persist image bytes
+    convert         resize and encode as WebP (cwebp with sharp YUV when installed)
     web             the request/response contract shared by every image route
     dominant_color  accent colour extraction for covers
     task_queue      background workers for slow image jobs

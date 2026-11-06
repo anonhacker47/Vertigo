@@ -1,11 +1,10 @@
-import io
 import os
 import shutil
 
 import requests
-from PIL import Image
 from werkzeug.datastructures import FileStorage
 
+from api.media.convert import ACCEPTED, EXT, sniff, to_webp
 from api.media.dominant_color import dominant_color
 from api.media.paths import (
     AVATAR_DIR, SERIES_DIR, ENTITIES_DIR,
@@ -13,7 +12,6 @@ from api.media.paths import (
 )
 
 MAX_IMAGE_BYTES = 20 * 1024 * 1024
-_FORMAT_EXT = {"JPEG": ".jpeg", "PNG": ".png", "WEBP": ".webp", "GIF": ".gif"}
 _DOWNLOAD_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 }
@@ -49,23 +47,24 @@ def _read_source(source) -> bytes:
     return data
 
 
-def _sniff_ext(data: bytes) -> str:
+def _encode(data: bytes):
+    """(bytes, ext) to store: lossy WebP, or the original when it is animated."""
     try:
-        with Image.open(io.BytesIO(data)) as img:
-            fmt = img.format
+        fmt, animated = sniff(data)
+    except ValueError as exc:
+        raise MediaError(str(exc)) from exc
+    if animated:
+        return data, ACCEPTED[fmt]
+    try:
+        return to_webp(data), EXT
     except Exception as exc:
-        raise MediaError("not a valid image") from exc
-    ext = _FORMAT_EXT.get(fmt or "")
-    if not ext:
-        raise MediaError(f"unsupported image format {fmt}")
-    return ext
+        raise MediaError("could not convert image") from exc
 
 
 def store(user_id, rel_dir: str, filename: str, source, *, replace=None,
           want_color: bool = False):
 
-    data = _read_source(source)
-    ext = _sniff_ext(data)
+    data, ext = _encode(_read_source(source))
     filename = f"{filename}{ext}"
     relpath = f"{rel_dir}/{filename}"
 

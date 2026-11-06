@@ -216,7 +216,7 @@ class TestBackupAndRestore(TransferTestCase):
         self.assertEqual([c.title for c in hb.character], ['John Constantine'])
         self.assertEqual([g.title for g in hb.genre], ['Horror'])
         self.assertEqual((hb.issue_count, hb.owned_count, hb.read_count, hb.purchase_cost), (3, 2, 1, 7.5))
-        self.assertEqual(hb.thumbnail, f'series/{hb.id}/cover.png')
+        self.assertEqual(hb.thumbnail, f'series/{hb.id}/cover.webp')
         self.assertTrue(os.path.isfile(media.resolve(self.user_id, hb.thumbnail)))
 
         issues = self.issues_of(hb)
@@ -230,7 +230,7 @@ class TestBackupAndRestore(TransferTestCase):
         self.assertEqual(first.user_rating, 5)
         self.assertEqual(first.notes, 'Signed')
         self.assertEqual(first.metron_id, '1001')
-        self.assertEqual(first.thumbnail, f'series/{hb.id}/issues/{first.id}.png')
+        self.assertEqual(first.thumbnail, f'series/{hb.id}/issues/{first.id}.webp')
         self.assertTrue(os.path.isfile(media.resolve(self.user_id, first.thumbnail)))
         self.assertIsNone(issues[3].thumbnail)
 
@@ -240,10 +240,10 @@ class TestBackupAndRestore(TransferTestCase):
 
         publisher = db.session.scalar(Publisher.select().where(Publisher.user_id == self.user_id))
         self.assertEqual(publisher.description, 'Big two')
-        self.assertEqual(publisher.thumbnail, f'entities/publisher/{publisher.id}.png')
+        self.assertEqual(publisher.thumbnail, f'entities/publisher/{publisher.id}.webp')
         self.assertTrue(os.path.isfile(media.resolve(self.user_id, publisher.thumbnail)))
 
-        self.assertEqual(self.me().profile_picture, 'avatar/avatar.png')
+        self.assertEqual(self.me().profile_picture, 'avatar/avatar.webp')
 
     def test_a_full_account_needs_a_mode(self):
         self.seed_collection()

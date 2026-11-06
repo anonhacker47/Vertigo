@@ -30,4 +30,15 @@ def migrate_media_layout():
 
 migrate_media_layout()
 
+def convert_media_store():
+    """Idempotent; runs on a media worker so startup is not held up."""
+    try:
+        from api import media
+        from api.media_convert import convert_media
+        media.submit(convert_media, log=lambda line: logger.info(line))
+    except Exception as e:
+        print(f"Error while scheduling image conversion: {e}")
+
+convert_media_store()
+
 serve(app, host='0.0.0.0', port=6166)
