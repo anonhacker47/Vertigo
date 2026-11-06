@@ -211,6 +211,7 @@ onBeforeUnmount(() => {
 .room {
   position: relative;
   height: calc(100vh - var(--spacing-header, 72px));
+  height: calc(100dvh - var(--spacing-header, 72px));
   overflow: hidden;
   background: #0a0b10;
 }
