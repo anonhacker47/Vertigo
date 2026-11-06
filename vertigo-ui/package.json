@@ -13,7 +13,6 @@
     "lint-fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx,json,css,scss,md}'"
   },
   "dependencies": {
-    "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/vite": "^4.1.18",
@@ -28,16 +27,12 @@
     "pinia-plugin-persistedstate": "^4.7.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
-    "requirejs": "^2.3.8",
     "swiper": "^12.0.3",
-    "tailwindcss-primeui": "^0.6.1",
     "three": "^0.170.0",
     "vue": "^3.5.25",
     "vue-echarts": "^8.0.1",
     "vue-router": "^4.6.4",
-    "vue-window-size": "^2.0.0",
-    "vuedraggable": "^4.1.0",
-    "webfontloader": "^1.6.28"
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.15.0",
