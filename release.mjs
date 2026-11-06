@@ -45,7 +45,7 @@ try {
   // Windows-safe copy command
   const copyCommand = process.platform === 'win32' 
     ? `xcopy /E /I "${backendDir}" "${versionedBuildPath}"`
-    : `cp -r "${backendDir}" "${versionedBuildPath}/vertigo-backend"`;
+    : `cp -r "${backendDir}/." "${versionedBuildPath}"`;
   
   execSync(copyCommand, { stdio: 'inherit', shell: true });
 } catch (error) {
@@ -53,9 +53,9 @@ try {
   process.exit(1);
 }
 
-// Step 5: Remove unwanted folders from backend copy
-const backendCopyPath = path.join(versionedBuildPath);
-const removeDirs = ['Config', 'env','__pycache__',"tests"];
+// Step 5: Remove local data from the copy
+const backendCopyPath = versionedBuildPath;
+const removeDirs = ['Config', 'env', '__pycache__', 'tests'];
 
 removeDirs.forEach(dir => {
   const fullPath = path.join(backendCopyPath, dir);
