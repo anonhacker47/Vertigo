@@ -8,6 +8,7 @@ import { useUserStore } from "@/store/user";
 import type { Entity } from "@/types/entity.types";
 import type { LibraryIssue } from "@/types/issue.types";
 import type { Series } from "@/types/series.types";
+import { SHELF_DEFAULTS, type ShelfOrder, type ShelfSettings } from "@/types/shelf.types";
 
 /** What the room needs to know about a series: enough for a cover, a spine colour and the card. */
 export interface RoomSeries {
@@ -16,6 +17,7 @@ export interface RoomSeries {
   title: string;
   slug: string;
   publisher: string;
+  publisherId: number | null;
   format: string;
   year: number | null;
   genre: string[];
@@ -45,6 +47,7 @@ function toRoomSeries(s: Series): RoomSeries {
     title: s.title,
     slug: s.slug,
     publisher: s.publisher?.title ?? "",
+    publisherId: s.publisher?.id ?? null,
     format: s.series_format ?? "",
     year: s.release_date ? new Date(s.release_date).getFullYear() : null,
     genre: s.genre ?? [],
@@ -106,15 +109,22 @@ export interface RoomCharacter {
   image: string;
 }
 
-/** The characters in the most series, among those with a picture. */
-export async function loadRoomCharacters(count = 2): Promise<RoomCharacter[]> {
+const toRoomCharacter = (c: Entity): RoomCharacter => ({ id: c.id, title: c.title, slug: c.slug, series: c.series_count ?? 0, image: CharacterService.getCharacterImageById(c.id, c.last_updated) });
+
+/** The chosen characters, or the ones in the most series; only a character with a picture can stand. */
+export async function loadRoomCharacters(chosen: number[] | null = null, count = 2): Promise<RoomCharacter[]> {
+  if (chosen?.length) {
+    const found = await Promise.all(chosen.map((id) => CharacterService.getCharacterById(id).catch(() => null)));
+    const standing = found.filter((c): c is Entity => !!c?.thumbnail).map(toRoomCharacter);
+    if (standing.length) return standing;
+  }
   const page = await CharacterService.fetchCharacters(100, 0);
   const list: Entity[] = page?.data ?? [];
   return list
     .filter((c) => c.thumbnail)
     .sort((a, b) => (b.series_count ?? 0) - (a.series_count ?? 0))
     .slice(0, count)
-    .map((c) => ({ id: c.id, title: c.title, slug: c.slug, series: c.series_count ?? 0, image: CharacterService.getCharacterImageById(c.id, c.last_updated) }));
+    .map(toRoomCharacter);
 }
 
 /** An owned issue standing on the shelf. */
@@ -130,6 +140,7 @@ export interface RoomIssue {
   slug: string;
   year: number | null;
   read: boolean;
+  added: number;
   price: number | null;
   rgb: [number, number, number];
   cover: string;
@@ -152,6 +163,7 @@ function toRoomIssue(i: LibraryIssue): RoomIssue {
     slug: i.series.slug,
     year: i.cover_date ? new Date(i.cover_date).getFullYear() : null,
     read: !!i.is_read,
+    added: i.timestamp ? new Date(i.timestamp).getTime() : 0,
     price: i.bought_price ?? null,
     rgb: [70, 80, 110],
     cover: i.thumbnail ? IssueService.getIssueImageById(i.id, i.last_updated ?? undefined) : SeriesService.getSeriesImageById(i.series.id, i.series.last_updated ?? undefined),
@@ -171,9 +183,18 @@ export async function loadRoomIssues(): Promise<{ issues: RoomIssue[]; total: nu
   return { issues: owned, total: owned.length };
 }
 
-/** Publisher together, then series together, then by number; a series the room does not know goes last. */
-export function shelfOrder(issues: RoomIssue[], series: RoomSeries[]): RoomIssue[] {
-  const publisher = new Map(series.map((s) => [s.id, s.publisher]));
-  for (const i of issues) i.publisher = publisher.get(i.seriesId) ?? "";
-  return issues.slice().sort((a, b) => (a.publisher || "\uffff").localeCompare(b.publisher || "\uffff") || a.seriesTitle.localeCompare(b.seriesTitle) || a.number - b.number);
+/** The issues that stand, filtered and ordered as the settings say. */
+export function arrangeShelf(issues: RoomIssue[], series: RoomSeries[], settings: ShelfSettings = SHELF_DEFAULTS): RoomIssue[] {
+  const byId = new Map(series.map((s) => [s.id, s]));
+  for (const i of issues) i.publisher = byId.get(i.seriesId)?.publisher ?? "";
+  const shown = issues.filter((i) => (settings.show !== "unread" || !i.read) && (settings.publisher === null || byId.get(i.seriesId)?.publisherId === settings.publisher));
+  const byPublisher = (a: RoomIssue, b: RoomIssue) => (a.publisher || "\uffff").localeCompare(b.publisher || "\uffff");
+  const bySeries = (a: RoomIssue, b: RoomIssue) => a.seriesTitle.localeCompare(b.seriesTitle) || a.number - b.number;
+  const orders: Record<ShelfOrder, (a: RoomIssue, b: RoomIssue) => number> = {
+    publisher: (a, b) => byPublisher(a, b) || bySeries(a, b),
+    series: bySeries,
+    newest: (a, b) => b.added - a.added || bySeries(a, b),
+    unread: (a, b) => Number(a.read) - Number(b.read) || byPublisher(a, b) || bySeries(a, b),
+  };
+  return shown.sort(orders[settings.order] ?? orders.publisher);
 }

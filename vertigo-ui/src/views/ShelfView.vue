@@ -19,6 +19,7 @@
         <h2>{{ character.title }}</h2>
         <p class="room__meta">in {{ character.series }} series</p>
         <RouterLink :to="{ name: 'CharacterDetail', params: { Id: character.id, Link: character.slug ?? 'character' } }" class="btn">Open character</RouterLink>
+        <RouterLink :to="{ name: 'SettingsShelf' }" class="link">Choose who stands here</RouterLink>
         <button type="button" class="link" @click="putBack">Put it back</button>
       </aside>
     </Transition>
@@ -90,7 +91,9 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, shelfOrder, type RoomCharacter, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
+import { arrangeShelf, loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
+import ShelfService from "@/services/ShelfService";
+import { SHELF_DEFAULTS, type ShelfSettings } from "@/types/shelf.types";
 import { createRoom, type RoomHandle, type RoomPhoto } from "@/components/reading-room/roomScene";
 
 const stage = ref<HTMLElement | null>(null);
@@ -154,10 +157,12 @@ onMounted(async () => {
   easeVeil();
   let series: RoomSeries[];
   let shelf: Awaited<ReturnType<typeof loadRoomIssues>> = { issues: [], total: 0 };
+  let settings: ShelfSettings = SHELF_DEFAULTS;
   try {
-    const [result, issueResult] = await Promise.all([loadRoomSeries(), loadRoomIssues().catch(() => shelf)]);
+    const [result, issueResult, chosen] = await Promise.all([loadRoomSeries(), loadRoomIssues().catch(() => shelf), ShelfService.getSettings().catch(() => SHELF_DEFAULTS)]);
     series = result.series;
-    shelf = { issues: shelfOrder(issueResult.issues, series), total: issueResult.total };
+    settings = chosen;
+    shelf = { issues: arrangeShelf(issueResult.issues, series, settings), total: issueResult.total };
     total.value = result.total;
     target = Math.max(target, 18);
   } catch (error) {
@@ -190,7 +195,7 @@ onMounted(async () => {
     // a slow network still gets the room; the covers keep arriving behind it
     veilTimer = window.setTimeout(() => { target = 100; }, 6000);
     loadRoomSummary({ series: total.value, issues: issues.value }).then((summary) => room?.setSummary(summary)).catch(() => {});
-    loadRoomCharacters().then((list) => room?.setCharacters(list)).catch(() => {});
+    loadRoomCharacters(settings.standees).then((list) => room?.setCharacters(list)).catch(() => {});
   } catch (error) {
     console.error("The 3D shelf could not start", error);
     failed.value = "Your browser could not start the 3D room.";

@@ -11,6 +11,7 @@ import pandas as pd
 from io import BytesIO
 from flask import send_file
 from api.schemas.user_schema import UserSchema, UpdateUserSchema
+from api.schemas.shelf_schema import ShelfSettingsSchema, shelf_settings
 from sqlalchemy.orm import selectinload
 
 from api.utils.auth import token_auth
@@ -23,6 +24,7 @@ users = Blueprint('users', __name__)
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 update_user_schema = UpdateUserSchema(partial=True)
+shelf_settings_schema = ShelfSettingsSchema()
 
 
 @users.route('/users', methods=['POST'])
@@ -139,6 +141,35 @@ def get_profile_picture():
    
 
 
+@users.route('/me/shelf', methods=['GET'])
+@authenticate(token_auth)
+@response(shelf_settings_schema)
+def get_shelf():
+    """How the 3D shelf is arranged"""
+    return shelf_settings(token_auth.current_user())
+
+
+@users.route('/me/shelf', methods=['PUT'])
+@authenticate(token_auth)
+@body(shelf_settings_schema)
+@response(shelf_settings_schema)
+def put_shelf(args):
+    """Arrange the 3D shelf: its standees, order and what it shelves"""
+    user = token_auth.current_user()
+    if args['standees'] is not None:
+        ids = list(dict.fromkeys(args['standees']))
+        owned = db.session.scalars(user.character_select().filter(Character.id.in_(ids))).all() if ids else []
+        if len(owned) != len(ids):
+            abort(400, description="Pick characters from your own collection.")
+        args['standees'] = ids
+    if args['publisher'] is not None and not db.session.scalar(
+            user.publisher_select().filter(Publisher.id == args['publisher'])):
+        abort(400, description="Pick a publisher from your own collection.")
+    user.shelf_settings = args
+    db.session.commit()
+    return args
+
+
 @users.route('/export_data', methods=['GET'])
 @authenticate(token_auth)
 def export_data():
@@ -243,6 +274,7 @@ def delete_all_user_data():
 
         deleted_counts[model.__tablename__] = len(items)
     media.delete_user_media(user.id, keep_avatar=True)
+    user.shelf_settings = None
     db.session.commit()
 
     return jsonify({

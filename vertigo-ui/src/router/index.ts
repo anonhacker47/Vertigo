@@ -77,6 +77,11 @@ const router = createRouter({
           component: () => import("@/components/settings/IntegrationsSettings.vue"),
         },
         {
+          path: "shelf",
+          name: "SettingsShelf",
+          component: () => import("@/components/settings/ShelfSettings.vue"),
+        },
+        {
           path: "data",
           name: "SettingsData",
           component: () => import("@/components/settings/DataSettings.vue"),

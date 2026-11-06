@@ -997,7 +997,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     }
     const endX = unit.inner / 2 - 0.26, endZ = unit.backZ + 0.36;
     if (si === 1 || si === 2) standeeSlots.push([endX, y, endZ]);
-    if (si === 3) logo(endX, y, unit.backZ + 0.2, 0.52, unit.group, 0.35, 0.22);
+    if (si === 3) logo(endX, y, unit.backZ + 0.2, 0.52, unit.group, -0.25, 0.22);
   });
   // turning the shelf over: each slot steps out, turns edge on, swaps its cover, turns back; staggered
   const pageCount = Math.max(1, Math.ceil(shelfItems.length / SHELF_SLOTS));

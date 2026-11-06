@@ -1,3 +1,6 @@
+from api import db
+from api.models.series_entities import Character, Publisher
+from api.models.user import User
 from tests.base_test_case import BaseTestCase
 
 
@@ -185,3 +188,46 @@ class UserTests(BaseTestCase):
         assert rv.status_code == 200
         assert rv.json['pagination']['total'] == 0
         assert rv.json['data'] == []
+
+
+class ShelfSettingsTests(BaseTestCase):
+    def test_defaults(self):
+        rv = self.client.get('/api/me/shelf')
+        assert rv.status_code == 200
+        assert rv.json == {'standees': None, 'order': 'publisher', 'show': 'unread', 'publisher': None}
+
+    def test_rejects_an_unknown_order(self):
+        rv = self.client.put('/api/me/shelf', json={'order': 'colour'})
+        assert rv.status_code == 400
+
+    def test_rejects_too_many_standees(self):
+        rv = self.client.put('/api/me/shelf', json={'standees': [1, 2, 3]})
+        assert rv.status_code == 400
+
+    def test_rejects_a_strangers_character(self):
+        other = User(username='other', email='other@example.com', password='foo')
+        db.session.add(other)
+        db.session.commit()
+        theirs = Character(title='Rorschach', user_id=other.id)
+        db.session.add(theirs)
+        db.session.commit()
+        rv = self.client.put('/api/me/shelf', json={'standees': [theirs.id]})
+        assert rv.status_code == 400
+
+    def test_round_trip(self):
+        me = db.session.get(User, 1)
+        abe = Character(title='Abe Sapien', user_id=me.id)
+        dark_horse = Publisher(title='Dark Horse', user_id=me.id)
+        db.session.add_all([abe, dark_horse])
+        db.session.commit()
+        rv = self.client.put('/api/me/shelf', json={
+            'standees': [abe.id, abe.id], 'order': 'unread', 'show': 'unread', 'publisher': dark_horse.id,
+        })
+        assert rv.status_code == 200
+        assert rv.json == {'standees': [abe.id], 'order': 'unread', 'show': 'unread', 'publisher': dark_horse.id}
+        rv = self.client.get('/api/me/shelf')
+        assert rv.json['standees'] == [abe.id]
+        assert rv.json['publisher'] == dark_horse.id
+        rv = self.client.delete('/api/delete_all_data')
+        assert rv.status_code == 200
+        assert self.client.get('/api/me/shelf').json['standees'] is None

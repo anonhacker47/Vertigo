@@ -51,6 +51,7 @@ const sections = [
   { name: "SettingsProfile", label: "Profile", hint: "Photo, name, email and currency", icon: "pi pi-user" },
   { name: "SettingsSecurity", label: "Security", hint: "Password", icon: "pi pi-lock" },
   { name: "SettingsIntegrations", label: "Integrations", hint: "Metron and MyAnimeList", icon: "pi pi-link" },
+  { name: "SettingsShelf", label: "3D shelf", hint: "Standees, order and what stands out", icon: "pi pi-box" },
   { name: "SettingsData", label: "Your data", hint: "Export or delete everything", icon: "pi pi-database" },
 ];
 
