@@ -1,4 +1,8 @@
+import getSymbolFromCurrency from "currency-symbol-map";
+import DashboardService from "@/services/DashboardService";
+import InsightsService from "@/services/InsightsService";
 import SeriesService from "@/services/SeriesService";
+import { useUserStore } from "@/store/user";
 import type { Series } from "@/types/series.types";
 
 /** What the room needs to know about a series: enough for a cover, a spine colour and the card. */
@@ -58,4 +62,31 @@ export async function loadRoomSeries(): Promise<{ series: RoomSeries[]; total: n
     list = list.concat(page.seriesList);
   }
   return { series: list.slice(0, ROOM_MAX_SERIES).map(toRoomSeries), total };
+}
+
+/** What the plaque in the room's secret says: the total spent, with two figures under it. */
+export interface RoomSummary {
+  spent: number;
+  symbol: string;
+  issues: number;
+  series: number;
+  since: number | null;
+}
+
+/** The totals behind the plaque. Any part that fails falls back to what the room already counted. */
+export async function loadRoomSummary(fallback: { series: number; issues: number }): Promise<RoomSummary> {
+  const [spent, records, seriesStats, issueStats] = await Promise.all([
+    DashboardService.getTotalSpent().then((r) => Number(r.data?.totalSpent ?? 0)).catch(() => 0),
+    InsightsService.getRecords().then((r) => r.data).catch(() => null),
+    DashboardService.getUserSeriesStats().then((r) => r.data).catch(() => null),
+    DashboardService.getUserIssueStats().then((r) => r.data).catch(() => null),
+  ]);
+  const date = records?.firsts?.first_purchase?.date;
+  return {
+    spent,
+    symbol: getSymbolFromCurrency(useUserStore().getUser()?.preferred_currency ?? "") ?? "",
+    issues: Number(issueStats?.collectedIssueCount ?? fallback.issues),
+    series: Number(seriesStats?.totalSeriesCount ?? fallback.series),
+    since: date ? new Date(date).getFullYear() : null,
+  };
 }

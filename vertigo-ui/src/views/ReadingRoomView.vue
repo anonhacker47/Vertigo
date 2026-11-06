@@ -1,13 +1,21 @@
 <template>
   <div class="room">
-    <div ref="stage" class="room__stage" :class="{ 'room__stage--hot': !!hovered }"></div>
+    <div ref="stage" class="room__stage" :class="{ 'room__stage--hot': !!hovered, 'room__stage--on': !loading }"></div>
 
     <div class="room__title">
       <h1>Reading room</h1>
       <p>{{ subtitle }}</p>
     </div>
 
-    <p class="room__hint">Scroll to lean in · click a comic to pick it up · <kbd>Esc</kbd> puts it back</p>
+    <p v-show="!secretOpen" class="room__hint">Scroll to lean in · click a comic to pick it up · <kbd>Esc</kbd> puts it back · click a lamp to switch it<template v-if="pages > 1"> · <kbd>←</kbd> <kbd>→</kbd> turn the shelf</template></p>
+
+    <Transition name="fade">
+      <div v-if="pages > 1 && !holding && !secretOpen" class="room__pager" role="group" aria-label="Shelf pages" :style="{ left: `${shelfFoot.x * 100}%`, top: `${shelfFoot.y * 100}%` }">
+        <button type="button" :disabled="busy" aria-label="Previous shelf" @click="turn(-1)">‹</button>
+        <span>Shelf <b class="num">{{ page + 1 }}</b> of <b class="num">{{ pages }}</b></span>
+        <button type="button" :disabled="busy" aria-label="Next shelf" @click="turn(1)">›</button>
+      </div>
+    </Transition>
 
     <Transition name="card">
       <aside v-if="picked" class="room__card">
@@ -26,15 +34,20 @@
       </aside>
     </Transition>
 
-    <div v-if="loading" class="room__state">
-      <b class="num">{{ percent }}</b>
-      <span>{{ seriesCount ? "Hanging your covers" : "Fetching the collection" }}</span>
-    </div>
-    <div v-else-if="failed" class="room__state room__state--text">
+    <Transition name="veil">
+      <div v-if="loading" class="room__state">
+        <i class="veil__glow"></i>
+        <p class="veil__kicker">Reading room</p>
+        <b class="num">{{ Math.round(shown) }}</b>
+        <div class="veil__bar"><i :style="{ width: `${shown}%` }"></i></div>
+        <span>{{ caption }}</span>
+      </div>
+    </Transition>
+    <div v-if="!loading && failed" class="room__state room__state--text">
       <b>{{ failed }}</b>
       <span>The rest of the app still works; try again in a moment.</span>
     </div>
-    <div v-else-if="!seriesCount" class="room__state room__state--text">
+    <div v-if="!loading && !failed && !seriesCount" class="room__state room__state--text">
       <b>The shelves are empty.</b>
       <span>Add a few series and they will stand here, face out.</span>
     </div>
@@ -43,18 +56,26 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { loadRoomSeries, type RoomSeries } from "@/components/reading-room/roomData";
+import { loadRoomSeries, loadRoomSummary, type RoomSeries } from "@/components/reading-room/roomData";
 import { createRoom, type RoomHandle } from "@/components/reading-room/roomScene";
 
 const stage = ref<HTMLElement | null>(null);
 const loading = ref(true);
 const failed = ref("");
-const percent = ref(0);
+const shown = ref(0); // the number on the veil eases toward the real progress, then runs to a hundred
+let target = 6;
+let veilFrame = 0;
 const seriesCount = ref(0);
 const total = ref(0);
 const issues = ref(0);
 const picked = ref<RoomSeries | null>(null);
 const hovered = ref<RoomSeries | null>(null);
+const page = ref(0);
+const pages = ref(1);
+const busy = ref(false);
+const shelfFoot = ref({ x: 0.28, y: 0.78 });
+const holding = ref(false);
+const secretOpen = ref(false);
 let room: RoomHandle | null = null;
 
 const subtitle = computed(() => {
@@ -62,22 +83,35 @@ const subtitle = computed(() => {
   const shown = total.value > seriesCount.value ? `${seriesCount.value} of ${total.value} series` : `${seriesCount.value} series`;
   return `${shown} · ${issues.value} issues`;
 });
+const caption = computed(() => (shown.value < 25 ? "Fetching the collection" : shown.value < 75 ? "Hanging your covers" : "Lighting the lamps"));
+function easeVeil() {
+  shown.value += (target - shown.value) * 0.07;
+  if (target >= 100 && shown.value > 99.4) { shown.value = 100; loading.value = false; return; }
+  veilFrame = requestAnimationFrame(easeVeil);
+}
 const share = (count: number, all: number) => `${all ? Math.min(100, (count / all) * 100) : 0}%`;
 
 function putBack() {
   room?.putBack();
 }
+function turn(step: number) {
+  room?.showPage(page.value + step);
+}
 function onKey(event: KeyboardEvent) {
   if (event.key === "Escape") putBack();
+  else if (event.key === "ArrowLeft") turn(-1);
+  else if (event.key === "ArrowRight") turn(1);
 }
 
 onMounted(async () => {
   document.addEventListener("keydown", onKey);
+  easeVeil();
   let series: RoomSeries[];
   try {
     const result = await loadRoomSeries();
     series = result.series;
     total.value = result.total;
+    target = Math.max(target, 18);
   } catch (error) {
     console.error("Failed to load the reading room", error);
     failed.value = "The collection could not be loaded.";
@@ -93,14 +127,19 @@ onMounted(async () => {
   try {
     room = createRoom(stage.value, series, {
       onProgress: (loaded, all) => {
-        percent.value = Math.min(100, Math.round((loaded / all) * 100));
-        if (percent.value >= 60) loading.value = false;
+        const done = Math.min(100, (loaded / all) * 100);
+        target = done >= 60 ? 100 : Math.max(target, done); // from sixty the rest arrives behind the room
       },
       onPick: (s) => { picked.value = s; },
       onHover: (s) => { hovered.value = s; },
+      onPage: (current, all, turning) => { page.value = current; pages.value = all; busy.value = turning; },
+      onLayout: (foot) => { shelfFoot.value = foot; },
+      onHold: (held) => { holding.value = held; },
+      onSecret: (open) => { secretOpen.value = open; },
     });
     // a slow network still gets the room; the covers keep arriving behind it
-    setTimeout(() => { loading.value = false; }, 6000);
+    setTimeout(() => { target = 100; }, 6000);
+    loadRoomSummary({ series: total.value, issues: issues.value }).then((summary) => room?.setSummary(summary)).catch(() => {});
   } catch (error) {
     console.error("The reading room could not start", error);
     failed.value = "Your browser could not start the 3D room.";
@@ -108,6 +147,7 @@ onMounted(async () => {
   }
 });
 onBeforeUnmount(() => {
+  cancelAnimationFrame(veilFrame);
   document.removeEventListener("keydown", onKey);
   room?.dispose();
   room = null;
@@ -122,7 +162,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   background: #0a0b10;
 }
-.room__stage { position: absolute; inset: 0; }
+.room__stage { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease; }
+.room__stage--on { opacity: 1; }
 .room__stage--hot { cursor: pointer; }
 .room__stage :deep(canvas) { display: block; }
 /* a soft vignette and a little grain over the render; both are stills, so they cost nothing per frame */
@@ -160,8 +201,28 @@ onBeforeUnmount(() => {
 .room__hint { position: absolute; left: 32px; bottom: 20px; z-index: 3; margin: 0; font-size: 12px; font-weight: 700; color: #64748b; pointer-events: none; }
 .room__hint kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.12); font: inherit; font-size: 11px; line-height: 18px; text-align: center; color: #94a3b8; }
 
-.room__card { position: absolute; right: 32px; top: 50%; z-index: 4; width: min(340px, calc(100% - 64px)); transform: translateY(-50%); }
-.room__card h2 { margin: 0; font-size: 28px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; color: #fff; text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); }
+/* sits just under the bookcase; the scene says where that is on screen */
+.room__pager { position: absolute; z-index: 3; transform: translate(-50%, 12px); display: inline-flex; align-items: center; gap: 6px; padding: 3px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(10, 11, 16, 0.55); }
+.room__pager span { padding: 0 6px; font-size: 12px; font-weight: 700; color: #94a3b8; }
+.room__pager b { color: #fff; }
+.room__pager button { width: 28px; height: 28px; border-radius: 999px; font-size: 18px; line-height: 1; color: #cbd5e1; }
+.room__pager button:hover:not(:disabled) { color: #fff; background: rgba(255, 255, 255, 0.12); }
+.room__pager button:disabled { opacity: 0.4; }
+
+/* a small frosted card: the room shows through it, blurred */
+.room__card {
+  position: absolute; right: 32px; top: 50%; z-index: 4;
+  width: min(320px, calc(100% - 64px));
+  padding: 20px 22px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 14, 22, 0.42);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-50%);
+}
+.room__card h2 { margin: 0; font-size: 26px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; color: #fff; }
 .room__meta { margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #94a3b8; }
 .bars { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
 .bar { font-size: 12px; font-weight: 800; color: #cbd5e1; }
@@ -180,21 +241,31 @@ onBeforeUnmount(() => {
 .card-leave-active { transition: opacity 0.2s; }
 .card-enter-from { opacity: 0; transform: translateY(-50%) translateX(24px); }
 .card-leave-to { opacity: 0; }
+.fade-enter-active { transition: opacity 0.3s 0.15s; }
+.fade-leave-active { transition: opacity 0.15s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.room__state { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; text-align: center; background: #0a0b10; }
-.room__state b { display: block; font-size: clamp(48px, 10vw, 120px); font-weight: 900; line-height: 1; letter-spacing: -0.04em; color: #fff; }
-.room__state span { display: block; margin-top: 10px; font-size: 13px; font-weight: 700; color: #94a3b8; }
+.room__state { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; justify-items: center; text-align: center; background: #0a0b10; overflow: hidden; }
+.veil__glow { position: absolute; left: 50%; top: 50%; width: 70vmin; height: 70vmin; border-radius: 50%; background: radial-gradient(circle, rgba(255, 196, 120, 0.16), rgba(255, 196, 120, 0) 70%); animation: breathe 3.2s ease-in-out infinite; pointer-events: none; }
+@keyframes breathe { 0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; } 50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; } }
+.veil__kicker { position: relative; margin: 0 0 14px; font-size: 12px; font-weight: 800; letter-spacing: 0.28em; text-transform: uppercase; color: #a8906a; }
+.room__state b { position: relative; display: block; font-size: clamp(64px, 12vw, 150px); font-weight: 900; line-height: 1; letter-spacing: -0.04em; color: #fff; }
+.veil__bar { position: relative; width: min(260px, 60vw); height: 2px; margin: 22px auto 0; border-radius: 2px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.veil__bar i { display: block; height: 100%; background: linear-gradient(90deg, #d9b86a, #f3e6b8); }
+.room__state span { position: relative; display: block; margin-top: 14px; font-size: 13px; font-weight: 700; color: #94a3b8; }
+.veil-leave-active { transition: opacity 1s ease; }
+.veil-leave-to { opacity: 0; }
 .room__state--text b { max-width: 420px; font-size: 20px; letter-spacing: -0.01em; }
 .num { font-variant-numeric: tabular-nums; }
 
 @media (max-width: 767px) {
   .room__title { left: 16px; top: 16px; }
   .room__hint { display: none; }
-  .room__card { right: 16px; left: 16px; top: auto; bottom: 16px; width: auto; transform: none; }
+  .room__card { right: 16px; left: 16px; top: auto; bottom: 16px; width: auto; padding: 16px 18px 18px; transform: none; }
   .card-enter-from { transform: translateY(24px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .room::after { animation: none; }
-  .card-enter-active, .card-leave-active { transition: none; }
+  .room::after, .veil__glow { animation: none; }
+  .card-enter-active, .card-leave-active, .fade-enter-active, .fade-leave-active { transition: none; }
 }
 </style>
