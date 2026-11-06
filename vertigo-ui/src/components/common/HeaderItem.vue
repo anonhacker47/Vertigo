@@ -34,7 +34,7 @@
               <li><RouterLink :to="{ name: 'CharacterList' }" class="hover:text-blue-400">Characters</RouterLink></li>
               <li class="my-1 border-t border-slate-600" aria-hidden="true"></li>
               <li><RouterLink :to="{ name: 'TierList' }" class="hover:text-blue-400">Tier List</RouterLink></li>
-              <li><RouterLink :to="{ name: 'ReadingRoom' }" class="hover:text-blue-400">Reading Room</RouterLink></li>
+              <li><RouterLink :to="{ name: 'Shelf3D' }" class="hover:text-blue-400">3D Shelf</RouterLink></li>
             </ul>
           </div>
         </div>
@@ -170,7 +170,7 @@ const browseLinks = [
   { label: 'Creators', icon: 'pi pi-user', to: { name: 'CreatorList' } },
   { label: 'Characters', icon: 'pi pi-users', to: { name: 'CharacterList' } },
   { label: 'Tier list', icon: 'pi pi-sort-amount-down', to: { name: 'TierList' } },
-  { label: 'Reading room', icon: 'pi pi-home', to: { name: 'ReadingRoom' } },
+  { label: '3D shelf', icon: 'pi pi-box', to: { name: 'Shelf3D' } },
 ]
 
 const scrolled = ref(false)

@@ -1,4 +1,4 @@
-/** The reading room: a Three.js set seen head on. Nothing here depends on Vue; the view talks to it through the handle. */
+/** The 3D shelf: a Three.js set seen head on. Nothing here depends on Vue; the view talks to it through the handle. */
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -1385,7 +1385,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
       if (!g || disposed) return;
       g.drawImage(img, 56, 56, c.width - 112, 1216);
       g.fillStyle = "#2b2b33"; g.font = "64px 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive"; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText(`reading room · ${taken.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, c.width / 2, 1436);
+      g.fillText(`3d shelf · ${taken.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, c.width / 2, 1436);
       tex.needsUpdate = true;
     };
     const mesh = new THREE.Mesh(photoGeo, [paper, paper, paper, paper, keep(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 })), paper]);

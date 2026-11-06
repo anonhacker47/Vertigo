@@ -126,6 +126,7 @@ export interface RoomIssue {
   issueTitle: string;
   seriesId: number;
   seriesTitle: string;
+  publisher: string;
   slug: string;
   year: number | null;
   read: boolean;
@@ -147,6 +148,7 @@ function toRoomIssue(i: LibraryIssue): RoomIssue {
     issueTitle: i.title ?? "",
     seriesId: i.series.id,
     seriesTitle: i.series.title,
+    publisher: "",
     slug: i.series.slug,
     year: i.cover_date ? new Date(i.cover_date).getFullYear() : null,
     read: !!i.is_read,
@@ -156,7 +158,7 @@ function toRoomIssue(i: LibraryIssue): RoomIssue {
   };
 }
 
-/** Every owned issue, in series order then by number, up to the room's capacity. */
+/** Every owned issue, up to the room's capacity; see shelfOrder for how they stand. */
 export async function loadRoomIssues(): Promise<{ issues: RoomIssue[]; total: number }> {
   const first = await IssueService.fetchUserIssues(ISSUE_PAGE, 0);
   let list = first.issuesList;
@@ -166,6 +168,12 @@ export async function loadRoomIssues(): Promise<{ issues: RoomIssue[]; total: nu
     list = list.concat(page.issuesList);
   }
   const owned = list.filter((i) => i.is_owned).map(toRoomIssue);
-  owned.sort((a, b) => a.seriesTitle.localeCompare(b.seriesTitle) || a.number - b.number);
   return { issues: owned, total: owned.length };
+}
+
+/** Publisher together, then series together, then by number; a series the room does not know goes last. */
+export function shelfOrder(issues: RoomIssue[], series: RoomSeries[]): RoomIssue[] {
+  const publisher = new Map(series.map((s) => [s.id, s.publisher]));
+  for (const i of issues) i.publisher = publisher.get(i.seriesId) ?? "";
+  return issues.slice().sort((a, b) => (a.publisher || "\uffff").localeCompare(b.publisher || "\uffff") || a.seriesTitle.localeCompare(b.seriesTitle) || a.number - b.number);
 }

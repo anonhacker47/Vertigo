@@ -3,7 +3,7 @@
     <div ref="stage" class="room__stage" :class="{ 'room__stage--hot': !!hovered, 'room__stage--on': !loading }"></div>
 
     <div class="room__title">
-      <h1>Reading room</h1>
+      <h1>3D shelf</h1>
       <p>{{ subtitle }}</p>
     </div>
 
@@ -45,7 +45,7 @@
     <Transition name="card">
       <aside v-if="picked && picked.kind === 'issue'" class="room__card">
         <h2>{{ picked.seriesTitle }} <span class="num">#{{ picked.number }}</span></h2>
-        <p class="room__meta">{{ [picked.issueTitle, picked.year, picked.read ? "Read" : "Unread"].filter(Boolean).join(" · ") }}</p>
+        <p class="room__meta">{{ [picked.issueTitle, picked.publisher, picked.year, picked.read ? "Read" : "Unread"].filter(Boolean).join(" · ") }}</p>
         <RouterLink :to="{ name: 'IssueDetail', params: { seriesId: picked.seriesId, slug: picked.slug, number: picked.number } }" class="btn">Open issue</RouterLink>
         <button type="button" class="link" @click="putBack">Put it back</button>
       </aside>
@@ -71,7 +71,7 @@
     <Transition name="veil">
       <div v-if="loading" class="room__state">
         <i class="veil__glow"></i>
-        <p class="veil__kicker">Reading room</p>
+        <p class="veil__kicker">3D shelf</p>
         <b class="num">{{ Math.round(shown) }}</b>
         <div class="veil__bar"><i :style="{ width: `${shown}%` }"></i></div>
         <span>{{ caption }}</span>
@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
+import { loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, shelfOrder, type RoomCharacter, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
 import { createRoom, type RoomHandle, type RoomPhoto } from "@/components/reading-room/roomScene";
 
 const stage = ref<HTMLElement | null>(null);
@@ -157,11 +157,11 @@ onMounted(async () => {
   try {
     const [result, issueResult] = await Promise.all([loadRoomSeries(), loadRoomIssues().catch(() => shelf)]);
     series = result.series;
-    shelf = issueResult;
+    shelf = { issues: shelfOrder(issueResult.issues, series), total: issueResult.total };
     total.value = result.total;
     target = Math.max(target, 18);
   } catch (error) {
-    console.error("Failed to load the reading room", error);
+    console.error("Failed to load the 3D shelf", error);
     failed.value = "The collection could not be loaded.";
     loading.value = false;
     return;
@@ -192,7 +192,7 @@ onMounted(async () => {
     loadRoomSummary({ series: total.value, issues: issues.value }).then((summary) => room?.setSummary(summary)).catch(() => {});
     loadRoomCharacters().then((list) => room?.setCharacters(list)).catch(() => {});
   } catch (error) {
-    console.error("The reading room could not start", error);
+    console.error("The 3D shelf could not start", error);
     failed.value = "Your browser could not start the 3D room.";
     loading.value = false;
   }

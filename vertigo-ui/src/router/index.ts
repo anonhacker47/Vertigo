@@ -41,10 +41,11 @@ const router = createRouter({
         showHeaderItem: true,
       },
     },
+    { path: "/reading-room", redirect: "/shelf" },
     {
-      path: "/reading-room",
-      name: "ReadingRoom",
-      component: () => import("@/views/ReadingRoomView.vue"),
+      path: "/shelf",
+      name: "Shelf3D",
+      component: () => import("@/views/ShelfView.vue"),
       meta: {
         requiresAuth: true,
         showHeaderItem: true,
