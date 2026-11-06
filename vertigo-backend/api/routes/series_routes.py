@@ -3,6 +3,7 @@ from flask import jsonify
 from flask import Blueprint, abort, request, send_file
 from apifairy import authenticate, response, other_responses
 from sqlalchemy import func, or_, select
+from sqlalchemy.orm import selectinload
 from api import db
 from api.models.series import Series
 import api.models.series_entities as series_entities
@@ -23,6 +24,7 @@ series = Blueprint('series', __name__)
 series_schema = SeriesSchema()
 multi_series_schema = SeriesSchema(many=True)
 list_series_schema = SeriesSchema(many=True, exclude=('character', 'creator', 'description', 'notes', 'user'))
+LIST_LOADS = (selectinload(Series.publisher), selectinload(Series.genre))
 update_series_schema = SeriesSchema(partial=True)
 
 @series.route('/series', methods=['POST'])
@@ -84,7 +86,7 @@ def new():
             if not entity:
                 continue
 
-            if not rel.filter(model.id == entity.id).first():
+            if entity not in rel:
                 rel.append(entity)
 
     db.session.flush()  # the cover is stored under series/<id>/
@@ -123,7 +125,7 @@ def get(id):
                     pagination_schema=DateTimePaginationSchema)
 def all():
     """Retrieve all series"""
-    return Series.select()
+    return Series.select().options(*LIST_LOADS)
 
 
 @series.route('/users/series', methods=['GET'])
@@ -170,7 +172,7 @@ def user_all():
     if series_format:
         qs = qs.filter(Series.series_format == series_format)
 
-    return qs, {"base_total": base_total}
+    return qs.options(*LIST_LOADS), {"base_total": base_total}
 
 
 @series.route('/series/<int:id>', methods=['PUT'])
@@ -302,7 +304,7 @@ def delete(id):
 def feed():
     """Retrieve the user's series feed"""
     user = token_auth.current_user()
-    return user.followed_series_select()
+    return user.followed_series_select().options(*LIST_LOADS)
 
 
 @series.route('series/image/<int:id>',methods=['GET'])

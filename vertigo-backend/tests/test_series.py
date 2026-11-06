@@ -1,5 +1,8 @@
 import json
+import re
 from datetime import datetime
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from api import db
 from api.models.issue import Issue
 from api.models.series import Series
@@ -126,6 +129,38 @@ class TestCollectionSorts(BaseTestCase):
         self.assertEqual(rv.json['publisher'][0]['id'], '1')
         self.assertEqual(rv.json['series_format'], [])
 
+    def test_list_page_loads_publishers_and_genres_once_each(self):
+        hits = []
+        listener = lambda conn, cursor, statement, *args: hits.append(statement)
+        event.listen(Engine, 'before_cursor_execute', listener)
+        try:
+            rv = self.client.get('/api/users/series')
+        finally:
+            event.remove(Engine, 'before_cursor_execute', listener)
+        self.assertEqual(len(rv.json['data']), 3)
+        self.assertEqual(sum(bool(re.search(r'FROM .*\bpublisher\b', s)) for s in hits), 1)
+        self.assertEqual(sum(bool(re.search(r'FROM .*\bgenre\b', s)) for s in hits), 1)
+
     def test_unknown_sort_is_refused(self):
         rv = self.client.get('/api/users/series', query_string={'orderBy': 'user'})
         self.assertEqual(rv.status_code, 400)
+
+
+class SeriesEntityWriteTests(BaseTestCase):
+    def test_create_dedupes_and_update_replaces(self):
+        rv = self.client.post('/api/series', data={
+            'title': 'Hellblazer', 'issue_count': '3',
+            'publisher': json.dumps(['DC Comics', 'DC Comics']),
+            'genre': json.dumps([{'value': 'Horror'}, {'value': 'Occult'}]),
+        })
+        self.assertEqual(rv.status_code, 201, rv.json)
+        series = db.session.get(Series, rv.json['id'])
+        self.assertEqual([p.title for p in series.publisher], ['DC Comics'])
+        self.assertEqual(sorted(g.title for g in series.genre), ['Horror', 'Occult'])
+
+        rv = self.client.put(f'/api/series/{series.id}', data={'publisher': json.dumps(['Vertigo']), 'genre': json.dumps([])})
+        self.assertEqual(rv.status_code, 200, rv.json)
+        db.session.refresh(series)
+        self.assertEqual([p.title for p in series.publisher], ['Vertigo'])
+        self.assertEqual(list(series.genre), [])
+        self.assertEqual(sorted(p.title for p in db.session.scalars(Publisher.select())), ['DC Comics', 'Vertigo'])

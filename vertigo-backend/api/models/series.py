@@ -20,18 +20,18 @@ class Series(Updateable, MetronIdentifiable, Thumbnailed, Syncable, db.Model):
     title = sqla.Column(sqla.String(280), nullable=False)
 
     publisher = sqla_orm.relationship('Publisher', secondary=associations.series_publisher,
-                                   back_populates='series', lazy='dynamic')
+                                   back_populates='series')
     
     
     genre = sqla_orm.relationship('Genre', secondary=associations.series_genre, 
-                                  back_populates='series', lazy='dynamic')
+                                  back_populates='series')
     
 
     creator = sqla_orm.relationship('Creator', secondary=associations.series_creator,
-                                   back_populates='series', lazy='dynamic')
+                                   back_populates='series')
     
     character = sqla_orm.relationship('Character', secondary=associations.series_character,
-                                   back_populates='series', lazy='dynamic')
+                                   back_populates='series')
 
     user_rating = sqla.Column(sqla.Float)
     
