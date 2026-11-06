@@ -1436,7 +1436,12 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const gtao = new GTAOPass(scene, camera, container.clientWidth || 1, container.clientHeight || 1);
   gtao.output = GTAOPass.OUTPUT.Default;
   gtao.blendIntensity = 0.8;
-  gtao.updateGtaoMaterial({ radius: 0.24, distanceExponent: 1, thickness: 1, scale: 1, samples: 10, distanceFallOff: 1, screenSpaceRadius: false });
+  gtao.updateGtaoMaterial({ radius: 0.24, distanceExponent: 1, thickness: 1, scale: 1, samples: 6, distanceFallOff: 1, screenSpaceRadius: false });
+  gtao.updatePdMaterial({ samples: 8 });  const AO_SCALE = 0.6;
+  function fitAo(w: number, h: number) {
+    const pr = renderer.getPixelRatio();
+    gtao.setSize(Math.max(1, Math.round(w * pr * AO_SCALE)), Math.max(1, Math.round(h * pr * AO_SCALE)));
+  }
   // GTAO draws sprites as solid squares; hide them for its normal pass
   const hidePointsAndLines = gtao.overrideVisibility.bind(gtao);
   gtao.overrideVisibility = () => { hidePointsAndLines(); for (const s of sprites) s.visible = false; };
@@ -1539,6 +1544,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     renderer.setPixelRatio(1);
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
+    fitAo(W, H);
     composer.render();
     // the canvas is read now and encoded off the main thread into a blob, so no multi-megabyte string is made
     const taken = new Date(), img = new Image();
@@ -1761,6 +1767,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     composer.setSize(w, h);
+    fitAo(w, h);
     wake();
   }
   const observer = new ResizeObserver(resize);
@@ -1776,7 +1783,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     last = now;
     const t = (now - started) / 1000;
     frameNo++;
-    if (t > 2 && detailLevel > 0) { slowFrames = frameMs > 34 ? slowFrames + 1 : Math.max(0, slowFrames - 2); if (slowFrames > 90) { degrade(); slowFrames = 0; } }
+    if (t > 2 && detailLevel > 0) { slowFrames = frameMs > 34 ? slowFrames + 1 : Math.max(0, slowFrames - 2); if (slowFrames > 45) { degrade(); slowFrames = 0; } }
 
     const px = mouse.x > -5 ? mouse.x : 0, py = mouse.y > -5 ? mouse.y : 0;
     camLean += (lean - camLean) * 0.06;
