@@ -194,7 +194,7 @@ class ShelfSettingsTests(BaseTestCase):
     def test_defaults(self):
         rv = self.client.get('/api/me/shelf')
         assert rv.status_code == 200
-        assert rv.json == {'standees': None, 'order': 'publisher', 'show': 'unread', 'publisher': None}
+        assert rv.json == {'standees': None, 'order': 'publisher', 'show': 'all', 'publisher': None}
 
     def test_rejects_an_unknown_order(self):
         rv = self.client.put('/api/me/shelf', json={'order': 'colour'})

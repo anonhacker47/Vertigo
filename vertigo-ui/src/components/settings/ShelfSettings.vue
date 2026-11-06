@@ -89,7 +89,7 @@ const orders = [
   { value: "unread", label: "Unread first" },
 ];
 const shows = [
-  { value: "all", label: "Every issue" },
+  { value: "all", label: "Owned issues" },
   { value: "unread", label: "Unread only" },
 ];
 

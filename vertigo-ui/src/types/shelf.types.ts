@@ -9,4 +9,4 @@ export interface ShelfSettings {
   publisher: number | null;
 }
 
-export const SHELF_DEFAULTS: ShelfSettings = { standees: null, order: "publisher", show: "unread", publisher: null };
+export const SHELF_DEFAULTS: ShelfSettings = { standees: null, order: "publisher", show: "all", publisher: null };
