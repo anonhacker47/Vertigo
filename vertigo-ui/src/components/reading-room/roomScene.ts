@@ -1369,7 +1369,22 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   // end slots; they come to hand like the comics --------------------------------------------------------
   const characterByMesh = new Map<THREE.Object3D, RoomCharacter>();
   const standees: THREE.Group[] = [];
-  const standeeFrame = std(0x1a1b20, 0.5, { metalness: 0.2 }), standeePic = keep(new THREE.PlaneGeometry(0.33, 0.46)), standeePlate = keep(new THREE.PlaneGeometry(0.24, 0.022));
+  // a gallery frame: rails with a rebate, the print under a clear coat, a brass nameplate below
+  const PIC = { w: 0.31, h: 0.43 };
+  const standeeFrame = std(0x111216, 0.42, { metalness: 0.3 }), standeePic = keep(new THREE.PlaneGeometry(PIC.w, PIC.h)), standeePlate = box(0.19, 0.036, 0.004, 0.002);
+  const namePlate = (title: string) => canvasTexture((gc, w, h) => {
+    const brass = gc.createLinearGradient(0, 0, 0, h); brass.addColorStop(0, "#e6cb86"); brass.addColorStop(0.5, "#b8923f"); brass.addColorStop(1, "#8a662a");
+    gc.fillStyle = brass; gc.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 2) { gc.fillStyle = `rgba(255,255,255,${rng() * 0.07})`; gc.fillRect(0, y, w, 1); }
+    gc.strokeStyle = "rgba(50,32,8,.5)"; gc.lineWidth = 3; gc.strokeRect(7, 7, w - 14, h - 14);
+    const text = title.toUpperCase().split("").join(String.fromCharCode(8202));
+    let size = 44;
+    gc.font = `600 ${size}px Georgia, 'Times New Roman', serif`;
+    while (size > 18 && gc.measureText(text).width > w - 60) gc.font = `600 ${--size}px Georgia, 'Times New Roman', serif`;
+    gc.textAlign = "center"; gc.textBaseline = "middle";
+    gc.fillStyle = "rgba(255,240,200,.5)"; gc.fillText(text, w / 2, h / 2 + 3);
+    gc.fillStyle = "#2b1d08"; gc.fillText(text, w / 2, h / 2);
+  }, 512, 96);
   function setCharacters(list: RoomCharacter[]) {
     for (const g of standees) {
       if (focused === g) putBack();
@@ -1385,18 +1400,21 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
       g.position.set(x, y, z);
       g.rotation.x = -0.08;
       unit.group.add(g);
-      put(box(0.3, 0.035, 0.14, 0.006), standeeFrame, 0, 0.017, 0, { parent: g });
-      put(box(0.37, 0.5, 0.014, 0.004), standeeFrame, 0, 0.3, -0.02, { parent: g });
-      const pic = std(0x2a2d35, 0.6);
-      put(standeePic, pic, 0, 0.3, -0.012, { parent: g, shadow: false });
-      const plate = canvasTexture((gc, w, h) => { gc.fillStyle = "#b08a3e"; gc.fillRect(0, 0, w, h); gc.fillStyle = "#2a1f0f"; gc.font = "bold 40px system-ui, sans-serif"; gc.textAlign = "center"; gc.textBaseline = "middle"; gc.fillText(c.title.toUpperCase(), w / 2, h / 2 + 2); }, 512, 64);
-      put(standeePlate, std(0xffffff, 0.35, { map: plate, metalness: 0.5 }), 0, 0.018, 0.0705, { parent: g, shadow: false });
+      put(box(0.27, 0.03, 0.12, 0.01), standeeFrame, 0, 0.015, 0, { parent: g });
+      for (const sx of [-1, 1]) put(box(0.03, 0.54, 0.02, 0.004), standeeFrame, sx * 0.17, 0.3, -0.018, { parent: g });
+      put(box(0.37, 0.03, 0.02, 0.004), standeeFrame, 0, 0.555, -0.018, { parent: g });
+      put(box(0.37, 0.08, 0.02, 0.004), standeeFrame, 0, 0.07, -0.018, { parent: g });
+      put(box(0.33, 0.45, 0.004, 0.002), standeeFrame, 0, 0.325, -0.026, { parent: g });
+      const pic = keep(new THREE.MeshPhysicalMaterial({ color: 0x2a2d35, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.12 }));
+      const print = put(standeePic, pic, 0, 0.325, -0.02, { parent: g, shadow: false });
+      const plate = put(standeePlate, std(0xffffff, 0.3, { map: namePlate(c.title), metalness: 0.8 }), 0, 0.07, -0.006, { parent: g, shadow: false });
+      mergeStatic(g, [print, plate]);
       const loader = new THREE.TextureLoader();
       loader.crossOrigin = "anonymous";
       loader.load(c.image, (tex) => {
         if (disposed) { tex.dispose(); return; }
         tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; keep(tex);
-        const img = tex.image as { width: number; height: number }, want = 0.33 / 0.46, have = img.width / img.height;
+        const img = tex.image as { width: number; height: number }, want = PIC.w / PIC.h, have = img.width / img.height;
         if (have > want) { tex.repeat.set(want / have, 1); tex.offset.set((1 - want / have) / 2, 0); } else { tex.repeat.set(1, have / want); tex.offset.set(0, (1 - have / want) / 2); }
         pic.map = tex; pic.color.setHex(0xffffff); pic.needsUpdate = true;
         wake();
