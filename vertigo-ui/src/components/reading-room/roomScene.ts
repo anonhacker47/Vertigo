@@ -123,8 +123,12 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0b10);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
+  let disposed = false;
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  const envScene = new RoomEnvironment();
+  scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+  (envScene as THREE.Scene & { dispose?: () => void }).dispose?.();
+  pmrem.dispose();
   scene.add(camera);
   const handLight = new THREE.PointLight(0xfff1dc, 0, 7, 2);
   handLight.position.set(1.0, 0.9, -0.8);
@@ -153,7 +157,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const std = (color: THREE.ColorRepresentation, roughness = 0.9, extra: THREE.MeshStandardMaterialParameters = {}) =>
     keep(new THREE.MeshStandardMaterial({ color, roughness, metalness: 0, ...extra }));
   const brassMat = keep(new THREE.MeshStandardMaterial({ color: 0xb08a3e, roughness: 0.32, metalness: 0.9 }));
-  const box = (w: number, h: number, d: number, r = 0.02) => keep(new RoundedBoxGeometry(w, h, d, 4, Math.max(0.004, Math.min(r, w / 2, h / 2, d / 2))));
+  const box = (w: number, h: number, d: number, r = 0.02) => {
+    const radius = Math.max(0.004, Math.min(r, w / 2, h / 2, d / 2));
+    return keep(new RoundedBoxGeometry(w, h, d, radius <= 0.004 ? 1 : radius < 0.04 ? 2 : 3, radius)); // segments by how much rounding shows
+  };
   const cyl = (rt: number, rb: number, h: number, seg = 32, open = false) => keep(new THREE.CylinderGeometry(rt, rb, h, seg, 1, open));
   const sphere = (r: number, w = 24, h = 18) => keep(new THREE.SphereGeometry(r, w, h));
   const capsule = (r: number, l: number, cs = 8, rs = 20) => keep(new THREE.CapsuleGeometry(r, l, cs, rs));
@@ -338,7 +345,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     loader.crossOrigin = "anonymous";
     loader.load(
       s.cover,
-      (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16; keep(t); mat.map?.dispose(); mat.map = t; mat.needsUpdate = true; onDone(); },
+      (t) => { if (disposed) { t.dispose(); return; } t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; keep(t); mat.map?.dispose(); mat.map = t; mat.needsUpdate = true; onDone(); },
       undefined,
       () => onDone(),
     );
@@ -397,12 +404,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     bulb.target.position.set(0, 0, 0);
     if (shadows) { bulb.castShadow = true; bulb.shadow.mapSize.set(512, 512); bulb.shadow.bias = -0.0006; bulb.shadow.radius = 4; }
     g.add(bulb, bulb.target);
-    const glow = new THREE.PointLight(0xffb36b, power * 0.5, 6, 2);
-    glow.position.set(0, poleH + shadeR * 0.6, 0);
-    g.add(glow);
     const parts: THREE.Object3D[] = [];
     g.traverse((o) => { if ((o as THREE.Mesh).isMesh) parts.push(o); });
-    addLamp({ parts, lights: [{ light: bulb, max: power * 2.2 * NIGHT.lamp }, { light: glow, max: power * 0.5 * NIGHT.lamp }], glows: [{ mat: shadeMat, max: 0.3 * NIGHT.lamp }, { mat: bulbMat, max: 1.2 }], on: true, level: 1 });
+    addLamp({ parts, lights: [{ light: bulb, max: power * 2.2 * NIGHT.lamp }], glows: [{ mat: shadeMat, max: 0.3 * NIGHT.lamp }, { mat: bulbMat, max: 1.2 }], on: true, level: 1 });
   }
   const leafShape = new THREE.Shape();
   leafShape.moveTo(0, 0);
@@ -772,7 +776,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const signalTex = canvasTexture(drawSignal, 512, 512);
   const signalMat = keep(new THREE.MeshBasicMaterial({ map: signalTex, transparent: true, opacity: 0, depthWrite: false }));
   const batFile = new Image();
-  batFile.onload = () => { batImage = batFile; const c = signalTex.image as HTMLCanvasElement, g = c.getContext("2d"); if (g) { drawSignal(g, c.width, c.height); signalTex.needsUpdate = true; } };
+  batFile.onload = () => { if (disposed) return; batImage = batFile; const c = signalTex.image as HTMLCanvasElement, g = c.getContext("2d"); if (g) { drawSignal(g, c.width, c.height); signalTex.needsUpdate = true; } };
   batFile.src = "/bat-signal.png";
   const SIGNAL = new THREE.Vector3(1.15, 5.05, BZ - 3.9), SIGNAL_FROM = new THREE.Vector3(3.0, 1.5, BZ - 3.95); // up in clear sky over the rooftops
   put(keep(new THREE.PlaneGeometry(1.05, 1.05)), signalMat, SIGNAL.x, SIGNAL.y, SIGNAL.z, { shadow: false });
@@ -938,7 +942,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   for (const [dx, dz] of [[-1.9, -0.35], [-1.9, 0.35]]) put(leg, dark, 1.6 + dx, 0.48, BZ + 0.55 + dz);
   blob(1.6, BZ + 0.6, 4.4, 1.3, 0.4);
   // digital rain on an unlit canvas, stepped a few times a second
-  const RAIN = { w: 1024, h: 576, cell: 28, step: 32, glyphs: "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789VERTIGO" };
+  const RAIN = { w: 768, h: 432, cell: 21, step: 24, glyphs: "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789VERTIGO" };
   const screenTex = canvasTexture((g, w, h) => { g.fillStyle = "#060914"; g.fillRect(0, 0, w, h); }, RAIN.w, RAIN.h);
   const rainCtx = (screenTex.image as HTMLCanvasElement).getContext("2d");
   const rainCols = Math.floor(RAIN.w / RAIN.cell);
@@ -950,7 +954,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     if (!g) return;
     g.fillStyle = "rgba(6,9,20,0.2)";
     g.fillRect(0, 0, RAIN.w, RAIN.h);
-    g.font = "bold 28px ui-monospace, Menlo, monospace";
+    g.font = "bold 21px ui-monospace, Menlo, monospace";
     g.textBaseline = "top";
     for (let i = 0; i < rainCols; i++) {
       const x = i * RAIN.cell, y = rainDrops[i] * RAIN.step;
@@ -973,11 +977,11 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     g.fillStyle = "#07070a"; g.fillRect(0, 0, w, h);
     const lines = ["Tonight, a comedian", "died in New York.", "Somebody knows why."];
     let left = Math.floor(t * 1000 / 55);
-    g.font = "600 64px 'Courier New', ui-monospace, monospace"; g.fillStyle = "#e4dfd2"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "600 48px 'Courier New', ui-monospace, monospace"; g.fillStyle = "#e4dfd2"; g.textAlign = "center"; g.textBaseline = "middle";
     lines.forEach((text, i) => {
       const shown = text.slice(0, Math.max(0, left));
       const cursor = left >= 0 && left < text.length && Math.floor(now / 400) % 2 ? "_" : "";
-      g.fillText(shown + cursor, w / 2, h * 0.5 + (i - 1) * 86);
+      g.fillText(shown + cursor, w / 2, h * 0.5 + (i - 1) * 64);
       left -= text.length + 1 + (i === 1 ? 22 : 0); // a beat before the last line
     });
     const base = Math.min(0.58, 0.05 + t * 0.016) * h;
@@ -1123,7 +1127,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const clockHands = { hour: hand(0.036, 0.28, clockDark, 0.036, 0.04), minute: hand(0.026, 0.4, clockDark, 0.042, 0.04) };
   put(cyl(0.024, 0.024, 0.01, 24), clockDark, 0, 0, 0.05, { parent: clock, rot: [Math.PI / 2, 0, 0], shadow: false });
   const smileyMat = keep(new THREE.MeshPhysicalMaterial({ color: 0xf2c900, roughness: 0.42, metalness: 0, clearcoat: 0.7, clearcoatRoughness: 0.18, bumpMap: clothGrain, bumpScale: 0.0025 }));
-  new THREE.TextureLoader().load(smileyUrl, (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; keep(t); smileyMat.map = t; smileyMat.color.setHex(0xffffff); smileyMat.needsUpdate = true; });
+  new THREE.TextureLoader().load(smileyUrl, (t) => { if (disposed) { t.dispose(); return; } t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; keep(t); smileyMat.map = t; smileyMat.color.setHex(0xffffff); smileyMat.needsUpdate = true; });
   put(keep(new THREE.CircleGeometry(clockR - 0.004, 64)), smileyMat, 0, 0, -0.002, { parent: clock, rot: [0, Math.PI, 0], shadow: false });
   put(keep(new THREE.TorusGeometry(clockR, 0.014, 10, 96)), clockDark, 0, 0, -0.008, { parent: clock, shadow: false });
   // take it down and a drag on the face winds the hands
@@ -1299,7 +1303,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     const img = new Image();
     img.onload = () => {
       const c = tex.image as HTMLCanvasElement, g = c.getContext("2d");
-      if (!g) return;
+      if (!g || disposed) return;
       g.drawImage(img, 56, 56, c.width - 112, 1216);
       g.fillStyle = "#2b2b33"; g.font = "64px 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive"; g.textAlign = "center"; g.textBaseline = "middle";
       g.fillText(`reading room · ${taken.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, c.width / 2, 1436);
@@ -1318,6 +1322,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     photos.unshift(photo);
     while (photos.length > PINS.length) dropPhoto(photos.pop() as Photo);
     pinPhotos();
+    retarget();
     return { id: photo.id, taken, jpeg };
   }
   function pinPhotos() {
@@ -1328,12 +1333,16 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       st.homeQ.setFromEuler(new THREE.Euler(0, 0, (ph.id % 2 ? 1 : -1) * (0.03 + (ph.id % 3) * 0.015)));
     });
   }
+  // a print that comes off the wall drops to the floor, lies there a moment, and fades away
+  const falling: { mesh: THREE.Mesh; v: THREE.Vector3; spin: THREE.Vector3; landed: number; mats: THREE.Material[] }[] = [];
   function dropPhoto(ph: Photo) {
     if (focused === ph.mesh) putBack();
-    scene.remove(ph.mesh);
     pickables.splice(pickables.indexOf(ph.mesh), 1);
     states.delete(ph.mesh);
     photoByMesh.delete(ph.mesh);
+    const mats = (ph.mesh.material as THREE.Material[]).map((m) => { const c = m.clone(); c.transparent = true; return c; });
+    ph.mesh.material = mats;
+    falling.push({ mesh: ph.mesh, v: new THREE.Vector3((rng() - 0.5) * 0.4, 0.3, 0.5 + rng() * 0.5), spin: new THREE.Vector3((rng() - 0.5) * 4, (rng() - 0.5) * 3, (rng() - 0.5) * 5), landed: 0, mats });
   }
   function removePhoto(id: number) {
     const i = photos.findIndex((ph) => ph.id === id);
@@ -1341,6 +1350,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     dropPhoto(photos[i]);
     photos.splice(i, 1);
     pinPhotos();
+    retarget();
   }
 
   // When the machine cannot keep up, the costly half of the look goes quietly: occlusion first, then shadows.
@@ -1407,7 +1417,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
   const lampParts = lamps.flatMap((l) => l.parts);
   // the walls and the bookcase's back panel count too, so nothing hidden behind them can be reached
   const occluders: THREE.Object3D[] = [unit.back, ...scene.children.filter((o) => (o as THREE.Mesh).material === paint || (o as THREE.Mesh).material === paintSide)];
-  const hitTargets = () => pickables.concat(lampParts, occluders); // pickables change as prints come and go
+  let hitTargets = pickables.concat(lampParts, occluders);
+  const retarget = () => { hitTargets = pickables.concat(lampParts, occluders); }; // when prints come and go
   // nothing smaller than a coin casts a shadow
   scene.traverse((o) => {
     const m = o as THREE.Mesh;
@@ -1490,7 +1501,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
 
     if (!focused && now - lastMove < 120 && mouse.x > -5) {
       raycaster.setFromCamera(mouse, camera);
-      const first = raycaster.intersectObjects(hitTargets(), true).find((h) => h.object.visible);
+      const first = raycaster.intersectObjects(hitTargets, true).find((h) => h.object.visible);
       const hit = first && !occluders.includes(first.object) ? first : undefined;
       let next: THREE.Object3D | null = hit ? hit.object : null;
       lampHot = (hit && lampByMesh.get(hit.object)) ?? null;
@@ -1545,8 +1556,21 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       }
     }
     if (pageBusy && now / 1000 >= busyUntil) { pageBusy = false; options.onPage?.(currentPage, pageCount, false); }
-    if (now - rainAt > 100) { rainAt = now; if (screenMode === "rain") rainStep(); else comedianStep(now); }
+    if (now - rainAt > 120) { rainAt = now; if (screenMode === "rain") rainStep(); else comedianStep(now); }
     if (clockFlipped && now > midnightUntil) setMidnight(false);
+    for (let i = falling.length - 1; i >= 0; i--) {
+      const f = falling[i], m = f.mesh;
+      if (!f.landed) {
+        f.v.y -= 9 * dt;
+        m.position.addScaledVector(f.v, dt);
+        m.rotation.x += f.spin.x * dt; m.rotation.y += f.spin.y * dt; m.rotation.z += f.spin.z * dt;
+        if (m.position.y <= 0.03) { m.position.y = 0.03; m.rotation.set(-Math.PI / 2, 0, m.rotation.z); f.landed = now; }
+      } else if (now - f.landed > 900) {
+        let gone = true;
+        for (const mat of f.mats) { mat.opacity = Math.max(0, mat.opacity - dt * 1.4); if (mat.opacity > 0) gone = false; }
+        if (gone) { scene.remove(m); f.mats.forEach((mat) => mat.dispose()); falling.splice(i, 1); }
+      }
+    }
     if (glassBreakAt && now >= glassBreakAt) { glassBreakAt = 0; breakGlass(); }
     if (burstT >= 0) {
       const step = dt * (burstT < 0.55 ? 0.18 : 1); // the slow beat, then real time
@@ -1614,6 +1638,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
     setSummary,
     putBack,
     dispose() {
+      disposed = true;
       renderer.setAnimationLoop(null);
       observer.disconnect();
       el.removeEventListener("pointerdown", onDown);
@@ -1623,10 +1648,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], options
       el.removeEventListener("pointerleave", onLeave);
       el.removeEventListener("wheel", onWheel);
       for (const d of disposables) d.dispose();
+      for (const f of falling) f.mats.forEach((m) => m.dispose());
       gtao.dispose();
       composer.dispose();
       scene.environment?.dispose();
-      pmrem.dispose();
       renderer.dispose();
       el.remove();
     },

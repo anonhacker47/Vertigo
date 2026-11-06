@@ -80,6 +80,7 @@ const failed = ref("");
 const shown = ref(0); // the number on the veil eases toward the real progress, then runs to a hundred
 let target = 6;
 let veilFrame = 0;
+let veilTimer = 0;
 const seriesCount = ref(0);
 const total = ref(0);
 const issues = ref(0);
@@ -164,7 +165,7 @@ onMounted(async () => {
       onPhoto: (p) => { photo.value = p; },
     });
     // a slow network still gets the room; the covers keep arriving behind it
-    setTimeout(() => { target = 100; }, 6000);
+    veilTimer = window.setTimeout(() => { target = 100; }, 6000);
     loadRoomSummary({ series: total.value, issues: issues.value }).then((summary) => room?.setSummary(summary)).catch(() => {});
   } catch (error) {
     console.error("The reading room could not start", error);
@@ -174,6 +175,7 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => {
   cancelAnimationFrame(veilFrame);
+  clearTimeout(veilTimer);
   document.removeEventListener("keydown", onKey);
   room?.dispose();
   room = null;
