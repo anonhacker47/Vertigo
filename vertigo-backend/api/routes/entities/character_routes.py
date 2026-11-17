@@ -12,6 +12,7 @@ from api.schemas.character_schema import CharacterSchema, CharacterDetailSchema
 from api import media
 from api.routes.entities.thumbnails import apply_entity_thumbnail
 from api.utils.auth import token_auth
+from api.utils.ownership import owned_or_403
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
 
@@ -85,10 +86,10 @@ def all():
 @character.route('/character/<int:id>', methods=['GET'])
 @authenticate(token_auth)
 @response(CharacterDetailSchema)
-@other_responses({404: 'Character not found'})
+@other_responses({403: 'Not allowed to access this character', 404: 'Character not found'})
 def get(id):
     """Retrieve a character by id"""
-    return db.session.get(Character, id) or abort(404)
+    return owned_or_403(Character, id)
 
 
 @character.route('character/image/<int:id>',methods=['GET'])
@@ -107,7 +108,7 @@ def neighbors(id):
 
     user = token_auth.current_user()
 
-    character_obj = db.session.get(Character, id) or abort(404)
+    character_obj = owned_or_403(Character, id)
     current_title = character_obj.title
 
     prev_character = (
@@ -141,12 +142,12 @@ def neighbors(id):
 @character.route('/character/<int:id>', methods=['PUT', 'PATCH'])
 @authenticate(token_auth)
 @response(CharacterDetailSchema)
-@other_responses({404: 'Character not found'})
+@other_responses({403: 'Not allowed to access this character', 404: 'Character not found'})
 def update_character(id):
     """Update an existing character"""
 
     user = token_auth.current_user()
-    character = db.session.get(Character, id) or abort(404)
+    character = owned_or_403(Character, id)
 
     title = request.form.get('title', '').strip()
     if title:

@@ -44,8 +44,11 @@ def new(args):
 @response(user_schema)
 @other_responses({404: 'User not found'})
 def get(id):
-    """Retrieve a user by id"""
-    return db.session.get(User, id) or abort(404)
+    """Retrieve a user by id; only your own"""
+    user = token_auth.current_user()
+    if id != user.id:
+        abort(404)
+    return user
 
 
 # @users.route('/users/<username>', methods=['GET'])

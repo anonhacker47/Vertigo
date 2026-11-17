@@ -14,6 +14,7 @@ from api.schemas.series_schema import SeriesSchema
 from api import media
 
 from api.utils.auth import token_auth
+from api.utils.ownership import owned_or_403
 from api.decorators import paginated_response
 from api.routes.series_sorts import SERIES_SORTS
 from api.routes.series_filters import apply_status_filters
@@ -113,20 +114,10 @@ def new():
 @series.route('/series/<int:id>', methods=['GET'])
 @authenticate(token_auth)
 @response(series_schema)
-@other_responses({404: 'Series not found'})
+@other_responses({403: 'Not allowed to view this series', 404: 'Series not found'})
 def get(id):
     """Retrieve a series by id"""
-    return db.session.get(Series, id) or abort(404)
-
-
-@series.route('/series', methods=['GET'])
-@authenticate(token_auth)
-@paginated_response(list_series_schema, order_by=Series.timestamp,
-                    order_direction='desc',
-                    pagination_schema=DateTimePaginationSchema)
-def all():
-    """Retrieve all series"""
-    return Series.select().options(*LIST_LOADS)
+    return owned_or_403(Series, id)
 
 
 @series.route('/users/series', methods=['GET'])
@@ -317,16 +308,6 @@ def get_series_image(id):
         return jsonify("Series not found"), 404
     return media.send(series.user_id, series.thumbnail)
 
-@series.route('/series/key', methods=['GET'])
-@authenticate(token_auth)
-def key():
-    """Retrieve series key"""
-    obj = db.session.query(Series).order_by(Series.id.desc()).first()
-    if obj is None:
-        return jsonify("0")
-    else:
-        return jsonify(f"{obj.id}")
-    
 @series.route('/series/filters', methods=['GET'])
 @authenticate(token_auth)
 def filter_values():
@@ -367,7 +348,7 @@ def neighbors(id):
 
     user = token_auth.current_user()
 
-    series_obj = db.session.get(Series, id) or abort(404)
+    series_obj = owned_or_403(Series, id)
     current_title = series_obj.title
 
     prev_series = (

@@ -27,14 +27,9 @@ export default () => {
     async (error) => {
       const originalRequest = error.config;
 
-      console.log(error.config);
-      
-
-      if (error.response.status === 401 && originalRequest.url != "tokens") {
-        console.log("Token Expired Refreshing");
+      if (error.response?.status === 401 && originalRequest.url != "tokens") {
         try {
           const token = localStorage.getItem("token");
-          console.log("old token", token);
 
           const response = await refreshAxiosInstance.put("tokens", {
             access_token: token,
@@ -42,8 +37,6 @@ export default () => {
 
           if (response.data.access_token) {
             const newToken = response.data.access_token;
-
-            console.log("new token", newToken);
 
             originalRequest.headers["Authorization"] = "Bearer " + newToken;
 
@@ -56,8 +49,6 @@ export default () => {
           router.push("/login");
           return Promise.reject(error as Error);
         }
-      } else {
-        console.log(error);
       }
 
       return Promise.reject(error as Error);

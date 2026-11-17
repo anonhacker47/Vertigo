@@ -15,6 +15,7 @@ from api.models.issue import Issue
 from api.schemas.issue_schema import (IssueSchema, SlimIssueSchema, LibraryIssueSchema,
                                       BulkIssueIdsSchema, BulkIssueUpdateSchema)
 from api.utils.auth import token_auth
+from api.utils.ownership import owned_or_403
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
  
@@ -69,10 +70,7 @@ def new(args, series_id):
     """Create multiple new issues for a series"""
 
     user = token_auth.current_user()
-    series = db.session.get(Series, series_id)
-
-    if not series:
-        return jsonify({"error": "Series not found"}), 404
+    series = owned_or_403(Series, series_id)
 
     new_issues = []
     for issue_data in args:
@@ -154,9 +152,10 @@ def create_single_issue(args, series_id):
 @issues.route('/series/<int:series_id>/issues/<int:number>/', methods=['GET'])
 @authenticate(token_auth)
 @response(issue_schema)
-@other_responses({404: 'Issue not found'})
+@other_responses({403: 'Not allowed to view this series', 404: 'Issue not found'})
 def get_issue(series_id, number):
     """Retrieve an issue by its series ID and issue number"""
+    owned_or_403(Series, series_id)
     return db.session.scalar(
         Issue.select()
         .where(Issue.series_id == series_id, Issue.number == number)
@@ -199,16 +198,6 @@ def issue_neighbors(series_id, number):
     })
 
 
-@issues.route('/series/issues/', methods=['GET'])
-@authenticate(token_auth)
-@paginated_response(slim_issue_schema, order_by=Issue.title,
-                    order_direction='asc',
-                    pagination_schema=DateTimePaginationSchema)
-def all():
-    """Retrieve all issues"""
-    return Issue.select()
-
-
 @issues.route('/users/issues', methods=['GET'])
 @authenticate(token_auth)
 @paginated_response(library_issue_schema, max_limit=500, order_by=Issue.id,
@@ -224,18 +213,17 @@ def user_all():
 @paginated_response(slim_issue_schema, order_by=Issue.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
-@other_responses({404: 'User not found'})
+@other_responses({403: 'Not allowed to view this series', 404: 'Series not found'})
 def series_all(id):
     """Retrieve all issues from a series"""
-    series = db.session.get(Series, id) or abort(404)
-    return series.issue_select()
+    return owned_or_403(Series, id).issue_select()
 
 @issues.route('/series/<int:id>/issue_count', methods=['GET'])
 @authenticate(token_auth)
-@other_responses({404: 'User not found'})
+@other_responses({403: 'Not allowed to view this series', 404: 'Series not found'})
 def issue_count(id):
     """Retrieve issue counts from a series"""
-    series = db.session.get(Series, id) or abort(404)
+    series = owned_or_403(Series, id)
     issues = series.issue_select()
     data = db.session.scalars(issues).all()
     # Calculate the counts

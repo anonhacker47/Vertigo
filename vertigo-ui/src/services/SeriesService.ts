@@ -69,10 +69,6 @@ export default {
     return Api().defaults.baseURL + `/series/image/${id}`;
   },
 
-  getSeriesKey() {
-    return Api().get("series/key");
-  },
-
   getSeriesFilterValues() {
     return Api().get("series/filters");
   },

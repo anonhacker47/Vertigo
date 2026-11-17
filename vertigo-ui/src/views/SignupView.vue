@@ -51,7 +51,7 @@
           Sign up
         </button>
 
-        <h1 v-if="message" class="error py-5" v-html="message"></h1>
+        <h1 v-if="message" class="error whitespace-pre-line py-5">{{ message }}</h1>
       </form>
       <p class="text-sm text-center font-light text-gray-300 mt-4">
         Already have an account?
@@ -104,7 +104,7 @@ async function register() {
       const errData = error.response.data;
       if (errData.errors?.json) {
         const allErrorsArray = Object.values(errData.errors.json).flat();
-        message.value = allErrorsArray.join("<br>");
+        message.value = allErrorsArray.join("\n");
         toast.add({
           severity: 'error',
           summary: 'Error',

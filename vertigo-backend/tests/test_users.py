@@ -25,10 +25,9 @@ class UserTests(BaseTestCase):
             'password': 'dog'
         })
         assert rv.status_code == 400
+        # another user's record is not served
         rv = self.client.get(f'/api/users/{user_id}')
-        assert rv.status_code == 200
-        assert rv.json['username'] == 'user'
-        assert rv.json['email'] == 'user@example.com'
+        assert rv.status_code == 404
 
     def test_create_invalid_user(self):
         rv = self.client.post('/api/users', json={

@@ -43,6 +43,10 @@ export default {
     return user.avatar ?? (user.profile_picture ? `${Api().defaults.baseURL}/users/${user.id}/avatar` : null);
   },
 
+  revokeToken() {
+    return Api().delete("tokens");
+  },
+
   refreshToken(data: any) {
     return Api().put("tokens", data);
   },

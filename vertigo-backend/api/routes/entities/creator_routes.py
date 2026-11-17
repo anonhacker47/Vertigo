@@ -11,6 +11,7 @@ from api.schemas.creator_schema import CreatorSchema, CreatorDetailSchema
 from api import media
 from api.routes.entities.thumbnails import apply_entity_thumbnail
 from api.utils.auth import token_auth
+from api.utils.ownership import owned_or_403
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
 
@@ -83,10 +84,10 @@ def all():
 @creator.route('/creator/<int:id>', methods=['GET'])
 @authenticate(token_auth)
 @response(CreatorDetailSchema)
-@other_responses({404: 'Creator not found'})
+@other_responses({403: 'Not allowed to access this creator', 404: 'Creator not found'})
 def get(id):
     """Retrieve a creator by id"""
-    return db.session.get(Creator, id) or abort(404)
+    return owned_or_403(Creator, id)
 
 
 @creator.route('creator/image/<int:id>',methods=['GET'])
@@ -105,7 +106,7 @@ def neighbors(id):
 
     user = token_auth.current_user()
 
-    creator_obj = db.session.get(Creator, id) or abort(404)
+    creator_obj = owned_or_403(Creator, id)
     current_title = creator_obj.title
 
     prev_creator = (
@@ -138,12 +139,12 @@ def neighbors(id):
 @creator.route('/creator/<int:id>', methods=['PUT', 'PATCH'])
 @authenticate(token_auth)
 @response(CreatorDetailSchema)
-@other_responses({404: 'Creator not found'})
+@other_responses({403: 'Not allowed to access this creator', 404: 'Creator not found'})
 def update_creator(id):
     """Update an existing creator"""
 
     user = token_auth.current_user()
-    creator = db.session.get(Creator, id) or abort(404)
+    creator = owned_or_403(Creator, id)
 
     # Update title
     title = request.form.get('title', '').strip()

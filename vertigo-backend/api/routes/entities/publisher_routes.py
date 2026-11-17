@@ -11,6 +11,7 @@ from api.schemas.publisher_schema import PublisherSchema,PublisherDetailSchema
 from api import media
 from api.routes.entities.thumbnails import apply_entity_thumbnail
 from api.utils.auth import token_auth
+from api.utils.ownership import owned_or_403
 from api.decorators import paginated_response
 from api.schemas.pagination_schema import DateTimePaginationSchema
 
@@ -82,10 +83,10 @@ def all():
 @publisher.route('/publisher/<int:id>', methods=['GET'])
 @authenticate(token_auth)
 @response(PublisherDetailSchema)
-@other_responses({404: 'Publisher not found'})
+@other_responses({403: 'Not allowed to access this publisher', 404: 'Publisher not found'})
 def get(id):
     """Retrieve a publisher by id"""
-    return db.session.get(Publisher, id) or abort(404)
+    return owned_or_403(Publisher, id)
 
 
 @publisher.route('publisher/image/<int:id>',methods=['GET'])
@@ -104,7 +105,7 @@ def neighbors(id):
 
     user = token_auth.current_user()
 
-    publisher_obj = db.session.get(Publisher, id) or abort(404)
+    publisher_obj = owned_or_403(Publisher, id)
     current_title = publisher_obj.title
 
     prev_publisher = (
@@ -138,12 +139,12 @@ def neighbors(id):
 @publisher.route('/publisher/<int:id>', methods=['PUT', 'PATCH'])
 @authenticate(token_auth)
 @response(PublisherDetailSchema)
-@other_responses({404: 'Publisher not found'})
+@other_responses({403: 'Not allowed to access this publisher', 404: 'Publisher not found'})
 def update_publisher(id):
     """Update an existing publisher"""
 
     user = token_auth.current_user()
-    publisher = db.session.get(Publisher, id) or abort(404)
+    publisher = owned_or_403(Publisher, id)
 
     title = request.form.get('title', '').strip()
     if title:

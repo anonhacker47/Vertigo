@@ -191,6 +191,7 @@ function changeThumb() {
 
 function logout() {
   mobileOpen.value = false
+  AuthenticationService.revokeToken().catch(() => {})
   userStore.logout()
   router.push('/')
 }
