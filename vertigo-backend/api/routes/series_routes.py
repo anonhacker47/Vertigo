@@ -16,6 +16,7 @@ from api import media
 from api.utils.auth import token_auth
 from api.decorators import paginated_response
 from api.routes.series_sorts import SERIES_SORTS
+from api.routes.series_filters import apply_status_filters
 from api.schemas.pagination_schema import DateTimePaginationSchema
 from api.utils.entity_manager import create_or_get_entity, safe_json_list, ENTITY_MODEL_MAP
 from api.helpers.cover_bg_generator import background_path, submit_background_regeneration
@@ -171,6 +172,7 @@ def user_all():
         qs = qs.filter(Series.character.any(title=character))
     if series_format:
         qs = qs.filter(Series.series_format == series_format)
+    qs = apply_status_filters(qs, request.args)
 
     return qs.options(*LIST_LOADS), {"base_total": base_total}
 

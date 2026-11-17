@@ -1,23 +1,44 @@
 <template>
   <div class="flex flex-wrap items-center gap-2">
-    <label class="search">
-      <i class="pi pi-search text-xs text-slate-500"></i>
-      <input v-model="term" type="search" placeholder="Search series" aria-label="Search series" @keydown.enter.prevent="flush" />
-      <button v-if="term" type="button" class="search__clear" aria-label="Clear search" @click="term = ''; flush()">
-        <i class="pi pi-times text-[10px]"></i>
-      </button>
-    </label>
+    <div class="lead">
+      <label class="search">
+        <i class="pi pi-search text-xs text-slate-500"></i>
+        <input v-model="term" type="search" placeholder="Search series" aria-label="Search series" @keydown.enter.prevent="flush" />
+        <button v-if="term" type="button" class="search__clear" aria-label="Clear search" @click="term = ''; flush()">
+          <i class="pi pi-times text-[10px]"></i>
+        </button>
+      </label>
 
-    <div class="filters">
-    <FilterPill label="Publisher" :options="options.publisher" :model-value="filters.publisher || ''" searchable @update:model-value="set('publisher', $event)" />
-    <FilterPill label="Creator" :options="options.creator" :model-value="filters.creator || ''" searchable @update:model-value="set('creator', $event)" />
-    <FilterPill label="Character" :options="options.character" :model-value="filters.character || ''" searchable @update:model-value="set('character', $event)" />
-    <FilterPill label="Genre" :options="options.genre" :model-value="filters.genre || ''" searchable @update:model-value="set('genre', $event)" />
-    <FilterPill label="Format" :options="options.series_format" :model-value="filters.series_format || ''" @update:model-value="set('series_format', $event)" />
-    <button v-if="activeCount" type="button" class="h-9 px-2 text-[13px] font-bold text-sky-400 hover:text-sky-300" @click="$emit('clear')">Clear all</button>
+      <PillMenu label="Filters" icon="pi-filter" :count="chips.length" wide>
+        <div class="panel">
+          <div class="panel__label">Series</div>
+          <div class="panel__picks">
+            <FilterPill v-for="pick in PICKS" :key="pick.field" :label="pick.label" :options="options[pick.field]" :model-value="filters[pick.field] || ''"
+              :searchable="pick.searchable" @update:model-value="set(pick.field, $event)" />
+          </div>
+
+          <template v-for="group in STATUS_GROUPS" :key="group.field">
+            <div class="panel__label">{{ group.label }}</div>
+            <div class="choices" role="group" :aria-label="group.label">
+              <button v-for="option in group.options" :key="option.value" type="button" class="choice" :aria-pressed="filters[group.field] === option.value"
+                @click="toggle(group.field, option.value)">{{ option.label }}</button>
+            </div>
+          </template>
+
+          <div class="panel__label">Rating</div>
+          <div class="flex items-center gap-3">
+            <div class="stars" role="group" aria-label="Minimum rating">
+              <button v-for="n in 5" :key="n" type="button" :aria-pressed="minRating === n" :aria-label="`${n} stars or more`" @click="toggle('min_rating', String(n))">
+                <i class="pi" :class="n <= minRating ? 'pi-star-fill text-sky-400' : 'pi-star text-slate-600'"></i>
+              </button>
+            </div>
+            <span class="text-[13px] font-semibold text-slate-400">{{ minRating ? ratingLabel(minRating) : "Any" }}</span>
+          </div>
+        </div>
+      </PillMenu>
     </div>
 
-    <div class="ml-auto flex flex-wrap items-center gap-2">
+    <div class="toolbar__right ml-auto flex flex-wrap items-center gap-2">
       <SortPill :options="SORTS" :order-by="orderBy" :order-dir="orderDir" @update:sort="$emit('update:sort', $event)" />
 
       <div class="viewtoggle" role="group" aria-label="View">
@@ -44,6 +65,14 @@
         </div>
       </PillMenu>
     </div>
+
+    <div v-if="chips.length" class="flex basis-full flex-wrap items-center gap-2">
+      <button v-for="chip in chips" :key="chip.field" type="button" class="chip" :aria-label="`Remove ${chip.text}`" @click="set(chip.field, '')">
+        <span class="truncate">{{ chip.text }}</span>
+        <i class="pi pi-times text-[10px]"></i>
+      </button>
+      <button type="button" class="px-1 text-[13px] font-bold text-sky-400 hover:text-sky-300" @click="$emit('clear')">Clear all</button>
+    </div>
   </div>
 </template>
 
@@ -55,15 +84,9 @@ import FilterPill, { type PillOption } from "./FilterPill.vue";
 import SortPill, { type SortOption } from "./SortPill.vue";
 import PillMenu from "./PillMenu.vue";
 import SegmentedControl from "@/components/common/SegmentedControl.vue";
+import { SERIES_FILTER_KEYS, type SeriesFilterFields, type SeriesFilterKey } from "@/types/series-filter.types";
 
-export interface SeriesFilters {
-  query?: string;
-  publisher?: string;
-  creator?: string;
-  character?: string;
-  genre?: string;
-  series_format?: string;
-}
+export type SeriesFilters = SeriesFilterFields;
 
 const props = defineProps<{
   filters: SeriesFilters;
@@ -102,11 +125,59 @@ const SORTS: SortOption[] = [
 const PAGE_SIZES = [10, 25, 50, 100].map((n) => ({ label: String(n), value: String(n) }));
 const FIELDS = ["publisher", "creator", "character", "genre", "series_format"] as const;
 
-const options = ref<Record<(typeof FIELDS)[number], PillOption[]>>({ publisher: [], creator: [], character: [], genre: [], series_format: [] });
+type PickField = (typeof FIELDS)[number];
+const PICKS: { field: PickField; label: string; searchable: boolean }[] = [
+  { field: "publisher", label: "Publisher", searchable: true },
+  { field: "creator", label: "Creator", searchable: true },
+  { field: "character", label: "Character", searchable: true },
+  { field: "genre", label: "Genre", searchable: true },
+  { field: "series_format", label: "Format", searchable: false },
+];
 
-const activeCount = computed(() => FIELDS.filter((f) => props.filters[f]).length + (props.filters.query ? 1 : 0));
+// Values the collection endpoint accepts (see series_filters.py).
+const STATUS_GROUPS: { field: SeriesFilterKey; label: string; options: PillOption[] }[] = [
+  { field: "collection", label: "Status", options: [
+    { label: "Owned", value: "owned" },
+    { label: "Complete", value: "complete" },
+    { label: "Incomplete", value: "incomplete" },
+    { label: "Not owned", value: "not_owned" },
+  ] },
+  { field: "reading", label: "Reading", options: [
+    { label: "Read", value: "read" },
+    { label: "In progress", value: "in_progress" },
+    { label: "Unread", value: "unread" },
+  ] },
+  { field: "type", label: "Type", options: [
+    { label: "Comic", value: "comic" },
+    { label: "Manga", value: "manga" },
+  ] },
+];
 
-function set(field: (typeof FIELDS)[number], value: string) {
+const options = ref<Record<PickField, PillOption[]>>({ publisher: [], creator: [], character: [], genre: [], series_format: [] });
+
+const minRating = computed(() => Number(props.filters.min_rating) || 0);
+const ratingLabel = (n: number) => (n >= 5 ? "5 stars" : `${n}+ stars`);
+
+// One removable chip per active filter; the search term stays in its own box.
+const chips = computed(() => {
+  const list: { field: SeriesFilterKey; text: string }[] = [];
+  for (const pick of PICKS) {
+    const value = props.filters[pick.field];
+    if (value) list.push({ field: pick.field, text: `${pick.label}: ${value}` });
+  }
+  for (const group of STATUS_GROUPS) {
+    const value = props.filters[group.field];
+    if (value) list.push({ field: group.field, text: `${group.label}: ${group.options.find((o) => o.value === value)?.label ?? value}` });
+  }
+  if (minRating.value) list.push({ field: "min_rating", text: ratingLabel(minRating.value) });
+  return list;
+});
+
+function toggle(field: SeriesFilterKey, value: string) {
+  set(field, props.filters[field] === value ? "" : value);
+}
+
+function set(field: SeriesFilterKey, value: string) {
   emit("update:filters", { ...props.filters, [field]: value });
 }
 
@@ -164,21 +235,66 @@ onMounted(async () => {
 .viewtoggle button[aria-pressed="true"] { background: #1e293b; color: #fff; }
 .viewtoggle button:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
 
-.filters { display: contents; }
+.lead { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
+
+.panel { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: 14px 12px; }
+.panel__label { color: #94a3b8; font-size: 13px; font-weight: 700; }
+.panel__label:first-child { align-self: start; line-height: 36px; }
+.panel__picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.panel__picks > * { min-width: 0; }
+.panel__picks :deep(.pill) { width: 100%; max-width: none; justify-content: space-between; }
+.panel__picks > :nth-child(even) :deep(.popover) { left: auto; right: 0; }
+.choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.choice {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+.choice:hover { border-color: rgba(255, 255, 255, 0.22); color: #fff; }
+.choice[aria-pressed="true"] { border-color: rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.1); color: #e0f2fe; }
+.choice:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
+.stars { display: inline-flex; gap: 2px; }
+.stars button { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 5px; font-size: 15px; }
+.stars button:hover { background: rgba(255, 255, 255, 0.06); }
+.stars button:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 18rem;
+  height: 28px;
+  padding: 0 8px 0 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  color: #e0f2fe;
+  font-size: 12px;
+  font-weight: 700;
+}
+.chip:hover { background: rgba(56, 189, 248, 0.2); color: #fff; }
+.chip:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
 @media (max-width: 767px) {
-  .search { width: 100%; }
-  .filters {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    width: 100%;
-  }
-  .filters > * { min-width: 0; }
-  .filters :deep(.pill) { width: 100%; max-width: none; justify-content: space-between; }
-  .filters > :nth-child(even) :deep(.popover) { left: auto; right: 0; }
-  .toolbar__right { width: 100%; margin-left: 0; }
+  .lead { width: 100%; flex-wrap: nowrap; }
+  .search { flex: 1 1 0; width: auto; min-width: 0; }
+  .panel { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .panel__label:first-child { line-height: inherit; }
+  .panel__label:not(:first-child) { margin-top: 10px; }
+  .choice { height: 34px; }
+  .stars button { width: 36px; height: 36px; font-size: 18px; }
+  .toolbar__right { width: 100%; margin-left: 0; flex-wrap: nowrap; }
   .toolbar__right > :first-child { flex: 1 1 auto; min-width: 0; }
   .toolbar__right > :first-child :deep(.pill) { width: 100%; justify-content: space-between; }
+  .toolbar__right > :first-child :deep(.popover) { left: 0; right: auto; }
   .toolbar__right > :last-child { margin-left: auto; }
 }
 </style>

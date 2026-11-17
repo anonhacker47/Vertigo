@@ -146,6 +146,57 @@ class TestCollectionSorts(BaseTestCase):
         self.assertEqual(rv.status_code, 400)
 
 
+class TestCollectionStatusFilters(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        user = db.session.query(User).filter_by(username='test').first()
+        db.session.add_all([
+            Series(title='Akira', user=user, issue_count=6, owned_count=6, read_count=6,
+                   user_rating=5.0, manga=True),
+            Series(title='Batman', user=user, issue_count=20, owned_count=5, read_count=2,
+                   user_rating=3.0, manga=False),
+            Series(title='Constantine', user=user, issue_count=4, owned_count=0, read_count=0),
+            Series(title='Doom Patrol', user=user, issue_count=0, owned_count=0, read_count=0,
+                   user_rating=4.0),
+        ])
+        db.session.commit()
+
+    def titles(self, **params):
+        rv = self.client.get('/api/users/series', query_string={'orderBy': 'title', 'orderDir': 'asc', **params})
+        self.assertEqual(rv.status_code, 200, rv.json)
+        return [s['title'] for s in rv.json['data']]
+
+    def test_collection(self):
+        self.assertEqual(self.titles(collection='owned'), ['Akira', 'Batman'])
+        self.assertEqual(self.titles(collection='not_owned'), ['Constantine', 'Doom Patrol'])
+        self.assertEqual(self.titles(collection='complete'), ['Akira'])
+        self.assertEqual(self.titles(collection='incomplete'), ['Batman'])
+
+    def test_reading(self):
+        self.assertEqual(self.titles(reading='read'), ['Akira'])
+        self.assertEqual(self.titles(reading='in_progress'), ['Batman'])
+        self.assertEqual(self.titles(reading='unread'), ['Constantine', 'Doom Patrol'])
+
+    def test_type_counts_an_unset_flag_as_comic(self):
+        self.assertEqual(self.titles(type='manga'), ['Akira'])
+        self.assertEqual(self.titles(type='comic'), ['Batman', 'Constantine', 'Doom Patrol'])
+
+    def test_minimum_rating_leaves_out_the_unrated(self):
+        self.assertEqual(self.titles(min_rating='4'), ['Akira', 'Doom Patrol'])
+        self.assertEqual(self.titles(min_rating='1'), ['Akira', 'Batman', 'Doom Patrol'])
+
+    def test_filters_combine_and_keep_the_unfiltered_total(self):
+        rv = self.client.get('/api/users/series', query_string={'collection': 'owned', 'type': 'comic', 'min_rating': '3'})
+        self.assertEqual([s['title'] for s in rv.json['data']], ['Batman'])
+        self.assertEqual(rv.json['pagination']['total'], 1)
+        self.assertEqual(rv.json['pagination']['base_total'], 4)
+
+    def test_unknown_values_are_refused(self):
+        for params in ({'collection': 'some'}, {'reading': 'done'}, {'type': 'novel'}, {'min_rating': 'high'}):
+            rv = self.client.get('/api/users/series', query_string=params)
+            self.assertEqual(rv.status_code, 400, params)
+
+
 class SeriesEntityWriteTests(BaseTestCase):
     def test_create_dedupes_and_update_replaces(self):
         rv = self.client.post('/api/series', data={

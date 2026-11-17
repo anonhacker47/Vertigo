@@ -78,8 +78,9 @@ import CollectionTable from "@/components/tables/CollectionTable.vue";
 import CollectionToolbar, { type SeriesFilters } from "@/components/collection/CollectionToolbar.vue";
 import CollectionPager from "@/components/collection/CollectionPager.vue";
 import LongboxView from "@/components/collection/longbox/LongboxView.vue";
+import { SERIES_FILTER_KEYS } from "@/types/series-filter.types";
 
-const EMPTY_FILTERS: SeriesFilters = { query: "", genre: "", creator: "", character: "", publisher: "", series_format: "" };
+const EMPTY_FILTERS = Object.fromEntries(SERIES_FILTER_KEYS.map((key) => [key, ""])) as SeriesFilters;
 
 const toast = useToast();
 const { confirmAction } = useConfirmAction();
@@ -117,14 +118,7 @@ const countLine = computed(() => {
 });
 
 function filtersFromQuery(query: Record<string, any>): SeriesFilters {
-  return {
-    query: query.query || "",
-    genre: query.genre || "",
-    creator: query.creator || "",
-    character: query.character || "",
-    publisher: query.publisher || "",
-    series_format: query.series_format || "",
-  };
+  return Object.fromEntries(SERIES_FILTER_KEYS.map((key) => [key, String(query[key] || "")])) as SeriesFilters;
 }
 
 const withThumbnails = (list: Series[]) =>
