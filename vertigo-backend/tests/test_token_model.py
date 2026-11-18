@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from api.app import db
-from api.models import Token, User
+from api.models.token import Token
+from api.models.user import User
 from tests.base_test_case import BaseTestCase
 
 

@@ -9,7 +9,7 @@ from tests.base_test_case import BaseTestCase
 
 class TestSync(BaseTestCase):
     def test_syncable_timestamps(self):
-        user = db.session.scalar(db.select(User).where(User.username == 'test'))
+        user = db.session.scalar(User.select().where(User.username == 'test'))
         
         series = Series(title='Test Series', user=user)
         db.session.add(series)
@@ -27,7 +27,7 @@ class TestSync(BaseTestCase):
         self.assertGreater(second_updated, first_updated)
 
     def test_sync_endpoint(self):
-        user = db.session.scalar(db.select(User).where(User.username == 'test'))
+        user = db.session.scalar(User.select().where(User.username == 'test'))
         
         s1 = Series(title='S1', user=user)
         s2 = Series(title='S2', user=user)
@@ -56,7 +56,7 @@ class TestSync(BaseTestCase):
         self.assertEqual(data['series'][0]['id'], s2.id)
 
     def test_deletion_logging_sync(self):
-        user = db.session.scalar(db.select(User).where(User.username == 'test'))
+        user = db.session.scalar(User.select().where(User.username == 'test'))
         
         s1 = Series(title='To be deleted', user=user)
         db.session.add(s1)
@@ -72,7 +72,7 @@ class TestSync(BaseTestCase):
         
         # Verify it's in DeletedRecord
         deleted = db.session.scalar(
-            db.select(DeletedRecord).where(
+            DeletedRecord.select().where(
                 DeletedRecord.table_name == 'series',
                 DeletedRecord.object_id == s1_id
             )

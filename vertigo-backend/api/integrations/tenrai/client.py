@@ -17,6 +17,8 @@ class TenraiSession:
         self.base_url = base_url
         self.session = Session()
         self.session.headers.update({"User-Agent": user_agent})
+        if server_key:
+            self.session.headers["X-Server-Key"] = server_key
 
     def _get(self, path, params=None):
         url = f"{self.base_url}{path}"
