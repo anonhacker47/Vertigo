@@ -4,7 +4,6 @@ from time import time
 from sqlalchemy import orm as sqla_orm
 
 from datetime import datetime
-from hashlib import md5
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask import current_app, url_for
@@ -15,14 +14,6 @@ from api.models.token import Token
 from api.models.series import Series
 from api.models.issue import Issue
 from api.models import series_entities
-
-
-followers = sqla.Table(
-    'followers',
-    db.Model.metadata,
-    sqla.Column('follower_id', sqla.Integer, sqla.ForeignKey('users.id')),
-    sqla.Column('followed_id', sqla.Integer, sqla.ForeignKey('users.id'))
-)
 
 
 class User(Updateable, db.Model):
@@ -60,17 +51,6 @@ class User(Updateable, db.Model):
     metron_api_token = sqla.Column(sqla.String(255))
     shelf_settings = sqla.Column(sqla.JSON)
 
-    following = sqla_orm.relationship(
-        'User', secondary=followers,
-        primaryjoin=(followers.c.follower_id == id),
-        secondaryjoin=(followers.c.followed_id == id),
-        back_populates='followers', lazy='noload')
-    followers = sqla_orm.relationship(
-        'User', secondary=followers,
-        primaryjoin=(followers.c.followed_id == id),
-        secondaryjoin=(followers.c.follower_id == id),
-        back_populates='following', lazy='noload')
-
     def series_select(self):
         return Series.select().where(sqla_orm.with_parent(self, User.series))
 
@@ -86,30 +66,12 @@ class User(Updateable, db.Model):
     def character_select(self):
         return series_entities.Character.select().where(sqla_orm.with_parent(self, User.character))
 
-    def following_select(self):
-        return User.select().where(sqla_orm.with_parent(self, User.following))
-
-    def followers_select(self):
-        return User.select().where(sqla_orm.with_parent(self, User.followers))
-
-    def followed_series_select(self):
-        return Series.select().join(
-            followers, (followers.c.followed_id == Series.user_id),
-            isouter=True).group_by(Series.id).filter(
-                sqla.or_(Series.user == self,
-                         followers.c.follower_id == self.id))
-
     def __repr__(self):  # pragma: no cover
         return '<User {}>'.format(self.username)
 
     @property
     def url(self):
         return url_for('users.get', id=self.id)
-
-    @property
-    def avatar_url(self):
-        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
-        return f'https://www.gravatar.com/avatar/{digest}?d=identicon'
 
     @property
     def password(self):
@@ -122,9 +84,6 @@ class User(Updateable, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def ping(self):
-        self.last_seen = datetime.utcnow()
-
     def generate_auth_token(self):
         token = Token(user=self)
         token.generate()
@@ -135,8 +94,6 @@ class User(Updateable, db.Model):
         token = Token.from_jwt(access_token_jwt)
         if token:
             if token.access_expiration > datetime.utcnow():
-                token.user.ping()
-                db.session.commit()
                 return token.user
 
     @staticmethod
@@ -173,19 +130,3 @@ class User(Updateable, db.Model):
             return
         return db.session.scalar(User.select().filter_by(
             email=data['reset_email']))
-
-    def follow(self, user):
-        if not self.is_following(user):
-            db.session.execute(followers.insert().values(
-                follower_id=self.id, followed_id=user.id))
-
-    def unfollow(self, user):
-        if self.is_following(user):
-            db.session.execute(followers.delete().where(
-                followers.c.follower_id == self.id,
-                followers.c.followed_id == user.id))
-
-    def is_following(self, user):
-        return db.session.scalars(User.select().where(
-            User.id == self.id, User.following.contains(
-                user))).one_or_none() is not None

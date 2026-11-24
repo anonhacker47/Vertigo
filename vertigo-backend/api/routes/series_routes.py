@@ -289,17 +289,6 @@ def delete(id):
     return '', 204
 
 
-@series.route('/feed', methods=['GET'])
-@authenticate(token_auth)
-@paginated_response(list_series_schema, order_by=Series.timestamp,
-                    order_direction='desc',
-                    pagination_schema=DateTimePaginationSchema)
-def feed():
-    """Retrieve the user's series feed"""
-    user = token_auth.current_user()
-    return user.followed_series_select().options(*LIST_LOADS)
-
-
 @series.route('series/image/<int:id>',methods=['GET'])
 def get_series_image(id):
     """Retrieve the series thumbnail"""

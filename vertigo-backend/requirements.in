@@ -1,7 +1,6 @@
 alembic
 alchemical
 apifairy
-faker
 flask
 flask-cors
 flask-httpauth

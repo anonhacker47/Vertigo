@@ -6,7 +6,6 @@ from flask_cors import CORS
 from flask_mail import Mail
 from apifairy import APIFairy
 from config import Config
-import importlib.util
 
 db = Alchemical()
 ma = Marshmallow()
@@ -38,10 +37,6 @@ def create_app(config_class=Config):
     apifairy.init_app(app)
 
     # blueprints
-    if importlib.util.find_spec("api.fake"):
-        from api.fake import fake
-        app.register_blueprint(fake)
-
     from api.errors import errors
     app.register_blueprint(errors)
     from api.routes.tokens_routes import tokens
