@@ -65,4 +65,10 @@ removeDirs.forEach(dir => {
   }
 });
 
+for (const entry of fs.readdirSync(backendCopyPath, { recursive: true, withFileTypes: true })) {
+  if (entry.isDirectory() && entry.name === '__pycache__') {
+    fs.rmSync(path.join(entry.parentPath, entry.name), { recursive: true, force: true });
+  }
+}
+
 console.log('✅ Release completed successfully.');

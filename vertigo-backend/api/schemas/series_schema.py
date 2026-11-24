@@ -59,6 +59,8 @@ class SeriesSchema(ma.SQLAlchemySchema):
 
     metron_id = ma.String(allow_none=True)
     metron_url = ma.String(allow_none=True)
+    mal_id = ma.Integer(allow_none=True)
+    mal_url = ma.String(allow_none=True)
 
     @post_dump
     def fix_datetimes(self, data, **kwargs):

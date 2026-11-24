@@ -27,6 +27,8 @@ export interface SlimSeries {
 }
 
 export interface Series extends MetronIdentifiable {
+  mal_id?: number | null;
+  mal_url?: string | null;
   character: SeriesEntityRef[];
   description: string;
   dominant_color: [number, number, number];

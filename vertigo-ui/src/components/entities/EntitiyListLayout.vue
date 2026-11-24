@@ -33,10 +33,6 @@
                 </p>
             </div>
 
-            <CollectionDropDownMenu :getScreenWidth="getScreenWidth" :selectedGrid="selectedGrid"
-                :changeGrid="changeGrid" :orderDirection="orderDirection" :orderByProperties="orderByProperties"
-                v-model:viewMode="viewMode" v-model:orderBy="orderBy" v-model:orderDir="orderDir"
-                v-model:itemsPerPage="pagination.limit" />
             <div class="flex flex-row items-center justify-center w-full md:w-auto gap-4 md:gap-4">
                 <RouterLink :to="{ name: `Add${pascalType}` }" custom v-slot="{ navigate }">
                     <Button class="md:flex-none" @click="navigate">

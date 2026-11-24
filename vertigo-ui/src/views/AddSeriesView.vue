@@ -196,6 +196,8 @@ function onMetronSelect(seriesDetail: any, seriesEntities: any, metronIssues: an
     owned_count: 0,
     metron_id: isManga ? null : seriesDetail.metron_id || null,
     metron_url: isManga ? null : seriesDetail.metron_url || null,
+    mal_id: isManga ? seriesDetail.mal_id || null : null,
+    mal_url: isManga ? seriesDetail.mal_url || null : null,
   };
 
   haveAll.value = false;
@@ -272,6 +274,8 @@ async function createSeries() {
       owned_count: owned_count,
       metron_id: seriesData.value.metron_id || null,
       metron_url: seriesData.value.metron_url || null,
+      mal_id: seriesData.value.mal_id || null,
+      mal_url: seriesData.value.mal_url || null,
       manga: seriesData.value.manga || false,
     };
 

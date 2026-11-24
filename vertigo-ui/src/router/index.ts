@@ -107,15 +107,6 @@ const router = createRouter({
       },
     },
     {
-      path: "/about",
-      name: "about",
-      meta: {
-        requiresAuth: true,
-        showHeaderItem: true,
-      },
-      component: () => import("@/views/SeriesView.vue"),
-    },
-    {
       path: "/login",
       name: "Login",
       meta: {
@@ -299,6 +290,15 @@ const router = createRouter({
         showHeaderItem: true,
       },
       component: () => import("@/views/EditIssueView.vue"),
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      name: "NotFound",
+      meta: {
+        requiresAuth: true,
+        showHeaderItem: true,
+      },
+      component: () => import("@/views/NotFoundView.vue"),
     },
   ],
 });

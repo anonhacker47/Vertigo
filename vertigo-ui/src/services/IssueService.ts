@@ -8,11 +8,16 @@ export default {
     orderBy: string,
     orderDir: string
   ): Promise<Object> {
-    const response = await Api().get<ApiResponse<Issue[]>>(
-      `series/${id}/issues?orderBy=${orderBy}&orderDir=${orderDir}`
-    );
-    const issuesList = response.data.data;
-    const pagination = response.data.pagination;
+    const pageSize = 500;
+    const issuesList: Issue[] = [];
+    let pagination: any;
+    do {
+      const response = await Api().get<ApiResponse<Issue[]>>(
+        `series/${id}/issues?orderBy=${orderBy}&orderDir=${orderDir}&limit=${pageSize}&offset=${issuesList.length}`
+      );
+      issuesList.push(...response.data.data);
+      pagination = response.data.pagination;
+    } while (pagination.count > 0 && issuesList.length < pagination.total);
     return { issuesList, pagination };
   },
 

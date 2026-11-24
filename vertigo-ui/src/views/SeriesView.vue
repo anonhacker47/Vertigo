@@ -43,6 +43,15 @@
               <p v-if="series.metron_id" class="select-all text-center text-sm text-slate-400" :style="accentStyle">
                 Metron ID: {{ series.metron_id }}
               </p>
+              <a v-if="series.mal_url" :href="series.mal_url" target="_blank" rel="noopener noreferrer"
+                class="flex items-center justify-center gap-2 rounded-sm border border-slate-600 bg-slate-900 px-2 py-1 text-sm font-semibold text-slate-300 transition hover:bg-slate-700"
+                :style="accentStyle">
+                View on MyAnimeList
+                <i class="pi pi-external-link text-sm"></i>
+              </a>
+              <p v-if="series.mal_id" class="select-all text-center text-sm text-slate-400" :style="accentStyle">
+                MAL ID: {{ series.mal_id }}
+              </p>
             </div>
 
             <div class="flex min-w-0 flex-1 flex-col gap-4">

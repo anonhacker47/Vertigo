@@ -28,6 +28,8 @@ class CreatorSchema(ma.SQLAlchemySchema):
     last_updated = ma.auto_field(dump_only=True)
     metron_id = ma.Integer(allow_none=True)
     metron_url = ma.String(allow_none=True)   
+    mal_id = ma.Integer(allow_none=True)
+    mal_url = ma.String(allow_none=True)
     
     @post_dump
     def fix_datetimes(self, data, **kwargs):

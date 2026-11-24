@@ -74,15 +74,17 @@ def new(args, series_id):
 
     new_issues = []
     for issue_data in args:
+        is_owned = bool(issue_data.get("is_owned", False))
+        is_read = bool(issue_data.get("is_read", False))
         issue = Issue(
         user=user,
         series=series,
         title=issue_data["title"],
         number=issue_data["number"],
-        is_owned=issue_data["is_owned"],
-        is_read=issue_data["is_read"],
-        bought_date=issue_data.get("bought_date") or (datetime.now(timezone.utc) if issue_data["is_owned"] else None),
-        read_date=issue_data.get("read_date") or (datetime.now(timezone.utc) if issue_data["is_read"] else None),
+        is_owned=is_owned,
+        is_read=is_read,
+        bought_date=issue_data.get("bought_date") or (datetime.now(timezone.utc) if is_owned else None),
+        read_date=issue_data.get("read_date") or (datetime.now(timezone.utc) if is_read else None),
         bought_price=issue_data.get("bought_price"),
         cover_date=issue_data.get("cover_date"),
         metron_id=issue_data.get("metron_id"),
@@ -210,7 +212,7 @@ def user_all():
 
 @issues.route('/series/<int:id>/issues', methods=['GET'])
 @authenticate(token_auth)
-@paginated_response(slim_issue_schema, order_by=Issue.timestamp,
+@paginated_response(slim_issue_schema, max_limit=500, order_by=Issue.timestamp,
                     order_direction='desc',
                     pagination_schema=DateTimePaginationSchema)
 @other_responses({403: 'Not allowed to view this series', 404: 'Series not found'})

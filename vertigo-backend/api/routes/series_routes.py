@@ -29,6 +29,11 @@ list_series_schema = SeriesSchema(many=True, exclude=('character', 'creator', 'd
 LIST_LOADS = (selectinload(Series.publisher), selectinload(Series.genre))
 update_series_schema = SeriesSchema(partial=True)
 
+def _mal_id(value):
+    value = (value or '').strip()
+    return int(value) if value.isdigit() else None
+
+
 @series.route('/series', methods=['POST'])
 @authenticate(token_auth)
 def new():
@@ -59,6 +64,8 @@ def new():
         owned_count=owned_count,
         metron_id=metron_id,
         metron_url=metron_url,
+        mal_id=_mal_id(request.form.get('mal_id')),
+        mal_url=(request.form.get('mal_url') or '').strip() or None,
         manga=manga,
     )
     db.session.add(series)
@@ -216,6 +223,13 @@ def update_series(id):
     if 'metron_url' in form:
         metron_url = (form.get('metron_url') or '').strip()
         series.metron_url = metron_url if metron_url not in ('', 'null') else None
+
+    if 'mal_id' in form:
+        series.mal_id = _mal_id(form.get('mal_id'))
+
+    if 'mal_url' in form:
+        mal_url = (form.get('mal_url') or '').strip()
+        series.mal_url = mal_url if mal_url not in ('', 'null') else None
 
     entities = {
         entity_type: safe_json_list(form.get(entity_type))

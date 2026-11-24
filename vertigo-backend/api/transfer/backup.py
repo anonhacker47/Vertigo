@@ -29,7 +29,8 @@ ENTITY_KEYS = {'publisher': 'publishers', 'creator': 'creators', 'character': 'c
 # id and thumbnail are kept apart: both change on restore
 SERIES_COLUMNS = ('title', 'description', 'notes', 'user_rating', 'manga', 'release_date',
                   'purchase_cost', 'series_format', 'issue_count', 'read_count', 'owned_count',
-                  'dominant_color', 'slug', 'timestamp', 'metron_id', 'metron_url')
+                  'dominant_color', 'slug', 'timestamp', 'metron_id', 'metron_url',
+                  'mal_id', 'mal_url')
 ISSUE_COLUMNS = ('title', 'number', 'description', 'cover_date', 'notes', 'slug', 'is_read',
                  'is_owned', 'bought_price', 'user_rating', 'bought_date', 'read_date',
                  'timestamp', 'metron_id', 'metron_url')

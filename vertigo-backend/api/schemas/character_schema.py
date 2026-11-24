@@ -25,6 +25,8 @@ class CharacterSchema(ma.SQLAlchemySchema):
 
     metron_id = ma.Integer(allow_none=True)
     metron_url = ma.String(allow_none=True)
+    mal_id = ma.Integer(allow_none=True)
+    mal_url = ma.String(allow_none=True)
     
     slug = ma.String()
     timestamp = ma.auto_field(dump_only=True)

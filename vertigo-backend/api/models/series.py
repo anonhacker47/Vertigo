@@ -12,8 +12,9 @@ from api.models.syncable import Syncable
 from api.models.thumbnailed import Thumbnailed
 from api.models.updatable import Updateable
 from api.models.metron_identifiable import MetronIdentifiable
+from api.models.mal_identifiable import MalIdentifiable
 from api.models import associations
-class Series(Updateable, MetronIdentifiable, Thumbnailed, Syncable, db.Model):
+class Series(Updateable, MetronIdentifiable, MalIdentifiable, Thumbnailed, Syncable, db.Model):
     __tablename__ = 'series'
 
     id = sqla.Column(sqla.Integer, primary_key=True)

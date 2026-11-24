@@ -17,6 +17,8 @@ class GenreSchema(ma.SQLAlchemySchema):
         min=0, max=3000))
     
     slug = ma.String()
+    mal_id = ma.Integer(allow_none=True)
+    mal_url = ma.String(allow_none=True)
     timestamp = ma.auto_field(dump_only=True)
 
     @post_dump
