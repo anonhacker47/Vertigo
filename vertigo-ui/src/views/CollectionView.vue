@@ -17,7 +17,7 @@
     </div>
 
     <CollectionToolbar class="mt-5 border-b border-white/8 pb-4" :filters="currentFilter" :order-by="orderBy" :order-dir="orderDir"
-      :view-mode="viewMode" :cards-per-line="selectedGrid" :items-per-page="pagination.limit"
+      :view-mode="viewMode" :cards-per-line="shownGrid" :cards-per-line-range="gridRange" :items-per-page="pagination.limit"
       @update:filters="handleSearch" @update:sort="setSort" @update:view-mode="viewMode = $event"
       @update:cards-per-line="setCardsPerLine" @update:items-per-page="pagination.limit = $event" @clear="clearFilters" />
   </div>
@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import { useConfirmAction } from "@/composables/useConfirmAction";
@@ -109,7 +109,13 @@ const viewMode = computed({
 });
 
 const hasFilters = computed(() => Object.values(currentFilter.value).some((v) => v));
-const gridStyle = computed(() => ({ gridTemplateColumns: `repeat(${selectedGrid.value}, minmax(0, 1fr))` }));
+// 2 across is oversized on a wide screen and more than 4 is too small on a phone; the saved choice is only clamped for display
+const wideQuery = window.matchMedia("(min-width: 768px)");
+const isWide = ref(wideQuery.matches);
+const onWideChange = (e: MediaQueryListEvent) => (isWide.value = e.matches);
+const gridRange = computed(() => (isWide.value ? { min: 3, max: 10 } : { min: 2, max: 4 }));
+const shownGrid = computed(() => Math.min(gridRange.value.max, Math.max(gridRange.value.min, selectedGrid.value)));
+const gridStyle = computed(() => ({ gridTemplateColumns: `repeat(${shownGrid.value}, minmax(0, 1fr))` }));
 const skeletonCount = computed(() => Math.min(pagination.value.limit || 10, 15));
 const countLine = computed(() => {
   const total = pagination.value.base_total ?? 0;
@@ -268,7 +274,10 @@ const confirmDelete = (id: number, title: string) => {
   });
 };
 
+onBeforeUnmount(() => wideQuery.removeEventListener("change", onWideChange));
+
 onMounted(() => {
+  wideQuery.addEventListener("change", onWideChange);
   userPreferences.loadPreferences();
   currentFilter.value = filtersFromQuery(route.query);
   getseriesList(currentFilter.value, 0, Number(route.query.limit) || pagination.value.limit);

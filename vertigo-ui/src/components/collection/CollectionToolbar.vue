@@ -56,7 +56,7 @@
           <div class="mb-2 flex items-baseline justify-between text-[13px] font-bold text-slate-300">
             <span>Cards per row</span><span class="tabular-nums text-slate-400">{{ cardsPerLine }}</span>
           </div>
-          <input type="range" min="2" max="10" step="1" :value="cardsPerLine" class="range range-xs range-primary w-full" aria-label="Cards per row"
+          <input type="range" :min="cardsPerLineRange.min" :max="cardsPerLineRange.max" step="1" :value="cardsPerLine" class="range range-xs range-primary w-full" aria-label="Cards per row"
             @input="$emit('update:cardsPerLine', Number(($event.target as HTMLInputElement).value))" />
         </div>
         <div>
@@ -94,6 +94,7 @@ const props = defineProps<{
   orderDir: string;
   viewMode: ViewMode;
   cardsPerLine: number;
+  cardsPerLineRange: { min: number; max: number };
   itemsPerPage: number;
 }>();
 const emit = defineEmits<{
