@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import type { Series } from "@/types/series.types";
 import type { LongboxItem } from "./dividers";
 import LongboxCover from "./LongboxCover.vue";
@@ -40,8 +40,12 @@ const emit = defineEmits<{
 
 /** How many items either side of the front one get rendered; the rest are off in the dark anyway. */
 const WINDOW = 12;
-/** Horizontal drag distance that moves the row by one. */
-const DRAG_STEP = 56;
+/** Spring rate (1/s) when snapping to an item, and the slower rate a hard flick coasts at. */
+const SNAP = 16;
+const COAST = 4.5;
+/** Release speed (items/s) that counts as a full flick, and the fastest one honoured. */
+const FLICK = 10;
+const MAX_SPEED = 80;
 /** Wheel travel per step, the most steps one wheel event may take, and the shortest gap between them. */
 const WHEEL_STEP = 36;
 const WHEEL_BURST = 3;
@@ -70,6 +74,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   observer?.disconnect();
+  halt();
   document.removeEventListener("keydown", onDocumentKey);
 });
 
@@ -92,25 +97,79 @@ const activeId = computed(() => {
   return item ? domId(item) : undefined;
 });
 
+// The row is drawn at a fractional index that a critically damped spring pulls to its target, so
+// drags track the finger, flicks coast, and every other move (keys, wheel, scrubber) eases the same way.
+const pos = ref(props.current);
+let target = props.current;
+let velocity = 0; // items per second
+let omega = SNAP;
+let frame = 0;
+let lastFrame = 0;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function tick(now: number) {
+  const dt = Math.max(0, Math.min(0.032, (now - lastFrame) / 1000));
+  lastFrame = now;
+  const x = pos.value - target;
+  const push = (velocity + omega * x) * dt;
+  const decay = Math.exp(-omega * dt);
+  const next = (x + push) * decay;
+  velocity = (velocity - omega * push) * decay;
+  if (Math.abs(next) < 0.002 && Math.abs(velocity) < 0.05) {
+    pos.value = target;
+    velocity = 0;
+    frame = 0;
+    return;
+  }
+  pos.value = target + next;
+  frame = requestAnimationFrame(tick);
+}
+function settle(to: number, rate = SNAP) {
+  target = to;
+  omega = rate;
+  if (reducedMotion.matches) {
+    halt();
+    pos.value = to;
+    velocity = 0;
+  } else if (!frame) {
+    lastFrame = performance.now();
+    frame = requestAnimationFrame(tick);
+  }
+}
+function halt() {
+  cancelAnimationFrame(frame);
+  frame = 0;
+}
+watch(() => props.current, (index) => {
+  if (!drag && index !== target) settle(index);
+});
+
 // Cover-flow placement: the front item faces out, the others fan back on either side, spaced
-// in proportion to the cover width.
+// in proportion to the cover width. Within one step of the front the pose blends between the two.
 function styleFor(d: number) {
   const ad = Math.abs(d);
+  const side = Math.sign(d);
   const w = coverWidth.value;
-  const [first, step, angle] = [Math.round(w * 0.85), Math.round(w * 0.24), 58];
-  const transform = d === 0
-    ? "translate3d(0, 0, 170px) rotateY(0deg)"
-    : `translate3d(${Math.sign(d) * (first + (ad - 1) * step)}px, 0, ${-ad * 16}px) rotateY(${d < 0 ? angle : -angle}deg)`;
-  return { transform, zIndex: 100 - ad, opacity: d === 0 ? 1 : Math.max(0.25, 1 - ad * 0.07) };
+  const [first, step, angle] = [w * 0.85, w * 0.24, 58];
+  const t = Math.min(1, ad);
+  const turn = t * t * (3 - 2 * t);
+  const x = side * (ad <= 1 ? first * ad : first + (ad - 1) * step);
+  const z = ad <= 1 ? 170 - 186 * turn : -ad * 16;
+  return {
+    transform: `translate3d(${x.toFixed(1)}px, 0, ${z.toFixed(1)}px) rotateY(${(-side * angle * turn).toFixed(1)}deg)`,
+    zIndex: 1000 - Math.round(ad * 10),
+    opacity: Math.max(0.25, 1 - ad * 0.07),
+  };
 }
 
 const visible = computed(() => {
-  const from = Math.max(0, props.current - WINDOW);
-  const to = Math.min(props.items.length - 1, props.current + WINDOW);
+  const centre = Math.round(pos.value);
+  const from = Math.max(0, centre - WINDOW);
+  const to = Math.min(props.items.length - 1, centre + WINDOW);
   const out: { index: number; item: LongboxItem; style: Record<string, string | number> }[] = [];
   for (let index = from; index <= to; index++) {
     const item = props.items[index];
-    if (item) out.push({ index, item, style: styleFor(index - props.current) });
+    if (item) out.push({ index, item, style: styleFor(index - pos.value) });
   }
   return out;
 });
@@ -129,8 +188,9 @@ const countLabel = computed(() => {
   return `${ordinals.value[props.current]} of ${seriesTotal.value}${more}`;
 });
 
+const clampIndex = (index: number) => Math.max(0, Math.min(props.items.length - 1, index));
 function go(index: number) {
-  const next = Math.max(0, Math.min(props.items.length - 1, index));
+  const next = clampIndex(index);
   if (next !== props.current) emit("update:current", next);
 }
 function openCurrent() {
@@ -181,30 +241,64 @@ function onKey(event: KeyboardEvent) {
   handler();
 }
 
-// A drag riffles; a tap on a side item brings it forward, a tap on the front cover opens it.
-// The tapped item is captured on pointerdown because pointer capture retargets the later events.
-let drag: { x: number; start: number; moved: boolean; hit: HTMLElement | null } | null = null;
+// A drag riffles and a flick coasts; a tap on a side item brings it forward, a tap on the front
+// cover opens it. The tapped item is captured on pointerdown because pointer capture retargets the later events.
+let drag: { x: number; start: number; moved: boolean; hit: HTMLElement | null; samples: { t: number; p: number }[] } | null = null;
+// side covers sit this far apart, so they follow the finger one to one
+const dragStep = () => Math.max(28, coverWidth.value * 0.24);
+
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return; // right and middle buttons keep their own meaning
-  drag = { x: event.clientX, start: props.current, moved: false, hit: (event.target as HTMLElement).closest(".item") };
+  halt();
+  velocity = 0;
+  drag = { x: event.clientX, start: pos.value, moved: false, hit: (event.target as HTMLElement).closest(".item"), samples: [] };
   stage.value?.setPointerCapture(event.pointerId);
 }
 function onPointerMove(event: PointerEvent) {
   if (!drag) return;
   const dx = event.clientX - drag.x;
   if (Math.abs(dx) > 6) drag.moved = true;
-  go(drag.start - Math.round(dx / DRAG_STEP));
+  // past either end the row resists instead of stopping dead
+  const max = props.items.length - 1;
+  let p = drag.start - dx / dragStep();
+  if (p < 0) p *= 0.35;
+  else if (p > max) p = max + (p - max) * 0.35;
+  pos.value = p;
+  drag.samples.push({ t: event.timeStamp, p });
+  while (drag.samples.length > 2 && event.timeStamp - drag.samples[0].t > 100) drag.samples.shift();
+  go(Math.round(p));
 }
-function onPointerUp() {
-  if (drag && !drag.moved && drag.hit) {
-    const index = Number(drag.hit.dataset.index);
-    if (index === props.current) openCurrent();
-    else go(index);
-  }
+function releaseSpeed(samples: { t: number; p: number }[], now: number) {
+  const first = samples[0];
+  const last = samples[samples.length - 1];
+  if (!first || !last || last === first || now - last.t > 60 || last.t - first.t > 160) return 0;
+  const speed = ((last.p - first.p) / (last.t - first.t)) * 1000;
+  return Math.max(-MAX_SPEED, Math.min(MAX_SPEED, speed));
+}
+function onPointerUp(event: PointerEvent) {
+  const released = drag;
   drag = null;
+  if (!released) return;
+  if (!released.moved) {
+    const index = released.hit ? Number(released.hit.dataset.index) : props.current;
+    if (released.hit && index === props.current) openCurrent();
+    go(index);
+    settle(clampIndex(index));
+    return;
+  }
+  // the faster the flick, the slower the spring, so the row carries on before it settles
+  velocity = releaseSpeed(released.samples, event.timeStamp);
+  const rate = SNAP - (SNAP - COAST) * Math.min(1, Math.abs(velocity) / FLICK);
+  const to = clampIndex(Math.round(pos.value + velocity / rate));
+  go(to);
+  settle(to, rate);
 }
 function onPointerCancel() {
+  if (!drag) return;
   drag = null;
+  const to = clampIndex(Math.round(pos.value));
+  go(to);
+  settle(to);
 }
 </script>
 
@@ -279,7 +373,6 @@ function onPointerCancel() {
   bottom: 72px;
   width: var(--w);
   transform-style: preserve-3d;
-  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.3s ease;
   will-change: transform, opacity;
   cursor: pointer;
 }
@@ -318,7 +411,6 @@ function onPointerCancel() {
   .hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .glow,
-  .item { transition: none; }
+  .glow { transition: none; }
 }
 </style>
