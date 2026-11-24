@@ -12,6 +12,9 @@
     <Transition name="fade">
       <button v-if="!holding && !secretOpen && !loading" type="button" class="room__shutter" aria-label="Take a shelfie" title="Take a shelfie (P)" @click="shelfie"><i class="pi pi-camera"></i></button>
     </Transition>
+    <Transition name="fade">
+      <RouterLink v-if="!holding && !secretOpen && !loading" :to="{ name: 'SettingsShelf' }" class="room__shutter room__gear" aria-label="Shelf settings" title="Shelf settings"><i class="pi pi-cog"></i></RouterLink>
+    </Transition>
     <Transition name="snap"><div v-if="flash" class="room__flash"></div></Transition>
 
     <Transition name="card">
@@ -137,10 +140,9 @@ function putBack() {
 }
 const stamp = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 function shelfie() {
-  if (!room || holding.value || secretOpen.value) return;
+  if (!room || holding.value || secretOpen.value || !room.takeShelfie()) return;
   flash.value = true;
   setTimeout(() => { flash.value = false; }, 160);
-  room.takeShelfie();
 }
 function turn(step: number) {
   room?.showPage(page.value + step);
@@ -256,11 +258,12 @@ onBeforeUnmount(() => {
 .room__title h1 { margin: 0; font-size: clamp(26px, 3.2vw, 38px); font-weight: 900; line-height: 1; letter-spacing: -0.03em; color: #fff; text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); }
 .room__title p { margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #94a3b8; }
 
-.room__hint { position: absolute; left: 32px; bottom: 20px; z-index: 3; margin: 0; font-size: 12px; font-weight: 700; color: #64748b; pointer-events: none; }
+.room__hint { position: absolute; left: 84px; bottom: 28px; z-index: 3; margin: 0; font-size: 12px; font-weight: 700; color: #64748b; pointer-events: none; }
 .room__hint kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.12); font: inherit; font-size: 11px; line-height: 18px; text-align: center; color: #94a3b8; }
 
 .room__shutter { position: absolute; right: 32px; bottom: 18px; z-index: 3; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(10, 11, 16, 0.55); color: #e2e8f0; font-size: 16px; }
 .room__shutter:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+.room__gear { right: auto; left: 32px; text-decoration: none; }
 .room__flash { position: absolute; inset: 0; z-index: 6; background: #fff; pointer-events: none; }
 .snap-enter-active { transition: opacity 0.04s; }
 .snap-leave-active { transition: opacity 0.3s ease-out; }
@@ -327,6 +330,7 @@ onBeforeUnmount(() => {
   .room__title { left: 16px; top: 16px; }
   .room__hint { display: none; }
   .room__shutter { right: 16px; bottom: 16px; }
+  .room__gear { right: auto; left: 16px; }
   .room__card { right: 16px; left: 16px; top: auto; bottom: 16px; width: auto; padding: 16px 18px 18px; transform: none; }
   .card-enter-from { transform: translateY(24px); }
 }

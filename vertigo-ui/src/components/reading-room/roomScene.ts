@@ -91,6 +91,7 @@ interface Pickable {
   home: THREE.Vector3;
   homeQ: THREE.Quaternion;
   parent: THREE.Object3D;
+  flat?: boolean; // lying in a stack: it slides out level
   lift: number;
   reach: number; // how far in front of the camera it floats
   offsetX: number;
@@ -576,29 +577,63 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     g.traverse((o) => { if ((o as THREE.Mesh).isMesh) parts.push(o); });
     addLamp({ parts, lights: [{ light: bulb, max: power * 2.2 * NIGHT.lamp }], glows: [{ mat: shadeMat, max: 0.3 * NIGHT.lamp }, { mat: bulbMat, max: 1.2 }], on: true, level: 1 });
   }
+  /** A balanced-arm desk lamp: two jointed arms and a cone head aimed down at the desk. */
+  function deskLamp(x: number, y: number, z: number, turn: number, power: number) {
+    const g = new THREE.Group();
+    g.position.set(x, y, z);
+    g.rotation.y = turn;
+    scene.add(g);
+    const enamel = std(0xe9e4d8, 0.4, { metalness: 0.1, side: THREE.DoubleSide, emissive: 0xffc48a, emissiveIntensity: 0.1 }), joint = std(0x1c1e24, 0.5, { metalness: 0.4 });
+    const A = [0, 0.05], B = [0.06, 0.52], C = [-0.2, 0.9];
+    const aim = new THREE.Vector3(-0.35, -0.94, 0).normalize(), lean = Math.atan2(aim.x, -aim.y);
+    put(cyl(0.13, 0.14, 0.03, 32), enamel, 0, 0.015, 0, { parent: g });
+    put(cyl(0.02, 0.02, 0.05, 12), joint, 0, 0.045, 0, { parent: g });
+    for (const [[x0, y0], [x1, y1]] of [[A, B], [B, C]]) {
+      const len = Math.hypot(x1 - x0, y1 - y0), rot: [number, number, number] = [0, 0, Math.atan2(x0 - x1, y1 - y0)];
+      for (const dz of [-0.02, 0.02]) put(cyl(0.007, 0.007, len, 8), enamel, (x0 + x1) / 2, (y0 + y1) / 2, dz, { parent: g, rot });
+    }
+    for (const [jx, jy] of [A, B, C]) put(cyl(0.022, 0.022, 0.065, 16), joint, jx, jy, 0, { parent: g, rot: [Math.PI / 2, 0, 0] });
+    put(cyl(0.045, 0.13, 0.2, 32, true), enamel, C[0] + aim.x * 0.1, C[1] + aim.y * 0.1, 0, { parent: g, rot: [0, 0, lean] });
+    put(cyl(0.045, 0.045, 0.012, 24), enamel, C[0], C[1], 0, { parent: g, rot: [0, 0, lean], shadow: false });
+    const bulbMat = std(0xfff3d6, 0.4, { emissive: 0xffd9a0, emissiveIntensity: 1.6 });
+    put(sphere(0.04, 16, 12), bulbMat, C[0] + aim.x * 0.14, C[1] + aim.y * 0.14, 0, { parent: g, shadow: false });
+    const bulb = new THREE.SpotLight(0xffb36b, power * 2.2, 8, 1.0, 0.9, 1.3);
+    bulb.position.set(C[0] + aim.x * 0.14, C[1] + aim.y * 0.14, 0);
+    bulb.target.position.copy(bulb.position).add(aim);
+    bulb.castShadow = true; bulb.shadow.mapSize.set(512, 512); bulb.shadow.bias = -0.0006; bulb.shadow.radius = 4;
+    g.add(bulb, bulb.target);
+    mergeStatic(g);
+    const parts: THREE.Object3D[] = [];
+    g.traverse((o) => { if ((o as THREE.Mesh).isMesh) parts.push(o); });
+    addLamp({ parts, lights: [{ light: bulb, max: power * 2.2 * NIGHT.lamp }], glows: [{ mat: enamel, max: 0.1 * NIGHT.lamp }, { mat: bulbMat, max: 1.6 }], on: true, level: 1 });
+  }
   const leafShape = new THREE.Shape();
   leafShape.moveTo(0, 0);
   leafShape.bezierCurveTo(0.28, 0.12, 0.34, 0.55, 0, 0.9);
   leafShape.bezierCurveTo(-0.34, 0.55, -0.28, 0.12, 0, 0);
   const leafGeo = keep(new THREE.ExtrudeGeometry(leafShape, { depth: 0.008, bevelEnabled: false, curveSegments: 10 }));
   const UP = new THREE.Vector3(0, 1, 0);
-  function plant(x: number, z: number, h: number, tall = false, parent: THREE.Object3D = scene) {
+  function plant(x: number, z: number, h: number, tall = false) {
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
+    scene.add(g);
     const pot = std(0xb8705a, 0.75, { bumpMap: plasterGrain, bumpScale: 0.01 });
-    put(keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.2, 0), new THREE.Vector2(0.26, 0.36), new THREE.Vector2(0.29, 0.38), new THREE.Vector2(0.29, 0.44), new THREE.Vector2(0.24, 0.44)], 32)), pot, x, 0, z, { parent });
-    put(cyl(0.23, 0.23, 0.02, 24), std(0x2b2016, 1), x, 0.43, z, { parent, shadow: false });
+    put(keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.2, 0), new THREE.Vector2(0.26, 0.36), new THREE.Vector2(0.29, 0.38), new THREE.Vector2(0.29, 0.44), new THREE.Vector2(0.24, 0.44)], 32)), pot, 0, 0, 0, { parent: g });
+    put(cyl(0.23, 0.23, 0.02, 24), std(0x2b2016, 1), 0, 0.43, 0, { parent: g, shadow: false });
     const leaves = tall ? 14 : 9;
     const stem = std(0x3f5c36, 0.9);
     for (let i = 0; i < leaves; i++) {
       const a = i * 2.39996 + rng() * 0.3;
       const size = (tall ? 0.6 : 0.42) * (0.75 + rng() * 0.5), rise = tall ? 0.6 + (i / leaves) * h * 1.3 : 0.4 + rng() * 0.25;
       const tilt = tall ? 0.55 + rng() * 0.5 : 0.9 + rng() * 0.5;
-      const leaf = put(leafGeo, std(i % 3 ? 0x4f7f4b : 0x5d9256, 0.85), x + Math.cos(a) * 0.08, rise, z + Math.sin(a) * 0.08, { parent });
+      const leaf = put(leafGeo, std(i % 3 ? 0x4f7f4b : 0x5d9256, 0.85), Math.cos(a) * 0.08, rise, Math.sin(a) * 0.08, { parent: g });
       leaf.rotation.set(-tilt, 0, 0);
       leaf.rotateOnWorldAxis(UP, -a + Math.PI / 2);
       leaf.scale.set(size, size, 1);
-      if (tall) put(cyl(0.012, 0.016, rise - 0.4, 8), stem, x + Math.cos(a) * 0.03, 0.4 + (rise - 0.4) / 2, z + Math.sin(a) * 0.03, { parent, shadow: false });
+      if (tall) put(cyl(0.012, 0.016, rise - 0.4, 8), stem, Math.cos(a) * 0.03, 0.4 + (rise - 0.4) / 2, Math.sin(a) * 0.03, { parent: g, shadow: false });
     }
-    if (parent === scene) blob(x, z, 1.1, 1.1, 0.35);
+    blob(x, z, 1.1, 1.1, 0.35);
+    mergeStatic(g);
   }
   /** A comic as a slim hardcover: cover board and spine, then page block and back board. Groups: cover, pages. */
   function comicGeometry(w: number, h: number, d: number) {
@@ -969,8 +1004,14 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   put(drapeGeo, drape, -0.27, 3.72, BZ + 0.3, { shadow: false }); put(drapeGeo, drape, 3.47, 3.72, BZ + 0.3, { shadow: false });
   put(cyl(0.02, 0.02, 4.6, 12), brassMat, 1.6, 5.42, BZ + 0.3, { rot: [0, 0, Math.PI / 2] });
   put(sphere(0.04, 12, 10), brassMat, -0.7, 5.42, BZ + 0.3); put(sphere(0.04, 12, 10), brassMat, 3.9, 5.42, BZ + 0.3);
-  put(keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.08, 0), new THREE.Vector2(0.1, 0.12), new THREE.Vector2(0.11, 0.14), new THREE.Vector2(0.09, 0.14)], 24)), std(0xd6c9b4, 0.8), 2.6, 2.31, BZ + 0.2);
-  for (let i = 0; i < 7; i++) { const a = i * 2.4; const l = put(leafGeo, std(0x7aa86f, 0.8), 2.6 + Math.cos(a) * 0.02, 2.44, BZ + 0.2 + Math.sin(a) * 0.02); l.rotation.set(-1.1, 0, 0); l.rotateOnWorldAxis(UP, -a + Math.PI / 2); l.scale.set(0.14, 0.14, 1); }
+  // the pot on the sill picks up like the logo
+  const sillPot = new THREE.Group(); sillPot.position.set(2.6, 2.31, BZ + 0.2); scene.add(sillPot);
+  put(keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.08, 0), new THREE.Vector2(0.1, 0.12), new THREE.Vector2(0.11, 0.14), new THREE.Vector2(0.09, 0.14)], 24)), std(0xd6c9b4, 0.8), 0, 0, 0, { parent: sillPot });
+  for (let i = 0; i < 7; i++) { const a = i * 2.4; const l = put(leafGeo, std(0x7aa86f, 0.8), Math.cos(a) * 0.02, 0.13, Math.sin(a) * 0.02, { parent: sillPot }); l.rotation.set(-1.1, 0, 0); l.rotateOnWorldAxis(UP, -a + Math.PI / 2); l.scale.set(0.14, 0.14, 1); }
+  put(cyl(0.1, 0.1, 0.01, 24), std(0x2b2016, 1), 0, 0.134, 0, { parent: sillPot, shadow: false });
+  mergeStatic(sillPot);
+  pickables.push(sillPot);
+  states.set(sillPot, { item: null, home: sillPot.position.clone(), homeQ: sillPot.quaternion.clone(), parent: scene, lift: 0, reach: 0.9, offsetX: 0, offsetY: -0.1, tilt: 1.4, glow: 0.6, spin: 0, pop: 0, out: new THREE.Vector3(0, 0.5, 1), flat: true });
 
   // ---- the shelves and the comics -------------------------------------------------------------
   const shelfWood = woodTexture(22, false);
@@ -1071,7 +1112,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   // the shelf holds the issues; the series stand elsewhere in the room as props
   const shelfItems: RoomItem[] = issues.length ? issues : byLove;
   const faceOut = shelfItems.slice(0, onShelves);
-  total = faceOut.length + Math.min(3, byLove.length) + Math.min(4, byLove.length);
+  total = faceOut.length + Math.min(3, byLove.length);
   const bump = () => { loaded++; options.onProgress?.(loaded, total); };
   const faceGeo = comicGeometry(FACE.w, FACE.h, FACE.d);
   const slots: { mesh: THREE.Mesh; row: number; col: number }[] = [];
@@ -1095,7 +1136,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   function showPage(page: number) {
     const target = ((page % pageCount) + pageCount) % pageCount;
     const now = performance.now() / 1000;
-    if (target === currentPage || now < busyUntil || secret !== "closed") return;
+    if (target === currentPage || now < busyUntil || secret !== "closed" || developing) return;
     if (focused && slots.some((slot) => slot.mesh === focused)) putBack();
     currentPage = target;
     for (const { mesh, row, col } of slots) {
@@ -1116,7 +1157,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   }
   options.onPage?.(0, pageCount, false);
 
-  // ---- the desk under the window: a screen, keyboard, headphones, a stack of comics, the lamp ---------
+  // ---- the desk under the window: a screen, keyboard, headphones, the desk lamp ---------
   put(box(4.0, 0.1, 0.85, 0.03), walnut, 1.6, 1.0, BZ + 0.55);
   put(box(1.2, 0.72, 0.78, 0.02), walnut, 2.9, 0.59, BZ + 0.55);
   for (let k = 0; k < 2; k++) { put(box(1.08, 0.3, 0.03, 0.01), std(0x3a2a1c, 0.6, { map: shelfWood }), 2.9, 0.42 + k * 0.34, BZ + 0.96, { shadow: false }); put(sphere(0.025, 12, 10), brassMat, 2.9, 0.42 + k * 0.34, BZ + 0.99, { shadow: false }); }
@@ -1131,6 +1172,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const rainDrops = Array.from({ length: rainCols }, () => Math.floor(rng() * (RAIN.h / RAIN.step)));
   const rainLast: string[] = Array.from({ length: rainCols }, () => "");
   let rainAt = 0;
+  const rainLogo = new Path2D("M419 93L373 119L372 135L338 213L317 227L320 282L358 260L419 112ZM293 122L293 104L292 104L262 119L264 137L301 218L322 207L320 185ZM392 77L347 104L347 122L320 185L320 206L302 216L266 135L266 119L293 104L248 77L221 93L221 113L281 260L320 282L320 227L338 216L337 216L374 135L374 119L419 93Z"); // the Vertigo mark, a hole in the rain
   function rainStep() {
     const g = rainCtx;
     if (!g) return;
@@ -1148,6 +1190,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
       if (y > RAIN.h && rng() > 0.975) { rainDrops[i] = 0; rainLast[i] = ""; }
       rainDrops[i]++;
     }
+    g.fillStyle = "#000";
+    g.fill(rainLogo);
     screenTex.needsUpdate = true;
   }
   let screenMode: "rain" | "comedian" = "rain", comedianAt = 0;
@@ -1186,33 +1230,21 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const screenLight = new THREE.PointLight(0x9fb8ff, 1.3, 2.6, 2); screenLight.position.set(1.4, 1.8, BZ + 0.8); scene.add(screenLight);
   const keysTex = canvasTexture((g) => { g.fillStyle = "#1c1f26"; g.fillRect(0, 0, 256, 96); for (let r = 0; r < 4; r++) for (let c = 0; c < 14; c++) { g.fillStyle = "#2b2f3a"; g.beginPath(); g.roundRect(6 + c * 17.6, 8 + r * 21, 14, 16, 3); g.fill(); } }, 256, 96);
   put(box(0.92, 0.035, 0.32, 0.01), std(0xffffff, 0.6, { map: keysTex }), 1.35, 1.07, BZ + 0.78);
-  put(capsule(0.035, 0.05, 6, 14), std(0x23262e, 0.4, { metalness: 0.2 }), 2.0, 1.085, BZ + 0.8, { rot: [Math.PI / 2, 0, 0] });
+  const mouse3d = new THREE.Group(); mouse3d.position.set(2.0, 1.062, BZ + 0.8); mouse3d.rotation.y = 0.15; scene.add(mouse3d);
+  put(keep(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)), std(0x23262e, 0.4, { metalness: 0.2 }), 0, 0, 0, { parent: mouse3d }).scale.set(0.032, 0.03, 0.055);
+  put(cyl(0.006, 0.006, 0.006, 12), std(0x8a8f99, 0.5), 0, 0.0265, -0.025, { parent: mouse3d, rot: [0, 0, Math.PI / 2], shadow: false });
+  put(box(0.0015, 0.004, 0.03, 0.0005), std(0x0e0f13, 0.6), 0, 0.021, -0.04, { parent: mouse3d, rot: [-0.5, 0, 0], shadow: false });
   put(box(1.6, 0.012, 0.6, 0.006), std(0x1a1e27, 0.95, { bumpMap: clothGrain, bumpScale: 0.004 }), 1.55, 1.056, BZ + 0.7, { shadow: false });
   const hp = new THREE.Group(); hp.position.set(0.25, 1.05, BZ + 0.5); scene.add(hp);
   put(cyl(0.09, 0.1, 0.02, 24), std(0x23262e, 0.5, { metalness: 0.3 }), 0, 0.01, 0, { parent: hp });
   put(cyl(0.012, 0.012, 0.36, 10), std(0x23262e, 0.5, { metalness: 0.3 }), 0, 0.2, 0, { parent: hp });
   put(keep(new THREE.TorusGeometry(0.13, 0.016, 10, 28, Math.PI)), std(0x2d3039, 0.6), 0, 0.37, 0, { parent: hp, rot: [0, 0, 0] });
   put(cyl(0.07, 0.07, 0.05, 24), std(0x2d3039, 0.6), -0.13, 0.36, 0, { parent: hp, rot: [0, 0, Math.PI / 2] }); put(cyl(0.07, 0.07, 0.05, 24), std(0x2d3039, 0.6), 0.13, 0.36, 0, { parent: hp, rot: [0, 0, Math.PI / 2] });
-  const flatGeo = comicGeometry(FACE.w, FACE.h, FACE.d * 0.7);
-  const deskStack = byLove.slice(0, 4).map((s, i) => {
-    const m = new THREE.Mesh(flatGeo.geo, [coverMaterial(s, bump, true), ghostPages]);
-    m.position.set(-0.05 + (i % 2) * 0.03, 1.05 + 0.035 + i * 0.068, BZ + 0.75 + (i % 3) * 0.02);
-    m.rotation.set(-Math.PI / 2, 0, 0.5 + (rng() - 0.5) * 0.2);
-    m.castShadow = true;
-    m.receiveShadow = true;
-    scene.add(m);
-    return m;
-  });
   const mugMat = std(0xd9d2c3, 0.45, { bumpMap: plasterGrain, bumpScale: 0.003 });
   put(keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.09, 0), new THREE.Vector2(0.1, 0.03), new THREE.Vector2(0.105, 0.2), new THREE.Vector2(0.11, 0.22), new THREE.Vector2(0.095, 0.22), new THREE.Vector2(0.09, 0.03), new THREE.Vector2(0, 0.03)], 32)), mugMat, 2.45, 1.05, BZ + 0.8);
   put(keep(new THREE.TorusGeometry(0.055, 0.016, 10, 24, Math.PI)), mugMat, 2.56, 1.17, BZ + 0.8, { rot: [0, 0, -Math.PI / 2] });
   put(cyl(0.085, 0.085, 0.004, 24), std(0x3b2a1a, 0.5), 2.45, 1.25, BZ + 0.8, { shadow: false });
-  lamp(3.3, 1.05, BZ + 0.7, 0.78, 0.27, 16, false, true);
-  const overflow = Math.max(0, shelfItems.length - faceOut.length);
-  if (overflow > 0) {
-    const cardboard = std(0xe6dcc4, 0.9, { bumpMap: clothGrain, bumpScale: 0.004 });
-    for (let i = 0; i < Math.min(2, Math.ceil(overflow / 100)); i++) { put(box(1.0, 0.42, 0.42, 0.02), cardboard, 0.9 + i * 0.03, 0.21 + i * 0.44, BZ + 0.52); put(box(0.98, 0.01, 0.4, 0.004), std(0xcfc3a8, 1), 0.9 + i * 0.03, 0.42 + i * 0.44, BZ + 0.52, { shadow: false }); }
-  }
+  deskLamp(3.3, 1.05, BZ + 0.5, 0.35, 16);
 
   // ---- the right side: cabinet with a console and figures, a wall of framed covers ---------
   put(box(2.3, 1.15, 0.6, 0.02), walnut, 4.6, 0.575, BZ + 0.35);
@@ -1220,7 +1252,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   for (const x of [4.05, 5.15]) { put(box(1.0, 0.8, 0.03, 0.008), std(0x3a2a1c, 0.6, { map: shelfWood }), x, 0.55, BZ + 0.66, { shadow: false }); put(box(0.05, 0.16, 0.02, 0.006), brassMat, x + (x < 4.6 ? 0.4 : -0.4), 0.55, BZ + 0.69, { shadow: false }); }
   blob(4.6, BZ + 0.5, 2.7, 1.1, 0.45);
   byLove.slice(7, 10).forEach((s, i) => addComic(s, faceGeo.geo, 3.75 + i * 0.6, 1.185 + FACE.h / 2, BZ + 0.2 + i * 0.03, scene, bump, true));
-  const syncBodies = [bodyInstances(faceGeo.body, faceComics), bodyInstances(flatGeo.body, deskStack)];
+  const syncBodies = [bodyInstances(faceGeo.body, faceComics)];
   const consoleMat = std(0xd8d4c8, 0.55), consoleDark = std(0x2a2d35, 0.6);
   put(box(0.44, 0.09, 0.3, 0.015), consoleMat, 5.45, 1.23, BZ + 0.42);
   put(box(0.3, 0.012, 0.06, 0.004), consoleDark, 5.45, 1.28, BZ + 0.36, { shadow: false });
@@ -1303,7 +1335,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     }
   }, 256, 256);
   const clockDark = std(0x15171c, 0.45, { metalness: 0.3 });
-  put(cyl(clockR - 0.006, clockR - 0.006, 0.03, 64), std(0xffffff, 0.65, { map: clockFace }), 0, 0, 0.015, { parent: clock, rot: [Math.PI / 2, 0, 0], shadow: false });
+  put(cyl(clockR - 0.006, clockR - 0.006, 0.03, 64), [clockDark, std(0xffffff, 0.65, { map: clockFace }), clockDark], 0, 0, 0.015, { parent: clock, rot: [Math.PI / 2, 0, 0], shadow: false });
   put(keep(new THREE.TorusGeometry(clockR, 0.014, 10, 96)), clockDark, 0, 0, 0.03, { parent: clock, shadow: false });
   const hand = (w: number, len: number, mat: THREE.Material, z: number, tail = 0.03) => {
     const geo = box(w, len + tail, 0.005, 0.002).translate(0, (len - tail) / 2, 0);
@@ -1354,17 +1386,13 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   chair.rotation.y = 0.5;
   scene.add(chair);
   put(box(1.5, 0.46, 1.4, 0.12), fabric, 0, 0.45, 0, { parent: chair });
-  put(box(1.36, 0.2, 1.16, 0.09), cushion, 0, 0.78, 0.06, { parent: chair });
+  put(box(1.36, 0.24, 1.16, 0.115), cushion, 0, 0.79, 0.06, { parent: chair });
   const back = put(box(1.5, 1.3, 0.4, 0.16), fabric, 0, 1.08, -0.62, { parent: chair });
   back.rotation.x = -0.12;
-  for (const [bx, by] of [[-0.35, 1.2], [0.35, 1.2], [0, 0.85]]) put(sphere(0.035, 10, 8), std(0x224247, 0.9), bx, by, -0.42, { parent: chair, shadow: false });
   const arm = capsule(0.17, 1.1, 8, 20);
   put(arm, fabric, -0.68, 0.78, 0.02, { parent: chair, rot: [Math.PI / 2, 0, 0] }); put(arm, fabric, 0.68, 0.78, 0.02, { parent: chair, rot: [Math.PI / 2, 0, 0] });
-  const footGeo = cyl(0.03, 0.045, 0.26, 12);
-  for (const [dx, dz] of [[-0.6, -0.55], [0.6, -0.55], [-0.6, 0.55], [0.6, 0.55]]) { const f = put(footGeo, dark, dx, 0.13, dz, { parent: chair }); f.rotation.set(dz * 0.12, 0, -dx * 0.12); }
-  const throwMat = std(0xc4694a, 0.95, { bumpMap: clothGrain, bumpScale: 0.015 });
-  put(box(0.5, 0.05, 0.9, 0.025), throwMat, -0.7, 0.98, 0.1, { parent: chair, rot: [0, 0, 0.08] });
-  put(box(0.05, 0.6, 0.86, 0.025), throwMat, -0.92, 0.66, 0.1, { parent: chair });
+  const footGeo = cyl(0.04, 0.025, 0.26, 12), footMat = std(0x6b4a2e, 0.55);
+  for (const [dx, dz] of [[-0.6, -0.55], [0.6, -0.55], [-0.6, 0.55], [0.6, 0.55]]) { const f = put(footGeo, footMat, dx, 0.13, dz, { parent: chair }); f.rotation.set(dz * 0.12, 0, -dx * 0.12); }
   blob(3.9, 0.9, 2.8, 2.8, 0.5);
   put(box(2.6, 0.02, 2.4, 0.01), std(0x262a33, 0.98, { bumpMap: clothGrain, bumpScale: 0.01 }), 3.4, 0.01, 1.0, { shadow: false, rot: [0, 0.5, 0] });
   const tableTop = keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.36, 0), new THREE.Vector2(0.38, 0.03), new THREE.Vector2(0.36, 0.06), new THREE.Vector2(0, 0.06)], 40));
@@ -1372,14 +1400,19 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   put(cyl(0.03, 0.04, 0.6, 14), dark, 2.2, 0.31, 1.7);
   put(keep(new THREE.LatheGeometry([new THREE.Vector2(0, 0), new THREE.Vector2(0.24, 0), new THREE.Vector2(0.22, 0.03), new THREE.Vector2(0.06, 0.06), new THREE.Vector2(0.04, 0.1)], 32)), dark, 2.2, 0, 1.7);
   blob(2.2, 1.7, 1.0, 1.0, 0.4);
-  const smallFlat = twoSided(new THREE.BoxGeometry(FACE.w * 0.9, FACE.d * 0.7, FACE.h * 0.9), 2); // the cover is the top
-  byLove.slice(4, 7).forEach((s, i) => {
-    const m = new THREE.Mesh(smallFlat, [coverMaterial(s, () => undefined, true), pages]);
-    m.position.set(2.1 + (i % 2) * 0.02, 0.68 + i * 0.065, 1.78);
-    m.rotation.y = 0.3 + (rng() - 0.5) * 0.3;
+  // the latest buys lie on the table, newest on top
+  const recent = issues.length ? issues.slice().sort((x, y) => (y.bought || y.added) - (x.bought || x.added)).slice(0, 3).reverse() : byLove.slice(4, 7);
+  const smallGeo = comicGeometry(FACE.w * 0.9, FACE.h * 0.9, FACE.d * 0.7).geo;
+  recent.forEach((s, i) => {
+    const m = new THREE.Mesh(smallGeo, [coverMaterial(s, () => undefined, true), pages]);
+    m.position.set(2.1 + (i % 2) * 0.02, 0.712 + i * 0.064, 1.78);
+    m.rotation.set(-Math.PI / 2, 0, 0.3 + (rng() - 0.5) * 0.3);
     m.castShadow = true;
     m.receiveShadow = true;
     scene.add(m);
+    pickables.push(m);
+    const top = i === recent.length - 1;
+    states.set(m, { item: s, home: m.position.clone(), homeQ: m.quaternion.clone(), parent: scene, lift: 0, reach: 2.2, offsetX: -0.3, offsetY: -0.05, tilt: 1, glow: 1, spin: 0, pop: 0, out: new THREE.Vector3(0, top ? 1 : 0, top ? 0 : 1), flat: true });
   });
   const pad = new THREE.Group(); pad.position.set(0.68, 0.96, 0.25); pad.rotation.y = -0.3; chair.add(pad);
   put(box(0.24, 0.04, 0.13, 0.015), std(0x23262e, 0.5), 0, 0, 0, { parent: pad });
@@ -1433,18 +1466,23 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const composer = new EffectComposer(renderer);
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
-  const gtao = new GTAOPass(scene, camera, container.clientWidth || 1, container.clientHeight || 1);
-  gtao.output = GTAOPass.OUTPUT.Default;
-  gtao.blendIntensity = 0.8;
-  gtao.updateGtaoMaterial({ radius: 0.24, distanceExponent: 1, thickness: 1, scale: 1, samples: 6, distanceFallOff: 1, screenSpaceRadius: false });
-  gtao.updatePdMaterial({ samples: 8 });  const AO_SCALE = 0.6;
+  function aoPass(cam: THREE.Camera, samples: number, denoise: number) {
+    const pass = new GTAOPass(scene, cam, 1, 1);
+    pass.output = GTAOPass.OUTPUT.Default;
+    pass.blendIntensity = 0.8;
+    pass.updateGtaoMaterial({ radius: 0.24, distanceExponent: 1, thickness: 1, scale: 1, samples, distanceFallOff: 1, screenSpaceRadius: false });
+    pass.updatePdMaterial({ samples: denoise });
+    // GTAO draws sprites as solid squares; hide them for its normal pass
+    const hidePointsAndLines = pass.overrideVisibility.bind(pass);
+    pass.overrideVisibility = () => { hidePointsAndLines(); for (const s of sprites) s.visible = false; };
+    return pass;
+  }
+  const gtao = aoPass(camera, 6, 8);
+  const AO_SCALE = 0.6;
   function fitAo(w: number, h: number) {
     const pr = renderer.getPixelRatio();
     gtao.setSize(Math.max(1, Math.round(w * pr * AO_SCALE)), Math.max(1, Math.round(h * pr * AO_SCALE)));
   }
-  // GTAO draws sprites as solid squares; hide them for its normal pass
-  const hidePointsAndLines = gtao.overrideVisibility.bind(gtao);
-  gtao.overrideVisibility = () => { hidePointsAndLines(); for (const s of sprites) s.visible = false; };
   composer.addPass(gtao);
   composer.addPass(new OutputPass());
 
@@ -1537,8 +1575,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   shelfCam.lookAt(-3.35, 2.62, BZ);
   const paper = std(0xf4f0e8, 0.9), pinMat = std(0xc0392b, 0.4);
   const photoGeo = twoSided(box(0.32, 0.5, 0.006, 0.002), 4), pinGeo = sphere(0.012, 10, 8);
+  let developing = false; // the shelf holds still while a shot's download file is made
   function takeShelfie(): RoomPhoto | null {
-    if (secret !== "closed") return null;
+    if (secret !== "closed" || developing) return null;
     const W = 1800, H = 2250;
     renderPass.camera = shelfCam; gtao.camera = shelfCam;
     renderer.setPixelRatio(1);
@@ -1546,10 +1585,11 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     composer.setSize(W, H);
     fitAo(W, H);
     composer.render();
-    // the canvas is read now and encoded off the main thread into a blob, so no multi-megabyte string is made
+    // this quick frame is the print on the wall; the download file is developed after it
     const taken = new Date(), img = new Image();
     const photo: Photo = { id: ++photoSeq, taken, url: "", mesh: new THREE.Mesh() };
-    renderer.domElement.toBlob((blob) => { if (!blob || disposed) return; photo.url = URL.createObjectURL(blob); img.src = photo.url; }, "image/jpeg", 0.92);
+    let draft = "";
+    renderer.domElement.toBlob((blob) => { if (!blob || disposed) return; draft = URL.createObjectURL(blob); img.src = draft; }, "image/jpeg", 0.92);
     renderPass.camera = camera; gtao.camera = camera;
     renderer.setPixelRatio(basePixelRatio);
     resize();
@@ -1577,7 +1617,85 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     while (photos.length > PINS.length) dropPhoto(photos.pop() as Photo);
     pinPhotos();
     retarget();
+    void develop(photo, () => draft);
     return { id: photo.id, taken, url: photo.url };
+  }
+  /** The file behind a shelfie's download: the same shot again at print quality, once the full covers are in. */
+  async function develop(photo: Photo, draft: () => string) {
+    developing = true;
+    options.onPage?.(currentPage, pageCount, true);
+    const sharp: { entry: CoverEntry; texture: THREE.Texture }[] = [];
+    let blob: Blob | null = null, closed = false;
+    try {
+      while (performance.now() / 1000 < busyUntil) await new Promise((r) => setTimeout(r, 60));
+      const entries = new Set<CoverEntry>();
+      for (const { mesh } of slots) { const e = mesh.visible ? coverOf(mesh) : undefined; if (e?.downscaled && !e.full) entries.add(e); }
+      const aniso = renderer.capabilities.getMaxAnisotropy();
+      const loads = Promise.all([...entries].map((entry) => loadCover(entry.url).then(({ texture }) => {
+        if (closed) { dropTexture(texture); return; }
+        texture.anisotropy = aniso;
+        sharp.push({ entry, texture });
+      }).catch(() => undefined)));
+      await Promise.race([loads, new Promise((r) => setTimeout(r, 2500))]);
+      if (!disposed && secret === "closed") blob = await printShot(sharp);
+    } catch (error) {
+      console.warn("The shelfie could not be developed at full quality", error);
+    } finally {
+      closed = true;
+      for (const { texture } of sharp) dropTexture(texture);
+      developing = false;
+    }
+    if (disposed) return;
+    if (!pageBusy) options.onPage?.(currentPage, pageCount, false);
+    const rough = draft();
+    photo.url = blob ? URL.createObjectURL(blob) : rough;
+    if (blob && rough) setTimeout(() => URL.revokeObjectURL(rough), 5000);
+    if (!photos.includes(photo)) setTimeout(() => URL.revokeObjectURL(photo.url), 2000);
+    else if (focused === photo.mesh) options.onPhoto?.({ id: photo.id, taken: photo.taken, url: photo.url });
+    wake();
+  }
+  /** The bookcase in tiles: full covers, finer shadows and occlusion, multisampled edges; everything is put back after. */
+  function printShot(sharp: { entry: CoverEntry; texture: THREE.Texture }[]): Promise<Blob | null> {
+    const FW = coarse ? 2160 : 2880, FH = FW * 1.25, N = 2, M = 64, tw = FW / N, th = FH / N, rw = tw + 2 * M, rh = th + 2 * M;
+    const out = document.createElement("canvas");
+    out.width = FW; out.height = FH;
+    const g = out.getContext("2d");
+    if (!g) return Promise.resolve(null);
+    const lights: { light: THREE.SpotLight; size: number }[] = [];
+    scene.traverse((o) => { const l = o as THREE.SpotLight; if (l.isLight && l.castShadow && l.shadow) lights.push({ light: l, size: l.shadow.mapSize.x }); });
+    const shadowSize = (l: THREE.SpotLight, n: number) => { l.shadow.mapSize.set(n, n); l.shadow.map?.dispose(); l.shadow.map = null; };
+    const hadShadows = renderer.shadowMap.enabled;
+    const target = new THREE.WebGLRenderTarget(rw, rh, { type: THREE.HalfFloatType, samples: Math.min(4, renderer.capabilities.maxSamples) });
+    const ao = aoPass(shelfCam, 16, 16), toScreen = new OutputPass();
+    let rig: EffectComposer | null = null;
+    try {
+      for (const { light } of lights) shadowSize(light, Math.min(renderer.capabilities.maxTextureSize, (light === keyLight ? 4096 : 2048) / (coarse ? 2 : 1)));
+      if (!hadShadows) setShadows(true);
+      for (const { entry, texture } of sharp) entry.mat.map = texture;
+      renderer.setPixelRatio(1);
+      renderer.setSize(rw, rh, false);
+      rig = new EffectComposer(renderer, target);
+      rig.addPass(new RenderPass(scene, shelfCam));
+      rig.addPass(ao);
+      rig.addPass(toScreen);
+      renderer.shadowMap.needsUpdate = true;
+      // each tile carries a margin that is cut off, so the occlusion has neighbours at the seams
+      for (let ty = 0; ty < N; ty++) for (let tx = 0; tx < N; tx++) {
+        shelfCam.setViewOffset(FW, FH, tx * tw - M, ty * th - M, rw, rh);
+        rig.render();
+        g.drawImage(renderer.domElement, M, M, tw, th, tx * tw, ty * th, tw, th);
+      }
+    } finally {
+      shelfCam.clearViewOffset();
+      rig?.dispose(); target.dispose(); ao.dispose(); toScreen.dispose();
+      for (const { entry } of sharp) entry.mat.map = entry.full ?? entry.small ?? entry.placeholder;
+      for (const { light, size } of lights) shadowSize(light, size);
+      if (!hadShadows) setShadows(false);
+      renderer.setPixelRatio(basePixelRatio);
+      resize();
+      shadowFrames = 2;
+    }
+    return new Promise((resolve) => out.toBlob(resolve, "image/jpeg", 0.95));
   }
   function pinPhotos() {
     photos.forEach((ph, i) => {
@@ -1616,14 +1734,15 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     detailLevel--;
     wake();
     if (detailLevel === 1) gtao.enabled = false;
-    if (detailLevel === 0) {
-      renderer.shadowMap.enabled = false;
-      scene.traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (!m.material) return;
-        (Array.isArray(m.material) ? m.material : [m.material]).forEach((mat) => { mat.needsUpdate = true; });
-      });
-    }
+    if (detailLevel === 0) setShadows(false);
+  }
+  function setShadows(on: boolean) {
+    renderer.shadowMap.enabled = on;
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.material) return;
+      (Array.isArray(m.material) ? m.material : [m.material]).forEach((mat) => { mat.needsUpdate = true; });
+    });
   }
 
   // ---- pointing, picking, the loop -------------------------------------------------------------------
@@ -1701,7 +1820,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6) {
       if (focused) putBack();
       else if (lampHot) lampHot.on = !lampHot.on;
-      else if (hovered) pickUp(hovered);
+      else if (hovered && !developing) pickUp(hovered);
       else if (secret === "open") closeSecret();
     }
     press = null;
@@ -1755,7 +1874,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     options.onHold?.(false);
   }
 
-  const tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler(), tiltQ = new THREE.Quaternion(), camGoal = new THREE.Vector3();
+  const tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler(), tiltQ = new THREE.Quaternion(), camGoal = new THREE.Vector3(), lookGoal = new THREE.Vector3(), camLook = new THREE.Vector3(CAM.tx, CAM.ty, CAM.tz);
   const footV = new THREE.Vector3(), lastFoot = { x: -1, y: -1 };
   function resize() {
     const w = container.clientWidth, h = container.clientHeight;
@@ -1789,7 +1908,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     camLean += (lean - camLean) * 0.06;
     camGoal.set(CAM.x + px * 0.35 + camPan, CAM.y + py * 0.18, CAM.z - camLean * 2.6);
     camera.position.lerp(camGoal, 0.05);
-    camera.lookAt(CAM.tx + px * 0.12 + camPan, CAM.ty + py * 0.08, CAM.tz);
+    lookGoal.set(CAM.tx + px * 0.12 + camPan, CAM.ty + py * 0.08, CAM.tz);
+    camLook.lerp(lookGoal, 0.05); // eased with the position, or leaving the stage snaps the view
+    camera.lookAt(camLook);
     if (now < shakeUntil) {
       const k = (shakeUntil - now) / 520;
       camera.position.x += (rng() - 0.5) * 0.45 * k; camera.position.y += (rng() - 0.5) * 0.32 * k;
@@ -1836,9 +1957,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
       } else if (m.parent === st.parent) {
         st.lift += ((m === hovered ? 1 : 0) - st.lift) * 0.15;
         tmpV.copy(st.home).addScaledVector(st.out, st.lift * 0.16 + st.pop);
-        tmpV.y += st.lift * 0.03;
         tmpE.setFromQuaternion(st.homeQ);
-        tmpE.x -= st.lift * 0.05;
+        if (!st.flat) { tmpV.y += st.lift * 0.03; tmpE.x -= st.lift * 0.05; }
         tmpE.y += st.spin;
         tmpQ.setFromEuler(tmpE);
         if (st.flip) { m.position.copy(tmpV); m.quaternion.copy(tmpQ); }
@@ -1926,7 +2046,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     // a frame that would match the last one is not drawn
     const near = (a: number, b: number, eps = 1e-3) => Math.abs(a - b) < eps;
     const busy = now < awake || shadowFrames > 0 || focused || secret === "opening" || secret === "closing" || burstT >= 0 || falling.length || clockDrag || now < shakeUntil || stepped
-      || signalLevel > 0.002 || camera.position.distanceToSquared(camGoal) > 6e-8 || !near(camLean, lean) || !near(gloom, blackout ? 1 : 0) || !near(handLight.intensity, 11 * glow, 0.01)
+      || signalLevel > 0.002 || camera.position.distanceToSquared(camGoal) > 6e-8 || camLook.distanceToSquared(lookGoal) > 6e-8 || !near(camLean, lean) || !near(gloom, blackout ? 1 : 0) || !near(handLight.intensity, 11 * glow, 0.01)
       || !near(caseSpot.intensity, spotWant * flicker, 0.01) || lamps.some((l) => !near(l.level, l.on ? 1 : 0));
     if (!busy) return;
     scene.updateMatrixWorld();

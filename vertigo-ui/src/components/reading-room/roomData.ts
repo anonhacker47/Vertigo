@@ -141,6 +141,7 @@ export interface RoomIssue {
   year: number | null;
   read: boolean;
   added: number;
+  bought: number;
   price: number | null;
   rgb: [number, number, number];
   cover: string;
@@ -164,6 +165,7 @@ function toRoomIssue(i: LibraryIssue): RoomIssue {
     year: i.cover_date ? new Date(i.cover_date).getFullYear() : null,
     read: !!i.is_read,
     added: i.timestamp ? new Date(i.timestamp).getTime() : 0,
+    bought: i.bought_date ? new Date(i.bought_date).getTime() : 0,
     price: i.bought_price ?? null,
     rgb: [70, 80, 110],
     cover: i.thumbnail ? IssueService.getIssueImageById(i.id, i.last_updated ?? undefined) : SeriesService.getSeriesImageById(i.series.id, i.series.last_updated ?? undefined),
