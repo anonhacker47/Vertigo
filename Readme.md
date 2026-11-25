@@ -10,7 +10,7 @@
 
   <strong>Live Demo:</strong> https://demo.vertigolabs.dev  
   <strong>Username:</strong> <code>demo</code> 
-  Password: <code>demo@2025</code>
+  Password: <code>demo@2026</code>
 
 </div>
 
