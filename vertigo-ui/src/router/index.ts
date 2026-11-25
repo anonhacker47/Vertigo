@@ -76,11 +76,7 @@ const router = createRouter({
           name: "SettingsIntegrations",
           component: () => import("@/components/settings/IntegrationsSettings.vue"),
         },
-        {
-          path: "shelf",
-          name: "SettingsShelf",
-          component: () => import("@/components/settings/ShelfSettings.vue"),
-        },
+        { path: "shelf", redirect: { name: "Shelf3D", query: { settings: "1" } } },
         {
           path: "data",
           name: "SettingsData",

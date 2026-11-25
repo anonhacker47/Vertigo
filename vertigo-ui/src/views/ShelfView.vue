@@ -1,6 +1,6 @@
 <template>
   <div class="room">
-    <div ref="stage" class="room__stage" :class="{ 'room__stage--hot': !!hovered, 'room__stage--on': !loading }"></div>
+    <div ref="stage" class="room__stage" :class="{ 'room__stage--hot': !!hovered, 'room__stage--on': !loading, 'room__stage--swap': swapping }"></div>
 
     <div class="room__title">
       <h1>3D shelf</h1>
@@ -13,7 +13,7 @@
       <button v-if="!holding && !secretOpen && !loading" type="button" class="room__shutter" aria-label="Take a shelfie" title="Take a shelfie (P)" @click="shelfie"><i class="pi pi-camera"></i></button>
     </Transition>
     <Transition name="fade">
-      <RouterLink v-if="!holding && !secretOpen && !loading" :to="{ name: 'SettingsShelf' }" class="room__shutter room__gear" aria-label="Shelf settings" title="Shelf settings"><i class="pi pi-cog"></i></RouterLink>
+      <button v-if="!holding && !secretOpen && !loading" type="button" class="room__shutter room__gear" aria-label="Shelf settings" title="Shelf settings" @click="settingsOpen = !settingsOpen"><i class="pi pi-cog"></i></button>
     </Transition>
     <Transition name="snap"><div v-if="flash" class="room__flash"></div></Transition>
 
@@ -22,7 +22,7 @@
         <h2>{{ character.title }}</h2>
         <p class="room__meta">in {{ character.series }} series</p>
         <RouterLink :to="{ name: 'CharacterDetail', params: { Id: character.id, Link: character.slug ?? 'character' } }" class="btn">Open character</RouterLink>
-        <RouterLink :to="{ name: 'SettingsShelf' }" class="link">Choose who stands here</RouterLink>
+        <button type="button" class="link" @click="chooseStandees">Choose who stands here</button>
         <button type="button" class="link" @click="putBack">Put it back</button>
       </aside>
     </Transition>
@@ -72,6 +72,8 @@
       </aside>
     </Transition>
 
+    <ShelfSettingsPanel v-model:visible="settingsOpen" :settings="settings" @saved="applySettings" />
+
     <Transition name="veil">
       <div v-if="loading" class="room__state">
         <i class="veil__glow"></i>
@@ -93,8 +95,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { arrangeShelf, loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import ShelfSettingsPanel from "@/components/reading-room/ShelfSettingsPanel.vue";
+import { arrangeShelf, loadRoomCharacters, loadRoomIssues, loadRoomSeries, loadRoomSummary, type RoomCharacter, type RoomIssue, type RoomItem, type RoomSeries } from "@/components/reading-room/roomData";
 import ShelfService from "@/services/ShelfService";
 import { SHELF_DEFAULTS, type ShelfSettings } from "@/types/shelf.types";
 import { createRoom, type RoomHandle, type RoomPhoto } from "@/components/reading-room/roomScene";
@@ -120,7 +124,15 @@ const secretOpen = ref(false);
 const photo = ref<RoomPhoto | null>(null);
 const character = ref<RoomCharacter | null>(null);
 const flash = ref(false);
+const settingsOpen = ref(false);
 let room: RoomHandle | null = null;
+let series: RoomSeries[] = [];
+let ownedIssues: RoomIssue[] = [];
+let ownedTotal = 0;
+const settings = shallowRef<ShelfSettings>(SHELF_DEFAULTS);
+const swapping = ref(false);
+const route = useRoute();
+const router = useRouter();
 
 const subtitle = computed(() => {
   if (!seriesCount.value) return "A quiet place for the collection.";
@@ -147,40 +159,33 @@ function shelfie() {
 function turn(step: number) {
   room?.showPage(page.value + step);
 }
+function chooseStandees() {
+  putBack();
+  settingsOpen.value = true;
+}
 function onKey(event: KeyboardEvent) {
+  if (settingsOpen.value) { if (event.key === "Escape") settingsOpen.value = false; return; }
   if (event.key === "Escape") putBack();
   else if (event.key === "ArrowLeft") turn(-1);
   else if (event.key === "ArrowRight") turn(1);
   else if (event.key === "p" || event.key === "P") shelfie();
 }
 
-onMounted(async () => {
-  document.addEventListener("keydown", onKey);
-  easeVeil();
-  let series: RoomSeries[];
-  let shelf: Awaited<ReturnType<typeof loadRoomIssues>> = { issues: [], total: 0 };
-  let settings: ShelfSettings = SHELF_DEFAULTS;
-  try {
-    const [result, issueResult, chosen] = await Promise.all([loadRoomSeries(), loadRoomIssues().catch(() => shelf), ShelfService.getSettings().catch(() => SHELF_DEFAULTS)]);
-    series = result.series;
-    settings = chosen;
-    shelf = { issues: arrangeShelf(issueResult.issues, series, settings), total: issueResult.total };
-    total.value = result.total;
-    target = Math.max(target, 18);
-  } catch (error) {
-    console.error("Failed to load the 3D shelf", error);
-    failed.value = "The collection could not be loaded.";
-    loading.value = false;
-    return;
-  }
-  seriesCount.value = series.length;
-  issues.value = shelf.total || series.reduce((sum, s) => sum + s.owned, 0);
+/** Stands the room up for the current settings; any room already there is taken down first. */
+function build() {
+  room?.dispose();
+  room = null;
+  picked.value = null; hovered.value = null; photo.value = null; character.value = null;
+  holding.value = false; secretOpen.value = false; page.value = 0; pages.value = 1; busy.value = false;
+  const shelf = arrangeShelf(ownedIssues, series, settings.value);
+  issues.value = ownedTotal || series.reduce((sum, s) => sum + s.owned, 0);
   if (!series.length || !stage.value) {
     loading.value = false;
     return;
   }
   try {
-    room = createRoom(stage.value, series, shelf.issues, {
+    room = createRoom(stage.value, series, shelf, {
+      finish: settings.value.finish,
       onProgress: (loaded, all) => {
         const done = Math.min(100, (loaded / all) * 100);
         target = done >= 60 ? 100 : Math.max(target, done); // from sixty the rest arrives behind the room
@@ -195,13 +200,53 @@ onMounted(async () => {
       onCharacter: (c) => { character.value = c; },
     });
     // a slow network still gets the room; the covers keep arriving behind it
+    clearTimeout(veilTimer);
     veilTimer = window.setTimeout(() => { target = 100; }, 6000);
     loadRoomSummary({ series: total.value, issues: issues.value }).then((summary) => room?.setSummary(summary)).catch(() => {});
-    loadRoomCharacters(settings.standees).then((list) => room?.setCharacters(list)).catch(() => {});
+    loadRoomCharacters(settings.value.standees).then((list) => room?.setCharacters(list)).catch(() => {});
   } catch (error) {
     console.error("The 3D shelf could not start", error);
     failed.value = "Your browser could not start the 3D room.";
     loading.value = false;
+  }
+}
+/** Settings show at once and in place: the bookcase is recoloured, the shelf turns over, standees are swapped. */
+function applySettings(next: ShelfSettings) {
+  const before = settings.value;
+  settings.value = next;
+  if (!room) return;
+  room.putBack();
+  if (before.finish !== next.finish) room.setFinish(next.finish);
+  if (JSON.stringify(before.standees) !== JSON.stringify(next.standees)) loadRoomCharacters(next.standees).then((list) => room?.setCharacters(list)).catch(() => {});
+  if (before.order === next.order && before.show === next.show && before.publisher === next.publisher) return;
+  if (room.setItems(arrangeShelf(ownedIssues, series, next))) return;
+  // the shelf was built with too few slots for this arrangement: a quick fade covers the rebuild
+  swapping.value = true;
+  window.setTimeout(() => { build(); swapping.value = false; }, 220);
+}
+
+onMounted(async () => {
+  document.addEventListener("keydown", onKey);
+  easeVeil();
+  try {
+    const [result, issueResult, chosen] = await Promise.all([loadRoomSeries(), loadRoomIssues().catch(() => ({ issues: [], total: 0 })), ShelfService.getSettings().catch(() => SHELF_DEFAULTS)]);
+    series = result.series;
+    settings.value = chosen;
+    ownedIssues = issueResult.issues;
+    ownedTotal = issueResult.total;
+    total.value = result.total;
+    target = Math.max(target, 18);
+  } catch (error) {
+    console.error("Failed to load the 3D shelf", error);
+    failed.value = "The collection could not be loaded.";
+    loading.value = false;
+    return;
+  }
+  seriesCount.value = series.length;
+  build();
+  if (route.query.settings) {
+    settingsOpen.value = true;
+    void router.replace({ query: {} });
   }
 });
 onBeforeUnmount(() => {
@@ -224,6 +269,7 @@ onBeforeUnmount(() => {
 }
 .room__stage { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease; }
 .room__stage--on { opacity: 1; }
+.room__stage--swap { opacity: 0; transition-duration: 0.2s; }
 .room__stage--hot { cursor: pointer; }
 .room__stage :deep(canvas) { display: block; }
 /* a soft vignette and a little grain over the render; both are stills, so they cost nothing per frame */

@@ -10,6 +10,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import smileyUrl from "@/assets/comedian-smiley.png";
 import type { RoomCharacter, RoomIssue, RoomItem, RoomSeries, RoomSummary } from "./roomData";
+import type { ShelfFinish } from "@/types/shelf.types";
 
 /** A shelfie: a straight-on photo of the bookcase, kept as a print on the wall and as a JPEG. */
 export interface RoomPhoto {
@@ -19,6 +20,8 @@ export interface RoomPhoto {
 }
 
 export interface RoomOptions {
+  /** The bookcase's colour. */
+  finish?: ShelfFinish;
   onPhoto?: (photo: RoomPhoto | null) => void;
   onCharacter?: (character: RoomCharacter | null) => void;
   /** The shelf shows one page of the collection at a time; this reports which, and when it is mid-turn. */
@@ -41,6 +44,10 @@ export interface RoomHandle {
   removePhoto(id: number): void;
   /** Stands pictures of these characters in the shelf's empty end slots. */
   setCharacters(list: RoomCharacter[]): void;
+  /** Recolours the bookcase in place. */
+  setFinish(finish: ShelfFinish): void;
+  /** Turns the shelf over to a new arrangement; false when it holds too few slots for it, and the room must be rebuilt. */
+  setItems(issues: RoomIssue[]): boolean;
   /** What the plaque in the secret says; it can arrive after the room is up. */
   setSummary(summary: RoomSummary | null): void;
   putBack(): void;
@@ -165,11 +172,30 @@ interface CoverEntry {
   url: string;
 }
 
+/** GTAO with three denoise rounds instead of one; a single round leaves a stipple wherever the pass darkens. */
+class SmoothAoPass extends GTAOPass {
+  private rounds = false;
+  renderPass(renderer: THREE.WebGLRenderer, material: THREE.ShaderMaterial, target: THREE.WebGLRenderTarget | null, clearColor?: THREE.ColorRepresentation, clearAlpha?: number) {
+    super.renderPass(renderer, material, target, clearColor, clearAlpha);
+    if (material !== this.pdMaterial || target !== this.pdRenderTarget || this.rounds) return;
+    this.rounds = true;
+    const u = this.pdMaterial.uniforms;
+    // each round turns the sample disc by another noise channel, back and forth between the two buffers
+    u.tDiffuse.value = this.pdRenderTarget.texture; u.index.value = 1;
+    super.renderPass(renderer, material, this.gtaoRenderTarget, 0xffffff, 1);
+    u.tDiffuse.value = this.gtaoRenderTarget.texture; u.index.value = 2;
+    super.renderPass(renderer, material, this.pdRenderTarget, 0xffffff, 1);
+    u.index.value = 0;
+    this.rounds = false;
+  }
+}
+
 export function createRoom(container: HTMLElement, series: RoomSeries[], issues: RoomIssue[], options: RoomOptions = {}): RoomHandle {
   const rng = mulberry32(21);
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   const coarse = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
-  const basePixelRatio = Math.min(coarse ? 2 : 1.5, window.devicePixelRatio || 1); // phones skip occlusion, so they can afford full density
+  // phones skip occlusion, so they can afford full density; a desktop at 1x is drawn oversize, or covers a few dozen pixels wide turn rough
+  const basePixelRatio = coarse ? Math.min(2, window.devicePixelRatio || 1) : Math.min(2, Math.max(1.25, window.devicePixelRatio || 1));
   renderer.setPixelRatio(basePixelRatio);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.04;
@@ -537,8 +563,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     const ys: number[] = [];
     const lips: Piece[] = [];
     for (let k = 0; k < shelves; k++) {
-      const y = 0.14 + k * ((height - 0.44) / shelves);
-      put(box(width - 2 * t, t, depth - t, 0.008), wood, 0, y + t / 2, t / 2, { parent: g });
+      const y = 0.14 + k * ((height - 0.252) / shelves); // every opening the same height, the top one included
+      // a little into the sides and the back panel: rounded edges that only touch leave a lit seam
+      put(box(width - 2 * t + 0.03, t, depth - t + 0.03, 0.008), wood, 0, y + t / 2, t / 2 - 0.015, { parent: g });
       lips.push({ geo: box(width - 2 * t, 0.012, 0.012, 0.004), x: 0, y: y + t + 0.006, z: depth / 2 - 0.01 });
       ys.push(y + t);
     }
@@ -547,8 +574,6 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     return { group: g, ys, inner: width - 2 * t - 0.12, backZ: -depth / 2 + t, back: backPanel };
   }
   /** A light you can switch: click any of its parts and its lights and glowing bits fade out, or back. */
-  /** Halos and flames; the occlusion pass would draw these as solid squares, so it skips them. */
-  const sprites: THREE.Sprite[] = [];
   interface Lamp { parts: THREE.Object3D[]; lights: { light: THREE.Light; max: number }[]; glows: { mat: THREE.MeshStandardMaterial; max: number }[]; on: boolean; level: number }
   const lamps: Lamp[] = [];
   const lampByMesh = new Map<THREE.Object3D, Lamp>();
@@ -1017,14 +1042,22 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const shelfWood = woodTexture(22, false);
   shelfWood.repeat.set(1.2, 1.2);
   const walnut = std(0xffffff, 0.62, { map: shelfWood, bumpMap: shelfWood, bumpScale: 0.015 });
-  const charcoal = std(0x1d1e23, 0.55, { metalness: 0.08, bumpMap: clothGrain, bumpScale: 0.005 }), charcoalBack = std(0x141519, 0.9, { bumpMap: plasterGrain, bumpScale: 0.01 });
-  const unit = shelfUnit(4.7, 5.25, 0.85, SHELF_ROWS, charcoal, charcoalBack);
+  let white = options.finish === "white";
+  const caseMat = std(0x1d1e23, 0.55, { bumpScale: 0.005 }), caseBack = std(0x141519, 0.9, { bumpScale: 0.01 });
+  // the grain that gives the dark finish some life reads as noise on white, so white goes smooth
+  function paintCase() {
+    caseMat.color.setHex(white ? 0xe6e3dc : 0x1d1e23); caseMat.roughness = white ? 0.5 : 0.55; caseMat.metalness = white ? 0 : 0.08; caseMat.bumpMap = white ? null : clothGrain;
+    caseBack.color.setHex(white ? 0xd9d6ce : 0x141519); caseBack.roughness = white ? 0.8 : 0.9; caseBack.bumpMap = white ? null : plasterGrain;
+    caseMat.needsUpdate = caseBack.needsUpdate = true;
+  }
+  paintCase();
+  const unit = shelfUnit(4.7, 5.51, 0.85, SHELF_ROWS, caseMat, caseBack);
   // the bookcase rides a lift: when the secret opens it sinks through the slot in the floor, out of sight
   const lift = new THREE.Group();
   lift.position.set(DOOR_X, 0, BZ + 0.43);
   scene.add(lift);
   lift.add(unit.group);
-  const LIFT_DROP = 5.5;
+  const LIFT_DROP = 5.8;
 
   // ---- the passage: lined a touch narrower than the cut so no plane is shared; landing, stairs, certificate ----
   const passage = new THREE.Group();
@@ -1110,7 +1143,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   const shelves = unit.ys.slice().reverse();
   const onShelves = FACE_PER_SHELF * shelves.length;
   // the shelf holds the issues; the series stand elsewhere in the room as props
-  const shelfItems: RoomItem[] = issues.length ? issues : byLove;
+  let shelfItems: RoomItem[] = issues.length ? issues : byLove;
   const faceOut = shelfItems.slice(0, onShelves);
   total = faceOut.length + Math.min(3, byLove.length);
   const bump = () => { loaded++; options.onProgress?.(loaded, total); };
@@ -1129,7 +1162,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     if (si === 3) logo(endX, y, unit.backZ + 0.2, 0.52, unit.group, -0.25, 0.22);
   });
   // turning the shelf over: each slot steps out, turns edge on, swaps its cover, turns back; staggered
-  const pageCount = Math.max(1, Math.ceil(shelfItems.length / SHELF_SLOTS));
+  let pageCount = Math.max(1, Math.ceil(shelfItems.length / SHELF_SLOTS));
   const noop = () => {};
   let currentPage = 0, busyUntil = 0, pageBusy = false;
   let recentPages = [0];
@@ -1137,6 +1170,10 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     const target = ((page % pageCount) + pageCount) % pageCount;
     const now = performance.now() / 1000;
     if (target === currentPage || now < busyUntil || secret !== "closed" || developing) return;
+    turnTo(target);
+  }
+  function turnTo(target: number) {
+    const now = performance.now() / 1000;
     if (focused && slots.some((slot) => slot.mesh === focused)) putBack();
     currentPage = target;
     for (const { mesh, row, col } of slots) {
@@ -1151,9 +1188,32 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
     wake();
     options.onPage?.(currentPage, pageCount, true);
     recentPages = [target, ...recentPages.filter((p) => p !== target)].slice(0, KEEP_PAGES);
+  }
+  /** Frees covers outside the recent pages; run once a turn is over, so nothing still standing goes blank. */
+  function sweepCovers() {
     const live = new Set<string>();
     for (const p of recentPages) for (let i = 0; i < SHELF_SLOTS; i++) { const s = shelfItems[p * SHELF_SLOTS + i]; if (s) live.add(`${s.kind}:${s.id}`); }
     for (const [key, entry] of coverMaterials) if (!entry.pinned && !live.has(key)) unloadCover(entry);
+  }
+  let reshelve = 0;
+  function setItems(next: RoomIssue[]) {
+    const items: RoomItem[] = next.length ? next : byLove;
+    if (Math.min(items.length, SHELF_SLOTS) > slots.length || secret !== "closed" || developing) return false;
+    // the first page's covers are fetched before the turn, so no slot flips to a placeholder
+    const request = ++reshelve, first = items.slice(0, SHELF_SLOTS);
+    let waiting = first.length;
+    const go = () => {
+      if (request !== reshelve || disposed) return;
+      reshelve++;
+      shelfItems = items;
+      pageCount = Math.max(1, Math.ceil(items.length / SHELF_SLOTS));
+      recentPages = [];
+      turnTo(0);
+    };
+    for (const item of first) coverMaterial(item, () => { if (--waiting === 0) go(); });
+    if (!first.length) go();
+    setTimeout(go, 2500);
+    return true;
   }
   options.onPage?.(0, pageCount, false);
 
@@ -1445,6 +1505,9 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(1536, 1536);
   keyLight.shadow.bias = -0.0004;
+  // nothing casts within 4 m of this light; at the default near plane the same bias pushed shadows some 10 cm off whatever cast them
+  keyLight.shadow.camera.near = 4;
+  keyLight.shadow.normalBias = 0.02;
   keyLight.shadow.radius = 6;
   scene.add(keyLight, keyLight.target);
   const pendantLight = new THREE.PointLight(0xffd2a8, 7, 8, 2);
@@ -1463,21 +1526,30 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   scene.add(windowLight);
 
   // ---- post: ambient occlusion seats everything on everything ----------------------------------------
-  const composer = new EffectComposer(renderer);
+  // multisampled: the renderer's own antialiasing never reaches a composer target
+  const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: coarse ? 0 : Math.min(4, renderer.capabilities.maxSamples) }));
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
   function aoPass(cam: THREE.Camera, samples: number, denoise: number) {
-    const pass = new GTAOPass(scene, cam, 1, 1);
+    const pass = new SmoothAoPass(scene, cam, 1, 1);
     pass.output = GTAOPass.OUTPUT.Default;
-    pass.blendIntensity = 0.8;
-    pass.updateGtaoMaterial({ radius: 0.24, distanceExponent: 1, thickness: 1, scale: 1, samples, distanceFallOff: 1, screenSpaceRadius: false });
-    pass.updatePdMaterial({ samples: denoise });
-    // GTAO draws sprites as solid squares; hide them for its normal pass
-    const hidePointsAndLines = pass.overrideVisibility.bind(pass);
-    pass.overrideVisibility = () => { hidePointsAndLines(); for (const s of sprites) s.visible = false; };
+    tuneAo(pass, samples, denoise);
     return pass;
   }
-  const gtao = aoPass(camera, 6, 8);
+  // on a white bookcase the darkening shows more, so it is kept tighter and fainter there
+  function tuneAo(pass: GTAOPass, samples: number, denoise: number) {
+    pass.blendIntensity = white ? 0.4 : 0.8;
+    pass.updateGtaoMaterial({ radius: white ? 0.14 : 0.24, distanceExponent: 1, thickness: 1, scale: 1, samples, distanceFallOff: 1, screenSpaceRadius: false });
+    pass.updatePdMaterial({ samples: denoise, radius: white ? 12 : 8 });
+  }
+  const gtao = aoPass(camera, white ? 12 : 6, white ? 16 : 8);
+  function setFinish(finish: ShelfFinish) {
+    if ((finish === "white") === white) return;
+    white = finish === "white";
+    paintCase();
+    tuneAo(gtao, white ? 12 : 6, white ? 16 : 8);
+    wake();
+  }
   const AO_SCALE = 0.6;
   function fitAo(w: number, h: number) {
     const pr = renderer.getPixelRatio();
@@ -1571,8 +1643,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
   let photoSeq = 0;
   const PINS = [[-0.72, 4.6], [-0.72, 3.86], [-0.72, 3.12]];
   const shelfCam = new THREE.PerspectiveCamera(44, 0.8, 0.1, 60);
-  shelfCam.position.set(-3.35, 2.75, BZ + 0.86 + 8.6);
-  shelfCam.lookAt(-3.35, 2.62, BZ);
+  shelfCam.position.set(-3.35, 2.88, BZ + 0.86 + 8.6);
+  shelfCam.lookAt(-3.35, 2.75, BZ);
   const paper = std(0xf4f0e8, 0.9), pinMat = std(0xc0392b, 0.4);
   const photoGeo = twoSided(box(0.32, 0.5, 0.006, 0.002), 4), pinGeo = sphere(0.012, 10, 8);
   let developing = false; // the shelf holds still while a shot's download file is made
@@ -1968,7 +2040,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
         }
       }
     }
-    if (pageBusy && now / 1000 >= busyUntil) { pageBusy = false; options.onPage?.(currentPage, pageCount, false); }
+    if (pageBusy && now / 1000 >= busyUntil) { pageBusy = false; sweepCovers(); options.onPage?.(currentPage, pageCount, false); }
     let stepped = false;
     if (now - rainAt > 150) { rainAt = now; stepped = true; if (screenMode === "rain") rainStep(); else comedianStep(now); }
     if (clockFlipped && now > midnightUntil) setMidnight(false);
@@ -2058,6 +2130,8 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
 
   return {
     showPage,
+    setFinish,
+    setItems,
     takeShelfie,
     removePhoto,
     setCharacters,
@@ -2080,6 +2154,7 @@ export function createRoom(container: HTMLElement, series: RoomSeries[], issues:
       gtao.dispose();
       composer.dispose();
       scene.environment?.dispose();
+      renderer.forceContextLoss(); // the room can be rebuilt many times in one visit
       renderer.dispose();
       el.remove();
     },

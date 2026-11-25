@@ -20,7 +20,7 @@
         <nav aria-label="Settings sections" class="min-w-0">
           <ul class="grid grid-cols-4 gap-1 lg:sticky lg:top-[calc(var(--spacing-header)+2rem)] lg:flex lg:flex-col">
             <li v-for="section in sections" :key="section.name" class="min-w-0">
-              <RouterLink :to="{ name: section.name }" class="nav-link" active-class="is-active">
+              <RouterLink :to="section.to ?? { name: section.name }" class="nav-link" active-class="is-active">
                 <i :class="section.icon" aria-hidden="true"></i>
                 <span class="min-w-0">
                   <span class="block truncate">{{ section.label }}</span>
@@ -42,16 +42,17 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
+import type { RouteLocationRaw } from "vue-router";
 import { useUserStore } from "@/store/user";
 import type { User } from "@/types/user.types";
 import AuthenticationService from "@/services/AuthenticationService";
 import fallbackAvatar from "@/assets/user.svg";
 
-const sections = [
+const sections: { name: string; label: string; hint: string; icon: string; to?: RouteLocationRaw }[] = [
   { name: "SettingsProfile", label: "Profile", hint: "Photo, name, email and currency", icon: "pi pi-user" },
   { name: "SettingsSecurity", label: "Security", hint: "Password", icon: "pi pi-lock" },
   { name: "SettingsIntegrations", label: "Integrations", hint: "Metron and MyAnimeList", icon: "pi pi-link" },
-  { name: "SettingsShelf", label: "3D shelf", hint: "Standees, order and what stands out", icon: "pi pi-box" },
+  { name: "Shelf3D", to: { name: "Shelf3D", query: { settings: "1" } }, label: "3D shelf", hint: "Opens the shelf and its settings", icon: "pi pi-box" },
   { name: "SettingsData", label: "Your data", hint: "Export, back up, restore or delete", icon: "pi pi-database" },
 ];
 

@@ -99,10 +99,14 @@ class ShelfSettingsTests(BaseTestCase):
     def test_defaults(self):
         rv = self.client.get('/api/me/shelf')
         assert rv.status_code == 200
-        assert rv.json == {'standees': None, 'order': 'publisher', 'show': 'all', 'publisher': None}
+        assert rv.json == {'standees': None, 'order': 'publisher', 'show': 'all', 'publisher': None, 'finish': 'charcoal'}
 
     def test_rejects_an_unknown_order(self):
         rv = self.client.put('/api/me/shelf', json={'order': 'colour'})
+        assert rv.status_code == 400
+
+    def test_rejects_an_unknown_finish(self):
+        rv = self.client.put('/api/me/shelf', json={'finish': 'oak'})
         assert rv.status_code == 400
 
     def test_rejects_too_many_standees(self):
@@ -127,9 +131,11 @@ class ShelfSettingsTests(BaseTestCase):
         db.session.commit()
         rv = self.client.put('/api/me/shelf', json={
             'standees': [abe.id, abe.id], 'order': 'unread', 'show': 'unread', 'publisher': dark_horse.id,
+            'finish': 'white',
         })
         assert rv.status_code == 200
-        assert rv.json == {'standees': [abe.id], 'order': 'unread', 'show': 'unread', 'publisher': dark_horse.id}
+        assert rv.json == {'standees': [abe.id], 'order': 'unread', 'show': 'unread', 'publisher': dark_horse.id,
+                           'finish': 'white'}
         rv = self.client.get('/api/me/shelf')
         assert rv.json['standees'] == [abe.id]
         assert rv.json['publisher'] == dark_horse.id

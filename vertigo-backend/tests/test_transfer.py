@@ -339,7 +339,8 @@ class TestBackupAndRestore(TransferTestCase):
         dc = db.session.scalar(Publisher.select().where(Publisher.user_id == self.user_id))
         self.assertNotEqual(constantine.id, self.constantine_id)
         self.assertEqual(self.me().shelf_settings,
-                         {'standees': [constantine.id], 'order': 'unread', 'show': 'all', 'publisher': dc.id})
+                         {'standees': [constantine.id], 'order': 'unread', 'show': 'all', 'publisher': dc.id,
+                          'finish': 'charcoal'})
 
     def test_a_failed_run_keeps_the_counts_it_reached(self):
         self.seed_collection()

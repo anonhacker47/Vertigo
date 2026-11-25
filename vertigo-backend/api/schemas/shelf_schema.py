@@ -3,8 +3,9 @@ from api import ma
 
 SHELF_ORDERS = ("publisher", "series", "newest", "unread")
 SHELF_SHOWS = ("all", "unread")
+SHELF_FINISHES = ("charcoal", "white")
 MAX_STANDEES = 2
-SHELF_DEFAULTS = {"standees": None, "order": "publisher", "show": "all", "publisher": None}
+SHELF_DEFAULTS = {"standees": None, "order": "publisher", "show": "all", "publisher": None, "finish": "charcoal"}
 
 
 class ShelfSettingsSchema(ma.Schema):
@@ -14,6 +15,7 @@ class ShelfSettingsSchema(ma.Schema):
     order = ma.String(load_default="publisher", validate=validate.OneOf(SHELF_ORDERS))
     show = ma.String(load_default="all", validate=validate.OneOf(SHELF_SHOWS))
     publisher = ma.Integer(allow_none=True, load_default=None)
+    finish = ma.String(load_default="charcoal", validate=validate.OneOf(SHELF_FINISHES))
 
 
 def shelf_settings(user) -> dict:
