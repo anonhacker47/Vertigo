@@ -1,11 +1,30 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { brotliCompressSync, gzipSync } from "node:zlib";
 import tailwindcss from '@tailwindcss/vite'
 
+const outDir = resolve(__dirname, "../vertigo-backend/api/wwwroot");
+
+// the backend serves these .gz/.br siblings as they are
+const precompress = (): Plugin => ({
+  name: "precompress",
+  apply: "build",
+  closeBundle() {
+    for (const entry of readdirSync(outDir, { recursive: true, withFileTypes: true })) {
+      if (!entry.isFile() || !/\.(js|css|svg|html|json)$/.test(entry.name)) continue;
+      const file = join(entry.parentPath, entry.name);
+      const data = readFileSync(file);
+      writeFileSync(`${file}.gz`, gzipSync(data, { level: 9 }));
+      writeFileSync(`${file}.br`, brotliCompressSync(data));
+    }
+  },
+});
+
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), tailwindcss(), precompress()],
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
@@ -17,13 +36,13 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "../vertigo-backend/api/wwwroot",
+    outDir,
     assetsDir: "static",
   },
   server: {
     host: true,
     cors: {
-      origin: ["http://127.0.0.1:5000","http://100.119.101.24:5166"],
+      origin: [],
       credentials: true,
     },
   },

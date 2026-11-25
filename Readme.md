@@ -38,23 +38,6 @@
 
 Feel free to reach out if you have anything else you'd like to see!
 
-## Getting Started:
-
-Vertigo has now entered its **Alpha release** stage! You can try it out by downloading the latest ZIP from the [releases section](https://github.com/anonhacker47/vertigo/releases).
-
-After extracting the ZIP, run the app using the appropriate script for your os:
-
-2. Run the app using the appropriate script for your operating system:
-
-- **Linux**:  
-  Run `launch.sh`
-
-- **Windows**:  
-  Run `launch.bat`
-
-This will set up and launch the webapp in http://localhost:6166
-<br/>
-
 ## Integrations:
 
 Vertigo can fetch series details, covers, creators and characters.
@@ -62,6 +45,24 @@ Vertigo can fetch series details, covers, creators and characters.
 - **Comics** come from [Metron](https://metron.cloud/). You'll need a Metron account and an API token. Paste it in under **Settings > Integrations** and comic search is good to go.
 
 - **Manga** comes from MyAnimeList through [Tenrai](https://tenrai.org/), a public mirror of MAL. Nothing to set up.
+
+<br/>
+
+## Getting Started:
+
+Vertigo has now entered its **Alpha release** stage! It runs as a single Docker container:
+
+```bash
+docker run -d --name vertigo -p 6166:6166 -v ./data:/data ghcr.io/anonhacker47/vertigo:latest
+```
+
+Or with Compose, using the `docker-compose.yml` in this repository:
+
+```bash
+docker compose up -d
+```
+
+Open http://localhost:6166.
 
 <br/>
 

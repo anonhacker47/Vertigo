@@ -22,7 +22,8 @@ class Config:
     ALCHEMICAL_ENGINE_OPTIONS = {'echo': as_bool(os.environ.get('SQL_ECHO'))}
 
     # security options
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'top-secret!')
+    # unset: a random key kept in DATA_DIR/secret_key
+    SECRET_KEY = os.environ.get('SECRET_KEY') or None
     DISABLE_AUTH = as_bool(os.environ.get('DISABLE_AUTH'))
     ACCESS_TOKEN_MINUTES = int(os.environ.get('ACCESS_TOKEN_MINUTES') or '60')
     REFRESH_TOKEN_DAYS = int(os.environ.get('REFRESH_TOKEN_DAYS') or '7')
@@ -32,6 +33,10 @@ class Config:
     RESET_TOKEN_MINUTES = int(os.environ.get('RESET_TOKEN_MINUTES') or '15')
     PASSWORD_RESET_URL = os.environ.get('PASSWORD_RESET_URL') or \
         'http://localhost:3000/reset'
+    # unset: Secure when the request came over https
+    COOKIE_SECURE = as_bool(os.environ['COOKIE_SECURE']) \
+        if os.environ.get('COOKIE_SECURE') else None
+    BEHIND_PROXY = as_bool(os.environ.get('BEHIND_PROXY'))
     USE_CORS = as_bool(os.environ.get('USE_CORS') or 'yes')
     CORS_SUPPORTS_CREDENTIALS = True
 

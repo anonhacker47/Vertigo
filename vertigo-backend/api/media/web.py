@@ -1,6 +1,6 @@
 import os
 
-from flask import jsonify, send_file, url_for
+from flask import jsonify, request, send_file, url_for
 
 from api.media.paths import resolve
 from api.media.storage import MediaError, store, remove
@@ -23,7 +23,12 @@ def send(user_id, relpath):
     path = resolve(user_id, relpath)
     if not path:
         return jsonify("Image file not found"), 404
-    return send_file(path)
+    if 't' not in request.args:
+        return send_file(path)
+    # a versioned URL never changes content
+    response = send_file(path, max_age=31536000)
+    response.cache_control.immutable = True
+    return response
 
 
 def apply_thumbnail_field(user_id, form, files, field: str, *, rel_dir: str,

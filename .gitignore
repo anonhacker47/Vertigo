@@ -31,3 +31,6 @@ vertigo-backend/api/fake.py
 vertigo-ui/.env.development
 vertigo-backend/api/wwwroot/*
 env/
+# docker
+/.env
+/data/

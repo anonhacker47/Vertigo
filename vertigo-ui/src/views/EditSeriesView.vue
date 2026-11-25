@@ -91,7 +91,7 @@ async function getSeries() {
       publisher: normalizeSingleEntity(response.publisher),
     };
 
-    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId)}`;
+    imagesrc.value = `${SeriesService.getSeriesImageById(seriesId, response.last_updated ?? undefined)}`;
     loaded.value = true;
   } catch (error) {
     console.error("Could not load series:", error);

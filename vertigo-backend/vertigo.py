@@ -1,6 +1,7 @@
 from api import create_app
 from waitress import serve
 import logging
+import os
 import sys
 logger = logging.getLogger('waitress')
 logger.setLevel(logging.DEBUG)
@@ -41,4 +42,4 @@ def convert_media_store():
 
 convert_media_store()
 
-serve(app, host='0.0.0.0', port=6166)
+serve(app, host='0.0.0.0', port=int(os.environ.get('VERTIGO_PORT') or 6166), threads=8)

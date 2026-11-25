@@ -1,0 +1,17 @@
+.git
+.github
+.vscode
+.env
+data
+docs
+*.md
+**/node_modules
+**/__pycache__
+vertigo-backend/env
+vertigo-backend/venv
+vertigo-backend/Config
+vertigo-backend/.env
+vertigo-backend/.flaskenv
+vertigo-backend/tests
+vertigo-backend/api/wwwroot
+vertigo-ui/.env.development

@@ -1,11 +1,12 @@
 import os
-from flask import Flask, redirect, send_file, send_from_directory, url_for, request, render_template
+from flask import Flask, redirect, url_for, request
 from alchemical.flask import Alchemical
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_mail import Mail
 from apifairy import APIFairy
 from config import Config
+from api.compression import gzip_json
 
 db = Alchemical()
 ma = Marshmallow()
@@ -15,14 +16,24 @@ apifairy = APIFairy()
 
 def create_app(config_class=Config):
     app = Flask(__name__,
-            static_folder = "./wwwroot/static",
+            static_folder = None,
             template_folder = "./wwwroot")
     app.config.from_object(config_class)
+
+    if app.config.get('BEHIND_PROXY'):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # DATA_DIR holds the sqlite db, the metron cache and every user image
     # (see api/media for the layout). Configurable via VERTIGO_DATA_DIR.
     from api import media
     os.makedirs(os.path.join(app.config['DATA_DIR'], media.USERS_DIR), exist_ok=True)
+
+    if not app.config.get('SECRET_KEY'):
+        from api.utils import secret_key
+        # tests must not write into the real data folder
+        app.config['SECRET_KEY'] = 'testing' if app.testing \
+            else secret_key.load(app.config['DATA_DIR'])
 
     # extensions
     from api import models  
@@ -90,33 +101,9 @@ def create_app(config_class=Config):
                 ctx[attr] = model
         return ctx
 
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>')
-    def index(path):
-        if path.startswith("api"):
-            return "Not found", 404
+    from api import static_files
+    static_files.register(app)
 
-        full_path = os.path.join(app.static_folder, path)
-        if os.path.exists(full_path) and not os.path.isdir(full_path):
-            return send_from_directory(app.static_folder, path)
-
-        return render_template('index.html')
-    
-    @app.route('/favicon.ico')
-    def favicon():
-        try:
-            favicon_path = os.path.join(app.root_path, 'wwwroot', 'favicon.ico')
-    
-            if not os.path.exists(favicon_path):
-                print(f"favicon.ico not found at {favicon_path}")
-                return '', 204  
-    
-            return send_file(favicon_path, mimetype='image/vnd.microsoft.icon')
-    
-        except Exception as e:
-            print(f"Error serving favicon.ico: {e}")
-            return '', 204  
-    
     @app.route('/api/docs')
     def docs(): 
         return redirect(url_for('apifairy.docs'))
@@ -124,7 +111,7 @@ def create_app(config_class=Config):
     @app.after_request
     def after_request(response):
         request.get_data()
-        return response
+        return gzip_json(response)
 
     from api.integrations.mokkari.task_queue import start_mokkari_workers
     start_mokkari_workers(app, num_workers=1)

@@ -43,7 +43,7 @@ const RULES: Record<string, Rule> = {
   title: { label: firstLetter },
   publisher: {
     label: (series) => series.publisher?.title || "No publisher",
-    image: (series) => (series.publisher?.id ? PublisherService.getPublisherImageById(series.publisher.id) : null),
+    image: (series) => (series.publisher?.id ? PublisherService.getPublisherImageById(series.publisher.id, series.publisher.last_updated) : null),
   },
   series_format: { label: (series) => series.series_format || "No format" },
   timestamp: { label: addedMonth },
