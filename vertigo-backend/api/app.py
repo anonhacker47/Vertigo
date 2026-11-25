@@ -1,3 +1,4 @@
+import mimetypes
 import os
 from flask import Flask, redirect, url_for, request
 from alchemical.flask import Alchemical
@@ -7,6 +8,11 @@ from flask_mail import Mail
 from apifairy import APIFairy
 from config import Config
 from api.compression import gzip_json
+
+# slim Docker images ship no system mime.types
+for _ext, _type in (('.webp', 'image/webp'), ('.woff', 'font/woff'), ('.woff2', 'font/woff2'),
+                    ('.ttf', 'font/ttf'), ('.eot', 'application/vnd.ms-fontobject')):
+    mimetypes.add_type(_type, _ext)
 
 db = Alchemical()
 ma = Marshmallow()

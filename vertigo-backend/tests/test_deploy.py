@@ -45,6 +45,7 @@ class CoverCacheTests(BaseTestCase):
 
     def test_versioned_url_is_immutable(self):
         rv = self.client.get(self.url + '?t=1')
+        self.assertEqual(rv.headers['Content-Type'], 'image/webp')
         cache = rv.headers['Cache-Control']
         self.assertIn('max-age=31536000', cache)
         self.assertIn('immutable', cache)
