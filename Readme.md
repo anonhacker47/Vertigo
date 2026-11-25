@@ -38,7 +38,7 @@
 - [x] Export User Data to commonly used formats like spreadsheets.
 - [x] Explore options to integrate with external APIs for automatic fetching of details.
 
-Feel free to reach out if you have anything else you'd like to see!
+Feel free to reach out if you have anything else you'd like to see! Open an [issue](https://github.com/anonhacker47/Vertigo/issues) for bugs and ideas, or email [hello@vertigolabs.dev](mailto:hello@vertigolabs.dev) for anything private.
 
 ## Integrations:
 
@@ -128,3 +128,6 @@ Voila! you can find the frontend at http://localhost:5173/
 ## Acknowledgements
 
 - **[Miguel Grinberg Microblog API](https://github.com/miguelgrinberg/microblog-api)**
+- **[Metron](https://metron.cloud/)** for the comic database API
+- **[Tenrai](https://tenrai.org/)** for the MyAnimeList manga API
+
