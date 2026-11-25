@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+VERSION = '0.1.0'
+
 
 def as_bool(value):
     if value:
@@ -44,7 +46,7 @@ class Config:
     raw_origins = os.environ.get('CORS_ORIGINS', '')
     CORS_ORIGINS = [origin.strip() for origin in raw_origins.split(',') if origin.strip()]  
 
-    PACKAGE_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
+    PACKAGE_VERSION = os.environ.get('PACKAGE_VERSION', VERSION)
 
     # Metron (mokkari)
     METRON_API_TOKEN = os.environ.get('METRON_API_TOKEN') or None
@@ -56,6 +58,6 @@ class Config:
 
     # API documentation
     APIFAIRY_TITLE = 'Vertigo API'
-    APIFAIRY_VERSION = '0.0.2'
+    APIFAIRY_VERSION = VERSION
     APIFAIRY_UI = os.environ.get('DOCS_UI', 'elements')
-    SERVER_VERSION = os.environ.get('PACKAGE_VERSION', '0.0.1')
+    SERVER_VERSION = PACKAGE_VERSION
