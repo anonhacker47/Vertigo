@@ -1,5 +1,5 @@
 <template>
-  <div class="relative h-screen flex justify-center items-center overflow-hidden">
+  <div class="relative h-[calc(100vh-var(--ribbon))] flex justify-center items-center overflow-hidden">
 
     <img src="../assets/logo.svg" alt="Background Logo" class="absolute inset-0 object-cover filter blur-sm opacity-10">
 
@@ -63,7 +63,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watchEffect } from "vue";
+import { useServerStore } from "@/store/server";
 import AuthenticationService from "../services/AuthenticationService";
 import PanelCardItem from "../components/cards/PanelCardItem.vue";
 import { useRouter } from "vue-router";
@@ -80,6 +81,11 @@ const showPassword = ref(false);
 const showPasswordConfirm = ref(false);
 
 const router = useRouter();
+const server = useServerStore();
+
+watchEffect(() => {
+  if (server.demo) router.replace("/login");
+});
 const toast = useToast(); // <-- Initialize toast
 
 async function register() {

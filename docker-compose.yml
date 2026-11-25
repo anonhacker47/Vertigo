@@ -7,6 +7,7 @@ services:
     init: true
     environment:
       BEHIND_PROXY: ${BEHIND_PROXY:-}
+      DEMO_MODE: ${DEMO_MODE:-}
       METRON_API_TOKEN: ${METRON_API_TOKEN:-}
       TENRAI_SERVER_KEY: ${TENRAI_SERVER_KEY:-}
     ports:

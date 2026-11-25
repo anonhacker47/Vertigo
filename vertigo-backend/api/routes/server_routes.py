@@ -24,13 +24,16 @@ class PingResponseSchema(ma.Schema):
     status = fields.String(required=True,)
     message = fields.String(required=True)
     version = fields.String(required=True)
+    demo = fields.Boolean(required=True)
 
 @server.route('/ping', methods=['GET'])
 @response(PingResponseSchema, description="Health check response")
 @other_responses({404: {'description': 'Server not reachable'}})
 def ping():
     """Health check route"""
-    return {'status': 'ok', 'message': 'Server is running','version': current_app.config['SERVER_VERSION']}, 200
+    return {'status': 'ok', 'message': 'Server is running',
+            'version': current_app.config['SERVER_VERSION'],
+            'demo': current_app.config['DEMO_MODE']}, 200
 
 series_schema = SeriesSchema(many=True)
 issue_schema = IssueSchema(many=True)

@@ -1,6 +1,6 @@
 <template>
   <div v-if="series" :key="series.id" class="select-none">
-    <div class="flex w-full flex-col md:h-[calc(100vh-var(--spacing-header))]">
+    <div class="flex w-full flex-col md:h-[calc(100vh-var(--spacing-header)-var(--ribbon))]">
 
       <nav class="hidden grid-cols-2 items-center gap-4 border-b border-slate-600 px-6 py-3 text-sm md:grid">
         <RouterLink v-if="neighbours.previous" :to="seriesRoute(neighbours.previous)" title="Previous series"
@@ -623,7 +623,7 @@ onUnmounted(() => {
 .bulk-bar {
   position: fixed;
   left: 50%;
-  bottom: 16px;
+  bottom: calc(16px + var(--ribbon));
   z-index: 40;
   display: flex;
   flex-wrap: wrap;

@@ -1,5 +1,15 @@
 import axios from "axios";
 import router from "../router";
+import ToastEventBus from "primevue/toasteventbus";
+
+let lastDemoToast = 0;
+
+// one toast even when a flow fires several blocked requests
+function demoToast() {
+  if (Date.now() - lastDemoToast < 3000) return;
+  lastDemoToast = Date.now();
+  ToastEventBus.emit("add", { severity: "warn", summary: "This demo is read-only", detail: "Changes are not saved.", life: 3000 });
+}
 
 export default () => {
   const axiosInstance = axios.create({
@@ -49,6 +59,10 @@ export default () => {
           router.push("/login");
           return Promise.reject(error as Error);
         }
+      }
+
+      if (error.response?.status === 403 && document.documentElement.classList.contains("demo")) {
+        demoToast();
       }
 
       return Promise.reject(error as Error);

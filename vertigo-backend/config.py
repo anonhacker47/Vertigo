@@ -25,6 +25,7 @@ class Config:
     # unset: a random key kept in DATA_DIR/secret_key
     SECRET_KEY = os.environ.get('SECRET_KEY') or None
     DISABLE_AUTH = as_bool(os.environ.get('DISABLE_AUTH'))
+    DEMO_MODE = as_bool(os.environ.get('DEMO_MODE'))
     ACCESS_TOKEN_MINUTES = int(os.environ.get('ACCESS_TOKEN_MINUTES') or '60')
     REFRESH_TOKEN_DAYS = int(os.environ.get('REFRESH_TOKEN_DAYS') or '7')
     REFRESH_TOKEN_IN_COOKIE = as_bool(os.environ.get(

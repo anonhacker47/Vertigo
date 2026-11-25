@@ -2,7 +2,9 @@
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import ConfirmModal from './components/modals/ConfirmModal.vue';
 import HeaderItem from "./components/common/HeaderItem.vue";
+import DemoRibbon from "./components/common/DemoRibbon.vue";
 import { useUserStore } from "./store/user";
+import { useServerStore } from "./store/server";
 import { onMounted, computed, ref, Ref } from "vue";
 import { useRoute } from "vue-router";
 import '@/assets/fonts/fonts.css'
@@ -19,6 +21,7 @@ const transparentHeader = computed(() => {
 });
 
 onMounted(() => {
+  useServerStore().load();
 });
 </script>
 
@@ -29,6 +32,7 @@ onMounted(() => {
       <HeaderItem v-cloak v-if="showNavbar" :transparentHeader="transparentHeader"></HeaderItem>
       <RouterView />
       <NotificationToast position="bottom-center" />
+      <DemoRibbon />
     </div>
   </ErrorBoundary>
 </template>

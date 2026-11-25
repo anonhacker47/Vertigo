@@ -101,7 +101,8 @@ def create_app(config_class=Config):
                 ctx[attr] = model
         return ctx
 
-    from api import static_files
+    from api import demo, static_files
+    demo.register(app)
     static_files.register(app)
 
     @app.route('/api/docs')

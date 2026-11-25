@@ -4,6 +4,22 @@
   themes: night;
 }
 
+:root {
+  --ribbon: 0px;
+}
+
+html.demo {
+  --ribbon: 28px;
+}
+
+html.demo body {
+  padding-bottom: var(--ribbon);
+}
+
+html.demo .p-toast-bottom-center {
+  bottom: calc(20px + var(--ribbon));
+}
+
 @theme {
   --spacing-header: 72px;
   --container-page: 90rem;

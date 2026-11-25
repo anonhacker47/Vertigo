@@ -262,8 +262,8 @@ onBeforeUnmount(() => {
 /* The room is one screen under the header. Everything else floats over the canvas. */
 .room {
   position: relative;
-  height: calc(100vh - var(--spacing-header, 72px));
-  height: calc(100dvh - var(--spacing-header, 72px));
+  height: calc(100vh - var(--spacing-header, 72px) - var(--ribbon));
+  height: calc(100dvh - var(--spacing-header, 72px) - var(--ribbon));
   overflow: hidden;
   background: #0a0b10;
 }

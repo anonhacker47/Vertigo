@@ -37,7 +37,7 @@
             class="bg-linear-to-r from-purple-500 to-indigo-500 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-lg transition-all duration-300 w-full py-3 rounded-xl" />
         </form>
 
-        <p class="text-sm font-light text-gray-500 dark:text-gray-400 mt-4 text-center">
+        <p v-if="!server.demo" class="text-sm font-light text-gray-500 dark:text-gray-400 mt-4 text-center">
           Don’t have an account yet?
           <RouterLink to="/register" class="text-blue-500 underline">
             Sign up
@@ -51,6 +51,7 @@
 <script setup lang="ts">
   import { ref, onMounted } from "vue";
   import { useUserStore } from "@/store/user";
+import { useServerStore } from "@/store/server";
 import { useRouter } from "vue-router";
 import AuthenticationService from "../services/AuthenticationService";
 import SeriesService from "../services/SeriesService";
@@ -62,6 +63,7 @@ import FloatLabel from "primevue/floatlabel";
 import Button from "primevue/button";
 
 const userStore = useUserStore();
+const server = useServerStore();
 const router = useRouter();
 
 const message = ref("");
@@ -113,7 +115,7 @@ onMounted(fetchBackground);
 <style scoped>
 .background-container {
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - var(--ribbon));
   position: relative;
   overflow: hidden;
 }
