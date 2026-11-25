@@ -15,14 +15,16 @@
 </div>
 
 
-<h3 align="center">Screenshot</h3>
+<h3 align="center">Screenshots</h3>
 
 <p align="center">
-  <img
-    alt="Vertigo Dashboard"
-    src="./.github/gifs/vertigo.gif"
-    width="90%"
-  />
+  <img alt="Vertigo Dashboard" src="./.github/images/dashboard.png" width="90%" />
+</p>
+<p align="center">
+  <img alt="Vertigo Collection" src="./.github/images/collection.png" width="90%" />
+</p>
+<p align="center">
+  <img alt="Vertigo Series" src="./.github/images/series.png" width="90%" />
 </p>
 
 > **⚠ Disclaimer ⚠**: Vertigo is WIP and under active development. Expect occasional bugs, incomplete features, and potential breaking changes as I add new features and improve functionality.
