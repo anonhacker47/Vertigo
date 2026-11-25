@@ -50,11 +50,10 @@ def full_sync():
     series = db.session.query(Series).filter_by(user_id=user_id).all()
     issues = db.session.query(Issue).join(Series).filter(Series.user_id == user_id).all()
 
-    # Related global data
-    genres = db.session.query(Genre).all()
-    publishers = db.session.query(Publisher).all()
-    creators = db.session.query(Creator).all()
-    characters = db.session.query(Character).all()
+    genres = db.session.query(Genre).filter_by(user_id=user_id).all()
+    publishers = db.session.query(Publisher).filter_by(user_id=user_id).all()
+    creators = db.session.query(Creator).filter_by(user_id=user_id).all()
+    characters = db.session.query(Character).filter_by(user_id=user_id).all()
 
     return jsonify({
         "series": series_schema.dump(series),

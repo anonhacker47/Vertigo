@@ -121,8 +121,8 @@ def create_stats_sheet(wb, df_series, df_issues):
     # === Summary Statistics ===
     total_series = len(df_series)
     total_issues = len(df_issues)
-    total_owned = (df_issues["Owned Already?"] == "Yes").sum()
-    total_read = (df_issues["Read Already?"] == "Yes").sum()
+    total_owned = (df_issues["Owned Already?"] == "Yes").sum() if total_issues else 0
+    total_read = (df_issues["Read Already?"] == "Yes").sum() if total_issues else 0
 
     percent_owned = round((total_owned / total_issues) * 100, 2) if total_issues else 0
     percent_read = round((total_read / total_issues) * 100, 2) if total_issues else 0
