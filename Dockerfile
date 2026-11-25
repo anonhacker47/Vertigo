@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:22-slim AS ui
+FROM node:22-slim AS ui
 WORKDIR /src/vertigo-ui
 COPY vertigo-ui/package.json vertigo-ui/package-lock.json ./
 RUN npm ci
