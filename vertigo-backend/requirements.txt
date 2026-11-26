@@ -28,7 +28,7 @@ click==8.3.0
     # via flask
 et-xmlfile==2.0.0
     # via openpyxl
-faker==37.12.0
+faker==40.63.0
     # via -r requirements.in
 flask==3.1.2
     # via
@@ -132,9 +132,7 @@ typing-extensions==4.15.0
 typing-inspection==0.4.2
     # via pydantic
 tzdata==2025.2
-    # via
-    #   faker
-    #   pandas
+    # via pandas
 urllib3==2.5.0
     # via requests
 waitress==3.0.2
